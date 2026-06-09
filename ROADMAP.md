@@ -1,7 +1,19 @@
 # Daedalus Roadmap
 
 Phases are gated by evidence, not dates. Each phase has an exit criterion a
-human can check.
+human can check. Work items live in `backlog.d/`.
+
+## MVP milestone (current target)
+
+MVP = an operator can actually use Daedalus, not just demo it:
+`daedalus run <taskspec>` autonomously searches compositions (typed, hashed,
+single-slot mutations) against an isolated arena whose tasks cannot be
+one-shotted, under fixture splits that prevent benchmark overfitting, and
+emits a comparison report + Pareto archive the operator can act on.
+
+MVP = backlog 001 002 003 005 006 007 008 (core) + 004 009 (isolation +
+non-one-shot arena) with 010 (judge family) wanted but droppable. 011–014 are
+post-MVP unless evidence promotes them.
 
 ## Phase 0 — Prose-first pilot (current)
 
