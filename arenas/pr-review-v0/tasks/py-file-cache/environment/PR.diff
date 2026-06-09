@@ -1,0 +1,50 @@
+diff -ruN a/app.py b/app.py
+--- a/app.py	2026-06-09 17:11:35
++++ b/app.py	2026-06-09 17:11:35
+@@ -1,7 +1,15 @@
+ import requests
+ 
++import cache
+ 
++
+ def fetch_profile(user_id):
++    key = f"profile-{user_id}"
++    cached = cache.get(key)
++    if cached is not None:
++        return cached
+     resp = requests.get(f"https://api.example.com/users/{user_id}")
+     resp.raise_for_status()
+-    return resp.json()
++    data = resp.json()
++    cache.set(key, data)
++    return data
+diff -ruN a/cache.py b/cache.py
+--- a/cache.py	1969-12-31 18:00:00
++++ b/cache.py	2026-06-09 17:11:35
+@@ -0,0 +1,26 @@
++import json
++import os
++
++CACHE_DIR = os.path.expanduser("~/.app-cache")
++
++
++def _path(key):
++    return os.path.join(CACHE_DIR, key + ".json")
++
++
++def get(key):
++    path = _path(key)
++    if not os.path.exists(path):
++        return None
++    f = open(path)
++    data = json.load(f)
++    f.close()
++    return data
++
++
++def set(key, value):
++    os.makedirs(CACHE_DIR, exist_ok=True)
++    tmp = _path(key) + ".tmp"
++    with open(tmp, "w") as f:
++        json.dump(value, f)
++    os.rename(tmp, _path(key))

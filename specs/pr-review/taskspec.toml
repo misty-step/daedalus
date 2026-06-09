@@ -1,0 +1,43 @@
+# Daedalus task specification: focused PR-review agent.
+# Schema: DESIGN.md "Task specification". Gate G1 approval: approvals/G1-pr-review.md
+
+id = "pr-review-v0"
+goal = "Given a pull request diff plus repository context, produce structured review findings that identify the real defects introduced by the change."
+domain = "code-review"
+mode = "threshold-then-cheap" # hit the quality bar, then minimize cost
+
+[inputs]
+description = "Post-change repository files plus PR.diff (unified diff)"
+fixtures = "arenas/pr-review-v0"
+
+[output]
+contract = "findings.json: {findings: [{file, line, category, description}]} with categories from the fixed taxonomy (see arena instruction.md)"
+
+[oracle]
+type = "deterministic"
+description = "Seeded-defect answer keys; reward = max(0, recall - 0.2 * false_positives) per runner/score.py"
+
+[risk]
+class = "low"
+notes = "Offline synthetic fixtures only; no live repos, secrets, or write actions."
+
+[budget]
+max_cost_per_trial_usd = 0.50
+max_wall_per_trial_sec = 600
+
+[trigger]
+intent = "GitHub PR webhook (Phase 3); manual runs until then"
+
+[boundaries]
+data = "Synthetic fixtures in arenas/ only. Candidates never read tests/ or solution/."
+
+[checkpoints]
+gates = ["G1-spec", "G2-eval-quality", "G3-launch-contract"]
+
+[negative_examples]
+bad = [
+  "style or naming nitpicks",
+  "confident prose without file/line evidence",
+  "flagging pre-existing code the diff does not touch",
+  "inventing findings on a clean change",
+]

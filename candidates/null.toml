@@ -1,0 +1,4 @@
+# Floor reference: reports no findings on every task. Validates that the
+# arena cannot be passed by silence (only the clean task scores 1.0).
+id = "null"
+kind = "null"

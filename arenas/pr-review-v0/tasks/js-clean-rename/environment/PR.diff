@@ -1,0 +1,25 @@
+diff -ruN a/src/format.js b/src/format.js
+--- a/src/format.js	2026-06-09 17:11:36
++++ b/src/format.js	2026-06-09 17:11:36
+@@ -1,6 +1,6 @@
+-function formatMoney(cents, currency = "USD") {
++function formatCurrency(cents, currency = "USD") {
+   const amount = (cents / 100).toFixed(2);
+   return `${currency} ${amount}`;
+ }
+ 
+-module.exports = { formatMoney };
++module.exports = { formatCurrency };
+diff -ruN a/src/receipt.js b/src/receipt.js
+--- a/src/receipt.js	2026-06-09 17:11:36
++++ b/src/receipt.js	2026-06-09 17:11:36
+@@ -1,7 +1,7 @@
+-const { formatMoney } = require("./format");
++const { formatCurrency } = require("./format");
+ 
+ function receiptLine(item) {
+-  return `${item.name}: ${formatMoney(item.cents)}`;
++  return `${item.name}: ${formatCurrency(item.cents)}`;
+ }
+ 
+ module.exports = { receiptLine };

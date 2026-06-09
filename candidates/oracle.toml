@@ -1,0 +1,5 @@
+# Ceiling reference: replays each task's solution/findings.json. Validates the
+# verifier end-to-end (must score 1.0 on every task). Mirrors Harbor's oracle
+# agent pattern.
+id = "oracle"
+kind = "oracle"

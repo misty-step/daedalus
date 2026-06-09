@@ -1,0 +1,18 @@
+id = "pr-review-v0"
+# 0.1.1: clean-task false positives now score a hard 0 (was -0.2 each).
+# All v0.1.0 run records score identically under this rule (no clean-task
+# FPs occurred), so cross-version comparison with them remains valid.
+version = "0.1.1"
+taskspec = "specs/pr-review/taskspec.toml"
+description = """
+Six frozen pull-request fixtures with seeded defects (8 defects total across 5
+defective PRs, plus 1 clean PR as a false-positive check). Each task follows
+the Harbor task-directory format: instruction.md, environment/ (post-change
+files + PR.diff), tests/ (verifier + hidden answer key), solution/ (oracle
+findings). Candidates must never read tests/ or solution/; the Phase 0 runner
+only copies environment/ into the agent workspace.
+"""
+
+# Frozen surfaces for this arena version: fixtures, answer keys, scorer
+# constants (FP_PENALTY), and instruction text. Changing any of these requires
+# a version bump and re-running all baselines.

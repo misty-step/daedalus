@@ -1,0 +1,10 @@
+# Cheap baseline: a single OpenRouter chat completion, no tools, no agent
+# loop. The whole workspace is inlined into one prompt. Uses the same model as
+# pi-kimi so the comparison isolates the harness contribution.
+id = "baseline-oneshot"
+kind = "openrouter"
+model = "moonshotai/kimi-k2.6"
+temperature = 0.2
+max_tokens = 8192
+timeout_sec = 300
+system_prompt = "You are a precise code-review agent. Follow the task instructions exactly and output only valid JSON."

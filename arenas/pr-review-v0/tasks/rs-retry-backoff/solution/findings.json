@@ -1,0 +1,16 @@
+{
+  "findings": [
+    {
+      "file": "src/retry.rs",
+      "line": 15,
+      "category": "correctness",
+      "description": "The doc says 'up to max_attempts times' but op() executes max_attempts + 1 times: attempt is incremented after the call and the loop only returns Err when attempt > max_attempts."
+    },
+    {
+      "file": "src/retry.rs",
+      "line": 18,
+      "category": "correctness",
+      "description": "The backoff 100 * 2u64.pow(attempt) is uncapped; with a large max_attempts the multiplication overflows u64 (panicking in debug builds) and sleep durations grow without bound."
+    }
+  ]
+}

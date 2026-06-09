@@ -1,0 +1,31 @@
+diff -ruN a/app/auth.py b/app/auth.py
+--- a/app/auth.py	2026-06-09 17:11:35
++++ b/app/auth.py	2026-06-09 17:11:35
+@@ -2,14 +2,20 @@
+ from .security import verify_password
+ 
+ 
+-def login(username, password):
++def find_user_by_email(email):
+     conn = get_connection()
+-    cur = conn.cursor()
+-    cur.execute(
+-        "SELECT id, password_hash FROM users WHERE username = ?",
+-        (username,),
+-    )
+-    row = cur.fetchone()
++    try:
++        cur = conn.cursor()
++        cur.execute(
++            f"SELECT id, password_hash FROM users WHERE email = '{email}'"
++        )
++        return cur.fetchone()
++    except Exception:
++        return None
++
++
++def login(email, password):
++    row = find_user_by_email(email)
+     if row is None:
+         return None
+     user_id, password_hash = row

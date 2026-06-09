@@ -1,0 +1,20 @@
+{
+  "defects": [
+    {
+      "id": "off-by-one-attempts",
+      "file": "src/retry.rs",
+      "line_start": 14,
+      "line_end": 17,
+      "category": "correctness",
+      "note": "Documented as 'up to max_attempts times', but op() runs max_attempts + 1 times: the attempt counter is incremented after the call and only checked with > before retrying."
+    },
+    {
+      "id": "unbounded-backoff-overflow",
+      "file": "src/retry.rs",
+      "line_start": 18,
+      "line_end": 19,
+      "category": "correctness",
+      "note": "100 * 2u64.pow(attempt) has no cap: for large attempt counts the multiplication overflows (panics in debug builds) and the sleep grows without bound."
+    }
+  ]
+}

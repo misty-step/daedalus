@@ -1,0 +1,10 @@
+{
+  "findings": [
+    {
+      "file": "pagination.py",
+      "line": 7,
+      "category": "correctness",
+      "description": "The docstring says page is 1-indexed, so the offset must be (page - 1) * page_size. As written, page 1 skips the first page_size items and they are unreachable from any page."
+    }
+  ]
+}

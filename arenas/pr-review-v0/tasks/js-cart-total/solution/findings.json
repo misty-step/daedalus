@@ -1,0 +1,10 @@
+{
+  "findings": [
+    {
+      "file": "src/cart.js",
+      "line": 3,
+      "category": "correctness",
+      "description": "applyDiscount mutates the caller's item objects in place, so computing a total is no longer side-effect free: calling orderTotal twice compounds the discount and permanently corrupts cart prices."
+    }
+  ]
+}

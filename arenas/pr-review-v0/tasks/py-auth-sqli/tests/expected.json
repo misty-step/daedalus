@@ -1,0 +1,20 @@
+{
+  "defects": [
+    {
+      "id": "sqli",
+      "file": "app/auth.py",
+      "line_start": 8,
+      "line_end": 12,
+      "category": "security",
+      "note": "Query is built by interpolating the email into the SQL string; classic SQL injection. Old code used a parameterized query."
+    },
+    {
+      "id": "swallowed-db-errors",
+      "file": "app/auth.py",
+      "line_start": 13,
+      "line_end": 14,
+      "category": "error-handling",
+      "note": "Broad except returns None for any database error, making outages indistinguishable from an unknown user."
+    }
+  ]
+}

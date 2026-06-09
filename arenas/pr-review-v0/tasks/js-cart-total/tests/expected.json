@@ -1,0 +1,12 @@
+{
+  "defects": [
+    {
+      "id": "mutates-cart-items",
+      "file": "src/cart.js",
+      "line_start": 1,
+      "line_end": 6,
+      "category": "correctness",
+      "note": "applyDiscount mutates the caller's item objects in place; calling orderTotal twice compounds the discount and corrupts the cart state."
+    }
+  ]
+}
