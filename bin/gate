@@ -1,0 +1,7 @@
+#!/usr/bin/env sh
+# The repo gate. Offline, no API keys required. Agents run this before
+# claiming any change is done; CI runs the same command.
+set -eu
+cd "$(dirname "$0")/.."
+python3 -m py_compile runner/run.py runner/score.py
+python3 -m pytest tests/ -q

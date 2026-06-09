@@ -249,8 +249,8 @@ def main():
     if not task_dirs:
         sys.exit("no tasks matched")
 
-    runs_dir = REPO / "runs"
-    runs_dir.mkdir(exist_ok=True)
+    runs_dir = Path(os.environ.get("DAEDALUS_RUNS_DIR", REPO / "runs"))
+    runs_dir.mkdir(parents=True, exist_ok=True)
     stamp = utc_stamp()
     out_path = runs_dir / f"{stamp}-{candidate['id']}.jsonl"
 
@@ -339,7 +339,8 @@ def main():
     print(f"\ncandidate: {candidate['id']}  ({len(records)} trials)")
     print(f"mean reward: {sum(rewards)/len(rewards):.4f}")
     print(f"total cost:  ${sum(costs):.4f}" if costs else "total cost:  unknown")
-    print(f"records:     {out_path.relative_to(REPO)}")
+    shown = out_path.relative_to(REPO) if out_path.is_relative_to(REPO) else out_path
+    print(f"records:     {shown}")
 
 
 if __name__ == "__main__":
