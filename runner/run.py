@@ -145,6 +145,20 @@ def run_openrouter(candidate, instruction, task_dir, workdir, record):
     (workdir / "findings.json").write_text(json.dumps(findings, indent=2))
 
 
+# Baseline process environment for candidate subprocesses. Everything else —
+# notably every API key except the candidate's own allowlist — is withheld.
+BASE_ENV_VARS = ("PATH", "HOME", "TERM", "LANG", "LC_ALL")
+
+
+def candidate_env(candidate):
+    allow = candidate.get("env_allowlist", ["OPENROUTER_API_KEY"])
+    return {
+        k: os.environ[k]
+        for k in (*BASE_ENV_VARS, *allow)
+        if k in os.environ
+    }
+
+
 def extract_pi_usage(stdout_text):
     """Sum usage across assistant message_end events in pi --mode json output."""
     tokens_in = tokens_out = cached = 0
@@ -210,6 +224,7 @@ def run_pi(candidate, instruction, task_dir, workdir, record):
         capture_output=True,
         text=True,
         timeout=candidate.get("timeout_sec", 600),
+        env=candidate_env(candidate),
     )
     record["agent_exit_code"] = proc.returncode
     record.update(extract_pi_usage(proc.stdout))

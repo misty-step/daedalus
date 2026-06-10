@@ -54,6 +54,25 @@ def test_extract_pi_usage_empty_on_no_events():
     assert runner.extract_pi_usage("plain text\n{\"type\":\"other\"}") == {}
 
 
+def test_candidate_env_withholds_unrelated_secrets(monkeypatch):
+    monkeypatch.setenv("GITHUB_TOKEN", "sekret")
+    monkeypatch.setenv("OPENAI_API_KEY", "sekret2")
+    monkeypatch.setenv("OPENROUTER_API_KEY", "or-key")
+    env = runner.candidate_env({})
+    assert "GITHUB_TOKEN" not in env
+    assert "OPENAI_API_KEY" not in env
+    assert env["OPENROUTER_API_KEY"] == "or-key"
+    assert "PATH" in env
+
+
+def test_candidate_env_respects_manifest_allowlist(monkeypatch):
+    monkeypatch.setenv("CUSTOM_KEY", "v")
+    monkeypatch.setenv("OPENROUTER_API_KEY", "or-key")
+    env = runner.candidate_env({"env_allowlist": ["CUSTOM_KEY"]})
+    assert env["CUSTOM_KEY"] == "v"
+    assert "OPENROUTER_API_KEY" not in env
+
+
 def test_tree_digest_detects_tampering(tmp_path):
     (tmp_path / "tests").mkdir()
     key = tmp_path / "tests" / "expected.json"
