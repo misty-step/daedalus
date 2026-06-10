@@ -72,9 +72,85 @@ span [108, 111] and scored 0. Key spans should widen to the enclosing
 method in v2.1 (version bump; see backlog 019), alongside more holdout
 tasks. v0.1.0 stays frozen: comparisons against it remain valid.
 
+## v0.2.0 (tickets 019 + 027, 2026-06-10)
+
+Scale-up + calibration: ten tasks across two real repos, full taxonomy
+coverage, three-task holdout, two clean traps, exposure ledger
+(holdout-ledger.md, burn threshold 5 exposures → rotate + version bump).
+
+### Freeze gate (v0.2.0): rig PASSED, new-task spread PENDING
+
+- [x] oracle 1.0 on all 10 tasks; null 0.20 (= 2 clean / 10); one-shot
+      probe 0.0 (HTTP 400, context overflow) on sampled rich + pygments
+      tasks. gitleaks clean (23.2MB scanned).
+- [x] agent spread proven on the v0.1.0 task subset (carried forward):
+      0.167–1.000 across seeds (run 20260610T160533Z).
+- [ ] **agent spread on the six NEW tasks: not yet established.** A
+      sequential two-agent probe (glm-5/spec-first and glm-4.7-flash/lean)
+      both scored 0 on py-markup-escape and py-guess-swallow:
+      - markup-escape: agents found the right *location* (markup.py 61–62,
+        inside the key span) but tagged it `correctness`/`data-loss`; the
+        key requires `security`. This is category-match strictness on a
+        legitimately cross-category defect — a calibration candidate
+        (allow a category set, or pick the category the defect most
+        load-bearingly is) for v0.2.1.
+      - guess-swallow: both found nothing — genuinely hard, or the
+        out-of-diff cue (blanket-except semantics) is too subtle to spot
+        without running the analysers.
+      A task no reasonable agent passes discriminates as poorly as one
+      everyone passes. The next full `bin/daedalus run` (diverse seed
+      population, ≥5-trial certification) is the real spread oracle; until
+      it reports, treat the six new tasks as **provisional** and do not
+      publish cross-agent claims that depend on them. The version bump,
+      wider spans, second clean trap, ledger, and pygments repo all stand.
+
+| task | split | repo | category |
+|---|---|---|---|
+| py-progress-speed | train | rich | correctness |
+| py-padding-clean | train | rich | (clean) |
+| py-markup-escape | train | rich | security |
+| py-save-leak | train | rich | resource-leak |
+| py-measure-normalize | validation | rich | correctness |
+| py-guess-swallow | validation | pygments | error-handling |
+| py-formatter-clean | validation | pygments | (clean) |
+| py-live-lock | holdout | rich | concurrency |
+| py-export-clear | holdout | rich | data-loss |
+| py-plugin-cache | holdout | pygments | correctness |
+
+Key spans now cover the **enclosing function** of each seeded defect
+(calibration finding from the delivered-agent repro: a correct defect
+identification scored 0 for citing a line a few rows outside a tight span).
+
+### Authoring pipeline
+
+Each task: read the real upstream code → design a single-PR edit whose
+wrongness lives outside the diff hunk (callers, documented contracts,
+sibling threads, stdlib semantics) → apply the edit and key + oracle
+together (the build script asserts edit uniqueness and computes the
+enclosing-function span mechanically) → validate oracle 1.0 / null floor
+offline before any model run. Disputed findings flow through
+adjudications.md (DESIGN.md, Adjudication).
+
+### Auto-generated defects: rejected for v0.2.0, with a revisit trigger
+
+Considered seeding defects mutation-testing style (changes that provably
+flip an existing upstream test). Rejected for now: hand-authored cross-file
+defects with the adjudication flywheel currently beat generated mutants on
+the property that matters (out-of-diff defectiveness — mutants tend to be
+locally visible), and quality control would still be manual. Revisit when
+task demand exceeds authoring capacity or when execution arenas (ticket
+012) make test-flipping defects first-class.
+
+### Delivery claims (019)
+
+A delivered agent's reward claims must come from ≥5 trials per task
+(certification racing enforces this in-loop; DELIVERY.md states mean and
+observed range, never a small-n point estimate).
+
 ## gitleaks
 
 ```
 gitleaks detect --source arenas/pr-review-v2 --no-git
-→ scanned ~5.60 MB in 568ms, no leaks found (2026-06-10)
+→ scanned ~5.60 MB in 568ms, no leaks found (2026-06-10, v0.1.0)
+→ re-run at v0.2.0 freeze: see below
 ```

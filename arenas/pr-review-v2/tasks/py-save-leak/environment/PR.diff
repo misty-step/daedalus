@@ -1,0 +1,16 @@
+diff -ruN a/rich/console.py b/rich/console.py
+--- a/rich/console.py
++++ b/rich/console.py
+@@ -2207,9 +2207,9 @@
+                 Defaults to ``False``.
+ 
+         """
+-        text = self.export_text(clear=clear, styles=styles)
+-        with open(path, "w", encoding="utf-8") as write_file:
+-            write_file.write(text)
++        write_file = open(path, "w", encoding="utf-8")
++        write_file.write(self.export_text(clear=clear, styles=styles))
++        write_file.close()
+ 
+     def export_html(
+         self,

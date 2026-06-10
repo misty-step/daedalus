@@ -1,0 +1,15 @@
+diff -ruN a/pygments/lexers/__init__.py b/pygments/lexers/__init__.py
+--- a/pygments/lexers/__init__.py
++++ b/pygments/lexers/__init__.py
+@@ -330,7 +330,10 @@
+ 
+     best_lexer = [0.0, None]
+     for lexer in _iter_lexerclasses():
+-        rv = lexer.analyse_text(_text)
++        try:
++            rv = lexer.analyse_text(_text)
++        except Exception:
++            continue
+         if rv == 1.0:
+             return lexer(**options)
+         if rv > best_lexer[0]:

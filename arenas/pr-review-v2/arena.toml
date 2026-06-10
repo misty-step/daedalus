@@ -1,32 +1,34 @@
 id = "pr-review-v2"
-# 0.1.0: first real-repo arena. Mechanism (backlog 015): the workspace is a
-# full snapshot of Textualize/rich v14.0.0 (~1.4MB, ~350K tokens), which
-# exceeds the one-shot probe's context window — the inline-everything pattern
-# physically cannot process it — and every seeded defect's wrongness lives
-# outside the diff hunk (callers, documented invariants, sibling threads), so
-# diff-only pattern matching is not enough either.
-version = "0.1.0"
+# 0.2.0 (tickets 019 + 027): six new tasks across a second real repo
+# (pygments 2.19.1) covering the full defect taxonomy with a second clean
+# trap and a three-task holdout; existing key spans widened to the enclosing
+# function (calibration finding: a correct defect identification scored 0
+# for citing a line a few rows outside a tight span); holdout exposure is
+# tracked in holdout-ledger.md. Cross-version averaging with 0.1.0 records
+# is invalid; baselines re-run before new comparisons.
+# 0.1.0: first real-repo arena (rich v14.0.0); mechanism per backlog 015.
+version = "0.2.0"
 taskspec = "specs/pr-review/taskspec.toml"
 description = """
-Four frozen pull-request fixtures over a real repository snapshot
-(Textualize/rich v14.0.0, MIT): three seeded defects whose defectiveness is
-only visible by reading code outside the diff (a speed-sample starvation
-whose consumer sits below the hunk, a measurement-normalization contract
-break whose consumers live in other modules, a lock-scope reduction that
-races a background thread defined elsewhere in the file), plus one clean
-"tempting refactor" PR as a false-positive trap. Harbor task-directory
-format; candidates never read tests/ or solution/.
+Ten frozen pull-request fixtures over two real repository snapshots
+(Textualize/rich v14.0.0, MIT; pygments 2.19.1, BSD-2): eight seeded defects
+covering correctness, security, error-handling, concurrency, resource-leak,
+and data-loss — each authored so its wrongness lives outside the diff hunk —
+plus two clean "tempting refactor" PRs as false-positive traps. Workspaces
+are 1.4–5MB (≈350K–1.3M tokens), beyond the one-shot probe's context.
+Harbor task-directory format; candidates never read tests/ or solution/.
 """
 
 [template]
 file = "template.md"
 
 # The search loop optimizes against train+validation only. Holdout is scored
-# once, at final evaluation, behind the runner's --final flag.
+# once per final evaluation, behind the runner's --final flag, and every
+# exposure is recorded in holdout-ledger.md.
 [split]
-train = ["py-progress-speed", "py-padding-clean"]
-validation = ["py-measure-normalize"]
-holdout = ["py-live-lock"]
+train = ["py-progress-speed", "py-padding-clean", "py-markup-escape", "py-save-leak"]
+validation = ["py-measure-normalize", "py-guess-swallow", "py-formatter-clean"]
+holdout = ["py-live-lock", "py-export-clear", "py-plugin-cache"]
 
 # Frozen surfaces for this arena version: fixtures, answer keys, scorer
 # constants, template, and splits. Changing any requires a version bump and

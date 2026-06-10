@@ -1,0 +1,12 @@
+{
+  "defects": [
+    {
+      "id": "py-guess-swallow",
+      "file": "pygments/lexers/__init__.py",
+      "line_start": 304,
+      "line_end": 343,
+      "category": "error-handling",
+      "note": "The blanket except around every builtin analyser silently skips lexers whose analyse_text raises: a systemic failure (bad input type propagating TypeError through many analysers) now collapses into ClassNotFound('no lexer matching the text found'), indistinguishable from genuinely unknown text, and guessing results silently change with no logging. A plugin guard would catch narrowly around plugin lexers and warn."
+    }
+  ]
+}

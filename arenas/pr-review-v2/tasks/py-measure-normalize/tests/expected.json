@@ -3,8 +3,8 @@
     {
       "id": "py-measure-normalize",
       "file": "rich/measure.py",
-      "line_start": 108,
-      "line_end": 111,
+      "line_start": 79,
+      "line_end": 118,
       "category": "correctness",
       "note": "Dropping with_maximum(_max_width) and normalize() breaks the documented invariant 0 <= minimum <= maximum <= max_width that every layout consumer (table column sizing, columns, align, constrain) relies on; a renderable whose __rich_measure__ returns widths beyond max_width or minimum > maximum now corrupts layout math instead of being clamped."
     }

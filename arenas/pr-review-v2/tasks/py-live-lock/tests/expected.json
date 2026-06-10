@@ -3,8 +3,8 @@
     {
       "id": "py-live-lock",
       "file": "rich/live.py",
-      "line_start": 215,
-      "line_end": 219,
+      "line_start": 206,
+      "line_end": 218,
       "category": "concurrency",
       "note": "Live.update() must be atomic with respect to the background _RefreshThread, which holds the same lock while calling live.refresh() (see _RefreshThread.run earlier in this file). Without the lock, the assignment and its paired refresh interleave with the thread's refresh: the display can render a torn mix of old and new state, and the atomicity argument does not hold off-CPython."
     }

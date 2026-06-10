@@ -356,10 +356,17 @@ def main():
     front = report.pareto_front(cands)
     if holdout_ids:
         print("== stage 4: holdout final evaluation", flush=True)
-        for cid in front:
-            if cid in manifests:
-                sh_runner(manifests[cid], arena_dir, exp_dir, "holdout",
-                          args.certify_trials, final=True)
+        exposed = [cid for cid in front if cid in manifests]
+        for cid in exposed:
+            sh_runner(manifests[cid], arena_dir, exp_dir, "holdout",
+                      args.certify_trials, final=True)
+        ledger = arena_dir / "holdout-ledger.md"
+        if ledger.exists() and exposed:
+            with open(ledger, "a") as f:
+                f.write(
+                    f"| {stamp[:8]} | {exp_dir.name} | {', '.join(exposed)} "
+                    f"| {', '.join(holdout_ids)} |\n"
+                )
     else:
         print("== stage 4: skipped (arena declares no holdout tasks)", flush=True)
 

@@ -1,0 +1,10 @@
+{
+  "findings": [
+    {
+      "file": "rich/console.py",
+      "line": 2210,
+      "category": "resource-leak",
+      "description": "save_text now opens the destination before calling export_text inside the write; if export_text raises (e.g. its record=True assertion, defined earlier in this class) the file handle leaks and an empty file is left behind \u2014 export first, then write under a context manager."
+    }
+  ]
+}

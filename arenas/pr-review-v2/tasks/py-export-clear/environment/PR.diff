@@ -1,0 +1,35 @@
+diff -ruN a/rich/console.py b/rich/console.py
+--- a/rich/console.py
++++ b/rich/console.py
+@@ -2182,19 +2182,20 @@
+         ), "To export console contents set record=True in the constructor or instance"
+ 
+         with self._record_buffer_lock:
+-            if styles:
+-                text = "".join(
+-                    (style.render(text) if style else text)
+-                    for text, style, _ in self._record_buffer
+-                )
+-            else:
+-                text = "".join(
+-                    segment.text
+-                    for segment in self._record_buffer
+-                    if not segment.control
+-                )
++            buffer = self._record_buffer
+             if clear:
+                 del self._record_buffer[:]
++        if styles:
++            text = "".join(
++                (style.render(text) if style else text)
++                for text, style, _ in buffer
++            )
++        else:
++            text = "".join(
++                segment.text
++                for segment in buffer
++                if not segment.control
++            )
+         return text
+ 
+     def save_text(self, path: str, *, clear: bool = True, styles: bool = False) -> None:

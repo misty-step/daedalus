@@ -1,0 +1,10 @@
+{
+  "findings": [
+    {
+      "file": "rich/console.py",
+      "line": 2185,
+      "category": "data-loss",
+      "description": "buffer = self._record_buffer aliases the live list; del self._record_buffer[:] then empties it before rendering, so export_text(clear=True) returns an empty string and permanently destroys the recorded segments \u2014 take a copy before clearing."
+    }
+  ]
+}

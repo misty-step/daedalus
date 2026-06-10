@@ -1,0 +1,10 @@
+{
+  "findings": [
+    {
+      "file": "pygments/lexers/__init__.py",
+      "line": 335,
+      "category": "error-handling",
+      "description": "The new try/except Exception: continue swallows every analyse_text failure across all lexers, so real errors collapse into ClassNotFound and guessing silently changes results; the guard should be narrow (plugin lexers) and observable, not a blanket continue."
+    }
+  ]
+}

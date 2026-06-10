@@ -1,0 +1,10 @@
+{
+  "findings": [
+    {
+      "file": "pygments/lexers/__init__.py",
+      "line": 131,
+      "category": "correctness",
+      "description": "get_lexer_by_name now caches the lexer INSTANCE keyed only by alias, so the first caller's options (stripnl, encoding, filters \u2014 see Lexer in pygments/lexer.py) silently apply to all later callers, and one stateful instance is shared; the class, not the instance, is what can be cached."
+    }
+  ]
+}

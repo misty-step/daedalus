@@ -26,13 +26,21 @@ search space.
 pi version is captured per run record (`harness_version`); pin-worthy
 behavior changes ride on that field.
 
+**Concurrency constraint (live finding, 2026-06-10, pi 0.78.1):** two
+concurrent `pi -p` agent processes deadlock at startup (zero stdout until
+timeout) — isolated HOMEs and `--offline` do not help; `pi --version` and
+plain network calls are fine concurrently. Run pi trials **sequentially**
+per machine. `runner/run.py` and `bin/daedalus` are naturally sequential;
+do not parallelize runner invocations until pi fixes this. Re-test on pi
+upgrades.
+
 ## Slots a pi composition actually has
 
 | slot | values | notes |
 |---|---|---|
 | `model` | OpenRouter model id (see pool below) | `--model openrouter/<id>` |
 | `prompt_packet` | file under `packets/` | the primary mutable surface |
-| `system_prompt_mode` | `append` (default) \| `replace` | append adds the packet to pi's default coding prompt (`--append-system-prompt`); replace makes the packet the entire system prompt (`--system-prompt`). **Live finding (2026-06-10):** replace with a guidance-free packet loses pi's operating/termination framing — agents wandered to timeout on real tasks; replace-mode packets must carry their own agent-operating instructions |
+| `system_prompt_mode` | `append` (default) \| `replace` | append adds the packet to pi's default coding prompt (`--append-system-prompt`); replace makes the packet the entire system prompt (`--system-prompt`). Both verified working: a replace-mode glm-4.7-flash scored 1.0 at $0.003 on a real task (2026-06-10, sequential). An earlier "replace wanders to timeout" note was retracted — that hang was the concurrency deadlock below, not the slot. |
 | `thinking` | off \| minimal \| low \| medium \| high \| xhigh | `--thinking`; reasoning budget knob |
 | `tools` | subset of `read, bash, edit, write` | `--tools` allowlist; see policies below |
 | `skills` | list of pi skill files | repeated `--skill`; declaring any drops `--no-skills`; contents hashed into the composition |

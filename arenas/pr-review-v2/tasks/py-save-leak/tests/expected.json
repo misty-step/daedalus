@@ -1,0 +1,12 @@
+{
+  "defects": [
+    {
+      "id": "py-save-leak",
+      "file": "rich/console.py",
+      "line_start": 2200,
+      "line_end": 2212,
+      "category": "resource-leak",
+      "note": "export_text() raises after the destination is opened (its record=True assert lives ~40 lines above this method, and style rendering can raise): the handle is never closed and a truncated/empty file is left at path. The old code exported first and used a context manager."
+    }
+  ]
+}
