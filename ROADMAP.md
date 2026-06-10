@@ -43,6 +43,37 @@ pr-review-v1 unfrozen.
 Remaining backlog (post-MVP): 010 judge family, 011 adjudication, 012 visual-QA
 spike, 013 runs retention, 014 Langfuse, 015 non-one-shot arena mechanism.
 
+## Agent-vs-agent redesign + first full cycle (2026-06-10)
+
+Operator review found the MVP's baseline framing wrong (one-shot is never a
+candidate); tickets 016–018 + re-scoped 015 rebuilt the search and the first
+complete spec→delivery cycle ran end-to-end
+(`runs/20260610T160533Z-search-pr-review-v0`, $3.03):
+
+- **016** one-shot demoted to a saturation probe (reference kind); saturated
+  arenas abort the search.
+- **017** taskspec `[search]` space + seeder: 6 diverse pi compositions
+  (model × thinking × tool policy × optimizer-authored packet stances),
+  reproducible RNG, budget-metered.
+- **018** loop v2: archive parent pool (per-task winners selectable), ≥2
+  competing single-slot hypotheses raced per generation, variance-aware
+  keep, `tools` mutable; temperature/max_tokens frozen out (pi cannot
+  express them).
+- **015** pr-review-v2: real-repo arena (rich v14, ~350K tokens/workspace).
+  Freeze gate passed: oracle 1.000 / null 0.250 / probe **0.000** (context
+  overflow) / seeds spread 0.167–1.000 at 230× cost spread.
+- Capstone: landscape scan found glm-5+spec-first at 1.000; the loop's
+  thinking=high→medium mutation held 1.000 at 42% lower cost and aced the
+  unseen holdout; two accuracy-for-cost packet mutations regressed and were
+  discarded on evidence. Delivered package: `deliveries/pr-review/`
+  (hash 44a9aa47e96933ed).
+- Live bug found by the run and fixed gate-protected: Pareto/recommendation
+  compared total cost across unequal trial counts; now cost-per-trial.
+- Honest certification finding: repro at larger n shows within-composition
+  variance (per-task 3/5 and 2/5 on the subtle tasks; ~0.69 point estimate
+  vs the in-search 1.000). Candidate *ranking* stands; contract-grade
+  claims need n ≥ 5 certification → backlog 019 (arena v2.1 calibration).
+
 ## Phase 0 — Prose-first pilot (current)
 
 The loop run by hand, every interface a file, zero framework dependencies.

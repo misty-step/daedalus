@@ -1,0 +1,14 @@
+# Delivered agent for specs/pr-review/taskspec.toml (threshold-then-cheap).
+# Selected by the Daedalus search of 2026-06-10 over arenas/pr-review-v2:
+# run runs/20260610T160533Z-search-pr-review-v0, composition hash
+# 44a9aa47e96933ed (hash binds the manifest + resolved packet text — recompute
+# after any edit). Evidence and launch contract sketch: DELIVERY.md.
+composition = 1
+id = "pr-review-glm5-specfirst-medium"
+kind = "pi"
+provider_name = "openrouter"
+model = "z-ai/glm-5"
+prompt_packet = "deliveries/pr-review/packet.md"
+thinking = "medium"
+tools = ["read", "bash", "edit", "write"]
+timeout_sec = 600

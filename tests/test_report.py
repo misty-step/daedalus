@@ -114,6 +114,24 @@ def test_render_and_files(tmp_path):
     assert "hash-a" in text
 
 
+def test_extra_holdout_trials_do_not_penalize_recommendation():
+    # Regression (live, capstone 20260610T160533Z): the holdout-proven winner
+    # ran more trials, so its *total* cost exceeded a dominated rival that
+    # never faced holdout — recommendation must compare cost per trial.
+    records = [
+        record("untested", "t1", 1.0, 0.0171, 65000),
+        record("untested", "t2", 1.0, 0.0171, 65000),
+        record("proven", "t1", 1.0, 0.0138, 61000),
+        record("proven", "t2", 1.0, 0.0138, 61000),
+        record("proven", "holdout", 1.0, 0.0138, 61000),
+        record("proven", "holdout", 1.0, 0.0138, 61000),
+    ]
+    cands = report.aggregate(records)
+    assert cands["proven"]["cost"] > cands["untested"]["cost"]  # totals mislead
+    pick = report.recommend(cands, report.pareto_front(cands))
+    assert pick == "proven"
+
+
 def test_unknown_cost_treated_as_worst_in_dominance():
     records = [
         record("known", "t1", 0.8, 0.01, 1000),

@@ -61,13 +61,20 @@ def aggregate(records):
         c["reward_mean"] = round(sum(rewards) / len(rewards), 4)
         c["wall_mean"] = round(sum(c["walls"]) / len(c["walls"]) / 1000, 1)
         c["cost"] = round(c["cost"], 4) if c["cost_known"] else None
+        # Dominance and recommendation compare cost per trial, never totals:
+        # a front candidate that earned extra holdout trials must not be
+        # penalized for having been tested more (live bug, capstone run
+        # 20260610T160533Z).
+        c["cost_per_trial"] = (
+            round(c["cost"] / c["trials"], 6) if c["cost"] is not None else None
+        )
     return cands
 
 
 def _dominates(b, a):
     """b dominates a: no worse on all three objectives, better on one."""
-    b_cost = b["cost"] if b["cost"] is not None else float("inf")
-    a_cost = a["cost"] if a["cost"] is not None else float("inf")
+    b_cost = b["cost_per_trial"] if b["cost_per_trial"] is not None else float("inf")
+    a_cost = a["cost_per_trial"] if a["cost_per_trial"] is not None else float("inf")
     no_worse = (
         b["reward_mean"] >= a["reward_mean"]
         and b_cost <= a_cost
@@ -90,7 +97,7 @@ def pareto_front(cands):
 
 
 def recommend(cands, front):
-    """Best mean reward; within 0.05 of the best, cheapest wins."""
+    """Best mean reward; within 0.05 of the best, cheapest per trial wins."""
     if not front:
         return None
     best = max(cands[cid]["reward_mean"] for cid in front)
@@ -98,7 +105,9 @@ def recommend(cands, front):
     return min(
         close,
         key=lambda cid: (
-            cands[cid]["cost"] if cands[cid]["cost"] is not None else float("inf")
+            cands[cid]["cost_per_trial"]
+            if cands[cid]["cost_per_trial"] is not None
+            else float("inf")
         ),
     )
 
@@ -130,11 +139,16 @@ def render(cands, front, pick):
         )
 
     lines += ["", "## Cost and latency", ""]
-    lines.append("| candidate | total cost | mean wall/task |")
-    lines.append("|---|---|---|")
+    lines.append("| candidate | cost/trial | total cost | mean wall/task |")
+    lines.append("|---|---|---|---|")
     for c in order:
         cost = f"${c['cost']:.4f}" if c["cost"] is not None else "unknown"
-        lines.append(f"| {c['id']} | {cost} | {c['wall_mean']}s |")
+        per = (
+            f"${c['cost_per_trial']:.4f}"
+            if c["cost_per_trial"] is not None
+            else "unknown"
+        )
+        lines.append(f"| {c['id']} | {per} | {cost} | {c['wall_mean']}s |")
 
     lines += ["", "## Pareto set (reward ↑, cost ↓, latency ↓)", ""]
     lines += [f"- {cid}" for cid in front] or ["- (no non-reference candidates)"]
@@ -142,11 +156,15 @@ def render(cands, front, pick):
     lines += ["", "## Recommendation", ""]
     if pick:
         c = cands[pick]
-        cost = f"${c['cost']:.4f}" if c["cost"] is not None else "unknown cost"
+        per = (
+            f"${c['cost_per_trial']:.4f}/trial"
+            if c["cost_per_trial"] is not None
+            else "unknown cost"
+        )
         lines.append(
-            f"**{pick}** — mean reward {c['reward_mean']:.4f} at {cost} "
+            f"**{pick}** — mean reward {c['reward_mean']:.4f} at {per} "
             f"({c['wall_mean']}s mean wall). Within-0.05 reward ties resolve "
-            "to the cheapest candidate."
+            "to the cheapest candidate per trial."
         )
     else:
         lines.append("No non-reference candidates to recommend.")
@@ -184,6 +202,7 @@ def main():
                     "composition_hash": cands[cid]["hash"],
                     "reward_mean": cands[cid]["reward_mean"],
                     "cost_usd_total": cands[cid]["cost"],
+                    "cost_usd_per_trial": cands[cid]["cost_per_trial"],
                     "wall_mean_s": cands[cid]["wall_mean"],
                     "recommended": cid == pick,
                 }

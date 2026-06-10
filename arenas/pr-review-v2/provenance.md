@@ -45,16 +45,36 @@ ran.
   (enforced by the runner). The *workspace* `tests/` directory is rich's own
   test suite — fixture content, fair game.
 
-## Freeze gate (ticket 015 oracle)
+## Freeze gate (ticket 015 oracle) — PASSED 2026-06-10, v0.1.0 frozen
 
-To freeze this arena version, record here, with run-record paths:
+Evidence run: `runs/20260610T160533Z-search-pr-review-v0` (rig.json,
+trials.jsonl, seed.json, report.md).
 
-- [ ] oracle scores 1.0 on every task
-- [ ] null scores exactly the clean-task fraction (0.25)
-- [ ] one-shot probe mean < 0.5 (target: workspace exceeds its context)
-- [ ] ≥ 2 distinct agent compositions land measurably apart
-      (mean reward gap > trial noise) — the arena ranks agents
+- [x] oracle scores 1.0 on every task (4/4)
+- [x] null scores exactly the clean-task fraction (0.25)
+- [x] one-shot probe mean < 0.5 — scored **0.000** on all four tasks: the
+      ~350K-token workspace exceeds its 262K context and the API rejects
+      the request (HTTP 400)
+- [x] agent compositions land measurably apart: six seeds spanned
+      **0.167–1.000** mean reward (glm-5/spec-first 1.000 vs
+      gpt-5-mini/spec-first 0.167; same packet, different model) at 230×
+      cost spread — far beyond observed trial noise
+
+Reference ordering: probe 0.000 < null 0.250 < weakest agent 0.167…
+strongest agents 1.000 = oracle.
+
+### Known calibration finding (post-freeze, for v2.1)
+
+A fresh repro of the winning composition (2026-06-10, delivered-agent
+verification) found the right defect on `py-measure-normalize` — correct
+file, category, and description — but cited a line just outside the key
+span [108, 111] and scored 0. Key spans should widen to the enclosing
+method in v2.1 (version bump; see backlog 019), alongside more holdout
+tasks. v0.1.0 stays frozen: comparisons against it remain valid.
 
 ## gitleaks
 
-(recorded at freeze)
+```
+gitleaks detect --source arenas/pr-review-v2 --no-git
+→ scanned ~5.60 MB in 568ms, no leaks found (2026-06-10)
+```

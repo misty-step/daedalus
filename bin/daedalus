@@ -260,6 +260,7 @@ def main():
                 "composition_hash": cands[cid]["hash"],
                 "reward_mean": cands[cid]["reward_mean"],
                 "cost_usd_total": cands[cid]["cost"],
+                "cost_usd_per_trial": cands[cid]["cost_per_trial"],
                 "wall_mean_s": cands[cid]["wall_mean"],
                 "recommended": cid == pick,
             }

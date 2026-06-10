@@ -1,0 +1,19 @@
+{
+  "composition": 1,
+  "id": "seed2-glm-4-7-flash-test-runner",
+  "kind": "pi",
+  "provider_name": "openrouter",
+  "model": "z-ai/glm-4.7-flash",
+  "prompt_packet": "/Users/phaedrus/Development/daedalus/runs/20260610T160533Z-search-pr-review-v0/packets/seed-test-runner.md",
+  "thinking": "off",
+  "tools": [
+    "read",
+    "edit",
+    "write"
+  ],
+  "timeout_sec": 600,
+  "composition_hash": "04eba1523b345086",
+  "prompt_packet_text": "Analyze the provided pull request diff and repository context to identify real defects introduced by the change. Prioritize evidence-by-execution review: when tests or a runnable entrypoint exist, run them and ground your findings in observed behavior rather than static analysis alone. Examine the diff for logic errors, regressions, security issues, and broken interfaces that the change directly introduces. Ground every finding with specific file paths and line numbers. If a test suite is present, execute it and report failures caused by the change. If a runnable entrypoint exists, run it to verify runtime behavior. Report only concrete defects with reproducible evidence; do not speculate, nitpick style, or flag pre-existing issues. If the change introduces no defects, return an empty review with no commentary. Structure each finding as a concise description of the defect, the specific file and line evidence, and the observed or executable proof. Maintain this discipline regardless of change size.\n",
+  "harness_version": null,
+  "runner_version": "0.1.0"
+}

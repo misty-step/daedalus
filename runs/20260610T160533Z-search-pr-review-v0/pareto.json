@@ -1,0 +1,29 @@
+[
+  {
+    "candidate_id": "g1b-seed1-glm-5-spec-first",
+    "composition_hash": "44a9aa47e96933ed",
+    "reward_mean": 1.0,
+    "cost_usd_total": 0.1105,
+    "cost_usd_per_trial": 0.013813,
+    "wall_mean_s": 61.2,
+    "recommended": true
+  },
+  {
+    "candidate_id": "g2b-g1b-seed1-glm-5-spec-first",
+    "composition_hash": "1268d01355e9cd85",
+    "reward_mean": 0.6667,
+    "cost_usd_total": 0.0883,
+    "cost_usd_per_trial": 0.014717,
+    "wall_mean_s": 60.1,
+    "recommended": false
+  },
+  {
+    "candidate_id": "seed4-gpt-5-mini-spec-first",
+    "composition_hash": "8b6e58f5ead72aea",
+    "reward_mean": 0.125,
+    "cost_usd_total": 0.0264,
+    "cost_usd_per_trial": 0.0033,
+    "wall_mean_s": 18.2,
+    "recommended": false
+  }
+]

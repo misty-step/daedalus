@@ -1,0 +1,46 @@
+{
+  "rng_seed": 1106,
+  "seed_count": 6,
+  "packet_stances": [
+    "spec-first",
+    "test-runner",
+    "trace-callers"
+  ],
+  "optimizer_costs": [
+    0.0086529,
+    0.0086769,
+    0.00622755
+  ],
+  "combos": [
+    {
+      "model": "z-ai/glm-5",
+      "thinking": "high",
+      "policy_name": "full"
+    },
+    {
+      "model": "z-ai/glm-4.7-flash",
+      "thinking": "off",
+      "policy_name": "no-exec"
+    },
+    {
+      "model": "deepseek/deepseek-v4-flash",
+      "thinking": "medium",
+      "policy_name": "explore"
+    },
+    {
+      "model": "openai/gpt-5-mini",
+      "thinking": "low",
+      "policy_name": "full"
+    },
+    {
+      "model": "qwen/qwen3.7-plus",
+      "thinking": "high",
+      "policy_name": "no-exec"
+    },
+    {
+      "model": "moonshotai/kimi-k2.6",
+      "thinking": "off",
+      "policy_name": "explore"
+    }
+  ]
+}
