@@ -1,0 +1,20 @@
+--- a/billing/core/order.py	2026-06-09 21:26:52
++++ b/billing/core/order.py	2026-06-09 21:26:52
+@@ -4,12 +4,15 @@
+ from .tax import tax_for
+ 
+ 
++def _subtotal(line_items):
++    return sum(price * qty for price, qty in line_items)
++
++
+ def order_total(line_items, region, discount=Decimal("0")):
+     """Compute the final order total in cents.
+ 
+     line_items: list of (unit_price_cents, quantity).
+     Tax is charged on the post-discount subtotal (see discount.py).
+     """
+-    subtotal = sum(price * qty for price, qty in line_items)
+-    discounted = apply_discount(subtotal, discount)
++    discounted = apply_discount(_subtotal(line_items), discount)
+     return discounted + tax_for(region, discounted)

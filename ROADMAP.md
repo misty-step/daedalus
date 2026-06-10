@@ -12,8 +12,16 @@ one-shotted, under fixture splits that prevent benchmark overfitting, and
 emits a comparison report + Pareto archive the operator can act on.
 
 MVP = backlog 001 002 003 005 006 007 008 (core) + 004 009 (isolation +
-non-one-shot arena) with 010 (judge family) wanted but droppable. 011–014 are
+non-one-shot arena) with 010 (judge family) wanted but droppable. 011–015 are
 post-MVP unless evidence promotes them.
+
+Status (2026-06-09): core machinery 001–008 + 004 built, gate-green, and
+live-validated (Harbor pi in Docker: reward 0.300, 0 exceptions; oracle 1.000;
+mutation step proposes valid single-slot changes with hypotheses; report emits
+Pareto + recommendation). 009 surfaced a real finding — synthetic cross-file
+defects do NOT defeat the one-shot baseline (it inlines every file), so a
+genuinely non-one-shot arena needs a large repo or execution (backlog 015).
+The freeze gate correctly kept pr-review-v1 unfrozen.
 
 ## Phase 0 — Prose-first pilot (current)
 

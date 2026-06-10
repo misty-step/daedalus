@@ -1,0 +1,20 @@
+id = "pr-review-v1"
+version = "0.1.0"
+taskspec = "specs/pr-review/taskspec.toml"
+description = """
+Codebase-context PR review over a multi-file `billing` service snapshot. Unlike
+pr-review-v0's self-contained fixtures, these defects require reading code or
+specs in files the diff does not touch (the discount/tax invariant lives in
+discount.py and SPEC.md, not in the reviewed order.py). Same Harbor task
+format and deterministic seeded-defect scoring as v0.
+"""
+
+[template]
+file = "template.md"
+
+# Small arena: train carries the cross-file defect, validation the clean trap.
+# Holdout empty until the snapshot grows (see provenance.md freeze gate).
+[split]
+train = ["discount-after-tax"]
+validation = ["extract-subtotal"]
+holdout = []

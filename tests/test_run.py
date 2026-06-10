@@ -7,6 +7,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "runner"))
 import run as runner  # noqa: E402
 
@@ -156,6 +158,36 @@ def test_null_scores_exactly_clean_fraction_offline(tmp_path):
     rewards = {r["task_id"]: r["reward"] for r in records}
     assert rewards["js-clean-rename"] == 1.0
     assert all(v == 0.0 for k, v in rewards.items() if k != "js-clean-rename")
+
+
+def run_candidate_arena(candidate, arena, runs_dir):
+    env = dict(os.environ, DAEDALUS_RUNS_DIR=str(runs_dir))
+    proc = subprocess.run(
+        [
+            sys.executable, str(REPO / "runner" / "run.py"),
+            "--candidate", str(REPO / "candidates" / f"{candidate}.toml"),
+            "--arena", str(REPO / "arenas" / arena), "--final",
+        ],
+        capture_output=True, text=True, env=env, cwd=REPO, timeout=120,
+    )
+    assert proc.returncode == 0, proc.stderr
+    records = []
+    for f in runs_dir.glob("*/trials.jsonl"):
+        records += [json.loads(line) for line in f.read_text().splitlines()]
+    return records
+
+
+@pytest.mark.parametrize("arena", ["pr-review-v0", "pr-review-v1"])
+def test_arena_rig_oracle_ceiling_and_null_floor(arena, tmp_path):
+    """Every arena must pass its rig: oracle 1.0 everywhere, null scores only
+    the clean (empty-key) tasks. This is the gate that protects the grader."""
+    oracle = run_candidate_arena("oracle", arena, tmp_path / "o")
+    assert oracle and all(r["reward"] == 1.0 for r in oracle)
+    null = run_candidate_arena("null", arena, tmp_path / "n")
+    for r in null:
+        # null reports nothing; it scores 1.0 only where the answer key is empty.
+        expected = 1.0 if r["expected_defects"] == 0 else 0.0
+        assert r["reward"] == expected, (arena, r["task_id"], r["reward"])
 
 
 def test_holdout_requires_final_flag(tmp_path):

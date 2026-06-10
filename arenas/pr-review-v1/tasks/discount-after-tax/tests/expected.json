@@ -1,0 +1,12 @@
+{
+  "defects": [
+    {
+      "id": "tax-on-pre-discount",
+      "file": "billing/core/order.py",
+      "line_start": 13,
+      "line_end": 15,
+      "category": "correctness",
+      "note": "order_total taxes the pre-discount subtotal and then discounts subtotal+tax. The documented invariant (billing/core/discount.py docstring and SPEC.md rule 2) is that discounts apply to the pre-tax subtotal and tax is charged on the discounted amount. This over-taxes every discounted order."
+    }
+  ]
+}

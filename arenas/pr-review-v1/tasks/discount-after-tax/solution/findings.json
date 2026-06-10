@@ -1,0 +1,10 @@
+{
+  "findings": [
+    {
+      "file": "billing/core/order.py",
+      "line": 14,
+      "category": "correctness",
+      "description": "order_total computes tax on the pre-discount subtotal and applies the discount to subtotal+tax. SPEC.md rule 2 and the apply_discount docstring require the discount to apply to the pre-tax subtotal with tax charged on the discounted amount, so every discounted order is over-taxed and the customer is overcharged."
+    }
+  ]
+}

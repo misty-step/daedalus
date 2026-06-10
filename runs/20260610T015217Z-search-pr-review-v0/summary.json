@@ -198,12 +198,42 @@
         "mean": 0.6,
         "min": 0.3,
         "max": 1.0
+      },
+      "py-file-cache": {
+        "rewards": [
+          0.0,
+          0.4,
+          0.0
+        ],
+        "wall_ms": [
+          281946,
+          331968,
+          235388
+        ],
+        "mean": 0.1333,
+        "min": 0.0,
+        "max": 0.4
+      },
+      "py-pagination": {
+        "rewards": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "wall_ms": [
+          24045,
+          23381,
+          39542
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
       }
     },
-    "trials": 9,
-    "errors": 0,
-    "cost_usd_total": 0.083523,
+    "trials": 15,
+    "errors": 2,
+    "cost_usd_total": 0.209411,
     "cost_known": true,
-    "reward_mean": 0.8667
+    "reward_mean": 0.7467
   }
 }
