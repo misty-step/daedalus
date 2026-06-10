@@ -96,13 +96,25 @@ from: `correctness`, `security`, `error-handling`, `concurrency`,
 Answer key `tests/expected.json`:
 `{"defects": [{"id", "file", "line_start", "line_end", "category", "note"}]}`.
 
-Scoring (`runner/score.py`): a finding matches a defect on equal file +
-category with line inside the range; each defect matches once;
-`reward = max(0, recall − 0.2 × false_positives)`; malformed or missing output
-scores 0; on a clean task (empty answer key) any finding at all scores 0. The
-clean-PR task makes silence a non-strategy and invented findings fatal.
-Trials that error, crash (nonzero candidate exit), or trip grader
-tamper-detection are voided: reward 0, error recorded.
+Scoring families. A task may declare which apply in `tests/scoring.toml`;
+absence means deterministic-only (every task to date).
+
+- **deterministic** (`runner/score.py`, primary, always present): a finding
+  matches a defect on equal file + category with line inside the range; each
+  defect matches once; `reward = max(0, recall − 0.2 × false_positives)`;
+  malformed or missing output scores 0; on a clean task any finding scores 0.
+  The clean-PR task makes silence a non-strategy and invented findings fatal.
+  Trials that error, crash, or trip grader tamper-detection are voided.
+- **judge** (`runner/judge.py`, secondary, opt-in): a calibrated 0–5 rubric
+  judge for qualities the key can't capture (evidence quality, actionability,
+  severity calibration, precision). Rubric files under `rubrics/` are
+  versioned and hashed into run records; judge cost is metered into the
+  experiment budget. A judge score counts toward keep/discard **only after a
+  calibration gate passes**: two independent judge models agree (Spearman ≥
+  0.8 on a shared calibration set) AND, where a seeded key exists, the judge
+  ranking agrees with the deterministic ranking. This enforces the red line
+  "never the only oracle, never trusted without calibration" — an uncalibrated
+  judge is reported as a diagnostic, never an objective.
 
 ### Candidate manifest — `candidates/<id>.toml` (composition.v1)
 
