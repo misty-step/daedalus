@@ -62,6 +62,19 @@ def test_reference_candidates_never_in_front_or_pick(tmp_path):
     assert report.recommend(cands, front) == "real"
 
 
+def test_oneshot_probe_excluded_even_when_it_wins():
+    # The saturation probe outscoring every agent means the arena is broken,
+    # not that a one-shot should ship: it must never reach front or pick.
+    records = [
+        record("probe-oneshot", "t1", 1.0, 0.001, 500, kind="oneshot"),
+        record("agent", "t1", 0.7, 0.02, 2000),
+    ]
+    cands = report.aggregate(records)
+    front = report.pareto_front(cands)
+    assert front == ["agent"]
+    assert report.recommend(cands, front) == "agent"
+
+
 def test_recommendation_breaks_near_ties_by_cost():
     records = [
         record("pricey", "t1", 0.90, 0.50, 1000),

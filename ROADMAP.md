@@ -24,9 +24,12 @@ Status (2026-06-09): **MVP reached.** Core machinery 001–009 built, gate-green
   hypotheses, running them as hashed child candidates, and plateau-stopping.
 - Harbor Docker isolation proven: oracle 1.000, pi 0.300 single-task, and a
   full 6-task × 5-attempt pi run at mean 0.663.
-- First lab finding: on the (saturated) pr-review-v1 arena the cheap one-shot
-  ties the agentic harness at 1.7× lower cost, so threshold-then-cheap mode
-  correctly recommends the baseline.
+- Meta-eval finding (reframed 2026-06-10, ticket 016): the one-shot probe
+  matches the oracle on pr-review-v1 — the arena is **saturated** and cannot
+  rank agent configurations. The MVP's original framing ("one-shot ties
+  agentic at 1.7× lower cost → recommend the baseline") was a category error:
+  comparisons in this lab are agent vs agent; the one-shot is a rig probe,
+  never a candidate, and a saturated arena now aborts the search.
 
 Live runs surfaced and fixed four real bugs (rig discrimination threshold,
 empty-holdout crash, optimizer transient-retry, reasoning-model token
@@ -57,8 +60,8 @@ The loop run by hand, every interface a file, zero framework dependencies.
 - [ ] G2 meta-eval review of arena quality — report drafted at
       `approvals/G2-pr-review-v0.md`, awaiting human sign-off
 
-**Exit (met):** the eval discriminates (oracle > agentic > one-shot > null
-ordering interpretable), run records capture cost/tokens/latency, and the
+**Exit (met):** the rig discriminates (oracle ceiling, null floor, saturation
+probe interpretable), run records capture cost/tokens/latency, and the
 autonomous loop produces a Pareto archive + comparison report unattended.
 
 ## Phase 1 — Harbor adoption

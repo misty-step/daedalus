@@ -116,3 +116,13 @@ def test_best_candidate_ignores_references_and_breaks_ties_by_cost():
         "c": {"reward_mean": 0.8, "cost_usd_total": None},
     }
     assert loop.best_candidate(summary) == "b"
+
+
+def test_best_candidate_ignores_oneshot_probe_by_kind():
+    # Even a perfect probe score can never make it the incumbent/parent.
+    summary = {
+        "probe-oneshot": {"reward_mean": 1.0, "cost_usd_total": 0.001,
+                          "kind": "oneshot"},
+        "agent": {"reward_mean": 0.6, "cost_usd_total": 0.50, "kind": "pi"},
+    }
+    assert loop.best_candidate(summary) == "agent"

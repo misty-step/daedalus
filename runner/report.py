@@ -6,15 +6,18 @@ Usage:
 
 Aggregates trial records by candidate, prints a per-task reward grid, totals,
 the Pareto set over (reward mean ↑, cost ↓, wall ↓), and a recommendation.
-Reference candidates (null, oracle) appear in the grid but never in the
-Pareto set or recommendation.
+Reference candidates appear in the grid but never in the Pareto set or
+recommendation: null (floor), oracle (ceiling), and any oneshot-kind probe
+(saturation detector — comparisons here are always agent vs agent, so a
+one-shot can never be the recommended deliverable).
 """
 
 import argparse
 import json
 from pathlib import Path
 
-REFERENCE = {"null", "oracle"}
+REFERENCE_KINDS = {"null", "oracle", "oneshot"}
+COSTLESS_KINDS = {"null", "oracle"}  # cost is structurally absent, not unknown
 
 
 def load_records(paths):
@@ -49,7 +52,7 @@ def aggregate(records):
         c["tasks"].setdefault(r["task_id"], []).append(r["reward"])
         c["walls"].append(r["wall_ms"])
         if r.get("cost_usd") is None:
-            if r["candidate_id"] not in REFERENCE:
+            if r.get("candidate_kind") not in COSTLESS_KINDS:
                 c["cost_known"] = False
         else:
             c["cost"] += r["cost_usd"]
@@ -79,7 +82,7 @@ def _dominates(b, a):
 
 
 def pareto_front(cands):
-    pts = [c for c in cands.values() if c["id"] not in REFERENCE]
+    pts = [c for c in cands.values() if c["kind"] not in REFERENCE_KINDS]
     return sorted(
         (a["id"] for a in pts if not any(_dominates(b, a) for b in pts if b is not a)),
         key=lambda cid: -cands[cid]["reward_mean"],
@@ -149,8 +152,9 @@ def render(cands, front, pick):
         lines.append("No non-reference candidates to recommend.")
     lines.append("")
     lines.append(
-        "_Reference candidates (oracle/null) bound the verifier; they are "
-        "excluded from Pareto and recommendation._"
+        "_References are excluded from Pareto and recommendation: oracle/null "
+        "bound the verifier; the one-shot probe only detects arena saturation. "
+        "Every recommendable candidate is an agent composition._"
     )
     return "\n".join(lines) + "\n"
 

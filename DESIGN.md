@@ -99,20 +99,28 @@ tamper-detection are voided: reward 0, error recorded.
 ### Candidate manifest — `candidates/<id>.toml` (composition.v1)
 
 Slots: `composition = 1`, `id`, `kind` (null | oracle | oneshot | pi — the
-executor; `oneshot` is a baseline adapter, not a peer agent), `model`,
+executor; `oneshot` is a saturation probe, a reference like null/oracle,
+never a candidate), `model`,
 `provider_name`, `prompt_packet` (file reference under `packets/` — the
 primary mutable surface), `thinking`, `tools`, `temperature`, `max_tokens`,
 `timeout_sec`, `env_allowlist`, optional `provider` table for OpenRouter
 routing pinning. The runner computes a **composition hash** over the manifest
 plus the resolved packet text, and captures the harness version (`pi
---version`) per run — attribution is mechanical, not remembered. `null` and
-`oracle` are permanent reference candidates: the floor proves the arena can't
-be passed by silence; the ceiling proves the verifier end-to-end. Run both
-after any arena change, before any model spend.
+--version`) per run — attribution is mechanical, not remembered. Three
+permanent references bound every experiment and are excluded from Pareto
+fronts, recommendations, and parent selection: `null` (floor — the arena
+can't be passed by silence), `oracle` (ceiling — the verifier works
+end-to-end), and the `oneshot` probe (saturation — if one inlined-context
+completion rivals the oracle, the arena cannot rank agent configurations and
+the search aborts). Run all three after any arena change, before any search
+spend.
 
-Experimental discipline: two candidates under comparison should differ in as
-few slots as possible (ideally one). `baseline-oneshot` and `pi-kimi` share a
-model and packet precisely so the delta measures the harness.
+Experimental discipline: comparisons are always agent vs agent — different
+compositions of model, prompt packet, tools, thinking, and hyperparameters.
+Two candidates under comparison should differ in as few slots as possible
+(ideally one). A one-shot is never a comparison arm; this domain's
+deliverable is an agent, so "one-shot vs agent" answers a question nobody is
+asking.
 
 ### Experiment directory — `runs/<exp-id>/`
 
@@ -155,7 +163,8 @@ Automation shrinks the *effort* at a gate, never deletes the gate.
 ## Meta-eval checklist (gate G2)
 
 Before trusting an arena+scorer: oracle scores 1.0; null scores ≈ the
-clean-task fraction; the cheap baseline does not saturate the benchmark; the
+clean-task fraction; the one-shot probe does not saturate the benchmark
+(probe mean ≥ oracle − 0.1 aborts the search by default); the
 clean task penalizes invented findings; known-bad outputs (style nitpicks,
 findings without line numbers, findings on untouched code) score 0; for
 LLM-judge scorers (none yet): two independent judges agree and a human-labeled

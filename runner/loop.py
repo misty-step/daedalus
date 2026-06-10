@@ -6,13 +6,20 @@ incumbent selection) is testable offline. The CLI (bin/daedalus) wires in the
 real runner subprocess and the LLM mutation step.
 """
 
-REFERENCE = {"null", "oracle"}
+REFERENCE_IDS = {"null", "oracle"}
+REFERENCE_KINDS = {"null", "oracle", "oneshot"}
+
+
+def is_reference(cid, stats):
+    """References (floor, ceiling, saturation probe) never compete: not as
+    incumbents, parents, or winners. Comparisons are agent vs agent."""
+    return cid in REFERENCE_IDS or stats.get("kind") in REFERENCE_KINDS
 
 
 def best_candidate(summary):
     """Highest mean reward among non-reference candidates; ties go to the
     cheapest (unknown cost ranks worst)."""
-    real = {cid: v for cid, v in summary.items() if cid not in REFERENCE}
+    real = {cid: v for cid, v in summary.items() if not is_reference(cid, v)}
     if not real:
         raise ValueError("no non-reference candidates in summary")
 

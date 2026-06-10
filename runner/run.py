@@ -328,6 +328,7 @@ def summarize(trials_path):
             r["candidate_id"],
             {
                 "composition_hash": r.get("composition_hash"),
+                "kind": r.get("candidate_kind"),
                 "tasks": {},
                 "trials": 0,
                 "errors": 0,

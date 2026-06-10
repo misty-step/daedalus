@@ -1,0 +1,14 @@
+# Saturation probe (reference, like null/oracle — never a candidate): one
+# chat completion with the whole workspace inlined, no tools, no agent loop.
+# Its only job is the meta-eval question "is this arena too easy?". When the
+# probe approaches the oracle, the arena cannot rank agent configurations and
+# the search aborts. Excluded from Pareto fronts, recommendations, and parent
+# selection by kind.
+composition = 1
+id = "probe-oneshot"
+kind = "oneshot"
+model = "moonshotai/kimi-k2.6"
+prompt_packet = "packets/reviewer-v1.md"
+temperature = 0.2
+max_tokens = 8192
+timeout_sec = 300

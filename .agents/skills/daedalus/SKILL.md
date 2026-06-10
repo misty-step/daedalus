@@ -46,13 +46,19 @@ runner/run.py --candidate candidates/null.toml   --arena arenas/<id>
 
 Oracle must score 1.0 everywhere; null must score exactly the clean-task
 fraction. If either fails, the arena is broken — fix it before any model run.
+Then run the one-shot saturation probe (`candidates/probe-oneshot.toml`): if
+one inlined-context completion rivals the oracle, the arena cannot rank
+agent configurations — fix the arena, do not search it.
 
-## 4. Run baselines, then candidates
+## 4. Run agent candidates
 
-Always run the cheap baseline before anything expensive. Compare candidates
-that differ in as few slots as possible (one is ideal). Equal budgets per
-comparison. Every trial leaves a JSONL run record; never report a result
-without one. Unknown cost is "unknown", never an estimate stated as fact.
+Comparisons are always agent vs agent: compositions differing in model,
+prompt packet, tools, thinking, or hyperparameters. A one-shot is never a
+comparison arm — references (null, oracle, probe) bound the rig and are
+excluded from Pareto and recommendation. Compare candidates that differ in
+as few slots as possible (one is ideal). Equal budgets per comparison. Every
+trial leaves a JSONL run record; never report a result without one. Unknown
+cost is "unknown", never an estimate stated as fact.
 
 The loop is automated: `bin/daedalus run <taskspec>` runs stages 3–6
 (baselines → reflective single-slot search → holdout final → report). Use it

@@ -558,8 +558,8 @@ day, unlocking the Phase 0 prototype:
 - `specs/pr-review/` — first task specification (gate G1 approved).
 - `arenas/pr-review-v0/` — six PR fixtures in Harbor task format.
 - `runner/` — thin Phase 0 runner and deterministic scorer.
-- `candidates/` — null/oracle reference candidates plus the first real
-  compositions (one-shot baseline vs pi-over-OpenRouter).
+- `candidates/` — reference candidates (null floor, oracle ceiling, one-shot
+  saturation probe) plus agent compositions (pi over OpenRouter).
 - `runs/` — JSONL run records with reward, tokens, cost, and latency.
 - `.agents/skills/daedalus/SKILL.md` — the master-agent operating protocol.
 

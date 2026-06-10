@@ -27,8 +27,9 @@ import mutate  # noqa: E402
 import report  # noqa: E402
 from run import summarize  # noqa: E402
 
-BASELINES = ["candidates/baseline-oneshot.toml", "candidates/pi-kimi.toml"]
+BASELINES = ["candidates/pi-kimi.toml"]
 REFERENCES = ["candidates/oracle.toml", "candidates/null.toml"]
+PROBE = "candidates/probe-oneshot.toml"
 
 
 def sh_runner(manifest, arena_dir, exp_dir, split, trials, final=False):
@@ -67,6 +68,12 @@ def main():
     run_p.add_argument("--trials", type=int, default=3)
     run_p.add_argument("--optimizer-model", default="moonshotai/kimi-k2.6")
     run_p.add_argument("--plateau", type=int, default=2)
+    run_p.add_argument(
+        "--allow-saturated",
+        action="store_true",
+        help="search even when the one-shot probe rivals the oracle "
+        "(scores from a saturated arena cannot rank agents)",
+    )
     args = parser.parse_args()
 
     spec = tomllib.loads(Path(args.taskspec).read_text())
@@ -76,13 +83,10 @@ def main():
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     exp_dir = REPO / "runs" / f"{stamp}-search-{spec['id']}"
     exp_dir.mkdir(parents=True)
-    manifests = {
-        "baseline-oneshot": REPO / BASELINES[0],
-        "pi-kimi": REPO / BASELINES[1],
-    }
+    manifests = {"pi-kimi": REPO / BASELINES[0]}
     optimizer_costs = []
 
-    # --- Stage 1: validate the rig (offline reference candidates) ---
+    # --- Stage 1: validate the rig (references + saturation probe) ---
     print("== stage 1: rig validation (oracle ceiling, null floor)", flush=True)
     for ref in REFERENCES:
         sh_runner(REPO / ref, arena_dir, exp_dir, split="all",
@@ -97,6 +101,27 @@ def main():
     # absolute threshold would wrongly reject small arenas with a clean task.)
     if null_mean >= oracle_mean:
         sys.exit(f"rig broken: null scored {null_mean} == oracle (no discrimination)")
+
+    # Saturation probe: one inlined-context completion, no agent loop. If it
+    # rivals the oracle, no score from this arena can rank agent compositions
+    # — searching it would optimize noise (comparisons are agent vs agent).
+    print("== stage 1b: saturation probe (one-shot reference)", flush=True)
+    sh_runner(REPO / PROBE, arena_dir, exp_dir, split="all", trials=1, final=True)
+    rig = summarize(exp_dir / "trials.jsonl")
+    probe_mean = rig["probe-oneshot"]["reward_mean"]
+    saturated = probe_mean >= oracle_mean - 0.1
+    (exp_dir / "rig.json").write_text(json.dumps(
+        {"oracle_mean": oracle_mean, "null_mean": null_mean,
+         "probe_mean": probe_mean, "saturated": saturated}, indent=2))
+    if saturated:
+        print(
+            f"!! ARENA SATURATED: probe scored {probe_mean} vs oracle "
+            f"{oracle_mean}. This arena cannot rank agent configurations.",
+            flush=True,
+        )
+        if not args.allow_saturated:
+            sys.exit("aborting search on a saturated arena "
+                     "(--allow-saturated to override)")
 
     # --- Stage 2: baselines on the search splits ---
     print("== stage 2: baselines on train+validation", flush=True)
@@ -174,7 +199,14 @@ def main():
     cands = report.aggregate(load_records(exp_dir))
     front = report.pareto_front(cands)
     pick = report.recommend(cands, front)
-    (exp_dir / "report.md").write_text(report.render(cands, front, pick))
+    report_text = report.render(cands, front, pick)
+    if saturated:
+        report_text = (
+            "> **WARNING — arena saturated.** The one-shot probe scored "
+            f"{probe_mean} vs oracle {oracle_mean}; rewards here cannot rank "
+            "agent configurations. Fix the arena before trusting this table.\n\n"
+        ) + report_text
+    (exp_dir / "report.md").write_text(report_text)
     (exp_dir / "pareto.json").write_text(json.dumps(
         [
             {

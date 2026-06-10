@@ -17,17 +17,17 @@ but the invariant it violates is documented in `billing/core/discount.py` and
 
 ## Freeze gate (ticket 009 oracle)
 
-Each defective task must show the cheap one-shot baseline scoring < 0.5 while
+Each defective task must show the one-shot saturation probe scoring < 0.5 while
 the oracle scores 1.0 — the evidence that the task genuinely requires context
 rather than diff-only pattern matching. Record per-task results here before
 treating the arena version as frozen.
 
-| task | oracle | one-shot baseline | requires-context proven |
+| task | oracle | one-shot probe | requires-context proven |
 |---|---|---|---|
 | discount-after-tax | 1.0 | **1.0** ($0.0148, 80s) | **NO** |
 | extract-subtotal (clean) | 1.0 | n/a | n/a (FP trap) |
 
-**The freeze gate failed, and that is the finding.** The one-shot baseline
+**The freeze gate failed, and that is the finding.** The one-shot probe
 scored a perfect 1.0 on the cross-file defect, correctly identifying that
 `order_total` violates the discount/tax invariant. Reason: the runner's
 one-shot adapter inlines *every* workspace file (including `SPEC.md` and
