@@ -3,4 +3,3 @@ __pycache__/
 runs/*/artifacts/
 harbor-build/
 jobs/
-runs/*-search-*/

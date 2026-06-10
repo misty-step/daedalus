@@ -1,0 +1,693 @@
+{
+  "oracle": {
+    "composition_hash": "dac86ce481e480d9",
+    "kind": "oracle",
+    "tasks": {
+      "py-live-lock": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          40
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-measure-normalize": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          41
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-padding-clean": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          40
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-progress-speed": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          39
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      }
+    },
+    "trials": 4,
+    "errors": 0,
+    "cost_usd_total": 0.0,
+    "cost_known": false,
+    "reward_mean": 1.0
+  },
+  "null": {
+    "composition_hash": "eaedabf2780259e2",
+    "kind": "null",
+    "tasks": {
+      "py-live-lock": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          30
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-measure-normalize": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          28
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-padding-clean": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          28
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-progress-speed": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          27
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      }
+    },
+    "trials": 4,
+    "errors": 0,
+    "cost_usd_total": 0.0,
+    "cost_known": false,
+    "reward_mean": 0.25
+  },
+  "probe-oneshot": {
+    "composition_hash": "84e313ca2b655104",
+    "kind": "oneshot",
+    "tasks": {
+      "py-live-lock": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          1253
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-measure-normalize": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          1050
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-padding-clean": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          1054
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-progress-speed": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          1372
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      }
+    },
+    "trials": 4,
+    "errors": 4,
+    "cost_usd_total": 0.0,
+    "cost_known": false,
+    "reward_mean": 0.0
+  },
+  "seed1-glm-5-spec-first": {
+    "composition_hash": "ffa1ebbd0a79ab89",
+    "kind": "pi",
+    "tasks": {
+      "py-padding-clean": {
+        "rewards": [
+          1.0,
+          1.0
+        ],
+        "wall_ms": [
+          57947,
+          56843
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-progress-speed": {
+        "rewards": [
+          1.0,
+          1.0
+        ],
+        "wall_ms": [
+          62331,
+          41733
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-measure-normalize": {
+        "rewards": [
+          1.0,
+          1.0
+        ],
+        "wall_ms": [
+          137913,
+          34329
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      }
+    },
+    "trials": 6,
+    "errors": 0,
+    "cost_usd_total": 0.102594,
+    "cost_known": true,
+    "reward_mean": 1.0
+  },
+  "seed2-glm-4-7-flash-test-runner": {
+    "composition_hash": "04eba1523b345086",
+    "kind": "pi",
+    "tasks": {
+      "py-padding-clean": {
+        "rewards": [
+          1.0,
+          1.0
+        ],
+        "wall_ms": [
+          83722,
+          287011
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-progress-speed": {
+        "rewards": [
+          1.0,
+          1.0
+        ],
+        "wall_ms": [
+          28797,
+          250188
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-measure-normalize": {
+        "rewards": [
+          1.0,
+          0.0
+        ],
+        "wall_ms": [
+          115231,
+          600075
+        ],
+        "mean": 0.5,
+        "min": 0.0,
+        "max": 1.0
+      }
+    },
+    "trials": 6,
+    "errors": 1,
+    "cost_usd_total": 0.008536,
+    "cost_known": false,
+    "reward_mean": 0.8333
+  },
+  "seed3-deepseek-v4-flash-trace-callers": {
+    "composition_hash": "c8926d02ec0530fa",
+    "kind": "pi",
+    "tasks": {
+      "py-padding-clean": {
+        "rewards": [
+          1.0,
+          0.0
+        ],
+        "wall_ms": [
+          118081,
+          41790
+        ],
+        "mean": 0.5,
+        "min": 0.0,
+        "max": 1.0
+      },
+      "py-progress-speed": {
+        "rewards": [
+          1.0,
+          1.0
+        ],
+        "wall_ms": [
+          147160,
+          92600
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-measure-normalize": {
+        "rewards": [
+          0.0,
+          0.0
+        ],
+        "wall_ms": [
+          180499,
+          242914
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      }
+    },
+    "trials": 6,
+    "errors": 0,
+    "cost_usd_total": 0.084669,
+    "cost_known": true,
+    "reward_mean": 0.5
+  },
+  "seed4-gpt-5-mini-spec-first": {
+    "composition_hash": "8b6e58f5ead72aea",
+    "kind": "pi",
+    "tasks": {
+      "py-padding-clean": {
+        "rewards": [
+          0.0,
+          1.0
+        ],
+        "wall_ms": [
+          18340,
+          11436
+        ],
+        "mean": 0.5,
+        "min": 0.0,
+        "max": 1.0
+      },
+      "py-progress-speed": {
+        "rewards": [
+          0.0,
+          0.0
+        ],
+        "wall_ms": [
+          23442,
+          24802
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-measure-normalize": {
+        "rewards": [
+          0.0,
+          0.0
+        ],
+        "wall_ms": [
+          18845,
+          19616
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-live-lock": {
+        "rewards": [
+          0.0,
+          0.0
+        ],
+        "wall_ms": [
+          12910,
+          15937
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      }
+    },
+    "trials": 8,
+    "errors": 0,
+    "cost_usd_total": 0.026374,
+    "cost_known": true,
+    "reward_mean": 0.125
+  },
+  "seed5-qwen3-7-plus-test-runner": {
+    "composition_hash": "f645b7dfee3b5b15",
+    "kind": "pi",
+    "tasks": {
+      "py-padding-clean": {
+        "rewards": [
+          1.0,
+          1.0
+        ],
+        "wall_ms": [
+          40448,
+          35716
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-progress-speed": {
+        "rewards": [
+          1.0,
+          1.0
+        ],
+        "wall_ms": [
+          75140,
+          133307
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-measure-normalize": {
+        "rewards": [
+          1.0,
+          1.0
+        ],
+        "wall_ms": [
+          66115,
+          61293
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      }
+    },
+    "trials": 6,
+    "errors": 0,
+    "cost_usd_total": 0.107433,
+    "cost_known": true,
+    "reward_mean": 1.0
+  },
+  "seed6-kimi-k2-6-trace-callers": {
+    "composition_hash": "ba31e6f78e27486b",
+    "kind": "pi",
+    "tasks": {
+      "py-padding-clean": {
+        "rewards": [
+          1.0,
+          1.0
+        ],
+        "wall_ms": [
+          275518,
+          116222
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-progress-speed": {
+        "rewards": [
+          1.0,
+          1.0
+        ],
+        "wall_ms": [
+          301934,
+          378048
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-measure-normalize": {
+        "rewards": [
+          0.0,
+          0.0
+        ],
+        "wall_ms": [
+          600064,
+          471138
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      }
+    },
+    "trials": 6,
+    "errors": 1,
+    "cost_usd_total": 2.13363,
+    "cost_known": false,
+    "reward_mean": 0.6667
+  },
+  "g1a-seed1-glm-5-spec-first": {
+    "composition_hash": "24136eec39b07c57",
+    "kind": "pi",
+    "tasks": {
+      "py-padding-clean": {
+        "rewards": [
+          1.0,
+          1.0
+        ],
+        "wall_ms": [
+          72094,
+          42883
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-progress-speed": {
+        "rewards": [
+          1.0,
+          1.0
+        ],
+        "wall_ms": [
+          58641,
+          37004
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-measure-normalize": {
+        "rewards": [
+          0.0,
+          1.0
+        ],
+        "wall_ms": [
+          64254,
+          93994
+        ],
+        "mean": 0.5,
+        "min": 0.0,
+        "max": 1.0
+      }
+    },
+    "trials": 6,
+    "errors": 0,
+    "cost_usd_total": 0.086128,
+    "cost_known": true,
+    "reward_mean": 0.8333
+  },
+  "g1b-seed1-glm-5-spec-first": {
+    "composition_hash": "44a9aa47e96933ed",
+    "kind": "pi",
+    "tasks": {
+      "py-padding-clean": {
+        "rewards": [
+          1.0,
+          1.0
+        ],
+        "wall_ms": [
+          41844,
+          39211
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-progress-speed": {
+        "rewards": [
+          1.0,
+          1.0
+        ],
+        "wall_ms": [
+          46465,
+          43004
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-measure-normalize": {
+        "rewards": [
+          1.0,
+          1.0
+        ],
+        "wall_ms": [
+          48528,
+          68169
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-live-lock": {
+        "rewards": [
+          1.0,
+          1.0
+        ],
+        "wall_ms": [
+          99226,
+          103175
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      }
+    },
+    "trials": 8,
+    "errors": 0,
+    "cost_usd_total": 0.110485,
+    "cost_known": true,
+    "reward_mean": 1.0
+  },
+  "g2a-g1a-seed1-glm-5-spec-first": {
+    "composition_hash": "275e003efee5ea9d",
+    "kind": "pi",
+    "tasks": {
+      "py-padding-clean": {
+        "rewards": [
+          1.0,
+          1.0
+        ],
+        "wall_ms": [
+          30721,
+          37760
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-progress-speed": {
+        "rewards": [
+          1.0,
+          1.0
+        ],
+        "wall_ms": [
+          62498,
+          55904
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-measure-normalize": {
+        "rewards": [
+          0.0,
+          0.0
+        ],
+        "wall_ms": [
+          348132,
+          84464
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      }
+    },
+    "trials": 6,
+    "errors": 0,
+    "cost_usd_total": 0.177195,
+    "cost_known": true,
+    "reward_mean": 0.6667
+  },
+  "g2b-g1b-seed1-glm-5-spec-first": {
+    "composition_hash": "1268d01355e9cd85",
+    "kind": "pi",
+    "tasks": {
+      "py-padding-clean": {
+        "rewards": [
+          1.0,
+          1.0
+        ],
+        "wall_ms": [
+          36514,
+          41613
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-progress-speed": {
+        "rewards": [
+          1.0,
+          1.0
+        ],
+        "wall_ms": [
+          42471,
+          39324
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-measure-normalize": {
+        "rewards": [
+          0.0,
+          0.0
+        ],
+        "wall_ms": [
+          91070,
+          109825
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      }
+    },
+    "trials": 6,
+    "errors": 0,
+    "cost_usd_total": 0.0883,
+    "cost_known": true,
+    "reward_mean": 0.6667
+  }
+}

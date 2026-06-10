@@ -1,0 +1,8 @@
+composition = 1
+kind = "oneshot"
+model = "moonshotai/kimi-k2.6"
+prompt_packet = "/Users/phaedrus/Development/daedalus/runs/20260610T033939Z-search-pr-review-v0/packets/gen1-baseline-oneshot.md"
+temperature = 0.2
+max_tokens = 8192
+timeout_sec = 300
+id = "gen1-baseline-oneshot"

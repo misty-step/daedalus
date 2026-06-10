@@ -1,0 +1,21 @@
+{
+  "stop_reason": "proposal-failures",
+  "history": [
+    {
+      "generation": 1,
+      "parent_id": "baseline-oneshot",
+      "proposal_error": "optimizer call failed after 3 attempts: optimizer returned empty content"
+    },
+    {
+      "generation": 2,
+      "parent_id": "baseline-oneshot",
+      "proposal_error": "optimizer call failed after 3 attempts: optimizer returned empty content"
+    }
+  ],
+  "best_id": "baseline-oneshot",
+  "spend_known_usd": 0.1797,
+  "recommended": "baseline-oneshot",
+  "pareto_front": [
+    "baseline-oneshot"
+  ]
+}

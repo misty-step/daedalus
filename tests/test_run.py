@@ -145,6 +145,10 @@ def test_oracle_scores_one_everywhere_offline(tmp_path):
     exp_dir = next(tmp_path.iterdir())
     snapshot = json.loads((exp_dir / "compositions" / "oracle.json").read_text())
     assert snapshot["composition_hash"] == records[0]["composition_hash"]
+    # Committed index names the gitignored artifacts, one line per trial.
+    index_lines = (exp_dir / "artifacts.index").read_text().splitlines()
+    assert len(index_lines) == 6
+    assert records[0]["artifacts"] in index_lines[0]
     summary = json.loads((exp_dir / "summary.json").read_text())
     assert summary["oracle"]["reward_mean"] == 1.0
     assert summary["oracle"]["tasks"]["py-auth-sqli"]["rewards"] == [1.0]

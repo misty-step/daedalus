@@ -132,6 +132,14 @@ asking.
 - `summary.json` — per-candidate, per-task reward distributions
   (rewards list, mean/min/max, wall, cost totals)
 
+Retention rule: run *records* (trials.jsonl, compositions/, summary.json,
+rig/seed/loop/pareto JSON, report.md, lineage.md, packets/, manifests/,
+artifacts.index) are committed; heavy *artifacts* (transcripts, responses,
+findings copies under `artifacts/`) are gitignored local evidence, named per
+trial in the committed `artifacts.index` so a record always says what
+existed even after a local flush. A multi-candidate experiment's records
+stay under ~100KB; artifacts can run to hundreds of MB and never enter git.
+
 Trial record fields: `run_id, ts_start, ts_end, wall_ms, runner_version,
 arena_id, arena_version, taskspec, task_id, trial, candidate_id,
 candidate_kind, composition_hash, harness_version, model, provider_served,

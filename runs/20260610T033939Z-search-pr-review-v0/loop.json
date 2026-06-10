@@ -1,0 +1,33 @@
+{
+  "stop_reason": "plateau",
+  "history": [
+    {
+      "child_id": "gen1-baseline-oneshot",
+      "parent_id": "baseline-oneshot",
+      "slot_changed": "prompt_packet",
+      "hypothesis": "The current prompt allows verbose descriptions that inflate token count and cost without improving reward; adding a strict one-sentence limit per finding will reduce generated tokens and lower cost while preserving the correctness already demonstrated.",
+      "optimizer_cost_usd": 0.0361167975,
+      "generation": 1,
+      "parent_reward_mean": 1.0,
+      "reward_mean": 1.0,
+      "improved": false
+    },
+    {
+      "child_id": "gen2-baseline-oneshot",
+      "parent_id": "baseline-oneshot",
+      "slot_changed": "prompt_packet",
+      "hypothesis": "The current prompt references a JSON contract but never defines the required schema or prohibits markdown wrapping, which risks parser failures or verbose output on harder diffs; hard-coding the exact JSON schema and raw-output rule into the system prompt ensures the model emits compact, valid, parser-friendly output every time.",
+      "optimizer_cost_usd": 0.04401655,
+      "generation": 2,
+      "parent_reward_mean": 1.0,
+      "reward_mean": 0.75,
+      "improved": false
+    }
+  ],
+  "best_id": "baseline-oneshot",
+  "spend_known_usd": 0.303,
+  "recommended": "baseline-oneshot",
+  "pareto_front": [
+    "baseline-oneshot"
+  ]
+}

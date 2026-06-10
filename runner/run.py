@@ -545,6 +545,10 @@ def main():
             if findings_file.exists():
                 shutil.copy(findings_file, art_dir / "findings.json")
             record["artifacts"] = str(art_dir.relative_to(exp_dir))
+            # Committed index of local-only evidence: artifacts/ is
+            # gitignored, so the index names what existed for each trial.
+            with open(exp_dir / "artifacts.index", "a") as idx:
+                idx.write(f"{record['run_id']}\t{record['artifacts']}\n")
             shutil.rmtree(workdir, ignore_errors=True)
 
             with open(trials_path, "a") as f:

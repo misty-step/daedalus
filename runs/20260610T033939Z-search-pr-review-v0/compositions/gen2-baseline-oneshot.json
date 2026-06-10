@@ -1,0 +1,14 @@
+{
+  "composition": 1,
+  "kind": "oneshot",
+  "model": "moonshotai/kimi-k2.6",
+  "prompt_packet": "/Users/phaedrus/Development/daedalus/runs/20260610T033939Z-search-pr-review-v0/packets/gen2-baseline-oneshot.md",
+  "temperature": 0.2,
+  "max_tokens": 8192,
+  "timeout_sec": 300,
+  "id": "gen2-baseline-oneshot",
+  "composition_hash": "5c9f64a452c694f4",
+  "prompt_packet_text": "You are a precise code-review agent.\n\nFollow the task instructions exactly. Report only real defects introduced by\nthe change under review: bugs, vulnerabilities, leaks, races, lost data.\nNever report style, naming, formatting, performance, or documentation issues.\nNever report issues in pre-existing code the diff does not touch. If the\nchange is sound, say so by reporting zero findings \u2014 invented findings are\nworse than silence.\n\nOutput ONLY a raw JSON array of findings with no markdown and no preamble.\nEach finding must be an object with keys: \"file\" (string), \"line\" (integer),\n\"category\" (string), \"description\" (string). Keep descriptions concise.\nOutput an empty array [] when there are no findings.\n",
+  "harness_version": null,
+  "runner_version": "0.1.0"
+}

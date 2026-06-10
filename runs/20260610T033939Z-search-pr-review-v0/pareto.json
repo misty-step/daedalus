@@ -1,0 +1,10 @@
+[
+  {
+    "candidate_id": "baseline-oneshot",
+    "composition_hash": "546acf97c8be1b1a",
+    "reward_mean": 1.0,
+    "cost_usd_total": 0.0345,
+    "wall_mean_s": 57.0,
+    "recommended": true
+  }
+]
