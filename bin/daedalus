@@ -5,10 +5,12 @@
         [--budget-usd 2.0] [--max-candidates 6] [--trials 3] \
         [--optimizer-model moonshotai/kimi-k2.6] [--arena PATH]
 
-Stages: validate rig (oracle/null) → baselines on train+validation →
-reflective single-slot search loop → holdout final for the Pareto front →
-report.md + pareto.json + loop.json. Stops at budget, plateau, proposal
-failures, or the candidate cap.
+Stages: validate rig (oracle/null + one-shot saturation probe) → seed a
+diverse agent population from the taskspec [search] space → reflective
+single-slot search loop → holdout final for the Pareto front → report.md +
+pareto.json + loop.json. Stops at budget, plateau, proposal failures, or the
+candidate cap. Comparisons are agent vs agent throughout; references never
+compete.
 """
 
 import argparse
@@ -25,11 +27,14 @@ sys.path.insert(0, str(REPO / "runner"))
 import loop  # noqa: E402
 import mutate  # noqa: E402
 import report  # noqa: E402
+import seed  # noqa: E402
 from run import summarize  # noqa: E402
 
-BASELINES = ["candidates/pi-kimi.toml"]
 REFERENCES = ["candidates/oracle.toml", "candidates/null.toml"]
 PROBE = "candidates/probe-oneshot.toml"
+# Fraction of the budget the landscape scan may consume before the
+# reflective search takes over.
+SEED_BUDGET_FRACTION = 0.6
 
 
 def sh_runner(manifest, arena_dir, exp_dir, split, trials, final=False):
@@ -74,6 +79,11 @@ def main():
         help="search even when the one-shot probe rivals the oracle "
         "(scores from a saturated arena cannot rank agents)",
     )
+    run_p.add_argument(
+        "--rng-seed",
+        type=int,
+        help="fix the seed-sampling RNG for a reproducible landscape scan",
+    )
     args = parser.parse_args()
 
     spec = tomllib.loads(Path(args.taskspec).read_text())
@@ -83,7 +93,7 @@ def main():
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     exp_dir = REPO / "runs" / f"{stamp}-search-{spec['id']}"
     exp_dir.mkdir(parents=True)
-    manifests = {"pi-kimi": REPO / BASELINES[0]}
+    manifests = {}
     optimizer_costs = []
 
     # --- Stage 1: validate the rig (references + saturation probe) ---
@@ -123,11 +133,36 @@ def main():
             sys.exit("aborting search on a saturated arena "
                      "(--allow-saturated to override)")
 
-    # --- Stage 2: baselines on the search splits ---
-    print("== stage 2: baselines on train+validation", flush=True)
-    for cid, manifest in manifests.items():
+    # --- Stage 2: seed a diverse agent population from the search space ---
+    print("== stage 2: seed population (landscape scan)", flush=True)
+    seeds, seed_meta = seed.seed_population(
+        spec,
+        args.optimizer_model,
+        packets_dir=exp_dir / "packets",
+        manifests_dir=exp_dir / "manifests",
+        rng_seed=args.rng_seed,
+    )
+    optimizer_costs.extend(seed_meta["optimizer_costs"])
+    (exp_dir / "seed.json").write_text(json.dumps(seed_meta, indent=2))
+    print(f"  rng_seed={seed_meta['rng_seed']}  seeds={len(seeds)}", flush=True)
+    seed_budget = (args.budget_usd or 0) * SEED_BUDGET_FRACTION or None
+    for sid, manifest in seeds:
+        if seed_budget is not None:
+            spent = loop.known_spend(
+                summarize(exp_dir / "trials.jsonl"), optimizer_costs
+            )
+            if spent >= seed_budget:
+                print(
+                    f"  seed budget ${seed_budget:.2f} reached "
+                    f"(${spent:.4f} spent); stopping before {sid}",
+                    flush=True,
+                )
+                break
+        manifests[sid] = manifest
         for split in ("train", "validation"):
             sh_runner(manifest, arena_dir, exp_dir, split, args.trials)
+    if not manifests:
+        sys.exit("no seeds ran within the seed budget; raise --budget-usd")
 
     # --- Stage 3: the search loop ---
     print("== stage 3: reflective search", flush=True)

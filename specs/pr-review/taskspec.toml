@@ -41,3 +41,24 @@ bad = [
   "flagging pre-existing code the diff does not touch",
   "inventing findings on a clean change",
 ]
+
+# The candidate space the seeder samples and the mutator moves within.
+# Values must exist in docs/primitives.md (live-verified model pool).
+[search]
+models = [
+  "deepseek/deepseek-v4-flash",
+  "z-ai/glm-4.7-flash",
+  "openai/gpt-5-mini",
+  "moonshotai/kimi-k2.6",
+  "z-ai/glm-5",
+  "qwen/qwen3.7-plus",
+]
+thinking_levels = ["off", "low", "medium", "high"]
+packet_stances = 3
+seed_count = 6
+base_packet = "packets/reviewer-v1.md"
+
+[search.tool_policies]
+full = ["read", "bash", "edit", "write"]
+explore = ["read", "bash"]
+"no-exec" = ["read", "edit", "write"]
