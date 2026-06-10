@@ -74,9 +74,9 @@ def select_tasks(arena_dir, arena, split, task_filter, final):
     split_cfg = arena.get("split") or {}
     if split != "all":
         ids = split_cfg.get(split)
-        if not ids:
+        if ids is None:
             sys.exit(f"arena declares no '{split}' split")
-        allowed = set(ids)
+        allowed = set(ids)  # a declared-but-empty split selects no tasks
     else:
         allowed = None
     task_dirs = [

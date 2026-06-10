@@ -202,6 +202,21 @@ def test_full_arena_without_final_is_refused(tmp_path):
     assert "holdout" in proc.stderr
 
 
+def test_declared_empty_holdout_returns_no_tasks():
+    # pr-review-v1 declares holdout = []; that is valid and selects nothing,
+    # rather than crashing the loop's final-evaluation stage.
+    arena_dir = REPO / "arenas" / "pr-review-v1"
+    arena = runner.load_toml(arena_dir / "arena.toml")
+    assert runner.select_tasks(arena_dir, arena, "holdout", None, True) == []
+
+
+def test_undeclared_split_errors():
+    arena_dir = REPO / "arenas" / "pr-review-v1"
+    arena = runner.load_toml(arena_dir / "arena.toml")
+    with pytest.raises(SystemExit):
+        runner.select_tasks(arena_dir, arena, "nonsense", None, False)
+
+
 def test_train_split_runs_without_final(tmp_path):
     proc = invoke_runner("null", tmp_path, "--split", "train")
     assert proc.returncode == 0, proc.stderr

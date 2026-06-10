@@ -6,6 +6,7 @@ disposes. Frozen slots (harness kind, tools, env) cannot be mutated in V1.
 
 import json
 import os
+import time
 import urllib.request
 from pathlib import Path
 
@@ -82,7 +83,9 @@ def build_prompt(taskspec, parent_snapshot, trials_evidence, archive_summary):
     )
 
 
-def call_optimizer(prompt, model, timeout=180):
+def call_optimizer(prompt, model, timeout=180, retries=3):
+    """Call the optimizer model, retrying transient errors with backoff so a
+    flaky network does not consume the loop's proposal-failure budget."""
     key = os.environ.get("OPENROUTER_API_KEY")
     if not key:
         raise RuntimeError("OPENROUTER_API_KEY is not set")
@@ -93,16 +96,28 @@ def call_optimizer(prompt, model, timeout=180):
         "max_tokens": 4096,
         "usage": {"include": True},
     }
-    req = urllib.request.Request(
-        OPENROUTER_URL,
-        data=json.dumps(body).encode(),
-        headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
-    )
-    with urllib.request.urlopen(req, timeout=timeout) as resp:
-        payload = json.loads(resp.read())
-    content = payload["choices"][0]["message"]["content"]
-    cost = (payload.get("usage") or {}).get("cost")
-    return content, cost
+    last_exc = None
+    for attempt in range(retries):
+        req = urllib.request.Request(
+            OPENROUTER_URL,
+            data=json.dumps(body).encode(),
+            headers={
+                "Authorization": f"Bearer {key}",
+                "Content-Type": "application/json",
+            },
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                payload = json.loads(resp.read())
+            content = payload["choices"][0]["message"]["content"]
+            if not content:
+                raise RuntimeError("optimizer returned empty content")
+            return content, (payload.get("usage") or {}).get("cost")
+        except Exception as exc:  # noqa: BLE001 - transient; retry with backoff
+            last_exc = exc
+            if attempt < retries - 1:
+                time.sleep(2 ** attempt)
+    raise RuntimeError(f"optimizer call failed after {retries} attempts: {last_exc}")
 
 
 def parse_proposal(text):

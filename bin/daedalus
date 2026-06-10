@@ -156,13 +156,18 @@ def main():
         plateau_limit=args.plateau,
     )
 
-    # --- Stage 4: holdout final for the Pareto front ---
-    print("== stage 4: holdout final evaluation", flush=True)
+    # --- Stage 4: holdout final for the Pareto front (skip if no holdout) ---
+    holdout_ids = (tomllib.loads((arena_dir / "arena.toml").read_text())
+                   .get("split", {}).get("holdout") or [])
     cands = report.aggregate(load_records(exp_dir))
     front = report.pareto_front(cands)
-    for cid in front:
-        sh_runner(manifests[cid], arena_dir, exp_dir, "holdout",
-                  args.trials, final=True)
+    if holdout_ids:
+        print("== stage 4: holdout final evaluation", flush=True)
+        for cid in front:
+            sh_runner(manifests[cid], arena_dir, exp_dir, "holdout",
+                      args.trials, final=True)
+    else:
+        print("== stage 4: skipped (arena declares no holdout tasks)", flush=True)
 
     # --- Stage 5: report + receipts ---
     print("== stage 5: report", flush=True)
