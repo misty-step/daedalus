@@ -562,3 +562,20 @@ day, unlocking the Phase 0 prototype:
   compositions (one-shot baseline vs pi-over-OpenRouter).
 - `runs/` — JSONL run records with reward, tokens, cost, and latency.
 - `.agents/skills/daedalus/SKILL.md` — the master-agent operating protocol.
+
+### Quickstart
+
+```sh
+bin/gate                                   # offline tests (grader + runner)
+
+# One candidate against the arena (local, fast, no Docker):
+runner/run.py --candidate candidates/pi-kimi.toml --arena arenas/pr-review-v0 --final
+
+# Autonomous search: spec in, Pareto archive + comparison report out:
+bin/daedalus run specs/pr-review/taskspec.toml --budget-usd 2 --max-candidates 6
+
+# Same arena under real Docker isolation via Harbor (built-in pi agent):
+bin/harbor-run arenas/pr-review-v0 py-auth-sqli --agent oracle
+```
+
+`runner/report.py runs/<exp-id>` renders a comparison report from any run.

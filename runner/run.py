@@ -211,6 +211,11 @@ def run_oneshot(candidate, instruction, task_dir, workdir, record):
     )
     record["cost_usd"] = usage.get("cost")
     content = payload["choices"][0]["message"]["content"]
+    if not content:
+        raise RuntimeError(
+            "model returned empty content "
+            f"(finish_reason={payload['choices'][0].get('finish_reason')})"
+        )
     record["_response_text"] = content
     findings = extract_json_object(content)
     (workdir / "findings.json").write_text(json.dumps(findings, indent=2))
