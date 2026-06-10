@@ -15,13 +15,30 @@ MVP = backlog 001 002 003 005 006 007 008 (core) + 004 009 (isolation +
 non-one-shot arena) with 010 (judge family) wanted but droppable. 011–015 are
 post-MVP unless evidence promotes them.
 
-Status (2026-06-09): core machinery 001–008 + 004 built, gate-green, and
-live-validated (Harbor pi in Docker: reward 0.300, 0 exceptions; oracle 1.000;
-mutation step proposes valid single-slot changes with hypotheses; report emits
-Pareto + recommendation). 009 surfaced a real finding — synthetic cross-file
-defects do NOT defeat the one-shot baseline (it inlines every file), so a
-genuinely non-one-shot arena needs a large repo or execution (backlog 015).
-The freeze gate correctly kept pr-review-v1 unfrozen.
+Status (2026-06-09): **MVP reached.** Core machinery 001–009 built, gate-green
+(60 tests), and live-validated end-to-end:
+
+- `bin/daedalus run` completes the full pipeline unattended (rig → baselines →
+  reflective single-slot search → holdout/skip → report.md + pareto.json +
+  loop.json), demonstrated proposing two prompt-packet mutations with
+  hypotheses, running them as hashed child candidates, and plateau-stopping.
+- Harbor Docker isolation proven: oracle 1.000, pi 0.300 single-task, and a
+  full 6-task × 5-attempt pi run at mean 0.663.
+- First lab finding: on the (saturated) pr-review-v1 arena the cheap one-shot
+  ties the agentic harness at 1.7× lower cost, so threshold-then-cheap mode
+  correctly recommends the baseline.
+
+Live runs surfaced and fixed four real bugs (rig discrimination threshold,
+empty-holdout crash, optimizer transient-retry, reasoning-model token
+headroom) — each now gate-protected.
+
+009 finding retained: synthetic cross-file defects do NOT defeat the one-shot
+baseline (it inlines every file), so a genuinely non-one-shot arena needs a
+large repo or execution (backlog 015). The freeze gate correctly kept
+pr-review-v1 unfrozen.
+
+Remaining backlog (post-MVP): 010 judge family, 011 adjudication, 012 visual-QA
+spike, 013 runs retention, 014 Langfuse, 015 non-one-shot arena mechanism.
 
 ## Phase 0 — Prose-first pilot (current)
 
@@ -40,8 +57,9 @@ The loop run by hand, every interface a file, zero framework dependencies.
 - [ ] G2 meta-eval review of arena quality — report drafted at
       `approvals/G2-pr-review-v0.md`, awaiting human sign-off
 
-**Exit:** the eval discriminates (oracle > agentic > one-shot-or-null
-ordering is interpretable), and run records capture cost/tokens/latency.
+**Exit (met):** the eval discriminates (oracle > agentic > one-shot > null
+ordering interpretable), run records capture cost/tokens/latency, and the
+autonomous loop produces a Pareto archive + comparison report unattended.
 
 ## Phase 1 — Harbor adoption
 
