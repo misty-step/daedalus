@@ -13,27 +13,56 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parent.parent
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 
-MUTABLE_SLOTS = {"prompt_packet", "model", "thinking", "temperature", "max_tokens"}
+# temperature/max_tokens are NOT mutable: pi exposes no flag for either
+# (docs/primitives.md), so mutating them would change the composition hash
+# without changing behavior — false attribution by construction.
+MUTABLE_SLOTS = {"prompt_packet", "model", "thinking", "tools"}
 THINKING_LEVELS = {"off", "minimal", "low", "medium", "high", "xhigh"}
 
-PROPOSAL_INSTRUCTIONS = """\
-You are the search step of an agent-optimization loop. Your job: propose
-EXACTLY ONE change to ONE slot of the candidate composition below, grounded
-in the failure evidence. Single-variable experiments only — never change two
-things.
 
-Mutable slots and value rules:
-- "prompt_packet": value is the FULL replacement packet text (system-prompt
-  guidance for the review agent). Most mutations should target this slot.
-- "model": value is an OpenRouter model id string.
-- "thinking": one of off|minimal|low|medium|high|xhigh.
-- "temperature": number in [0, 2].
-- "max_tokens": integer in [256, 32768].
-
-Respond with ONLY a JSON object:
-{"slot": "<slot>", "value": <value>, "hypothesis": "<one or two sentences:
-what failure this addresses and why this change should fix it>"}
-"""
+def proposal_instructions(tool_policies=None, allowed_models=None,
+                          avoid_slots=()):
+    """Compose the slot menu from the taskspec's declared search space, so
+    the optimizer can only propose values the space contains."""
+    lines = [
+        "You are the search step of an agent-optimization loop. Your job: "
+        "propose",
+        "EXACTLY ONE change to ONE slot of the candidate composition below, "
+        "grounded",
+        "in the failure evidence. Single-variable experiments only — never "
+        "change two",
+        "things.",
+        "",
+        "Mutable slots and value rules:",
+        '- "prompt_packet": value is the FULL replacement packet text '
+        "(system-prompt",
+        "  guidance for the review agent). Most mutations should target this "
+        "slot.",
+    ]
+    if allowed_models:
+        lines.append(f'- "model": one of {json.dumps(sorted(allowed_models))}.')
+    else:
+        lines.append('- "model": an OpenRouter model id string.')
+    lines.append('- "thinking": one of off|minimal|low|medium|high|xhigh.')
+    if tool_policies:
+        lines.append(
+            f'- "tools": one of the named tool policies '
+            f"{json.dumps(sorted(tool_policies))} (value is the policy name)."
+        )
+    if avoid_slots:
+        lines += [
+            "",
+            "Competing hypotheses this generation already target: "
+            f"{sorted(set(avoid_slots))}. Propose a DIFFERENT slot.",
+        ]
+    lines += [
+        "",
+        "Respond with ONLY a JSON object:",
+        '{"slot": "<slot>", "value": <value>, "hypothesis": "<one or two '
+        "sentences:",
+        'what failure this addresses and why this change should fix it>"}',
+    ]
+    return "\n".join(lines)
 
 
 def worst_trials(records, candidate_id, n=3):
@@ -62,13 +91,14 @@ def evidence_block(trials, exp_dir, transcript_chars=3000):
     return "\n".join(parts)
 
 
-def build_prompt(taskspec, parent_snapshot, trials_evidence, archive_summary):
+def build_prompt(taskspec, parent_snapshot, trials_evidence, archive_summary,
+                 instructions=None):
     slots = {
         k: parent_snapshot.get(k)
-        for k in ("model", "thinking", "temperature", "max_tokens", "kind")
+        for k in ("model", "thinking", "tools", "kind")
     }
     return (
-        PROPOSAL_INSTRUCTIONS
+        (instructions or proposal_instructions())
         + "\n## Task\n"
         + f"goal: {taskspec.get('goal')}\nmode: {taskspec.get('mode')}\n"
         + "\n## Candidate composition (parent)\n"
@@ -157,13 +187,20 @@ def parse_proposal(text):
     raise ValueError("optimizer returned no parseable proposal")
 
 
-def validate_proposal(proposal, parent_manifest):
-    """Reject anything that is not a well-formed single-slot mutation."""
+def validate_proposal(proposal, parent_manifest, tool_policies=None,
+                      allowed_models=None, avoid_slots=()):
+    """Reject anything that is not a well-formed single-slot mutation drawn
+    from the declared search space."""
     slot = proposal.get("slot")
     value = proposal.get("value")
     hypothesis = proposal.get("hypothesis")
     if slot not in MUTABLE_SLOTS:
         raise ValueError(f"slot '{slot}' is not mutable (allowed: {sorted(MUTABLE_SLOTS)})")
+    if slot in avoid_slots:
+        raise ValueError(
+            f"slot '{slot}' already targeted by a competing hypothesis "
+            "this generation"
+        )
     if not hypothesis or not str(hypothesis).strip():
         raise ValueError("proposal missing hypothesis")
     if slot == "prompt_packet":
@@ -172,6 +209,10 @@ def validate_proposal(proposal, parent_manifest):
     elif slot == "model":
         if not isinstance(value, str) or "/" not in value:
             raise ValueError("model value must be an OpenRouter model id")
+        if allowed_models and value not in allowed_models:
+            raise ValueError(
+                f"model '{value}' is outside the declared search space"
+            )
         if value == parent_manifest.get("model"):
             raise ValueError("model mutation must differ from parent")
     elif slot == "thinking":
@@ -179,21 +220,23 @@ def validate_proposal(proposal, parent_manifest):
             raise ValueError(f"thinking must be one of {sorted(THINKING_LEVELS)}")
         if value == parent_manifest.get("thinking"):
             raise ValueError("thinking mutation must differ from parent")
-    elif slot == "temperature":
-        if not isinstance(value, (int, float)) or not 0 <= value <= 2:
-            raise ValueError("temperature must be a number in [0, 2]")
-        if value == parent_manifest.get("temperature"):
-            raise ValueError("temperature mutation must differ from parent")
-    elif slot == "max_tokens":
-        if not isinstance(value, int) or not 256 <= value <= 32768:
-            raise ValueError("max_tokens must be an int in [256, 32768]")
-        if value == parent_manifest.get("max_tokens"):
-            raise ValueError("max_tokens mutation must differ from parent")
+    elif slot == "tools":
+        if not tool_policies:
+            raise ValueError("tools mutation requires declared tool_policies")
+        if value not in tool_policies:
+            raise ValueError(
+                f"tools value must be a policy name from {sorted(tool_policies)}"
+            )
+        if list(tool_policies[value]) == list(parent_manifest.get("tools") or []):
+            raise ValueError("tools mutation must differ from parent")
     return slot, value, str(hypothesis).strip()
 
 
-def build_child(parent_manifest, slot, value, child_id, packets_dir):
-    """Materialize the child manifest (and packet file when mutated)."""
+def build_child(parent_manifest, slot, value, child_id, packets_dir,
+                tool_policies=None):
+    """Materialize the child manifest (and packet file when mutated). A
+    tools mutation carries the policy *name* as value; the manifest gets the
+    resolved tool list."""
     child = {
         k: v
         for k, v in parent_manifest.items()
@@ -205,6 +248,8 @@ def build_child(parent_manifest, slot, value, child_id, packets_dir):
         packet_path = packets_dir / f"{child_id}.md"
         packet_path.write_text(value if value.endswith("\n") else value + "\n")
         child["prompt_packet"] = str(packet_path)
+    elif slot == "tools":
+        child["tools"] = list(tool_policies[value])
     else:
         child[slot] = value
     return child
@@ -228,7 +273,8 @@ def write_manifest(child, path):
 
 def propose(taskspec, parent_snapshot, parent_manifest, records, exp_dir,
             child_id, optimizer_model, packets_dir, manifests_dir,
-            archive_summary=None):
+            archive_summary=None, tool_policies=None, allowed_models=None,
+            avoid_slots=()):
     """Full step: evidence → LLM proposal → validation → child on disk.
     Returns (manifest_path, metadata)."""
     trials = worst_trials(records, parent_snapshot["id"])
@@ -237,17 +283,29 @@ def propose(taskspec, parent_snapshot, parent_manifest, records, exp_dir,
         parent_snapshot,
         evidence_block(trials, exp_dir),
         archive_summary=archive_summary or {},
+        instructions=proposal_instructions(
+            tool_policies=tool_policies,
+            allowed_models=allowed_models,
+            avoid_slots=avoid_slots,
+        ),
     )
     content, cost = call_optimizer(prompt, optimizer_model)
     proposal = parse_proposal(content)
-    slot, value, hypothesis = validate_proposal(proposal, parent_manifest)
-    child = build_child(parent_manifest, slot, value, child_id, packets_dir)
+    slot, value, hypothesis = validate_proposal(
+        proposal, parent_manifest,
+        tool_policies=tool_policies,
+        allowed_models=allowed_models,
+        avoid_slots=avoid_slots,
+    )
+    child = build_child(parent_manifest, slot, value, child_id, packets_dir,
+                        tool_policies=tool_policies)
     manifests_dir.mkdir(parents=True, exist_ok=True)
     manifest_path = write_manifest(child, manifests_dir / f"{child_id}.toml")
     meta = {
         "child_id": child_id,
         "parent_id": parent_snapshot["id"],
         "slot_changed": slot,
+        "value_summary": value if slot != "prompt_packet" else "(new packet)",
         "hypothesis": hypothesis,
         "optimizer_cost_usd": cost,
     }

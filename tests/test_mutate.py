@@ -17,7 +17,13 @@ PARENT = {
     "model": "moonshotai/kimi-k2.6",
     "prompt_packet": "packets/reviewer-v1.md",
     "thinking": "medium",
+    "tools": ["read", "bash", "edit", "write"],
     "timeout_sec": 600,
+}
+
+POLICIES = {
+    "full": ["read", "bash", "edit", "write"],
+    "explore": ["read", "bash"],
 }
 
 
@@ -33,7 +39,10 @@ def test_parse_proposal_with_fences_and_braces_in_strings():
 
 
 def test_validate_rejects_unknown_and_frozen_slots():
-    for slot in ("kind", "tools", "env_allowlist", "nonsense"):
+    # temperature/max_tokens are frozen: pi has no flag for them, so a
+    # "mutation" there changes the hash without changing behavior.
+    for slot in ("kind", "env_allowlist", "temperature", "max_tokens",
+                 "nonsense"):
         with pytest.raises(ValueError, match="not mutable"):
             mutate.validate_proposal(
                 {"slot": slot, "value": "x", "hypothesis": "h"}, PARENT
@@ -59,22 +68,60 @@ def test_validate_rejects_thin_packet_and_missing_hypothesis():
         )
     with pytest.raises(ValueError, match="hypothesis"):
         mutate.validate_proposal(
-            {"slot": "temperature", "value": 0.5, "hypothesis": " "}, PARENT
+            {"slot": "thinking", "value": "high", "hypothesis": " "}, PARENT
         )
 
 
 def test_validate_bounds():
     with pytest.raises(ValueError):
         mutate.validate_proposal(
-            {"slot": "temperature", "value": 3.0, "hypothesis": "h"}, PARENT
-        )
-    with pytest.raises(ValueError):
-        mutate.validate_proposal(
-            {"slot": "max_tokens", "value": 64, "hypothesis": "h"}, PARENT
-        )
-    with pytest.raises(ValueError):
-        mutate.validate_proposal(
             {"slot": "thinking", "value": "ultra", "hypothesis": "h"}, PARENT
+        )
+
+
+def test_validate_model_must_be_in_search_space():
+    with pytest.raises(ValueError, match="search space"):
+        mutate.validate_proposal(
+            {"slot": "model", "value": "made-up/model", "hypothesis": "h"},
+            PARENT,
+            allowed_models=["z-ai/glm-5", "moonshotai/kimi-k2.6"],
+        )
+    slot, value, _ = mutate.validate_proposal(
+        {"slot": "model", "value": "z-ai/glm-5", "hypothesis": "h"},
+        PARENT,
+        allowed_models=["z-ai/glm-5", "moonshotai/kimi-k2.6"],
+    )
+    assert (slot, value) == ("model", "z-ai/glm-5")
+
+
+def test_validate_tools_policy_mutation():
+    # Unknown policy name rejected; same-as-parent rejected; valid accepted.
+    with pytest.raises(ValueError, match="policy name"):
+        mutate.validate_proposal(
+            {"slot": "tools", "value": "yolo", "hypothesis": "h"},
+            PARENT, tool_policies=POLICIES,
+        )
+    with pytest.raises(ValueError, match="differ from parent"):
+        mutate.validate_proposal(
+            {"slot": "tools", "value": "full", "hypothesis": "h"},
+            PARENT, tool_policies=POLICIES,
+        )
+    with pytest.raises(ValueError, match="tool_policies"):
+        mutate.validate_proposal(
+            {"slot": "tools", "value": "explore", "hypothesis": "h"}, PARENT
+        )
+    slot, value, _ = mutate.validate_proposal(
+        {"slot": "tools", "value": "explore", "hypothesis": "h"},
+        PARENT, tool_policies=POLICIES,
+    )
+    assert (slot, value) == ("tools", "explore")
+
+
+def test_validate_rejects_slot_taken_by_competing_hypothesis():
+    with pytest.raises(ValueError, match="competing"):
+        mutate.validate_proposal(
+            {"slot": "thinking", "value": "high", "hypothesis": "h"},
+            PARENT, avoid_slots=("thinking",),
         )
 
 
@@ -113,6 +160,13 @@ def test_build_child_scalar_mutation(tmp_path):
     child = mutate.build_child(PARENT, "thinking", "high", "gen2", tmp_path)
     assert child["thinking"] == "high"
     assert child["prompt_packet"] == PARENT["prompt_packet"]
+
+
+def test_build_child_tools_mutation_resolves_policy_name(tmp_path):
+    child = mutate.build_child(PARENT, "tools", "explore", "gen3", tmp_path,
+                               tool_policies=POLICIES)
+    assert child["tools"] == ["read", "bash"]
+    assert child["model"] == PARENT["model"]
 
 
 def test_parse_proposal_recovers_from_reasoning_style_text():

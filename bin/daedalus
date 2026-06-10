@@ -84,6 +84,12 @@ def main():
         type=int,
         help="fix the seed-sampling RNG for a reproducible landscape scan",
     )
+    run_p.add_argument(
+        "--children-per-gen",
+        type=int,
+        default=2,
+        help="competing hypotheses raced per generation (default 2)",
+    )
     args = parser.parse_args()
 
     spec = tomllib.loads(Path(args.taskspec).read_text())
@@ -164,19 +170,20 @@ def main():
     if not manifests:
         sys.exit("no seeds ran within the seed budget; raise --budget-usd")
 
-    # --- Stage 3: the search loop ---
+    # --- Stage 3: the search loop (competing hypotheses per generation) ---
     print("== stage 3: reflective search", flush=True)
     taskspec_for_prompt = {"goal": spec.get("goal"), "mode": spec.get("mode")}
+    search_space = spec.get("search") or {}
 
     def summary_fn():
         return summarize(exp_dir / "trials.jsonl")
 
-    def propose_fn(parent_id, generation):
-        child_id = f"gen{generation}-{parent_id}"[:48]
+    def propose_fn(parent_id, generation, attempt, avoid_slots):
+        child_id = f"g{generation}{'abcdefgh'[attempt]}-{parent_id}"[:48]
         snapshot = json.loads(
             (exp_dir / "compositions" / f"{parent_id}.json").read_text()
         )
-        parent_manifest = tomllib.loads(manifests[parent_id].read_text())
+        parent_manifest = tomllib.loads(Path(manifests[parent_id]).read_text())
         manifest_path, meta = mutate.propose(
             taskspec_for_prompt,
             snapshot,
@@ -192,12 +199,15 @@ def main():
                       "cost_usd_total": v["cost_usd_total"]}
                 for cid, v in summary_fn().items()
             },
+            tool_policies=search_space.get("tool_policies"),
+            allowed_models=search_space.get("models"),
+            avoid_slots=avoid_slots,
         )
         manifests[child_id] = manifest_path
         optimizer_costs.append(meta.get("optimizer_cost_usd"))
         print(
-            f"  proposed {child_id}: slot={meta['slot_changed']} — "
-            f"{meta['hypothesis']}",
+            f"  proposed {child_id} (parent {parent_id}): "
+            f"slot={meta['slot_changed']} — {meta['hypothesis']}",
             flush=True,
         )
         return child_id, meta
@@ -214,6 +224,7 @@ def main():
         budget_usd=args.budget_usd,
         optimizer_costs=optimizer_costs,
         plateau_limit=args.plateau,
+        children_per_generation=args.children_per_gen,
     )
 
     # --- Stage 4: holdout final for the Pareto front (skip if no holdout) ---
