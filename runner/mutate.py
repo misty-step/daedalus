@@ -16,12 +16,16 @@ OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 # temperature/max_tokens are NOT mutable: pi exposes no flag for either
 # (docs/primitives.md), so mutating them would change the composition hash
 # without changing behavior — false attribution by construction.
-MUTABLE_SLOTS = {"prompt_packet", "model", "thinking", "tools"}
+MUTABLE_SLOTS = {
+    "prompt_packet", "model", "thinking", "tools",
+    "system_prompt_mode", "agents_md", "skills",
+}
 THINKING_LEVELS = {"off", "minimal", "low", "medium", "high", "xhigh"}
+SYSTEM_PROMPT_MODES = {"append", "replace"}
 
 
 def proposal_instructions(tool_policies=None, allowed_models=None,
-                          avoid_slots=()):
+                          avoid_slots=(), skill_sets=None):
     """Compose the slot menu from the taskspec's declared search space, so
     the optimizer can only propose values the space contains."""
     lines = [
@@ -44,10 +48,23 @@ def proposal_instructions(tool_policies=None, allowed_models=None,
     else:
         lines.append('- "model": an OpenRouter model id string.')
     lines.append('- "thinking": one of off|minimal|low|medium|high|xhigh.')
+    lines.append(
+        '- "system_prompt_mode": "append" (packet added to pi\'s default '
+        'coding prompt) or "replace" (packet IS the whole system prompt).'
+    )
+    lines.append(
+        '- "agents_md": the FULL text of an AGENTS.md placed in the agent\'s '
+        "workspace root (repo-context briefing it reads on startup)."
+    )
     if tool_policies:
         lines.append(
             f'- "tools": one of the named tool policies '
             f"{json.dumps(sorted(tool_policies))} (value is the policy name)."
+        )
+    if skill_sets:
+        lines.append(
+            f'- "skills": one of the named skill sets '
+            f"{json.dumps(sorted(skill_sets))} (value is the set name)."
         )
     if avoid_slots:
         lines += [
@@ -188,7 +205,7 @@ def parse_proposal(text):
 
 
 def validate_proposal(proposal, parent_manifest, tool_policies=None,
-                      allowed_models=None, avoid_slots=()):
+                      allowed_models=None, avoid_slots=(), skill_sets=None):
     """Reject anything that is not a well-formed single-slot mutation drawn
     from the declared search space."""
     slot = proposal.get("slot")
@@ -229,27 +246,55 @@ def validate_proposal(proposal, parent_manifest, tool_policies=None,
             )
         if list(tool_policies[value]) == list(parent_manifest.get("tools") or []):
             raise ValueError("tools mutation must differ from parent")
+    elif slot == "system_prompt_mode":
+        if value not in SYSTEM_PROMPT_MODES:
+            raise ValueError(
+                f"system_prompt_mode must be one of {sorted(SYSTEM_PROMPT_MODES)}"
+            )
+        if value == parent_manifest.get("system_prompt_mode", "append"):
+            raise ValueError("system_prompt_mode mutation must differ from parent")
+    elif slot == "agents_md":
+        if not isinstance(value, str) or len(value.strip()) < 20:
+            raise ValueError("agents_md value must be substantial briefing text")
+    elif slot == "skills":
+        if not skill_sets:
+            raise ValueError("skills mutation requires declared skill_sets")
+        if value not in skill_sets:
+            raise ValueError(
+                f"skills value must be a set name from {sorted(skill_sets)}"
+            )
+        if list(skill_sets[value]) == list(parent_manifest.get("skills") or []):
+            raise ValueError("skills mutation must differ from parent")
     return slot, value, str(hypothesis).strip()
 
 
 def build_child(parent_manifest, slot, value, child_id, packets_dir,
-                tool_policies=None):
-    """Materialize the child manifest (and packet file when mutated). A
-    tools mutation carries the policy *name* as value; the manifest gets the
-    resolved tool list."""
+                tool_policies=None, skill_sets=None):
+    """Materialize the child manifest (and any mutated text file). tools and
+    skills mutations carry the *name* of a declared set; the manifest gets
+    the resolved list. prompt_packet and agents_md carry full text, written
+    to versioned files."""
     child = {
         k: v
         for k, v in parent_manifest.items()
         if not k.startswith("_") and k not in ("id",)
     }
     child["id"] = child_id
-    if slot == "prompt_packet":
+
+    def write_text_slot(suffix, text):
         packets_dir.mkdir(parents=True, exist_ok=True)
-        packet_path = packets_dir / f"{child_id}.md"
-        packet_path.write_text(value if value.endswith("\n") else value + "\n")
-        child["prompt_packet"] = str(packet_path)
+        path = packets_dir / f"{child_id}{suffix}"
+        path.write_text(text if text.endswith("\n") else text + "\n")
+        return str(path)
+
+    if slot == "prompt_packet":
+        child["prompt_packet"] = write_text_slot(".md", value)
+    elif slot == "agents_md":
+        child["agents_md"] = write_text_slot("-agents.md", value)
     elif slot == "tools":
         child["tools"] = list(tool_policies[value])
+    elif slot == "skills":
+        child["skills"] = list(skill_sets[value])
     else:
         child[slot] = value
     return child
@@ -274,7 +319,7 @@ def write_manifest(child, path):
 def propose(taskspec, parent_snapshot, parent_manifest, records, exp_dir,
             child_id, optimizer_model, packets_dir, manifests_dir,
             archive_summary=None, tool_policies=None, allowed_models=None,
-            avoid_slots=()):
+            avoid_slots=(), skill_sets=None):
     """Full step: evidence → LLM proposal → validation → child on disk.
     Returns (manifest_path, metadata)."""
     trials = worst_trials(records, parent_snapshot["id"])
@@ -287,6 +332,7 @@ def propose(taskspec, parent_snapshot, parent_manifest, records, exp_dir,
             tool_policies=tool_policies,
             allowed_models=allowed_models,
             avoid_slots=avoid_slots,
+            skill_sets=skill_sets,
         ),
     )
     content, cost = call_optimizer(prompt, optimizer_model)
@@ -296,16 +342,19 @@ def propose(taskspec, parent_snapshot, parent_manifest, records, exp_dir,
         tool_policies=tool_policies,
         allowed_models=allowed_models,
         avoid_slots=avoid_slots,
+        skill_sets=skill_sets,
     )
     child = build_child(parent_manifest, slot, value, child_id, packets_dir,
-                        tool_policies=tool_policies)
+                        tool_policies=tool_policies, skill_sets=skill_sets)
     manifests_dir.mkdir(parents=True, exist_ok=True)
     manifest_path = write_manifest(child, manifests_dir / f"{child_id}.toml")
     meta = {
         "child_id": child_id,
         "parent_id": parent_snapshot["id"],
         "slot_changed": slot,
-        "value_summary": value if slot != "prompt_packet" else "(new packet)",
+        "value_summary": (
+            "(new text)" if slot in ("prompt_packet", "agents_md") else value
+        ),
         "hypothesis": hypothesis,
         "optimizer_cost_usd": cost,
     }

@@ -101,6 +101,30 @@ def test_packet_author_failure_falls_back_to_base(tmp_path):
         assert path.read_text() == "Base reviewer packet.\n"
 
 
+def test_optional_axes_sampled_when_declared(tmp_path):
+    skill = tmp_path / "skill.md"
+    skill.write_text("# skill")
+    agents = tmp_path / "agents.md"
+    agents.write_text("workspace briefing for the review agent")
+    search = dict(
+        SEARCH,
+        system_prompt_modes=["append", "replace"],
+        skill_sets={"pack": [str(skill)], "bare": []},
+        agents_md_options=[str(agents)],
+    )
+    spec = dict(SPEC, search=search)
+    seeds, meta = seed.seed_population(
+        spec, "opt", tmp_path / "p", tmp_path / "m", rng_seed=3, call=fake_call,
+    )
+    manifests = [tomllib.loads(Path(p).read_text()) for _, p in seeds]
+    assert any(m.get("system_prompt_mode") == "replace" for m in manifests)
+    assert any(m.get("skills") == [str(skill)] for m in manifests)
+    assert all(m.get("agents_md") == str(agents) for m in manifests)
+    # combos record the axes (minus raw file lists) for the lineage story
+    assert all("system_prompt_mode" in c for c in meta["combos"])
+    assert all("skills" not in c for c in meta["combos"])
+
+
 def test_missing_models_raises(tmp_path):
     with pytest.raises(ValueError, match="models"):
         seed.seed_population({"search": {}}, "m", tmp_path, tmp_path,

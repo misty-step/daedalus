@@ -117,6 +117,60 @@ def test_validate_tools_policy_mutation():
     assert (slot, value) == ("tools", "explore")
 
 
+def test_validate_system_prompt_mode_mutation():
+    with pytest.raises(ValueError, match="append"):
+        mutate.validate_proposal(
+            {"slot": "system_prompt_mode", "value": "yolo", "hypothesis": "h"},
+            PARENT,
+        )
+    with pytest.raises(ValueError, match="differ from parent"):
+        # parent has no explicit mode -> defaults to append
+        mutate.validate_proposal(
+            {"slot": "system_prompt_mode", "value": "append", "hypothesis": "h"},
+            PARENT,
+        )
+    slot, value, _ = mutate.validate_proposal(
+        {"slot": "system_prompt_mode", "value": "replace", "hypothesis": "h"},
+        PARENT,
+    )
+    assert (slot, value) == ("system_prompt_mode", "replace")
+
+
+def test_validate_agents_md_and_build_child_writes_file(tmp_path):
+    with pytest.raises(ValueError, match="substantial"):
+        mutate.validate_proposal(
+            {"slot": "agents_md", "value": "hi", "hypothesis": "h"}, PARENT
+        )
+    text = "Workspace briefing: trace callers across modules before judging."
+    slot, value, _ = mutate.validate_proposal(
+        {"slot": "agents_md", "value": text, "hypothesis": "h"}, PARENT
+    )
+    child = mutate.build_child(PARENT, slot, value, "gen9", tmp_path)
+    assert "trace callers" in Path(child["agents_md"]).read_text()
+    assert child["prompt_packet"] == PARENT["prompt_packet"]
+
+
+def test_validate_skills_mutation_against_declared_sets(tmp_path):
+    sets = {"review-pack": ["packets/skill-a.md"], "bare": []}
+    with pytest.raises(ValueError, match="skill_sets"):
+        mutate.validate_proposal(
+            {"slot": "skills", "value": "review-pack", "hypothesis": "h"},
+            PARENT,
+        )
+    with pytest.raises(ValueError, match="set name"):
+        mutate.validate_proposal(
+            {"slot": "skills", "value": "nonsense", "hypothesis": "h"},
+            PARENT, skill_sets=sets,
+        )
+    slot, value, _ = mutate.validate_proposal(
+        {"slot": "skills", "value": "review-pack", "hypothesis": "h"},
+        PARENT, skill_sets=sets,
+    )
+    child = mutate.build_child(PARENT, slot, value, "gen10", tmp_path,
+                               skill_sets=sets)
+    assert child["skills"] == ["packets/skill-a.md"]
+
+
 def test_validate_rejects_slot_taken_by_competing_hypothesis():
     with pytest.raises(ValueError, match="competing"):
         mutate.validate_proposal(

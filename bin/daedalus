@@ -223,6 +223,7 @@ def main():
             tool_policies=search_space.get("tool_policies"),
             allowed_models=search_space.get("models"),
             avoid_slots=avoid_slots,
+            skill_sets=search_space.get("skill_sets"),
         )
         manifests[child_id] = manifest_path
         optimizer_costs.append(meta.get("optimizer_cost_usd"))

@@ -31,11 +31,18 @@ behavior changes ride on that field.
 | slot | values | notes |
 |---|---|---|
 | `model` | OpenRouter model id (see pool below) | `--model openrouter/<id>` |
-| `prompt_packet` | file under `packets/` | passed via `--append-system-prompt`; the primary mutable surface |
+| `prompt_packet` | file under `packets/` | the primary mutable surface |
+| `system_prompt_mode` | `append` (default) \| `replace` | append adds the packet to pi's default coding prompt (`--append-system-prompt`); replace makes the packet the entire system prompt (`--system-prompt`). **Live finding (2026-06-10):** replace with a guidance-free packet loses pi's operating/termination framing — agents wandered to timeout on real tasks; replace-mode packets must carry their own agent-operating instructions |
 | `thinking` | off \| minimal \| low \| medium \| high \| xhigh | `--thinking`; reasoning budget knob |
 | `tools` | subset of `read, bash, edit, write` | `--tools` allowlist; see policies below |
+| `skills` | list of pi skill files | repeated `--skill`; declaring any drops `--no-skills`; contents hashed into the composition |
+| `agents_md` | file ref | written to the workspace root as `AGENTS.md` and pi's context-file discovery is enabled (drops `--no-context-files`); contents hashed |
 | `timeout_sec` | int | wall-clock kill |
 | `env_allowlist` | env vars passed through | default `["OPENROUTER_API_KEY"]` |
+
+Search-space declarations for the optional axes: `system_prompt_modes`
+(list), `[search.skill_sets]` (named lists of skill files, mutable by set
+name like tool policies), `agents_md_options` (list of file refs).
 
 **Not real slots for pi:** `temperature` and `max_tokens` — pi exposes no
 CLI flag for either, so the runner ignores them for `kind = "pi"`. A

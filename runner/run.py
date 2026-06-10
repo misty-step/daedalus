@@ -102,20 +102,35 @@ def load_toml(path):
         return tomllib.load(f)
 
 
+def _resolve_ref(ref):
+    path = Path(ref)
+    return path if path.is_absolute() else REPO / path
+
+
 def load_candidate(path):
-    """Load a manifest, resolve its prompt packet, compute the composition
-    hash. Private keys (underscore-prefixed) never reach disk records."""
+    """Load a manifest, resolve its file-referenced slots (prompt packet,
+    skills, agents_md), compute the composition hash over the manifest plus
+    every resolved text — so changing any referenced file changes the hash.
+    Private keys (underscore-prefixed) never reach disk records."""
     candidate = load_toml(path)
     packet_ref = candidate.get("prompt_packet")
-    if packet_ref:
-        packet_path = Path(packet_ref)
-        if not packet_path.is_absolute():
-            packet_path = REPO / packet_path
-        candidate["_packet_text"] = packet_path.read_text()
-    else:
-        candidate["_packet_text"] = None
+    candidate["_packet_text"] = (
+        _resolve_ref(packet_ref).read_text() if packet_ref else None
+    )
+    skill_paths = [_resolve_ref(s) for s in candidate.get("skills") or []]
+    candidate["_skill_paths"] = [str(p) for p in skill_paths]
+    candidate["_skills_texts"] = [p.read_text() for p in skill_paths]
+    agents_ref = candidate.get("agents_md")
+    candidate["_agents_md_text"] = (
+        _resolve_ref(agents_ref).read_text() if agents_ref else None
+    )
+    mode = candidate.get("system_prompt_mode", "append")
+    if mode not in ("append", "replace"):
+        raise ValueError(f"system_prompt_mode must be append|replace, got {mode!r}")
     basis = {k: v for k, v in candidate.items() if not k.startswith("_")}
     basis["prompt_packet_text"] = candidate["_packet_text"]
+    basis["skills_texts"] = candidate["_skills_texts"]
+    basis["agents_md_text"] = candidate["_agents_md_text"]
     candidate["_hash"] = hashlib.sha256(
         json.dumps(basis, sort_keys=True).encode()
     ).hexdigest()[:16]
@@ -279,7 +294,10 @@ def extract_pi_usage(stdout_text):
     }
 
 
-def run_pi(candidate, instruction, task_dir, workdir, record):
+def build_pi_cmd(candidate):
+    """Compose the pi argv from the candidate's slots. Isolation flags stay
+    on unless a slot deliberately opens a surface: declared skills drop
+    --no-skills; a workspace agents_md drops --no-context-files."""
     cmd = [
         "pi",
         "-p",
@@ -287,21 +305,43 @@ def run_pi(candidate, instruction, task_dir, workdir, record):
         "json",
         "--no-session",
         "--no-extensions",
-        "--no-skills",
         "--no-prompt-templates",
         "--no-themes",
-        "--no-context-files",
         "--provider",
         candidate.get("provider_name", "openrouter"),
         "--model",
         candidate["model"],
     ]
+    if candidate.get("_skill_paths"):
+        for skill in candidate["_skill_paths"]:
+            cmd += ["--skill", skill]
+    else:
+        cmd.append("--no-skills")
+    if candidate.get("_agents_md_text") is None:
+        cmd.append("--no-context-files")
     if "thinking" in candidate:
         cmd += ["--thinking", candidate["thinking"]]
     if "tools" in candidate:
         cmd += ["--tools", ",".join(candidate["tools"])]
     if candidate["_packet_text"]:
-        cmd += ["--append-system-prompt", candidate["_packet_text"]]
+        flag = (
+            "--system-prompt"
+            if candidate.get("system_prompt_mode") == "replace"
+            else "--append-system-prompt"
+        )
+        cmd += [flag, candidate["_packet_text"]]
+    return cmd
+
+
+def prepare_workspace(candidate, workdir):
+    """Slot-driven workspace composition beyond the fixture copy."""
+    if candidate.get("_agents_md_text") is not None:
+        (workdir / "AGENTS.md").write_text(candidate["_agents_md_text"])
+
+
+def run_pi(candidate, instruction, task_dir, workdir, record):
+    prepare_workspace(candidate, workdir)
+    cmd = build_pi_cmd(candidate)
     message = instruction + "\n\nThe workspace is the current working directory."
     proc = subprocess.run(
         cmd + [message],
@@ -410,6 +450,8 @@ def main():
     snapshot.update(
         composition_hash=candidate["_hash"],
         prompt_packet_text=candidate["_packet_text"],
+        skills_texts=candidate["_skills_texts"],
+        agents_md_text=candidate["_agents_md_text"],
         harness_version=harness_version(candidate),
         runner_version=RUNNER_VERSION,
     )

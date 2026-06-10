@@ -47,23 +47,36 @@ Respond with ONLY the packet text."""
 
 
 def sample_compositions(search, n, rng):
-    """n scalar-slot combos cycling each shuffled axis independently, so a
-    small population still spans models, thinking levels, and tool policies."""
+    """n slot combos cycling each shuffled axis independently, so a small
+    population still spans models, thinking levels, tool policies, and any
+    optional axes the search space declares (system prompt mode, skill
+    sets, workspace AGENTS.md options)."""
     models = list(search["models"])
     rng.shuffle(models)
     levels = list(search.get("thinking_levels") or ["medium"])
     rng.shuffle(levels)
     policies = sorted((search.get("tool_policies") or DEFAULT_POLICIES).items())
     rng.shuffle(policies)
-    return [
-        {
+    sp_modes = list(search.get("system_prompt_modes") or ["append"])
+    rng.shuffle(sp_modes)
+    skill_sets = sorted((search.get("skill_sets") or {}).items()) or [(None, None)]
+    rng.shuffle(skill_sets)
+    agents_opts = list(search.get("agents_md_options") or [None])
+    rng.shuffle(agents_opts)
+    combos = []
+    for i in range(n):
+        set_name, set_files = skill_sets[i % len(skill_sets)]
+        combos.append({
             "model": models[i % len(models)],
             "thinking": levels[i % len(levels)],
             "policy_name": policies[i % len(policies)][0],
             "tools": list(policies[i % len(policies)][1]),
-        }
-        for i in range(n)
-    ]
+            "system_prompt_mode": sp_modes[i % len(sp_modes)],
+            "skill_set_name": set_name,
+            "skills": list(set_files) if set_files else None,
+            "agents_md": agents_opts[i % len(agents_opts)],
+        })
+    return combos
 
 
 def author_packets(taskspec, k, optimizer_model, rng, packets_dir,
@@ -112,6 +125,12 @@ def build_seeds(combos, packets, manifests_dir, timeout_sec):
             "tools": combo["tools"],
             "timeout_sec": timeout_sec,
         }
+        if combo.get("system_prompt_mode", "append") != "append":
+            manifest["system_prompt_mode"] = combo["system_prompt_mode"]
+        if combo.get("skills"):
+            manifest["skills"] = combo["skills"]
+        if combo.get("agents_md"):
+            manifest["agents_md"] = combo["agents_md"]
         path = mutate.write_manifest(manifest, manifests_dir / f"{seed_id}.toml")
         out.append((seed_id, path))
     return out
@@ -145,7 +164,8 @@ def seed_population(spec, optimizer_model, packets_dir, manifests_dir,
         "packet_stances": [name for name, _ in packets],
         "optimizer_costs": costs,
         "combos": [
-            {k_: v for k_, v in c.items() if k_ != "tools"} for c in combos
+            {k_: v for k_, v in c.items() if k_ not in ("tools", "skills")}
+            for c in combos
         ],
     }
     return seeds, meta

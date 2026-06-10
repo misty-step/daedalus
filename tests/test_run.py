@@ -241,6 +241,76 @@ def test_instruction_composed_from_template_and_intent():
     assert "findings.json" in text
 
 
+def test_build_pi_cmd_default_isolation_and_append(tmp_path):
+    packet = tmp_path / "p.md"
+    packet.write_text("Review carefully and thoroughly.")
+    manifest = tmp_path / "c.toml"
+    manifest.write_text(
+        f'id = "x"\nkind = "pi"\nmodel = "m"\nprompt_packet = "{packet}"\n'
+    )
+    cand = runner.load_candidate(manifest)
+    cmd = runner.build_pi_cmd(cand)
+    assert "--no-skills" in cmd
+    assert "--no-context-files" in cmd
+    assert "--append-system-prompt" in cmd
+    assert "--system-prompt" not in cmd
+
+
+def test_build_pi_cmd_slot_surfaces_open_deliberately(tmp_path):
+    packet = tmp_path / "p.md"
+    packet.write_text("You are the whole system prompt.")
+    skill = tmp_path / "skill.md"
+    skill.write_text("# a pi skill")
+    agents = tmp_path / "agents.md"
+    agents.write_text("Repo briefing: run bin/gate before claiming done.")
+    manifest = tmp_path / "c.toml"
+    manifest.write_text(
+        f'id = "x"\nkind = "pi"\nmodel = "m"\n'
+        f'prompt_packet = "{packet}"\n'
+        f'system_prompt_mode = "replace"\n'
+        f'skills = ["{skill}"]\n'
+        f'agents_md = "{agents}"\n'
+    )
+    cand = runner.load_candidate(manifest)
+    cmd = runner.build_pi_cmd(cand)
+    assert "--skill" in cmd and "--no-skills" not in cmd
+    assert "--no-context-files" not in cmd
+    assert "--system-prompt" in cmd and "--append-system-prompt" not in cmd
+    workdir = tmp_path / "ws"
+    workdir.mkdir()
+    runner.prepare_workspace(cand, workdir)
+    assert "bin/gate" in (workdir / "AGENTS.md").read_text()
+
+
+def test_hash_tracks_agents_md_and_skills_content(tmp_path):
+    skill = tmp_path / "skill.md"
+    skill.write_text("v1")
+    agents = tmp_path / "agents.md"
+    agents.write_text("briefing v1")
+    manifest = tmp_path / "c.toml"
+    manifest.write_text(
+        f'id = "x"\nkind = "pi"\nmodel = "m"\n'
+        f'skills = ["{skill}"]\nagents_md = "{agents}"\n'
+    )
+    h1 = runner.load_candidate(manifest)["_hash"]
+    skill.write_text("v2")
+    h2 = runner.load_candidate(manifest)["_hash"]
+    assert h1 != h2
+    skill.write_text("v1")
+    agents.write_text("briefing v2")
+    h3 = runner.load_candidate(manifest)["_hash"]
+    assert h3 != h1
+
+
+def test_invalid_system_prompt_mode_rejected(tmp_path):
+    manifest = tmp_path / "c.toml"
+    manifest.write_text(
+        'id = "x"\nkind = "pi"\nmodel = "m"\nsystem_prompt_mode = "yolo"\n'
+    )
+    with pytest.raises(ValueError, match="system_prompt_mode"):
+        runner.load_candidate(manifest)
+
+
 def test_composition_hash_tracks_prompt_packet(tmp_path):
     packet = tmp_path / "packet.md"
     packet.write_text("Review carefully.")
