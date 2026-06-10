@@ -40,8 +40,8 @@ baseline (it inlines every file), so a genuinely non-one-shot arena needs a
 large repo or execution (backlog 015). The freeze gate correctly kept
 pr-review-v1 unfrozen.
 
-Remaining backlog (post-MVP): 010 judge family, 011 adjudication, 012 visual-QA
-spike, 013 runs retention, 014 Langfuse, 015 non-one-shot arena mechanism.
+Remaining backlog (post-MVP): all cleared 2026-06-10 (see "Backlog cleared"
+below). 015 became pr-review-v2 (real-repo arena).
 
 ## Agent-vs-agent redesign + first full cycle (2026-06-10)
 
@@ -73,6 +73,51 @@ complete spec→delivery cycle ran end-to-end
   variance (per-task 3/5 and 2/5 on the subtle tasks; ~0.69 point estimate
   vs the in-search 1.000). Candidate *ranking* stands; contract-grade
   claims need n ≥ 5 certification → backlog 019 (arena v2.1 calibration).
+
+## Backlog cleared — rigor + breadth program (2026-06-10)
+
+Operator adversarial review → full backlog burn-down. All open tickets shipped
+(108 gate tests, clean tree). The lab is now scientifically rigorous end to end:
+
+- **020 certification racing** — top-k topped to n≥5/task before any
+  recommendation; only certified candidates ship (kills the winner's curse).
+- **021 mode-aware search** — keep/plateau/parents optimize the declared mode
+  (held reward + lower cost = improvement under threshold-then-cheap).
+- **022 in-loop meta-eval monitor** — saturation/variance/FP-trap alarms;
+  "the arena is the bottleneck" is now a first-class run outcome with a draft
+  arena-findings note.
+- **023 expanded composition surface** — system_prompt_mode, skills, agents_md
+  joined the hashed mutable slots (live: agents_md briefing took a cheap model
+  to 1.0 at $0.002/trial).
+- **024 lineage + lab notebook** — every run renders its full discovery story
+  from artifacts; runs/NOTEBOOK.md accumulates cross-run lessons.
+- **025 proposer evidence + ledger + transplant** — scorer-verdict evidence,
+  predicted_effect scored against measurement, donor-slot recombination.
+- **026 control-plane export** — `daedalus export` emits a pinned launch
+  contract + Bitter Blossom sprite persona (byte-identical measured packet).
+- **013 retention** — records committed, artifacts indexed + gitignored;
+  recovered orphaned MVP run records.
+- **011 adjudication** — `adjudications.md` workflow; both py-file-cache
+  disputes worked live (one ACCEPT → arena 0.3.0, one OUT-OF-SCOPE).
+- **019 + 027 arena scale-up** — pr-review-v2 → 10 tasks across rich +
+  pygments, full taxonomy, 3-task holdout, exposure ledger, function-wide key
+  spans. Rig passes; new-task agent-spread pending the next full search run.
+- **010 judge family** — calibrated 0–5 rubric judge; the calibration gate
+  *failed live* (two judges Spearman 0.0 on empty-findings) and correctly
+  refused to certify — the gate works.
+- **014 Langfuse → ADR-002** — trace as an export-time view (runner/trace.py,
+  validated on the capstone); live stand-up deferred by design.
+- **012 visual-QA → ADR-003** — GO with deterministic-oracle scope, proven by
+  a real Playwright DOM-assertion probe (defective app 0, fixed app 1).
+
+Two live harness findings recorded in primitives.md: concurrent `pi -p`
+processes deadlock (run trials sequentially); replace-mode system prompts work
+(an earlier timeout was that deadlock, not the slot).
+
+Next: the long pole is a fresh full `bin/daedalus run` on pr-review-v2 to
+certify new-task agent spread, exercise certification + alarms + lineage
+together, and produce a contract-grade delivery. Then Phase 3 (deploy/observe)
+against Olympus / Bitter Blossom via the export contract.
 
 ## Phase 0 — Prose-first pilot (current)
 
