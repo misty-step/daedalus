@@ -47,6 +47,38 @@ def _seed_index(candidate_id):
     return int(m.group(1)) if m else None
 
 
+def hypothesis_verdict(h):
+    """Score a generation's predicted_effect against its measurement.
+    Returns (label, detail) or None when no structured prediction exists."""
+    pe = h.get("predicted_effect")
+    if not pe:
+        return None
+    axes = []
+    delta = h.get("mean_task_delta")
+    if delta is not None:
+        ok = delta > 0.02 if pe.get("reward") == "up" else delta >= -0.05
+        axes.append(("reward", pe.get("reward"), ok, f"Δ{delta:+.3f}"))
+    pcpt = h.get("parent_cost_per_trial")
+    ccpt = h.get("child_cost_per_trial")
+    if pcpt and ccpt is not None:
+        ratio = ccpt / pcpt
+        ok = {"down": ratio <= 0.9,
+              "hold": 0.9 < ratio < 1.1,
+              "up": True}.get(pe.get("cost"), True)
+        axes.append(("cost", pe.get("cost"), ok, f"×{ratio:.2f}"))
+    if not axes:
+        return None
+    oks = [ok for _, _, ok, _ in axes]
+    label = ("prediction confirmed" if all(oks)
+             else "prediction refuted" if not any(oks)
+             else "prediction partially confirmed")
+    detail = ", ".join(
+        f"{axis} {pred}: {'✓' if ok else '✗'} ({meas})"
+        for axis, pred, ok, meas in axes
+    )
+    return label, detail
+
+
 def render(exp_dir):
     exp_dir = Path(exp_dir)
     rig = _load_json(exp_dir / "rig.json", {})
@@ -111,14 +143,19 @@ def render(exp_dir):
         verdict = ("**improvement — kept as a direction**"
                    if h.get("improved")
                    else "no improvement — direction discarded")
+        donor = f" (transplant from `{h['donor']}`)" if h.get("donor") else ""
         lines += [
             f"- {gen} `{h.get('child_id')}` ← `{h.get('parent_id')}` "
-            f"(slot `{h.get('slot_changed')}`)",
+            f"(slot `{h.get('slot_changed')}`){donor}",
             f"  - hypothesis: {h.get('hypothesis')}",
             f"  - measured: reward {h.get('reward_mean')} vs parent "
             f"{h.get('parent_reward_mean')} (paired Δ "
             f"{h.get('mean_task_delta')}) → {verdict}",
         ]
+        scored = hypothesis_verdict(h)
+        if scored:
+            label, detail = scored
+            lines.append(f"  - {label}: {detail}")
 
     alarms = loopj.get("alarms", [])
     if alarms:
@@ -149,8 +186,13 @@ def render(exp_dir):
         if "proposal_error" in h:
             continue
         taught = True
-        tag = ("confirmed" if h.get("improved")
-               else f"not confirmed (Δ {h.get('mean_task_delta')})")
+        scored = hypothesis_verdict(h)
+        if scored:
+            label, detail = scored
+            tag = f"{label.replace('prediction ', '')}: {detail}"
+        else:
+            tag = ("confirmed" if h.get("improved")
+                   else f"not confirmed (Δ {h.get('mean_task_delta')})")
         lines.append(f"- [{tag}] {h.get('hypothesis')}")
     for a in alarms:
         taught = True

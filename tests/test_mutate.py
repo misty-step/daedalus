@@ -237,6 +237,58 @@ def test_parse_proposal_recovers_from_reasoning_style_text():
     assert p["value"] == "anthropic/claude-x"
 
 
+def test_predicted_effect_normalization():
+    pe, defaulted = mutate.normalize_predicted_effect({})
+    assert pe == {"reward": "up", "cost": "hold"} and defaulted
+    pe, defaulted = mutate.normalize_predicted_effect(
+        {"predicted_effect": {"reward": "hold", "cost": "down"}}
+    )
+    assert pe == {"reward": "hold", "cost": "down"} and not defaulted
+    with pytest.raises(ValueError, match="predicted_effect"):
+        mutate.normalize_predicted_effect(
+            {"predicted_effect": {"reward": "sideways", "cost": "down"}}
+        )
+
+
+ARCHIVE = {
+    "seed2-cheap": {
+        "id": "seed2-cheap",
+        "kind": "pi",
+        "model": "z-ai/glm-4.7-flash",
+        "tools": ["read", "bash"],
+        "prompt_packet_text": "A winning packet with plenty of substance "
+                              "about tracing callers and citing evidence.",
+    },
+}
+
+
+def test_transplant_resolves_donor_value():
+    proposal = {"slot": "model", "donor": "seed2-cheap", "hypothesis": "h"}
+    resolved = mutate.resolve_donor(proposal, ARCHIVE, PARENT)
+    assert resolved["value"] == "z-ai/glm-4.7-flash"
+    # packet transplant pulls the donor's resolved text
+    proposal = {"slot": "prompt_packet", "donor": "seed2-cheap",
+                "hypothesis": "h"}
+    resolved = mutate.resolve_donor(proposal, ARCHIVE, PARENT)
+    assert "winning packet" in resolved["value"]
+    with pytest.raises(ValueError, match="unknown transplant donor"):
+        mutate.resolve_donor({"slot": "model", "donor": "ghost"}, ARCHIVE,
+                             PARENT)
+
+
+def test_transplanted_tools_list_validates_and_builds(tmp_path):
+    proposal = {"slot": "tools", "value": ["read", "bash"], "hypothesis": "h"}
+    slot, value, _ = mutate.validate_proposal(
+        proposal, PARENT, donor="seed2-cheap"
+    )
+    child = mutate.build_child(PARENT, slot, value, "gen11", tmp_path)
+    assert child["tools"] == ["read", "bash"]
+    # transplanting the parent's own value is a no-op and rejected
+    same = {"slot": "tools", "value": PARENT["tools"], "hypothesis": "h"}
+    with pytest.raises(ValueError, match="differ from parent"):
+        mutate.validate_proposal(same, PARENT, donor="seed2-cheap")
+
+
 def test_worst_trials_orders_by_reward():
     records = [
         {"candidate_id": "x", "reward": 1.0, "wall_ms": 1, "run_id": "a"},

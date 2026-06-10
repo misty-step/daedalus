@@ -22,26 +22,71 @@ MUTABLE_SLOTS = {
 }
 THINKING_LEVELS = {"off", "minimal", "low", "medium", "high", "xhigh"}
 SYSTEM_PROMPT_MODES = {"append", "replace"}
+PREDICTED_REWARD = {"up", "hold"}
+PREDICTED_COST = {"down", "hold", "up"}
+
+
+def normalize_predicted_effect(proposal):
+    """The proposer's testable prediction, scored later against measurement.
+    A missing prediction defaults to the classic implicit claim (reward up,
+    cost held) and is flagged as defaulted rather than failing the proposal."""
+    pe = proposal.get("predicted_effect")
+    if pe is None:
+        return {"reward": "up", "cost": "hold"}, True
+    if (not isinstance(pe, dict)
+            or pe.get("reward") not in PREDICTED_REWARD
+            or pe.get("cost") not in PREDICTED_COST):
+        raise ValueError(
+            'predicted_effect must be {"reward": "up|hold", '
+            '"cost": "down|hold|up"}'
+        )
+    return {"reward": pe["reward"], "cost": pe["cost"]}, False
+
+
+def resolve_donor(proposal, archive_manifests, parent_manifest):
+    """Transplant operator: take the proposed slot's value from a named
+    archive candidate. Still a one-slot delta on the parent — it just lets
+    the search recombine discovered wins (cheap model under winning packet)
+    instead of only perturbing."""
+    donor = proposal.get("donor")
+    slot = proposal.get("slot")
+    if not archive_manifests or donor not in archive_manifests:
+        raise ValueError(f"unknown transplant donor '{donor}'")
+    snap = archive_manifests[donor]
+    if slot == "prompt_packet":
+        value = snap.get("prompt_packet_text")
+    elif slot == "agents_md":
+        value = snap.get("agents_md_text")
+    else:
+        value = snap.get(slot)
+    if value is None:
+        raise ValueError(f"donor '{donor}' has no value for slot '{slot}'")
+    out = dict(proposal)
+    out["value"] = value
+    return out
 
 
 def proposal_instructions(tool_policies=None, allowed_models=None,
-                          avoid_slots=(), skill_sets=None):
-    """Compose the slot menu from the taskspec's declared search space, so
-    the optimizer can only propose values the space contains."""
+                          avoid_slots=(), skill_sets=None, mode=None,
+                          donors=None):
+    """Compose the slot menu from the declared search space, so the
+    optimizer can only propose values the space contains. The brief asks
+    for the highest-information experiment under the declared mode — no
+    slot is privileged."""
     lines = [
         "You are the search step of an agent-optimization loop. Your job: "
         "propose",
-        "EXACTLY ONE change to ONE slot of the candidate composition below, "
-        "grounded",
-        "in the failure evidence. Single-variable experiments only — never "
-        "change two",
+        "EXACTLY ONE change to ONE slot of the candidate composition below — "
+        "the",
+        "highest-information single-variable experiment available given the "
+        "evidence",
+        f"and the objective mode ({mode or 'max-quality'}). Never change two "
         "things.",
         "",
         "Mutable slots and value rules:",
         '- "prompt_packet": value is the FULL replacement packet text '
         "(system-prompt",
-        "  guidance for the review agent). Most mutations should target this "
-        "slot.",
+        "  guidance for the review agent).",
     ]
     if allowed_models:
         lines.append(f'- "model": one of {json.dumps(sorted(allowed_models))}.')
@@ -66,6 +111,17 @@ def proposal_instructions(tool_policies=None, allowed_models=None,
             f'- "skills": one of the named skill sets '
             f"{json.dumps(sorted(skill_sets))} (value is the set name)."
         )
+    if donors:
+        lines += [
+            "",
+            "You may instead TRANSPLANT one slot's value from another "
+            "archive candidate",
+            f"(donors: {json.dumps(sorted(donors))}) by adding "
+            '"donor": "<candidate_id>"',
+            'and omitting "value" — e.g. move a strong packet onto a cheaper '
+            "model, or a",
+            "cheap model under a winning packet. Still exactly one slot.",
+        ]
     if avoid_slots:
         lines += [
             "",
@@ -75,9 +131,14 @@ def proposal_instructions(tool_policies=None, allowed_models=None,
     lines += [
         "",
         "Respond with ONLY a JSON object:",
-        '{"slot": "<slot>", "value": <value>, "hypothesis": "<one or two '
-        "sentences:",
-        'what failure this addresses and why this change should fix it>"}',
+        '{"slot": "<slot>", "value": <value> (or "donor": "<candidate_id>"),',
+        ' "hypothesis": "<one or two sentences: what evidence this addresses '
+        'and why>",',
+        ' "predicted_effect": {"reward": "up|hold", "cost": "down|hold|up"}}',
+        "",
+        "predicted_effect is your testable prediction; it will be scored "
+        "against the",
+        "measured outcome and recorded in the lab notebook.",
     ]
     return "\n".join(lines)
 
@@ -91,12 +152,18 @@ def worst_trials(records, candidate_id, n=3):
 def evidence_block(trials, exp_dir, transcript_chars=3000):
     parts = []
     for r in trials:
+        matched = len(r.get("matched") or [])
+        expected = r.get("expected_defects")
+        # The scorer's verdict structure (never the key itself): how many
+        # seeded defects were matched vs missed, and how many findings were
+        # penalized as false positives — so the proposer reasons from real
+        # failure shape instead of guessing it from transcripts.
         parts.append(
             f"### Trial {r['run_id']}\n"
             f"task: {r['task_id']}  reward: {r['reward']}  "
-            f"expected defects: {r.get('expected_defects')}  "
-            f"false positives: {r.get('false_positives')}  "
-            f"error: {r.get('error')}\n"
+            f"verdict: matched {matched} of {expected} seeded defects, "
+            f"{r.get('false_positives')} finding(s) penalized as false "
+            f"positives  error: {r.get('error')}\n"
             f"findings: {json.dumps(r.get('findings'))[:800]}\n"
         )
         art = r.get("artifacts")
@@ -205,7 +272,8 @@ def parse_proposal(text):
 
 
 def validate_proposal(proposal, parent_manifest, tool_policies=None,
-                      allowed_models=None, avoid_slots=(), skill_sets=None):
+                      allowed_models=None, avoid_slots=(), skill_sets=None,
+                      donor=None):
     """Reject anything that is not a well-formed single-slot mutation drawn
     from the declared search space."""
     slot = proposal.get("slot")
@@ -238,14 +306,18 @@ def validate_proposal(proposal, parent_manifest, tool_policies=None,
         if value == parent_manifest.get("thinking"):
             raise ValueError("thinking mutation must differ from parent")
     elif slot == "tools":
-        if not tool_policies:
-            raise ValueError("tools mutation requires declared tool_policies")
-        if value not in tool_policies:
-            raise ValueError(
-                f"tools value must be a policy name from {sorted(tool_policies)}"
-            )
-        if list(tool_policies[value]) == list(parent_manifest.get("tools") or []):
-            raise ValueError("tools mutation must differ from parent")
+        if donor:
+            if list(value) == list(parent_manifest.get("tools") or []):
+                raise ValueError("tools transplant must differ from parent")
+        else:
+            if not tool_policies:
+                raise ValueError("tools mutation requires declared tool_policies")
+            if value not in tool_policies:
+                raise ValueError(
+                    f"tools value must be a policy name from {sorted(tool_policies)}"
+                )
+            if list(tool_policies[value]) == list(parent_manifest.get("tools") or []):
+                raise ValueError("tools mutation must differ from parent")
     elif slot == "system_prompt_mode":
         if value not in SYSTEM_PROMPT_MODES:
             raise ValueError(
@@ -257,14 +329,18 @@ def validate_proposal(proposal, parent_manifest, tool_policies=None,
         if not isinstance(value, str) or len(value.strip()) < 20:
             raise ValueError("agents_md value must be substantial briefing text")
     elif slot == "skills":
-        if not skill_sets:
-            raise ValueError("skills mutation requires declared skill_sets")
-        if value not in skill_sets:
-            raise ValueError(
-                f"skills value must be a set name from {sorted(skill_sets)}"
-            )
-        if list(skill_sets[value]) == list(parent_manifest.get("skills") or []):
-            raise ValueError("skills mutation must differ from parent")
+        if donor:
+            if list(value) == list(parent_manifest.get("skills") or []):
+                raise ValueError("skills transplant must differ from parent")
+        else:
+            if not skill_sets:
+                raise ValueError("skills mutation requires declared skill_sets")
+            if value not in skill_sets:
+                raise ValueError(
+                    f"skills value must be a set name from {sorted(skill_sets)}"
+                )
+            if list(skill_sets[value]) == list(parent_manifest.get("skills") or []):
+                raise ValueError("skills mutation must differ from parent")
     return slot, value, str(hypothesis).strip()
 
 
@@ -292,9 +368,13 @@ def build_child(parent_manifest, slot, value, child_id, packets_dir,
     elif slot == "agents_md":
         child["agents_md"] = write_text_slot("-agents.md", value)
     elif slot == "tools":
-        child["tools"] = list(tool_policies[value])
+        child["tools"] = (
+            list(value) if isinstance(value, list) else list(tool_policies[value])
+        )
     elif slot == "skills":
-        child["skills"] = list(skill_sets[value])
+        child["skills"] = (
+            list(value) if isinstance(value, list) else list(skill_sets[value])
+        )
     else:
         child[slot] = value
     return child
@@ -319,10 +399,15 @@ def write_manifest(child, path):
 def propose(taskspec, parent_snapshot, parent_manifest, records, exp_dir,
             child_id, optimizer_model, packets_dir, manifests_dir,
             archive_summary=None, tool_policies=None, allowed_models=None,
-            avoid_slots=(), skill_sets=None):
+            avoid_slots=(), skill_sets=None, archive_manifests=None,
+            mode=None):
     """Full step: evidence → LLM proposal → validation → child on disk.
     Returns (manifest_path, metadata)."""
     trials = worst_trials(records, parent_snapshot["id"])
+    donors = sorted(
+        cid for cid in (archive_manifests or {})
+        if cid != parent_snapshot["id"]
+    )
     prompt = build_prompt(
         taskspec,
         parent_snapshot,
@@ -333,16 +418,24 @@ def propose(taskspec, parent_snapshot, parent_manifest, records, exp_dir,
             allowed_models=allowed_models,
             avoid_slots=avoid_slots,
             skill_sets=skill_sets,
+            mode=mode,
+            donors=donors,
         ),
     )
     content, cost = call_optimizer(prompt, optimizer_model)
     proposal = parse_proposal(content)
+    predicted_effect, pe_defaulted = normalize_predicted_effect(proposal)
+    donor = proposal.get("donor")
+    if donor is not None:
+        proposal = resolve_donor(proposal, archive_manifests or {},
+                                 parent_manifest)
     slot, value, hypothesis = validate_proposal(
         proposal, parent_manifest,
         tool_policies=tool_policies,
         allowed_models=allowed_models,
         avoid_slots=avoid_slots,
         skill_sets=skill_sets,
+        donor=donor,
     )
     child = build_child(parent_manifest, slot, value, child_id, packets_dir,
                         tool_policies=tool_policies, skill_sets=skill_sets)
@@ -356,6 +449,11 @@ def propose(taskspec, parent_snapshot, parent_manifest, records, exp_dir,
             "(new text)" if slot in ("prompt_packet", "agents_md") else value
         ),
         "hypothesis": hypothesis,
+        "predicted_effect": predicted_effect,
         "optimizer_cost_usd": cost,
     }
+    if pe_defaulted:
+        meta["predicted_effect_defaulted"] = True
+    if donor:
+        meta["donor"] = donor
     return manifest_path, meta

@@ -215,6 +215,8 @@ def run_search(
             children_built += 1
             after = summary_fn()
             improved, delta = improved_over(after[child_id], after[parent], mode)
+            ccpt = cost_per_trial(after[child_id])
+            pcpt = cost_per_trial(after[parent])
             history.append(
                 dict(
                     meta,
@@ -224,6 +226,12 @@ def run_search(
                     parent_reward_mean=after[parent]["reward_mean"],
                     reward_mean=after[child_id]["reward_mean"],
                     mean_task_delta=delta,
+                    parent_cost_per_trial=(
+                        round(pcpt, 6) if pcpt is not None else None
+                    ),
+                    child_cost_per_trial=(
+                        round(ccpt, 6) if ccpt is not None else None
+                    ),
                     improved=improved,
                 )
             )

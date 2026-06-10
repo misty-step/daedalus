@@ -205,6 +205,14 @@ def main():
             (exp_dir / "compositions" / f"{parent_id}.json").read_text()
         )
         parent_manifest = tomllib.loads(Path(manifests[parent_id]).read_text())
+        # Archive snapshots double as transplant donors: the search may move
+        # one discovered slot value (packet text, model, tools...) onto the
+        # parent instead of inventing a perturbation.
+        archive = {}
+        for snap_file in (exp_dir / "compositions").glob("*.json"):
+            snap = json.loads(snap_file.read_text())
+            if snap.get("kind") == "pi":
+                archive[snap["id"]] = snap
         manifest_path, meta = mutate.propose(
             taskspec_for_prompt,
             snapshot,
@@ -224,6 +232,8 @@ def main():
             allowed_models=search_space.get("models"),
             avoid_slots=avoid_slots,
             skill_sets=search_space.get("skill_sets"),
+            archive_manifests=archive,
+            mode=mode,
         )
         manifests[child_id] = manifest_path
         optimizer_costs.append(meta.get("optimizer_cost_usd"))

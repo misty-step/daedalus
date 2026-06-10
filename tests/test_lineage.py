@@ -36,6 +36,8 @@ def build_run(tmp_path):
              "parent_id": "seed1-glm-5-spec-first",
              "slot_changed": "thinking",
              "hypothesis": "medium thinking keeps reward and cuts cost",
+             "predicted_effect": {"reward": "hold", "cost": "down"},
+             "parent_cost_per_trial": 0.0171, "child_cost_per_trial": 0.0138,
              "parent_reward_mean": 1.0, "reward_mean": 1.0,
              "mean_task_delta": 0.0, "improved": True},
             {"generation": 2, "attempt": 0, "child_id": "g2a-g1a",
@@ -74,13 +76,30 @@ def test_render_tells_the_whole_story(tmp_path):
     assert "z-ai/glm-5" in text and "spec-first" in text
     # hypotheses with verdicts
     assert "medium thinking keeps reward and cuts cost" in text
-    assert "[confirmed]" in text
-    assert "[not confirmed (Δ -0.33)]" in text
+    assert "prediction confirmed" in text  # structured predicted_effect scored
+    assert "reward hold: ✓" in text and "cost down: ✓" in text
+    assert "[not confirmed (Δ -0.33)]" in text  # legacy entry without prediction
     assert "proposal rejected" in text
     # alarms, certification, recommendation
     assert "saturation-at-top" in text
     assert "certified: seed1-glm-5-spec-first" in text
     assert "← **recommended**" in text
+
+
+def test_hypothesis_verdict_refuted_and_partial():
+    refuted = lineage.hypothesis_verdict({
+        "predicted_effect": {"reward": "up", "cost": "down"},
+        "mean_task_delta": -0.2,
+        "parent_cost_per_trial": 0.01, "child_cost_per_trial": 0.02,
+    })
+    assert refuted[0] == "prediction refuted"
+    partial = lineage.hypothesis_verdict({
+        "predicted_effect": {"reward": "up", "cost": "down"},
+        "mean_task_delta": 0.3,
+        "parent_cost_per_trial": 0.01, "child_cost_per_trial": 0.02,
+    })
+    assert partial[0] == "prediction partially confirmed"
+    assert lineage.hypothesis_verdict({"improved": True}) is None
 
 
 def test_render_survives_missing_artifacts(tmp_path):
