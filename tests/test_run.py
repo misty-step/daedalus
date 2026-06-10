@@ -112,7 +112,7 @@ def run_candidate(candidate, runs_dir):
     )
     assert proc.returncode == 0, proc.stderr
     records = []
-    for f in runs_dir.glob("*.jsonl"):
+    for f in runs_dir.glob("*/trials.jsonl"):
         records += [json.loads(line) for line in f.read_text().splitlines()]
     return [r for r in records if r["candidate_id"] == candidate]
 
@@ -120,9 +120,10 @@ def run_candidate(candidate, runs_dir):
 REQUIRED_FIELDS = {
     "run_id", "ts_start", "ts_end", "wall_ms", "runner_version", "arena_id",
     "arena_version", "task_id", "trial", "candidate_id", "candidate_kind",
-    "model", "provider_served", "tokens_prompt", "tokens_completion",
-    "tokens_cached", "cost_usd", "reward", "recall", "matched",
-    "false_positives", "error", "scorer_error",
+    "composition_hash", "harness_version", "artifacts", "model",
+    "provider_served", "tokens_prompt", "tokens_completion", "tokens_cached",
+    "cost_usd", "reward", "recall", "matched", "false_positives", "error",
+    "scorer_error",
 }
 
 
@@ -133,6 +134,15 @@ def test_oracle_scores_one_everywhere_offline(tmp_path):
     for r in records:
         missing = REQUIRED_FIELDS - set(r)
         assert not missing, f"run record missing fields: {missing}"
+        assert not any(k.startswith("_") for k in r), "private keys leaked"
+    exp_dir = next(tmp_path.iterdir())
+    snapshot = json.loads((exp_dir / "compositions" / "oracle.json").read_text())
+    assert snapshot["composition_hash"] == records[0]["composition_hash"]
+    summary = json.loads((exp_dir / "summary.json").read_text())
+    assert summary["oracle"]["reward_mean"] == 1.0
+    assert summary["oracle"]["tasks"]["py-auth-sqli"]["rewards"] == [1.0]
+    art = exp_dir / records[0]["artifacts"]
+    assert (art / "findings.json").exists()
 
 
 def test_null_scores_exactly_clean_fraction_offline(tmp_path):
@@ -141,3 +151,18 @@ def test_null_scores_exactly_clean_fraction_offline(tmp_path):
     rewards = {r["task_id"]: r["reward"] for r in records}
     assert rewards["js-clean-rename"] == 1.0
     assert all(v == 0.0 for k, v in rewards.items() if k != "js-clean-rename")
+
+
+def test_composition_hash_tracks_prompt_packet(tmp_path):
+    packet = tmp_path / "packet.md"
+    packet.write_text("Review carefully.")
+    manifest = tmp_path / "cand.toml"
+    manifest.write_text(
+        f'id = "x"\nkind = "oneshot"\nmodel = "m"\nprompt_packet = "{packet}"\n'
+    )
+    h1 = runner.load_candidate(manifest)["_hash"]
+    packet.write_text("Review very carefully.")
+    h2 = runner.load_candidate(manifest)["_hash"]
+    assert h1 != h2
+    packet.write_text("Review carefully.")
+    assert runner.load_candidate(manifest)["_hash"] == h1

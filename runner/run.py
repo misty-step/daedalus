@@ -61,6 +61,38 @@ def load_toml(path):
         return tomllib.load(f)
 
 
+def load_candidate(path):
+    """Load a manifest, resolve its prompt packet, compute the composition
+    hash. Private keys (underscore-prefixed) never reach disk records."""
+    candidate = load_toml(path)
+    packet_ref = candidate.get("prompt_packet")
+    if packet_ref:
+        packet_path = Path(packet_ref)
+        if not packet_path.is_absolute():
+            packet_path = REPO / packet_path
+        candidate["_packet_text"] = packet_path.read_text()
+    else:
+        candidate["_packet_text"] = None
+    basis = {k: v for k, v in candidate.items() if not k.startswith("_")}
+    basis["prompt_packet_text"] = candidate["_packet_text"]
+    candidate["_hash"] = hashlib.sha256(
+        json.dumps(basis, sort_keys=True).encode()
+    ).hexdigest()[:16]
+    return candidate
+
+
+def harness_version(candidate):
+    if candidate["kind"] != "pi":
+        return None
+    try:
+        out = subprocess.run(
+            ["pi", "--version"], capture_output=True, text=True, timeout=30
+        )
+        return out.stdout.strip() or None
+    except Exception:  # noqa: BLE001 - version capture is best-effort
+        return None
+
+
 def workspace_listing(workdir):
     parts = []
     for f in sorted(workdir.rglob("*")):
@@ -97,7 +129,7 @@ def run_oracle(candidate, instruction, task_dir, workdir, record):
     shutil.copy(task_dir / "solution" / "findings.json", workdir / "findings.json")
 
 
-def run_openrouter(candidate, instruction, task_dir, workdir, record):
+def run_oneshot(candidate, instruction, task_dir, workdir, record):
     key = os.environ.get("OPENROUTER_API_KEY")
     if not key:
         raise RuntimeError("OPENROUTER_API_KEY is not set")
@@ -107,16 +139,14 @@ def run_openrouter(candidate, instruction, task_dir, workdir, record):
         + workspace_listing(workdir)
         + "\nRespond with ONLY the findings JSON object, no prose."
     )
+    system = (
+        candidate["_packet_text"]
+        or "You are a precise code-review agent. Output only valid JSON."
+    )
     body = {
         "model": candidate["model"],
         "messages": [
-            {
-                "role": "system",
-                "content": candidate.get(
-                    "system_prompt",
-                    "You are a precise code-review agent. Output only valid JSON.",
-                ),
-            },
+            {"role": "system", "content": system},
             {"role": "user", "content": prompt},
         ],
         "temperature": candidate.get("temperature", 0.2),
@@ -141,6 +171,7 @@ def run_openrouter(candidate, instruction, task_dir, workdir, record):
     )
     record["cost_usd"] = usage.get("cost")
     content = payload["choices"][0]["message"]["content"]
+    record["_response_text"] = content
     findings = extract_json_object(content)
     (workdir / "findings.json").write_text(json.dumps(findings, indent=2))
 
@@ -215,8 +246,8 @@ def run_pi(candidate, instruction, task_dir, workdir, record):
         cmd += ["--thinking", candidate["thinking"]]
     if "tools" in candidate:
         cmd += ["--tools", ",".join(candidate["tools"])]
-    if "system_prompt" in candidate:
-        cmd += ["--system-prompt", candidate["system_prompt"]]
+    if candidate["_packet_text"]:
+        cmd += ["--append-system-prompt", candidate["_packet_text"]]
     message = instruction + "\n\nThe workspace is the current working directory."
     proc = subprocess.run(
         cmd + [message],
@@ -227,6 +258,7 @@ def run_pi(candidate, instruction, task_dir, workdir, record):
         env=candidate_env(candidate),
     )
     record["agent_exit_code"] = proc.returncode
+    record["_transcript_text"] = proc.stdout
     record.update(extract_pi_usage(proc.stdout))
     if proc.returncode != 0:
         # A crashing candidate is a failed trial even if it left findings;
@@ -234,12 +266,49 @@ def run_pi(candidate, instruction, task_dir, workdir, record):
         raise RuntimeError(f"pi exited {proc.returncode}: {proc.stderr[-400:]}")
 
 
-KINDS = {
+EXECUTORS = {
     "null": run_null,
     "oracle": run_oracle,
-    "openrouter": run_openrouter,
+    "oneshot": run_oneshot,
     "pi": run_pi,
 }
+
+
+def summarize(trials_path):
+    """Per-candidate, per-task reward distributions from a trials file."""
+    records = [json.loads(line) for line in trials_path.read_text().splitlines()]
+    summary = {}
+    for r in records:
+        c = summary.setdefault(
+            r["candidate_id"],
+            {
+                "composition_hash": r.get("composition_hash"),
+                "tasks": {},
+                "trials": 0,
+                "errors": 0,
+                "cost_usd_total": 0.0,
+                "cost_known": True,
+            },
+        )
+        c["trials"] += 1
+        if r.get("error"):
+            c["errors"] += 1
+        t = c["tasks"].setdefault(r["task_id"], {"rewards": [], "wall_ms": []})
+        t["rewards"].append(r["reward"])
+        t["wall_ms"].append(r["wall_ms"])
+        if r.get("cost_usd") is None:
+            c["cost_known"] = False
+        else:
+            c["cost_usd_total"] += r["cost_usd"]
+    for c in summary.values():
+        rewards = [x for t in c["tasks"].values() for x in t["rewards"]]
+        c["reward_mean"] = round(sum(rewards) / len(rewards), 4)
+        c["cost_usd_total"] = round(c["cost_usd_total"], 6)
+        for t in c["tasks"].values():
+            t["mean"] = round(sum(t["rewards"]) / len(t["rewards"]), 4)
+            t["min"] = min(t["rewards"])
+            t["max"] = max(t["rewards"])
+    return summary
 
 
 def main():
@@ -248,12 +317,16 @@ def main():
     parser.add_argument("--arena", required=True, help="arena directory")
     parser.add_argument("--tasks", help="comma-separated task ids (default: all)")
     parser.add_argument("--trials", type=int, default=1)
+    parser.add_argument(
+        "--exp-dir",
+        help="append into an existing experiment directory (loop driver mode)",
+    )
     args = parser.parse_args()
 
-    candidate = load_toml(args.candidate)
+    candidate = load_candidate(args.candidate)
     arena_dir = Path(args.arena)
     arena = load_toml(arena_dir / "arena.toml")
-    run_fn = KINDS[candidate["kind"]]
+    run_fn = EXECUTORS[candidate["kind"]]
 
     task_filter = set(args.tasks.split(",")) if args.tasks else None
     task_dirs = [
@@ -264,10 +337,24 @@ def main():
     if not task_dirs:
         sys.exit("no tasks matched")
 
-    runs_dir = Path(os.environ.get("DAEDALUS_RUNS_DIR", REPO / "runs"))
-    runs_dir.mkdir(parents=True, exist_ok=True)
     stamp = utc_stamp()
-    out_path = runs_dir / f"{stamp}-{candidate['id']}.jsonl"
+    runs_root = Path(os.environ.get("DAEDALUS_RUNS_DIR", REPO / "runs"))
+    exp_dir = Path(args.exp_dir) if args.exp_dir else (
+        runs_root / f"{stamp}-{candidate['id']}"
+    )
+    (exp_dir / "compositions").mkdir(parents=True, exist_ok=True)
+
+    snapshot = {k: v for k, v in candidate.items() if not k.startswith("_")}
+    snapshot.update(
+        composition_hash=candidate["_hash"],
+        prompt_packet_text=candidate["_packet_text"],
+        harness_version=harness_version(candidate),
+        runner_version=RUNNER_VERSION,
+    )
+    (exp_dir / "compositions" / f"{candidate['id']}.json").write_text(
+        json.dumps(snapshot, indent=2)
+    )
+    trials_path = exp_dir / "trials.jsonl"
 
     records = []
     for task_dir in task_dirs:
@@ -286,6 +373,8 @@ def main():
                 "trial": trial,
                 "candidate_id": candidate["id"],
                 "candidate_kind": candidate["kind"],
+                "composition_hash": candidate["_hash"],
+                "harness_version": snapshot["harness_version"],
                 "model": candidate.get("model"),
                 "provider_served": None,
                 "tokens_prompt": None,
@@ -336,9 +425,25 @@ def main():
                     )
                 except json.JSONDecodeError:
                     record["findings"] = None
+
+            # Retain evidence; artifacts/ is gitignored, records are not.
+            art_dir = (
+                exp_dir / "artifacts" / candidate["id"]
+                / f"{task_dir.name}-t{trial}-{stamp}"
+            )
+            art_dir.mkdir(parents=True, exist_ok=True)
+            transcript = record.pop("_transcript_text", None)
+            if transcript:
+                (art_dir / "transcript.txt").write_text(transcript)
+            response = record.pop("_response_text", None)
+            if response:
+                (art_dir / "response.txt").write_text(response)
+            if findings_file.exists():
+                shutil.copy(findings_file, art_dir / "findings.json")
+            record["artifacts"] = str(art_dir.relative_to(exp_dir))
             shutil.rmtree(workdir, ignore_errors=True)
 
-            with open(out_path, "a") as f:
+            with open(trials_path, "a") as f:
                 f.write(json.dumps(record) + "\n")
             records.append(record)
             cost = record["cost_usd"]
@@ -346,16 +451,22 @@ def main():
                 f"{task_dir.name:<18} t{trial}  reward={record['reward']:<6}"
                 f" wall={record['wall_ms']/1000:.1f}s"
                 f" cost={'$%.4f' % cost if cost is not None else 'unknown'}"
-                f"{'  ERROR: ' + record['error'] if record['error'] else ''}"
+                f"{'  ERROR: ' + record['error'] if record['error'] else ''}",
+                flush=True,
             )
 
+    summary = summarize(trials_path)
+    (exp_dir / "summary.json").write_text(json.dumps(summary, indent=2))
     rewards = [r["reward"] for r in records]
     costs = [r["cost_usd"] for r in records if r["cost_usd"] is not None]
-    print(f"\ncandidate: {candidate['id']}  ({len(records)} trials)")
-    print(f"mean reward: {sum(rewards)/len(rewards):.4f}")
-    print(f"total cost:  ${sum(costs):.4f}" if costs else "total cost:  unknown")
-    shown = out_path.relative_to(REPO) if out_path.is_relative_to(REPO) else out_path
-    print(f"records:     {shown}")
+    print(f"\ncandidate: {candidate['id']}  ({len(records)} trials)", flush=True)
+    print(f"mean reward: {sum(rewards)/len(rewards):.4f}", flush=True)
+    print(
+        f"total cost:  ${sum(costs):.4f}" if costs else "total cost:  unknown",
+        flush=True,
+    )
+    shown = exp_dir.relative_to(REPO) if exp_dir.is_relative_to(REPO) else exp_dir
+    print(f"experiment:  {shown}", flush=True)
 
 
 if __name__ == "__main__":

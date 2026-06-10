@@ -96,28 +96,42 @@ clean-PR task makes silence a non-strategy and invented findings fatal.
 Trials that error, crash (nonzero candidate exit), or trip grader
 tamper-detection are voided: reward 0, error recorded.
 
-### Candidate manifest — `candidates/<id>.toml`
+### Candidate manifest — `candidates/<id>.toml` (composition.v1)
 
-Slots: `id`, `kind` (null | oracle | openrouter | pi), `model`,
-`provider_name`, `thinking`, `tools`, `system_prompt`, `temperature`,
-`max_tokens`, `timeout_sec`, optional `provider` table for OpenRouter routing
-pinning. `null` and `oracle` are permanent reference candidates: the floor
-proves the arena can't be passed by silence; the ceiling proves the verifier
-end-to-end. Run both after any arena change, before any model spend.
+Slots: `composition = 1`, `id`, `kind` (null | oracle | oneshot | pi — the
+executor; `oneshot` is a baseline adapter, not a peer agent), `model`,
+`provider_name`, `prompt_packet` (file reference under `packets/` — the
+primary mutable surface), `thinking`, `tools`, `temperature`, `max_tokens`,
+`timeout_sec`, `env_allowlist`, optional `provider` table for OpenRouter
+routing pinning. The runner computes a **composition hash** over the manifest
+plus the resolved packet text, and captures the harness version (`pi
+--version`) per run — attribution is mechanical, not remembered. `null` and
+`oracle` are permanent reference candidates: the floor proves the arena can't
+be passed by silence; the ceiling proves the verifier end-to-end. Run both
+after any arena change, before any model spend.
 
 Experimental discipline: two candidates under comparison should differ in as
 few slots as possible (ideally one). `baseline-oneshot` and `pi-kimi` share a
-model precisely so the delta measures the harness.
+model and packet precisely so the delta measures the harness.
 
-### Run record — `runs/<stamp>-<candidate>.jsonl`, one JSON object per trial
+### Experiment directory — `runs/<exp-id>/`
 
-`run_id, ts_start, ts_end, wall_ms, runner_version, arena_id, arena_version,
-taskspec, task_id, trial, candidate_id, candidate_kind, model,
-provider_served, tokens_prompt, tokens_completion, tokens_cached, cost_usd,
-reward, recall, matched, false_positives, expected_defects, findings, error,
+- `compositions/<candidate>.json` — immutable snapshot (manifest + hash +
+  resolved packet + harness/runner versions)
+- `trials.jsonl` — one record per trial, all candidates in the experiment
+- `artifacts/<candidate>/<task>-t<n>-<stamp>/` — retained transcripts,
+  model responses, findings (gitignored; records reference them)
+- `summary.json` — per-candidate, per-task reward distributions
+  (rewards list, mean/min/max, wall, cost totals)
+
+Trial record fields: `run_id, ts_start, ts_end, wall_ms, runner_version,
+arena_id, arena_version, taskspec, task_id, trial, candidate_id,
+candidate_kind, composition_hash, harness_version, model, provider_served,
+tokens_prompt, tokens_completion, tokens_cached, cost_usd, reward, recall,
+matched, false_positives, expected_defects, findings, artifacts, error,
 scorer_error` (+ `agent_exit_code` for CLI candidates). Cost and latency are
 part of the objective, not diagnostics; unknown cost is recorded as null,
-never guessed.
+never guessed. Records are committed; artifacts are local evidence.
 
 ### Launch contract (Phase 3, schema TBD at G3)
 

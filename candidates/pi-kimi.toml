@@ -1,11 +1,12 @@
 # Agentic candidate: pi harness in headless mode over OpenRouter, default
 # read/bash/edit/write tools, exploring the workspace itself and writing
-# findings.json. Same model as baseline-oneshot to isolate the harness
-# contribution. pi version is part of the composition (record `pi --version`
-# alongside results until the runner captures it automatically).
+# findings.json. Same model and prompt packet as baseline-oneshot to isolate
+# the harness contribution. pi version is captured per run by the runner.
+composition = 1
 id = "pi-kimi"
 kind = "pi"
 provider_name = "openrouter"
 model = "moonshotai/kimi-k2.6"
+prompt_packet = "packets/reviewer-v1.md"
 thinking = "medium"
 timeout_sec = 600
