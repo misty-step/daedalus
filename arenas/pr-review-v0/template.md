@@ -1,6 +1,6 @@
 # Code Review Task
 
-PR intent: add a pagination helper for list endpoints.
+PR intent: {intent}
 
 You are reviewing a pull request. The workspace contains the repository files
 *after* the change was applied, plus `PR.diff`, the unified diff of the change

@@ -93,9 +93,9 @@ def test_validate_task_dir_rejects_symlinks(tmp_path):
     raise AssertionError("expected RuntimeError on symlinked fixture")
 
 
-def run_candidate(candidate, runs_dir):
+def invoke_runner(candidate, runs_dir, *extra):
     env = dict(os.environ, DAEDALUS_RUNS_DIR=str(runs_dir))
-    proc = subprocess.run(
+    return subprocess.run(
         [
             sys.executable,
             str(REPO / "runner" / "run.py"),
@@ -103,6 +103,7 @@ def run_candidate(candidate, runs_dir):
             str(REPO / "candidates" / f"{candidate}.toml"),
             "--arena",
             str(REPO / "arenas" / "pr-review-v0"),
+            *extra,
         ],
         capture_output=True,
         text=True,
@@ -110,6 +111,10 @@ def run_candidate(candidate, runs_dir):
         cwd=REPO,
         timeout=120,
     )
+
+
+def run_candidate(candidate, runs_dir, *extra):
+    proc = invoke_runner(candidate, runs_dir, "--final", *extra)
     assert proc.returncode == 0, proc.stderr
     records = []
     for f in runs_dir.glob("*/trials.jsonl"):
@@ -151,6 +156,42 @@ def test_null_scores_exactly_clean_fraction_offline(tmp_path):
     rewards = {r["task_id"]: r["reward"] for r in records}
     assert rewards["js-clean-rename"] == 1.0
     assert all(v == 0.0 for k, v in rewards.items() if k != "js-clean-rename")
+
+
+def test_holdout_requires_final_flag(tmp_path):
+    proc = invoke_runner("null", tmp_path, "--split", "holdout")
+    assert proc.returncode != 0
+    assert "holdout" in proc.stderr
+
+
+def test_full_arena_without_final_is_refused(tmp_path):
+    proc = invoke_runner("null", tmp_path)
+    assert proc.returncode != 0
+    assert "holdout" in proc.stderr
+
+
+def test_train_split_runs_without_final(tmp_path):
+    proc = invoke_runner("null", tmp_path, "--split", "train")
+    assert proc.returncode == 0, proc.stderr
+    records = []
+    for f in tmp_path.glob("*/trials.jsonl"):
+        records += [json.loads(line) for line in f.read_text().splitlines()]
+    assert sorted(r["task_id"] for r in records) == [
+        "js-cart-total",
+        "js-clean-rename",
+        "py-auth-sqli",
+    ]
+
+
+def test_instruction_composed_from_template_and_intent():
+    arena_dir = REPO / "arenas" / "pr-review-v0"
+    arena = runner.load_toml(arena_dir / "arena.toml")
+    text = runner.task_instruction(
+        arena_dir, arena, arena_dir / "tasks" / "py-pagination"
+    )
+    assert "pagination helper" in text
+    assert "{intent}" not in text
+    assert "findings.json" in text
 
 
 def test_composition_hash_tracks_prompt_packet(tmp_path):

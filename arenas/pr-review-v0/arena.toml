@@ -1,18 +1,30 @@
 id = "pr-review-v0"
-# 0.1.1: clean-task false positives now score a hard 0 (was -0.2 each).
-# All v0.1.0 run records score identically under this rule (no clean-task
-# FPs occurred), so cross-version comparison with them remains valid.
-version = "0.1.1"
+# 0.2.0: instructions moved to a shared template.md + per-task intent.md
+# (rendered text is semantically identical to 0.1.1 instructions) and train/
+# validation/holdout splits declared. Scoring rules unchanged from 0.1.1,
+# so cross-version comparison with 0.1.x records remains valid.
+# 0.1.1: clean-task false positives score a hard 0 (was -0.2 each).
+version = "0.2.0"
 taskspec = "specs/pr-review/taskspec.toml"
 description = """
 Six frozen pull-request fixtures with seeded defects (8 defects total across 5
 defective PRs, plus 1 clean PR as a false-positive check). Each task follows
-the Harbor task-directory format: instruction.md, environment/ (post-change
-files + PR.diff), tests/ (verifier + hidden answer key), solution/ (oracle
-findings). Candidates must never read tests/ or solution/; the Phase 0 runner
-only copies environment/ into the agent workspace.
+the Harbor task-directory format: intent.md (composed with template.md),
+environment/ (post-change files + PR.diff), tests/ (verifier + hidden answer
+key), solution/ (oracle findings). Candidates must never read tests/ or
+solution/; the runner only copies environment/ into the agent workspace.
 """
 
+[template]
+file = "template.md"
+
+# The search loop optimizes against train+validation only. Holdout is scored
+# once, at final evaluation, behind the runner's --final flag.
+[split]
+train = ["py-auth-sqli", "js-cart-total", "js-clean-rename"]
+validation = ["py-file-cache", "py-pagination"]
+holdout = ["rs-retry-backoff"]
+
 # Frozen surfaces for this arena version: fixtures, answer keys, scorer
-# constants (FP_PENALTY), and instruction text. Changing any of these requires
-# a version bump and re-running all baselines.
+# constants (FP_PENALTY, clean-task rule), template, and splits. Changing any
+# requires a version bump and re-running all baselines.

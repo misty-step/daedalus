@@ -56,6 +56,46 @@ def validate_task_dir(task_dir):
             raise RuntimeError(f"fixture contains symlink: {f}")
 
 
+def task_instruction(arena_dir, arena, task_dir):
+    """Compose the task instruction from the arena template + task intent,
+    or fall back to a per-task instruction.md for template-less arenas."""
+    template_ref = (arena.get("template") or {}).get("file")
+    if template_ref:
+        template = (arena_dir / template_ref).read_text()
+        intent = (task_dir / "intent.md").read_text().strip()
+        return template.replace("{intent}", intent)
+    return (task_dir / "instruction.md").read_text()
+
+
+def select_tasks(arena_dir, arena, split, task_filter, final):
+    """Resolve task dirs honoring split selection and the holdout guard:
+    holdout fixtures are scored only behind --final, so the search loop can
+    never overfit them."""
+    split_cfg = arena.get("split") or {}
+    if split != "all":
+        ids = split_cfg.get(split)
+        if not ids:
+            sys.exit(f"arena declares no '{split}' split")
+        allowed = set(ids)
+    else:
+        allowed = None
+    task_dirs = [
+        d
+        for d in sorted((arena_dir / "tasks").iterdir())
+        if d.is_dir()
+        and (allowed is None or d.name in allowed)
+        and (task_filter is None or d.name in task_filter)
+    ]
+    holdout = set(split_cfg.get("holdout", []))
+    touched_holdout = sorted(d.name for d in task_dirs if d.name in holdout)
+    if touched_holdout and not final:
+        sys.exit(
+            "holdout tasks require --final (anti-overfitting guard): "
+            + ", ".join(touched_holdout)
+        )
+    return task_dirs
+
+
 def load_toml(path):
     with open(path, "rb") as f:
         return tomllib.load(f)
@@ -321,6 +361,17 @@ def main():
         "--exp-dir",
         help="append into an existing experiment directory (loop driver mode)",
     )
+    parser.add_argument(
+        "--split",
+        choices=["train", "validation", "holdout", "all"],
+        default="all",
+        help="restrict to a declared arena split (default: all)",
+    )
+    parser.add_argument(
+        "--final",
+        action="store_true",
+        help="allow scoring holdout tasks (final evaluation only)",
+    )
     args = parser.parse_args()
 
     candidate = load_candidate(args.candidate)
@@ -329,11 +380,7 @@ def main():
     run_fn = EXECUTORS[candidate["kind"]]
 
     task_filter = set(args.tasks.split(",")) if args.tasks else None
-    task_dirs = [
-        d
-        for d in sorted((arena_dir / "tasks").iterdir())
-        if d.is_dir() and (task_filter is None or d.name in task_filter)
-    ]
+    task_dirs = select_tasks(arena_dir, arena, args.split, task_filter, args.final)
     if not task_dirs:
         sys.exit("no tasks matched")
 
@@ -359,7 +406,7 @@ def main():
     records = []
     for task_dir in task_dirs:
         validate_task_dir(task_dir)
-        instruction = (task_dir / "instruction.md").read_text()
+        instruction = task_instruction(arena_dir, arena, task_dir)
         grader_digest = tree_digest(task_dir / "tests", task_dir / "solution")
         for trial in range(1, args.trials + 1):
             record = {
