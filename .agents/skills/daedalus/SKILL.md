@@ -54,6 +54,13 @@ that differ in as few slots as possible (one is ideal). Equal budgets per
 comparison. Every trial leaves a JSONL run record; never report a result
 without one. Unknown cost is "unknown", never an estimate stated as fact.
 
+The loop is automated: `bin/daedalus run <taskspec>` runs stages 3–6
+(baselines → reflective single-slot search → holdout final → report). Use it
+for the full cycle; use `runner/run.py` for single candidates and
+`runner/report.py` to render a comparison from any experiment dir. For Docker
+isolation or real-repo arenas, `bin/harbor-run` ports the arena and runs it
+under Harbor's built-in pi/oracle agents (see docs/adr-001).
+
 ## 5. Meta-eval (→ gate G2)
 
 Be adversarial about your own eval before trusting it. Checklist in DESIGN.md
