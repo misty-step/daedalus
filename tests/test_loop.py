@@ -8,17 +8,18 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "runner"))
 import loop  # noqa: E402
 
 
-def stats(task_rewards, cost=0.05, kind="pi"):
+def stats(task_rewards, cost=0.05, kind="pi", wall_ms=1000):
     """Build a summary entry from {task: [trial rewards]}."""
     tasks = {
         t: {"rewards": rs, "mean": sum(rs) / len(rs), "min": min(rs),
-            "max": max(rs)}
+            "max": max(rs), "wall_ms": [wall_ms] * len(rs)}
         for t, rs in task_rewards.items()
     }
     flat = [x for rs in task_rewards.values() for x in rs]
     return {
         "kind": kind,
         "tasks": tasks,
+        "trials": len(flat),
         "reward_mean": round(sum(flat) / len(flat), 4),
         "cost_usd_total": cost,
     }
@@ -201,6 +202,77 @@ def test_best_candidate_ignores_oneshot_probe_by_kind():
         "agent": {"reward_mean": 0.6, "cost_usd_total": 0.50, "kind": "pi"},
     }
     assert loop.best_candidate(summary) == "agent"
+
+
+def test_held_reward_with_cost_cut_improves_under_cheap_modes():
+    # The g1b regression: same reward, 42% cheaper per trial. That is the
+    # whole point of threshold-then-cheap — it must count as improvement.
+    parent = stats({"t1": [1.0, 1.0], "t2": [1.0, 1.0]}, cost=0.40)
+    child = stats({"t1": [1.0, 1.0], "t2": [1.0, 1.0]}, cost=0.24)
+    ok, delta = loop.improved_over(child, parent, "threshold-then-cheap")
+    assert ok and delta == 0.0
+    ok, _ = loop.improved_over(child, parent, "max-quality")
+    assert not ok  # quality mode does not chase cost
+    # A trivial 3% cost wiggle is not improvement even in cheap mode.
+    wiggle = stats({"t1": [1.0, 1.0], "t2": [1.0, 1.0]}, cost=0.39)
+    ok, _ = loop.improved_over(wiggle, parent, "threshold-then-cheap")
+    assert not ok
+
+
+def test_held_reward_with_wall_cut_improves_under_fast_enough():
+    parent = stats({"t1": [0.8, 0.8]}, wall_ms=10000)
+    child = stats({"t1": [0.8, 0.8]}, wall_ms=6000)
+    ok, _ = loop.improved_over(child, parent, "fast-enough")
+    assert ok
+    ok, _ = loop.improved_over(child, parent, "threshold-then-cheap")
+    assert not ok  # cost unchanged; wall is not this mode's axis
+
+
+def test_reward_drop_is_never_excused_by_cheapness():
+    parent = stats({"t1": [1.0, 1.0], "t2": [1.0, 1.0]}, cost=0.40)
+    worse = stats({"t1": [0.5, 0.5], "t2": [0.5, 0.5]}, cost=0.04)
+    ok, _ = loop.improved_over(worse, parent, "threshold-then-cheap")
+    assert not ok
+
+
+def test_parent_pool_includes_cost_frontier_near_tie():
+    summary = dict(BASE)
+    summary["champ"] = stats({"t1": [1.0], "t2": [1.0]}, cost=0.50)
+    # within 0.05 of the champ's reward at a tenth of the cost per trial
+    summary["frugal"] = stats({"t1": [0.95], "t2": [0.96]}, cost=0.04)
+    pool = loop.parent_pool(summary)
+    assert "champ" in pool
+    assert "frugal" in pool
+
+
+def test_monitor_alarms_recorded_deduped_and_can_stop():
+    calls = []
+
+    def monitor(summary, generation):
+        calls.append(generation)
+        return [{"kind": "saturation-at-top", "detail": "best at ceiling",
+                 "stop": "arena-saturated-at-top"}]
+
+    world = FakeWorld(BASE, [("c1", {"t1": [0.7], "t2": [0.7]}, 0.01)])
+    out = search(world, monitor_fn=monitor)
+    assert out["stop_reason"] == "arena-saturated-at-top"
+    assert out["history"] == []  # stopped before proposing
+    assert len(out["alarms"]) == 1
+
+
+def test_monitor_note_alarms_do_not_stop_and_do_not_repeat():
+    def monitor(summary, generation):
+        return [{"kind": "variance", "detail": "x flip-flops on t1"}]
+
+    world = FakeWorld(BASE, [
+        ("c1", {"t1": [0.58], "t2": [0.5]}, 0.01),
+        ("c2", {"t1": [0.55], "t2": [0.5]}, 0.01),
+        ("c3", {"t1": [0.59], "t2": [0.5]}, 0.01),
+        ("c4", {"t1": [0.3], "t2": [0.2]}, 0.01),
+    ])
+    out = search(world, monitor_fn=monitor)
+    assert out["stop_reason"] == "plateau"
+    assert len(out["alarms"]) == 1  # same alarm across generations dedupes
 
 
 def test_rig_discrimination_accepts_clean_task_fraction():

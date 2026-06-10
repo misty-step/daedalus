@@ -16,6 +16,25 @@ import random
 REFERENCE_IDS = {"null", "oracle"}
 REFERENCE_KINDS = {"null", "oracle", "oneshot"}
 
+# Modes where holding reward while cutting cost (or wall) is progress.
+COST_SENSITIVE_MODES = {"threshold-then-cheap", "pareto"}
+LATENCY_SENSITIVE_MODES = {"fast-enough", "pareto"}
+
+
+def cost_per_trial(stats):
+    cost = stats.get("cost_usd_total")
+    trials = stats.get("trials") or 0
+    if cost is None or not trials:
+        return None
+    return cost / trials
+
+
+def wall_mean_ms(stats):
+    walls = [
+        w for t in stats.get("tasks", {}).values() for w in t.get("wall_ms", [])
+    ]
+    return (sum(walls) / len(walls)) if walls else None
+
 
 def is_reference(cid, stats):
     """References (floor, ceiling, saturation probe) never compete: not as
@@ -51,6 +70,17 @@ def parent_pool(summary):
         contenders = sorted(c for c in real if task in real[c].get("tasks", {}))
         if contenders:
             pool.add(max(contenders, key=lambda c: real[c]["tasks"][task]["mean"]))
+    # Cost frontier: the cheapest candidate within near-tie of the best
+    # reward stays breedable — cheap-and-almost-as-good is where the
+    # cost-sensitive modes want to search.
+    best_r = real[best_candidate(summary)]["reward_mean"]
+    near = [
+        c for c in sorted(real)
+        if real[c]["reward_mean"] >= best_r - 0.05
+        and cost_per_trial(real[c]) is not None
+    ]
+    if near:
+        pool.add(min(near, key=lambda c: cost_per_trial(real[c])))
     return sorted(pool)
 
 
@@ -65,10 +95,13 @@ def trial_noise(stats):
     return (sum(spreads) / len(spreads) / 2) if spreads else 0.0
 
 
-def improved_over(child, parent, epsilon=0.01):
-    """Variance-aware keep rule: the mean paired per-task delta must clear
-    both candidates' observed trial noise (and a minimal epsilon). A mean
-    drifting inside the noise band is not progress, it is dice."""
+def improved_over(child, parent, mode="max-quality", epsilon=0.01):
+    """Variance- and mode-aware keep rule. A reward gain must clear both
+    candidates' observed trial noise (means drifting inside the band are
+    dice, not progress). Under cost-sensitive modes, holding reward within
+    the band while cutting cost per trial ≥10% is also progress — the
+    search must chase what the report grades; same for wall under
+    latency-sensitive modes."""
     common = sorted(set(child.get("tasks", {})) & set(parent.get("tasks", {})))
     if not common:
         return False, 0.0
@@ -76,8 +109,19 @@ def improved_over(child, parent, epsilon=0.01):
         child["tasks"][t]["mean"] - parent["tasks"][t]["mean"] for t in common
     ]
     mean_delta = sum(deltas) / len(deltas)
-    threshold = max(trial_noise(child), trial_noise(parent), epsilon)
-    return mean_delta > threshold, round(mean_delta, 4)
+    band = max(trial_noise(child), trial_noise(parent), epsilon)
+    if mean_delta > band:
+        return True, round(mean_delta, 4)
+    if mean_delta >= -band:  # reward held within noise
+        cc, pc = cost_per_trial(child), cost_per_trial(parent)
+        if (mode in COST_SENSITIVE_MODES
+                and cc is not None and pc is not None and cc <= pc * 0.9):
+            return True, round(mean_delta, 4)
+        cw, pw = wall_mean_ms(child), wall_mean_ms(parent)
+        if (mode in LATENCY_SENSITIVE_MODES
+                and cw is not None and pw is not None and cw <= pw * 0.9):
+            return True, round(mean_delta, 4)
+    return False, round(mean_delta, 4)
 
 
 def known_spend(summary, optimizer_costs):
@@ -96,19 +140,27 @@ def run_search(
     plateau_limit=2,
     max_proposal_failures=2,
     children_per_generation=2,
+    mode="max-quality",
+    monitor_fn=None,
     rng=None,
 ):
     """Drive the search. Returns {stop_reason, history, generations, best_id,
-    spend_known_usd}.
+    alarms, spend_known_usd}.
 
     summary_fn() -> {candidate_id: {"reward_mean", "cost_usd_total", "kind",
                                     "tasks": {task: {"rewards","mean",...}}}}
     propose_fn(parent_id, generation, attempt, avoid_slots)
         -> (child_id, meta with "slot_changed") or raises
     run_child_fn(child_id) -> None (its trials land in the summary)
+    monitor_fn(summary, generation) -> [alarm dicts]; an alarm carrying a
+        "stop" key halts the search with that stop reason (the meta-eval
+        monitor's verdict that the arena, not the candidates, is the
+        bottleneck).
     """
     rng = rng or random.Random(0)
     history = []
+    alarms = []
+    seen_alarms = set()
     non_improving_gens = 0
     proposal_failures = 0
     children_built = 0
@@ -123,6 +175,18 @@ def run_search(
         if budget_usd is not None and spent >= budget_usd:
             stop_reason = "budget"
             break
+
+        if monitor_fn is not None:
+            for alarm in monitor_fn(summary, generation) or []:
+                key = (alarm.get("kind"), alarm.get("detail"))
+                if key not in seen_alarms:
+                    seen_alarms.add(key)
+                    alarms.append(alarm)
+                if alarm.get("stop"):
+                    stop_reason = alarm["stop"]
+                    stopped = True
+            if stopped:
+                break
 
         parents = parent_pool(summary)
         rng.shuffle(parents)
@@ -150,7 +214,7 @@ def run_search(
             run_child_fn(child_id)
             children_built += 1
             after = summary_fn()
-            improved, delta = improved_over(after[child_id], after[parent])
+            improved, delta = improved_over(after[child_id], after[parent], mode)
             history.append(
                 dict(
                     meta,
@@ -177,7 +241,9 @@ def run_search(
     final_summary = summary_fn()
     return {
         "stop_reason": stop_reason,
+        "mode": mode,
         "history": history,
+        "alarms": alarms,
         "generations": generation,
         "best_id": best_candidate(final_summary),
         "spend_known_usd": round(known_spend(final_summary, optimizer_costs), 4),

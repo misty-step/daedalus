@@ -96,12 +96,16 @@ def pareto_front(cands):
     )
 
 
-def recommend(cands, front):
-    """Best mean reward; within 0.05 of the best, cheapest per trial wins."""
-    if not front:
+def recommend(cands, front, eligible=None):
+    """Best mean reward; within 0.05 of the best, cheapest per trial wins.
+    When `eligible` is given (certification: candidates with enough trials),
+    only those may be recommended — a lucky low-n mean can rank but never
+    ship. Falls back to the whole front if nothing eligible made it."""
+    pool = [cid for cid in front if eligible is None or cid in eligible] or front
+    if not pool:
         return None
-    best = max(cands[cid]["reward_mean"] for cid in front)
-    close = [cid for cid in front if cands[cid]["reward_mean"] >= best - 0.05]
+    best = max(cands[cid]["reward_mean"] for cid in pool)
+    close = [cid for cid in pool if cands[cid]["reward_mean"] >= best - 0.05]
     return min(
         close,
         key=lambda cid: (

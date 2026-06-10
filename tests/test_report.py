@@ -132,6 +132,21 @@ def test_extra_holdout_trials_do_not_penalize_recommendation():
     assert pick == "proven"
 
 
+def test_recommend_restricted_to_certified_candidates():
+    # A lucky single-trial 1.0 may rank, but only certified candidates ship.
+    records = (
+        [record("lucky", "t1", 1.0, 0.001, 500)]
+        + [record("steady", "t1", 0.9, 0.0005, 800) for _ in range(5)]
+    )
+    cands = report.aggregate(records)
+    front = report.pareto_front(cands)
+    assert "lucky" in front
+    assert report.recommend(cands, front) == "lucky"
+    assert report.recommend(cands, front, eligible={"steady"}) == "steady"
+    # Nothing eligible on the front -> fall back rather than recommend None.
+    assert report.recommend(cands, front, eligible={"ghost"}) == "lucky"
+
+
 def test_unknown_cost_treated_as_worst_in_dominance():
     records = [
         record("known", "t1", 0.8, 0.01, 1000),

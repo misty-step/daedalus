@@ -22,6 +22,7 @@ import sys
 import tempfile
 import time
 import tomllib
+import urllib.error
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
@@ -200,8 +201,16 @@ def run_oneshot(candidate, instruction, task_dir, workdir, record):
         data=json.dumps(body).encode(),
         headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
     )
-    with urllib.request.urlopen(req, timeout=candidate.get("timeout_sec", 300)) as resp:
-        payload = json.loads(resp.read())
+    try:
+        with urllib.request.urlopen(
+            req, timeout=candidate.get("timeout_sec", 300)
+        ) as resp:
+            payload = json.loads(resp.read())
+    except urllib.error.HTTPError as exc:
+        # A rejected request bills nothing: that is a known $0, not an
+        # unknown cost (keeps known-spend accounting honest for the probe).
+        record["cost_usd"] = 0.0
+        raise RuntimeError(f"HTTP Error {exc.code}: {exc.reason}") from exc
     usage = payload.get("usage") or {}
     record["provider_served"] = payload.get("provider")
     record["tokens_prompt"] = usage.get("prompt_tokens")

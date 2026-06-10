@@ -24,6 +24,7 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO / "runner"))
 
+import lineage  # noqa: E402
 import loop  # noqa: E402
 import mutate  # noqa: E402
 import report  # noqa: E402
@@ -90,12 +91,32 @@ def main():
         default=2,
         help="competing hypotheses raced per generation (default 2)",
     )
+    run_p.add_argument(
+        "--certify-top",
+        type=int,
+        default=3,
+        help="candidates certified with extra trials before recommendation",
+    )
+    run_p.add_argument(
+        "--certify-trials",
+        type=int,
+        default=5,
+        help="minimum trials per search task a candidate needs to be "
+        "recommendable (kills the winner's curse)",
+    )
     args = parser.parse_args()
 
     spec = tomllib.loads(Path(args.taskspec).read_text())
+    mode = spec.get("mode") or "max-quality"
     arena_dir = Path(args.arena) if args.arena else (
         REPO / spec["inputs"]["fixtures"]
     )
+    arena_cfg = tomllib.loads((arena_dir / "arena.toml").read_text())
+    split_cfg = arena_cfg.get("split") or {}
+    search_tasks = (split_cfg.get("train") or []) + (
+        split_cfg.get("validation") or []
+    )
+    holdout_ids = split_cfg.get("holdout") or []
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     exp_dir = REPO / "runs" / f"{stamp}-search-{spec['id']}"
     exp_dir.mkdir(parents=True)
@@ -216,6 +237,40 @@ def main():
         for split in ("train", "validation"):
             sh_runner(manifests[child_id], arena_dir, exp_dir, split, args.trials)
 
+    def monitor_fn(summary, generation):
+        """In-loop meta-eval: notice when the arena, not the candidates, is
+        the bottleneck."""
+        alarms = []
+        try:
+            best = loop.best_candidate(summary)
+        except ValueError:
+            return alarms
+        best_r = summary[best]["reward_mean"]
+        if best_r >= 0.999:
+            alarm = {
+                "generation": generation,
+                "kind": "saturation-at-top",
+                "detail": f"{best} at reward {best_r}: no reward gradient "
+                          "remains on the search splits",
+            }
+            if mode == "max-quality":
+                alarm["stop"] = "arena-saturated-at-top"
+            else:
+                alarm["detail"] += "; continuing on cost/latency only"
+            alarms.append(alarm)
+        for cid, stats in summary.items():
+            if loop.is_reference(cid, stats):
+                continue
+            for task, t in stats.get("tasks", {}).items():
+                if t.get("min") == 0.0 and t.get("max") == 1.0:
+                    alarms.append({
+                        "generation": generation,
+                        "kind": "variance",
+                        "detail": f"{cid} flip-flops on {task} (trials span "
+                                  "0.0–1.0); certification required",
+                    })
+        return alarms
+
     outcome = loop.run_search(
         summary_fn=summary_fn,
         propose_fn=propose_fn,
@@ -225,27 +280,116 @@ def main():
         optimizer_costs=optimizer_costs,
         plateau_limit=args.plateau,
         children_per_generation=args.children_per_gen,
+        mode=mode,
+        monitor_fn=monitor_fn,
     )
 
+    # --- Stage 3.5: certification racing ---
+    # Selection on small-n means inflates the winner (winner's curse). The
+    # top-k under the declared mode earn real trial counts before anything
+    # is recommendable.
+    print("== stage 3.5: certification racing", flush=True)
+
+    def task_count(records, cid, task):
+        return sum(
+            1 for r in records
+            if r["candidate_id"] == cid and r["task_id"] == task
+        )
+
+    summary = summary_fn()
+    real = {
+        cid: v for cid, v in summary.items() if not loop.is_reference(cid, v)
+    }
+
+    def mode_key(cid):
+        cpt = loop.cost_per_trial(real[cid])
+        return (
+            real[cid]["reward_mean"],
+            -(cpt if cpt is not None else float("inf")),
+        )
+
+    topk = [c for c in sorted(real, key=mode_key, reverse=True)
+            if c in manifests][: args.certify_top]
+    for cid in topk:
+        spent = loop.known_spend(summary_fn(), optimizer_costs)
+        if args.budget_usd is not None and spent >= args.budget_usd:
+            print(f"  budget reached (${spent:.4f}); certification stops "
+                  f"before {cid}", flush=True)
+            break
+        records = load_records(exp_dir)
+        for split_name in ("train", "validation"):
+            ids = split_cfg.get(split_name) or []
+            if not ids:
+                continue
+            have = min(task_count(records, cid, t) for t in ids)
+            need = args.certify_trials - have
+            if need > 0:
+                sh_runner(manifests[cid], arena_dir, exp_dir, split_name, need)
+
     # --- Stage 4: holdout final for the Pareto front (skip if no holdout) ---
-    holdout_ids = (tomllib.loads((arena_dir / "arena.toml").read_text())
-                   .get("split", {}).get("holdout") or [])
     cands = report.aggregate(load_records(exp_dir))
     front = report.pareto_front(cands)
     if holdout_ids:
         print("== stage 4: holdout final evaluation", flush=True)
         for cid in front:
-            sh_runner(manifests[cid], arena_dir, exp_dir, "holdout",
-                      args.trials, final=True)
+            if cid in manifests:
+                sh_runner(manifests[cid], arena_dir, exp_dir, "holdout",
+                          args.certify_trials, final=True)
     else:
         print("== stage 4: skipped (arena declares no holdout tasks)", flush=True)
 
     # --- Stage 5: report + receipts ---
     print("== stage 5: report", flush=True)
-    cands = report.aggregate(load_records(exp_dir))
+    records = load_records(exp_dir)
+    cands = report.aggregate(records)
     front = report.pareto_front(cands)
-    pick = report.recommend(cands, front)
+
+    # Certified = enough trials on every search task that the mean is not a
+    # lucky draw. Only certified candidates may be recommended.
+    certified = {
+        cid for cid, c in cands.items()
+        if c["kind"] not in report.REFERENCE_KINDS
+        and search_tasks
+        and all(task_count(records, cid, t) >= args.certify_trials
+                for t in search_tasks)
+    }
+    pick = report.recommend(cands, front, eligible=certified or None)
+
+    # Post-run meta-eval: an FP trap every agent passed never fired.
+    alarms = list(outcome.get("alarms", []))
+    clean_tasks = {
+        r["task_id"] for r in records if r.get("expected_defects") == 0
+    }
+    for task in sorted(clean_tasks):
+        agent_trials = [
+            r for r in records
+            if r["task_id"] == task and r.get("candidate_kind") == "pi"
+        ]
+        if agent_trials and all(r["reward"] == 1.0 for r in agent_trials):
+            alarms.append({
+                "kind": "fp-trap-never-fired",
+                "detail": f"every agent passed clean task {task}; the trap "
+                          "may be too easy to discriminate FP discipline",
+            })
+    outcome["alarms"] = alarms
+
     report_text = report.render(cands, front, pick)
+    if certified:
+        report_text += (
+            f"\n_Certified (≥{args.certify_trials} trials per search task): "
+            + ", ".join(sorted(certified))
+            + ". Recommendation restricted to certified candidates._\n"
+        )
+    if alarms:
+        report_text += "\n## Meta-eval alarms\n\n" + "".join(
+            f"- **{a['kind']}**: {a['detail']}\n" for a in alarms
+        )
+        (exp_dir / "arena-findings.md").write_text(
+            "# Draft arena-iteration note (promote to a backlog ticket)\n\n"
+            f"Run: {exp_dir.name}  mode: {mode}\n\n" + "".join(
+                f"- {a['kind']}: {a['detail']}\n" for a in alarms
+            )
+        )
     if saturated:
         report_text = (
             "> **WARNING — arena saturated.** The one-shot probe scored "
@@ -262,6 +406,8 @@ def main():
                 "cost_usd_total": cands[cid]["cost"],
                 "cost_usd_per_trial": cands[cid]["cost_per_trial"],
                 "wall_mean_s": cands[cid]["wall_mean"],
+                "trials": cands[cid]["trials"],
+                "certified": cid in certified,
                 "recommended": cid == pick,
             }
             for cid in front
@@ -270,10 +416,24 @@ def main():
     ))
     outcome["recommended"] = pick
     outcome["pareto_front"] = front
+    outcome["certified"] = sorted(certified)
     (exp_dir / "loop.json").write_text(json.dumps(outcome, indent=2))
 
+    # Lineage: the traceable story of how this contract was discovered.
+    (exp_dir / "lineage.md").write_text(lineage.render(exp_dir))
+    notebook = REPO / "runs" / "NOTEBOOK.md"
+    if not notebook.exists():
+        notebook.write_text(
+            "# Lab notebook\n\nOne entry per run: what was tried, what was "
+            "learned. lineage.md in each run dir has the full story.\n"
+        )
+    with open(notebook, "a") as f:
+        f.write(lineage.notebook_entry(exp_dir, spec, arena_cfg))
+
     print(f"\nstop reason: {outcome['stop_reason']}", flush=True)
-    print(f"recommended: {pick}", flush=True)
+    print(f"recommended: {pick}"
+          + ("" if pick in certified else "  (UNCERTIFIED)"), flush=True)
+    print(f"certified:   {sorted(certified) or 'none'}", flush=True)
     print(f"known spend: ${outcome['spend_known_usd']}", flush=True)
     print(f"experiment:  {exp_dir.relative_to(REPO)}", flush=True)
 
