@@ -1,0 +1,193 @@
+#!/usr/bin/env python3
+"""daedalus — run the autonomous composition search for a task spec.
+
+    bin/daedalus run specs/pr-review/taskspec.toml \
+        [--budget-usd 2.0] [--max-candidates 6] [--trials 3] \
+        [--optimizer-model moonshotai/kimi-k2.6] [--arena PATH]
+
+Stages: validate rig (oracle/null) → baselines on train+validation →
+reflective single-slot search loop → holdout final for the Pareto front →
+report.md + pareto.json + loop.json. Stops at budget, plateau, proposal
+failures, or the candidate cap.
+"""
+
+import argparse
+import json
+import subprocess
+import sys
+import tomllib
+from datetime import datetime, timezone
+from pathlib import Path
+
+REPO = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(REPO / "runner"))
+
+import loop  # noqa: E402
+import mutate  # noqa: E402
+import report  # noqa: E402
+from run import summarize  # noqa: E402
+
+BASELINES = ["candidates/baseline-oneshot.toml", "candidates/pi-kimi.toml"]
+REFERENCES = ["candidates/oracle.toml", "candidates/null.toml"]
+
+
+def sh_runner(manifest, arena_dir, exp_dir, split, trials, final=False):
+    cmd = [
+        sys.executable,
+        str(REPO / "runner" / "run.py"),
+        "--candidate", str(manifest),
+        "--arena", str(arena_dir),
+        "--exp-dir", str(exp_dir),
+        "--trials", str(trials),
+        "--split", split,
+    ]
+    if final:
+        cmd.append("--final")
+    print(f"\n=== run {Path(manifest).stem} split={split} trials={trials}", flush=True)
+    proc = subprocess.run(cmd, cwd=REPO)
+    if proc.returncode != 0:
+        sys.exit(f"runner failed for {manifest} (split={split})")
+
+
+def load_records(exp_dir):
+    path = exp_dir / "trials.jsonl"
+    if not path.exists():
+        return []
+    return [json.loads(line) for line in path.read_text().splitlines()]
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    sub = parser.add_subparsers(dest="command", required=True)
+    run_p = sub.add_parser("run", help="search compositions for a task spec")
+    run_p.add_argument("taskspec")
+    run_p.add_argument("--arena", help="override arena dir (default: spec fixtures)")
+    run_p.add_argument("--budget-usd", type=float, default=2.0)
+    run_p.add_argument("--max-candidates", type=int, default=6)
+    run_p.add_argument("--trials", type=int, default=3)
+    run_p.add_argument("--optimizer-model", default="moonshotai/kimi-k2.6")
+    run_p.add_argument("--plateau", type=int, default=2)
+    args = parser.parse_args()
+
+    spec = tomllib.loads(Path(args.taskspec).read_text())
+    arena_dir = Path(args.arena) if args.arena else (
+        REPO / spec["inputs"]["fixtures"]
+    )
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    exp_dir = REPO / "runs" / f"{stamp}-search-{spec['id']}"
+    exp_dir.mkdir(parents=True)
+    manifests = {
+        "baseline-oneshot": REPO / BASELINES[0],
+        "pi-kimi": REPO / BASELINES[1],
+    }
+    optimizer_costs = []
+
+    # --- Stage 1: validate the rig (offline reference candidates) ---
+    print("== stage 1: rig validation (oracle ceiling, null floor)", flush=True)
+    for ref in REFERENCES:
+        sh_runner(REPO / ref, arena_dir, exp_dir, split="all",
+                  trials=1, final=True)
+    rig = summarize(exp_dir / "trials.jsonl")
+    if rig["oracle"]["reward_mean"] != 1.0:
+        sys.exit(f"rig broken: oracle scored {rig['oracle']['reward_mean']}, not 1.0")
+    if rig["null"]["reward_mean"] >= 0.5:
+        sys.exit(f"rig broken: null scored {rig['null']['reward_mean']} (too easy)")
+
+    # --- Stage 2: baselines on the search splits ---
+    print("== stage 2: baselines on train+validation", flush=True)
+    for cid, manifest in manifests.items():
+        for split in ("train", "validation"):
+            sh_runner(manifest, arena_dir, exp_dir, split, args.trials)
+
+    # --- Stage 3: the search loop ---
+    print("== stage 3: reflective search", flush=True)
+    taskspec_for_prompt = {"goal": spec.get("goal"), "mode": spec.get("mode")}
+
+    def summary_fn():
+        return summarize(exp_dir / "trials.jsonl")
+
+    def propose_fn(parent_id, generation):
+        child_id = f"gen{generation}-{parent_id}"[:48]
+        snapshot = json.loads(
+            (exp_dir / "compositions" / f"{parent_id}.json").read_text()
+        )
+        parent_manifest = tomllib.loads(manifests[parent_id].read_text())
+        manifest_path, meta = mutate.propose(
+            taskspec_for_prompt,
+            snapshot,
+            parent_manifest,
+            load_records(exp_dir),
+            exp_dir,
+            child_id,
+            args.optimizer_model,
+            packets_dir=exp_dir / "packets",
+            manifests_dir=exp_dir / "manifests",
+            archive_summary={
+                cid: {"reward_mean": v["reward_mean"],
+                      "cost_usd_total": v["cost_usd_total"]}
+                for cid, v in summary_fn().items()
+            },
+        )
+        manifests[child_id] = manifest_path
+        optimizer_costs.append(meta.get("optimizer_cost_usd"))
+        print(
+            f"  proposed {child_id}: slot={meta['slot_changed']} — "
+            f"{meta['hypothesis']}",
+            flush=True,
+        )
+        return child_id, meta
+
+    def run_child_fn(child_id):
+        for split in ("train", "validation"):
+            sh_runner(manifests[child_id], arena_dir, exp_dir, split, args.trials)
+
+    outcome = loop.run_search(
+        summary_fn=summary_fn,
+        propose_fn=propose_fn,
+        run_child_fn=run_child_fn,
+        max_children=args.max_candidates,
+        budget_usd=args.budget_usd,
+        optimizer_costs=optimizer_costs,
+        plateau_limit=args.plateau,
+    )
+
+    # --- Stage 4: holdout final for the Pareto front ---
+    print("== stage 4: holdout final evaluation", flush=True)
+    cands = report.aggregate(load_records(exp_dir))
+    front = report.pareto_front(cands)
+    for cid in front:
+        sh_runner(manifests[cid], arena_dir, exp_dir, "holdout",
+                  args.trials, final=True)
+
+    # --- Stage 5: report + receipts ---
+    print("== stage 5: report", flush=True)
+    cands = report.aggregate(load_records(exp_dir))
+    front = report.pareto_front(cands)
+    pick = report.recommend(cands, front)
+    (exp_dir / "report.md").write_text(report.render(cands, front, pick))
+    (exp_dir / "pareto.json").write_text(json.dumps(
+        [
+            {
+                "candidate_id": cid,
+                "composition_hash": cands[cid]["hash"],
+                "reward_mean": cands[cid]["reward_mean"],
+                "cost_usd_total": cands[cid]["cost"],
+                "wall_mean_s": cands[cid]["wall_mean"],
+                "recommended": cid == pick,
+            }
+            for cid in front
+        ],
+        indent=2,
+    ))
+    outcome["recommended"] = pick
+    outcome["pareto_front"] = front
+    (exp_dir / "loop.json").write_text(json.dumps(outcome, indent=2))
+
+    print(f"\nstop reason: {outcome['stop_reason']}", flush=True)
+    print(f"recommended: {pick}", flush=True)
+    print(f"known spend: ${outcome['spend_known_usd']}", flush=True)
+    print(f"experiment:  {exp_dir.relative_to(REPO)}", flush=True)
+
+
+if __name__ == "__main__":
+    main()
