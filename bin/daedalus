@@ -24,6 +24,7 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO / "runner"))
 
+import export as export_mod  # noqa: E402
 import lineage  # noqa: E402
 import loop  # noqa: E402
 import mutate  # noqa: E402
@@ -104,7 +105,20 @@ def main():
         help="minimum trials per search task a candidate needs to be "
         "recommendable (kills the winner's curse)",
     )
+    exp_p = sub.add_parser(
+        "export", help="export a delivery as control-plane artifacts "
+        "(launch contract + sprite persona)"
+    )
+    exp_p.add_argument("delivery", help="deliveries/<id> directory")
+    exp_p.add_argument("--spec", required=True, help="taskspec TOML")
     args = parser.parse_args()
+
+    if args.command == "export":
+        spec = tomllib.loads(Path(args.spec).read_text())
+        paths = export_mod.export_delivery(Path(args.delivery), spec)
+        for kind, path in paths.items():
+            print(f"{kind}: {path}")
+        return
 
     spec = tomllib.loads(Path(args.taskspec).read_text())
     mode = spec.get("mode") or "max-quality"
