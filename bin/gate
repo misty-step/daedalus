@@ -4,7 +4,7 @@
 set -eu
 cd "$(dirname "$0")/.."
 
-python3 -m py_compile runner/run.py runner/score.py
+python3 -m py_compile runner/*.py
 
 # Prefer a working pytest however this machine provides one.
 if python3 -m pytest --version >/dev/null 2>&1; then
