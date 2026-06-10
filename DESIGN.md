@@ -78,6 +78,14 @@ answer keys, scorer constants, instruction text. Changing any requires a
 version bump and re-running all baselines. Candidates never read `tests/` or
 `solution/`; the runner copies only `environment/` into the agent workspace.
 
+**Adjudication.** When a candidate reports a finding the key does not list,
+a human adjudicates it in `arenas/<id>/adjudications.md` before the next
+arena version: ACCEPT (extend the key + oracle solution, bump the version —
+cross-version averaging becomes invalid and baselines re-run before any new
+comparison) or OUT-OF-SCOPE (record the rationale; the key stands). This is
+the eval-improvement flywheel: keys improve instead of silently punishing
+reviewers better than their author. Worked example: pr-review-v0 ADJ-1/ADJ-2.
+
 ### Findings / answer key (pr-review domain)
 
 Agent output `findings.json`:

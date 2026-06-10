@@ -4,7 +4,10 @@ id = "pr-review-v0"
 # validation/holdout splits declared. Scoring rules unchanged from 0.1.1,
 # so cross-version comparison with 0.1.x records remains valid.
 # 0.1.1: clean-task false positives score a hard 0 (was -0.2 each).
-version = "0.2.0"
+version = "0.3.0"
+# 0.3.0: py-file-cache key extended with tmp-write-race (concurrency) via
+# adjudication ADJ-1 (adjudications.md). Cross-version averaging with 0.2.x
+# is invalid; re-run baselines before new comparisons.
 taskspec = "specs/pr-review/taskspec.toml"
 description = """
 Six frozen pull-request fixtures with seeded defects (8 defects total across 5

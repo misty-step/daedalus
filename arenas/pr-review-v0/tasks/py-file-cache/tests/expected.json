@@ -15,6 +15,14 @@
       "line_end": 17,
       "category": "resource-leak",
       "note": "get() opens the file without a context manager; if json.load raises, the handle is never closed."
+    },
+    {
+      "id": "tmp-write-race",
+      "file": "cache.py",
+      "line_start": 23,
+      "line_end": 26,
+      "category": "concurrency",
+      "note": "set() writes every writer's payload to the same deterministic <key>.json.tmp; concurrent writers for one key interleave writes and the rename can publish corrupted JSON. Accepted via adjudication ADJ-1 (arenas/pr-review-v0/adjudications.md)."
     }
   ]
 }

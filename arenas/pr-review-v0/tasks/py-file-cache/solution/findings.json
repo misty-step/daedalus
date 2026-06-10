@@ -11,6 +11,12 @@
       "line": 15,
       "category": "resource-leak",
       "description": "get() opens the cache file without a context manager; if json.load raises (corrupt cache entry), the file handle is never closed."
+    },
+    {
+      "file": "cache.py",
+      "line": 23,
+      "category": "concurrency",
+      "description": "set() uses a deterministic temp file per key, so two concurrent writers interleave writes to the same .tmp and the rename can publish a corrupted partial payload; the atomic write-then-rename pattern needs a unique temp file per writer."
     }
   ]
 }
