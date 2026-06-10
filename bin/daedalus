@@ -88,10 +88,15 @@ def main():
         sh_runner(REPO / ref, arena_dir, exp_dir, split="all",
                   trials=1, final=True)
     rig = summarize(exp_dir / "trials.jsonl")
-    if rig["oracle"]["reward_mean"] != 1.0:
-        sys.exit(f"rig broken: oracle scored {rig['oracle']['reward_mean']}, not 1.0")
-    if rig["null"]["reward_mean"] >= 0.5:
-        sys.exit(f"rig broken: null scored {rig['null']['reward_mean']} (too easy)")
+    oracle_mean = rig["oracle"]["reward_mean"]
+    null_mean = rig["null"]["reward_mean"]
+    if oracle_mean != 1.0:
+        sys.exit(f"rig broken: oracle scored {oracle_mean}, not 1.0")
+    # The arena must discriminate: reporting nothing (null) must score strictly
+    # worse than the oracle. (Null's score equals the clean-task fraction, so an
+    # absolute threshold would wrongly reject small arenas with a clean task.)
+    if null_mean >= oracle_mean:
+        sys.exit(f"rig broken: null scored {null_mean} == oracle (no discrimination)")
 
     # --- Stage 2: baselines on the search splits ---
     print("== stage 2: baselines on train+validation", flush=True)

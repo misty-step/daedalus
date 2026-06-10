@@ -1,0 +1,8 @@
+{
+  "id": "oracle",
+  "kind": "oracle",
+  "composition_hash": "dac86ce481e480d9",
+  "prompt_packet_text": null,
+  "harness_version": null,
+  "runner_version": "0.1.0"
+}

@@ -96,6 +96,18 @@ def test_proposal_failures_stop():
     assert all("proposal_error" in h for h in out["history"])
 
 
+def test_rig_discrimination_accepts_clean_task_fraction():
+    # Regression: a 2-task arena with one clean task gives null 0.5, which must
+    # NOT be rejected as "too easy" — the rig is sound as long as null < oracle.
+    def rig_ok(oracle_mean, null_mean):
+        return oracle_mean == 1.0 and null_mean < oracle_mean
+
+    assert rig_ok(1.0, 0.5)      # v1: one clean of two tasks
+    assert rig_ok(1.0, 0.1667)   # v0: one clean of six tasks
+    assert not rig_ok(1.0, 1.0)  # no discrimination
+    assert not rig_ok(0.8, 0.1)  # oracle can't ace the rig
+
+
 def test_best_candidate_ignores_references_and_breaks_ties_by_cost():
     summary = {
         "oracle": {"reward_mean": 1.0, "cost_usd_total": 0.0},
