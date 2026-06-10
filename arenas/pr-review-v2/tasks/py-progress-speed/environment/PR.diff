@@ -1,0 +1,20 @@
+diff -ruN a/rich/progress.py b/rich/progress.py
+--- a/rich/progress.py
++++ b/rich/progress.py
+@@ -1439,7 +1439,7 @@
+         """
+         with self._lock:
+             task = self._tasks[task_id]
+-            completed_start = task.completed
++            update_completed = advance if advance is not None else 0.0
+ 
+             if total is not None and total != task.total:
+                 task.total = total
+@@ -1453,7 +1453,6 @@
+             if visible is not None:
+                 task.visible = visible
+             task.fields.update(fields)
+-            update_completed = task.completed - completed_start
+ 
+             current_time = self.get_time()
+             old_sample_time = current_time - self.speed_estimate_period

@@ -1,0 +1,33 @@
+id = "pr-review-v2"
+# 0.1.0: first real-repo arena. Mechanism (backlog 015): the workspace is a
+# full snapshot of Textualize/rich v14.0.0 (~1.4MB, ~350K tokens), which
+# exceeds the one-shot probe's context window — the inline-everything pattern
+# physically cannot process it — and every seeded defect's wrongness lives
+# outside the diff hunk (callers, documented invariants, sibling threads), so
+# diff-only pattern matching is not enough either.
+version = "0.1.0"
+taskspec = "specs/pr-review/taskspec.toml"
+description = """
+Four frozen pull-request fixtures over a real repository snapshot
+(Textualize/rich v14.0.0, MIT): three seeded defects whose defectiveness is
+only visible by reading code outside the diff (a speed-sample starvation
+whose consumer sits below the hunk, a measurement-normalization contract
+break whose consumers live in other modules, a lock-scope reduction that
+races a background thread defined elsewhere in the file), plus one clean
+"tempting refactor" PR as a false-positive trap. Harbor task-directory
+format; candidates never read tests/ or solution/.
+"""
+
+[template]
+file = "template.md"
+
+# The search loop optimizes against train+validation only. Holdout is scored
+# once, at final evaluation, behind the runner's --final flag.
+[split]
+train = ["py-progress-speed", "py-padding-clean"]
+validation = ["py-measure-normalize"]
+holdout = ["py-live-lock"]
+
+# Frozen surfaces for this arena version: fixtures, answer keys, scorer
+# constants, template, and splits. Changing any requires a version bump and
+# re-running all baselines. Freeze gate status lives in provenance.md.

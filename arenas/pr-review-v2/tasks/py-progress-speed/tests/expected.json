@@ -1,0 +1,12 @@
+{
+  "defects": [
+    {
+      "id": "py-progress-speed",
+      "file": "rich/progress.py",
+      "line_start": 1441,
+      "line_end": 1456,
+      "category": "correctness",
+      "note": "update_completed is now derived only from the advance argument, so callers that pass completed= (e.g. _Reader in this module, download/track flows) never append a ProgressSample; Task.speed and remaining-time estimates go permanently dead for that entire API path. The sample-append consumer sits a dozen lines below, outside the diff hunk."
+    }
+  ]
+}
