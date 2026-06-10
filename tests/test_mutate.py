@@ -115,6 +115,20 @@ def test_build_child_scalar_mutation(tmp_path):
     assert child["prompt_packet"] == PARENT["prompt_packet"]
 
 
+def test_parse_proposal_recovers_from_reasoning_style_text():
+    # The optimizer sometimes wraps JSON in prose/reasoning; the parser must
+    # still recover the proposal object.
+    text = (
+        "Let me think. The agent missed cross-file context, so:\n\n"
+        '{"slot": "model", "value": "anthropic/claude-x", '
+        '"hypothesis": "stronger model for cross-file reasoning"}\n\n'
+        "That should help."
+    )
+    p = mutate.parse_proposal(text)
+    assert p["slot"] == "model"
+    assert p["value"] == "anthropic/claude-x"
+
+
 def test_worst_trials_orders_by_reward():
     records = [
         {"candidate_id": "x", "reward": 1.0, "wall_ms": 1, "run_id": "a"},

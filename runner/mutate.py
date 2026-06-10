@@ -89,11 +89,13 @@ def call_optimizer(prompt, model, timeout=180, retries=3):
     key = os.environ.get("OPENROUTER_API_KEY")
     if not key:
         raise RuntimeError("OPENROUTER_API_KEY is not set")
+    # Reasoning models spend tokens before emitting content; give generous
+    # headroom so the JSON proposal is not truncated to empty.
     body = {
         "model": model,
         "messages": [{"role": "user", "content": prompt}],
         "temperature": 0.7,
-        "max_tokens": 4096,
+        "max_tokens": 16384,
         "usage": {"include": True},
     }
     last_exc = None
@@ -109,11 +111,18 @@ def call_optimizer(prompt, model, timeout=180, retries=3):
         try:
             with urllib.request.urlopen(req, timeout=timeout) as resp:
                 payload = json.loads(resp.read())
-            content = payload["choices"][0]["message"]["content"]
-            if not content:
-                raise RuntimeError("optimizer returned empty content")
+            choice = payload["choices"][0]
+            msg = choice["message"]
+            # Some reasoning models put the answer in reasoning when content is
+            # empty; fall back to it so a parseable proposal is not lost.
+            content = msg.get("content") or msg.get("reasoning") or ""
+            if not content.strip():
+                raise RuntimeError(
+                    f"optimizer returned empty content "
+                    f"(finish_reason={choice.get('finish_reason')})"
+                )
             return content, (payload.get("usage") or {}).get("cost")
-        except Exception as exc:  # noqa: BLE001 - transient; retry with backoff
+        except Exception as exc:  # noqa: BLE001 - retry with backoff
             last_exc = exc
             if attempt < retries - 1:
                 time.sleep(2 ** attempt)
