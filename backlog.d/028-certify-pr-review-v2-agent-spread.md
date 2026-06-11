@@ -1,7 +1,7 @@
 # Certify pr-review-v2 and produce cross-plane handoff packets
 
 Priority: P0
-Status: ready
+Status: pending G2 human review
 Estimate: L
 
 ## Goal
@@ -16,43 +16,61 @@ review-coordinator surfaces.
 - Changing scorer constants to make provisional tasks pass
 
 ## Oracle
-- [ ] A fresh `bin/daedalus run specs/pr-review/taskspec.toml` against
+- [x] A fresh `bin/daedalus run specs/pr-review/taskspec.toml` against
       `arenas/pr-review-v2` v0.2.0 commits `report.md`, `pareto.json`,
       `loop.json`, `lineage.md`, `trials.jsonl`, `summary.json`, and
       `artifacts.index`
-- [ ] Every train+validation task has n >= 5 trials for every recommended
+- [x] Every train+validation task has n >= 5 trials for every recommended
       candidate; holdout candidates run at certification depth and are recorded
       in `holdout-ledger.md`
-- [ ] The six new v0.2.0 tasks show measurable agent spread, or failures are
+- [x] The six new v0.2.0 tasks show measurable agent spread, or failures are
       promoted into an arena-iteration note before any cross-agent claim
 - [ ] Category/span calibration findings such as `py-markup-escape` are
       adjudicated without weakening the grader; any key change bumps the arena
       version and reruns oracle/null/probe baselines
-- [ ] The certified run compares the recommended candidate against the current
+- [x] The certified run compares the recommended candidate against the current
       Bitter Blossom `review-coordinator` and Olympus `charon` incumbents, or
       explicitly records why exact replay is impossible
-- [ ] Delivery includes a `plane-handoff.md` packet or `plane-handoff/`
+- [x] Delivery includes a `plane-handoff.md` packet or `plane-handoff/`
       directory mapping composition hash, prompt packet, model, tools, budgets,
       output contract, observability, approval state, and residual risks to both
       Bitter Blossom review task/agent config and Olympus AgentSpec/activation
       surfaces
-- [ ] The handoff distinguishes lab evidence from launch approval: 028 may
+- [x] The handoff distinguishes lab evidence from launch approval: 028 may
       recommend import shapes, but G3/G4/G5 approval and control-plane
       deployment remain in 029
-- [ ] `approvals/G2-pr-review-v2.md` exists with the freeze gate, run-record
+- [x] `approvals/G2-pr-review-v2.md` exists with the freeze gate, run-record
       paths, residual risks, and human review state
-- [ ] `bin/gate` green
+- [x] `bin/gate` green
 
 ## Children
-1. Run the full v0.2.0 search sequentially with a recorded RNG seed and
+1. [x] Run the full v0.2.0 search sequentially with a recorded RNG seed and
    certification depth.
-2. Convert any `arena-findings.md` alarms into either a v0.2.1 calibration
+2. [ ] Convert any `arena-findings.md` alarms into either a v0.2.1 calibration
    patch or a written waiver.
-3. Add the v2 G2 approval artifact and link it from `ROADMAP.md`.
-4. Regenerate the PR-review delivery only from certified evidence.
-5. Write the cross-plane handoff packet by comparing the current Bitter Blossom
+3. [x] Add the v2 G2 approval artifact and link it from `ROADMAP.md`.
+4. [x] Regenerate the PR-review delivery only from certified evidence.
+5. [x] Write the cross-plane handoff packet by comparing the current Bitter Blossom
    and Olympus review agents, then mapping the certified winner into their
    import shapes without mutating either control-plane repo.
+
+## Evidence
+
+- Certification run: `runs/20260611T173632Z-search-pr-review-v0`
+- Recommended certified candidate:
+  `seed4-qwen3-7-plus-checklist` (`4a73f1fd213aa1a5`)
+- Delivery packet: `deliveries/pr-review/`
+- Cross-plane handoff: `deliveries/pr-review/plane-handoff.md`
+- Incumbent comparison source: `deliveries/pr-review/plane-incumbents.toml`
+- G2 packet awaiting human decision: `approvals/G2-pr-review-v2.md`
+- Gate: `bin/gate` passed on 2026-06-11 after packet generation
+
+## Remaining Closure Condition
+
+Human G2 must adjudicate `arena-findings.md`: accept v0.2.0 with residual
+risks, request v0.2.1 calibration, or sign written waivers for retained
+calibration issues. Until that happens, 028 is delivered to review but not
+closable with a `Closes-backlog: 028` trailer.
 
 ## Notes
 **Why:** product/eval lane. `ROADMAP.md` names the next full run, but
