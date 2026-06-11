@@ -1,4 +1,4 @@
-# Certify pr-review-v2 as a contract-grade benchmark
+# Certify pr-review-v2 and produce cross-plane handoff packets
 
 Priority: P0
 Status: ready
@@ -7,7 +7,9 @@ Estimate: L
 ## Goal
 Turn `arenas/pr-review-v2` v0.2.0 from a promising scaled arena into a
 publishable benchmark with demonstrated new-task agent spread, calibrated
-keys, signed G2 evidence, and a delivery-quality comparative run.
+keys, signed G2 evidence, a delivery-quality comparative run, and
+plane-handoff artifacts for the current Olympus Charon and Bitter Blossom
+review-coordinator surfaces.
 
 ## Non-Goals
 - Deploying the PR-review agent (that is G3+ launch work)
@@ -26,6 +28,17 @@ keys, signed G2 evidence, and a delivery-quality comparative run.
 - [ ] Category/span calibration findings such as `py-markup-escape` are
       adjudicated without weakening the grader; any key change bumps the arena
       version and reruns oracle/null/probe baselines
+- [ ] The certified run compares the recommended candidate against the current
+      Bitter Blossom `review-coordinator` and Olympus `charon` incumbents, or
+      explicitly records why exact replay is impossible
+- [ ] Delivery includes a `plane-handoff.md` packet or `plane-handoff/`
+      directory mapping composition hash, prompt packet, model, tools, budgets,
+      output contract, observability, approval state, and residual risks to both
+      Bitter Blossom review task/agent config and Olympus AgentSpec/activation
+      surfaces
+- [ ] The handoff distinguishes lab evidence from launch approval: 028 may
+      recommend import shapes, but G3/G4/G5 approval and control-plane
+      deployment remain in 029
 - [ ] `approvals/G2-pr-review-v2.md` exists with the freeze gate, run-record
       paths, residual risks, and human review state
 - [ ] `bin/gate` green
@@ -37,8 +50,17 @@ keys, signed G2 evidence, and a delivery-quality comparative run.
    patch or a written waiver.
 3. Add the v2 G2 approval artifact and link it from `ROADMAP.md`.
 4. Regenerate the PR-review delivery only from certified evidence.
+5. Write the cross-plane handoff packet by comparing the current Bitter Blossom
+   and Olympus review agents, then mapping the certified winner into their
+   import shapes without mutating either control-plane repo.
 
 ## Notes
 **Why:** product/eval lane. `ROADMAP.md` names the next full run, but
 `arenas/pr-review-v2/provenance.md` still marks six new tasks provisional
 until spread is established. This is the immediate long pole.
+
+**Current plane read (2026-06-11):** Bitter Blossom runs
+`review-coordinator` v2 as a pi/OpenRouter Kimi K2.6 review task and the agent
+posts directly through `gh`; Olympus runs `charon` v2 as a pi/OpenRouter Kimi
+AgentSpec with activation gating, strict JSON output, and orchestrator-side
+posting. Neither current review agent was configured from Daedalus evals.
