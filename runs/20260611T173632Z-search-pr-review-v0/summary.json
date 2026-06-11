@@ -1,0 +1,1536 @@
+{
+  "oracle": {
+    "composition_hash": "07d8650e238cd916",
+    "kind": "oracle",
+    "tasks": {
+      "py-export-clear": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          40
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-formatter-clean": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          90
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-guess-swallow": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          125
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-live-lock": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          42
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-markup-escape": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          37
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-measure-normalize": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          36
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-padding-clean": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          35
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-plugin-cache": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          89
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-progress-speed": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          43
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-save-leak": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          42
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      }
+    },
+    "trials": 10,
+    "errors": 0,
+    "cost_usd_total": 0.0,
+    "cost_known": false,
+    "reward_mean": 1.0
+  },
+  "null": {
+    "composition_hash": "40f2f6e05112c409",
+    "kind": "null",
+    "tasks": {
+      "py-export-clear": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          27
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-formatter-clean": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          61
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-guess-swallow": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          60
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-live-lock": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          25
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-markup-escape": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          25
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-measure-normalize": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          26
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-padding-clean": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          27
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-plugin-cache": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          60
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-progress-speed": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          27
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-save-leak": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          26
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      }
+    },
+    "trials": 10,
+    "errors": 0,
+    "cost_usd_total": 0.0,
+    "cost_known": false,
+    "reward_mean": 0.2
+  },
+  "probe-oneshot": {
+    "composition_hash": "9f21bdb5c010ab18",
+    "kind": "oneshot",
+    "tasks": {
+      "py-export-clear": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          1967
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-formatter-clean": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          4383
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-guess-swallow": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          4106
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-live-lock": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          1271
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-markup-escape": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          1506
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-measure-normalize": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          2336
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-padding-clean": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          1625
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-plugin-cache": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          4236
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-progress-speed": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          1666
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-save-leak": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          1469
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      }
+    },
+    "trials": 10,
+    "errors": 10,
+    "cost_usd_total": 0.0,
+    "cost_known": true,
+    "reward_mean": 0.0
+  },
+  "seed1-gpt-5-mini-checklist": {
+    "composition_hash": "8a97635f0309d4eb",
+    "kind": "pi",
+    "tasks": {
+      "py-markup-escape": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          138283
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-padding-clean": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          101387
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-progress-speed": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          65916
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-save-leak": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          53317
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-formatter-clean": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          42966
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-guess-swallow": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          157801
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-measure-normalize": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          65887
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      }
+    },
+    "trials": 7,
+    "errors": 0,
+    "cost_usd_total": 0.123851,
+    "cost_known": true,
+    "reward_mean": 0.5714
+  },
+  "seed2-kimi-k2-6-trace-callers": {
+    "composition_hash": "855ca3ae1f880ef0",
+    "kind": "pi",
+    "tasks": {
+      "py-markup-escape": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          600130
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      }
+    },
+    "trials": 1,
+    "errors": 1,
+    "cost_usd_total": 0.0,
+    "cost_known": false,
+    "reward_mean": 0.0
+  },
+  "seed3-glm-4-7-flash-test-runner": {
+    "composition_hash": "da3b9a61b46b102d",
+    "kind": "pi",
+    "tasks": {
+      "py-markup-escape": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          48535
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-padding-clean": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          73964
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-progress-speed": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          9206
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-save-leak": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          47624
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-formatter-clean": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          10692
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-guess-swallow": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          38002
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-measure-normalize": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          33368
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-export-clear": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          600057
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      }
+    },
+    "trials": 8,
+    "errors": 1,
+    "cost_usd_total": 0.011078,
+    "cost_known": false,
+    "reward_mean": 0.5
+  },
+  "seed4-qwen3-7-plus-checklist": {
+    "composition_hash": "4a73f1fd213aa1a5",
+    "kind": "pi",
+    "tasks": {
+      "py-markup-escape": {
+        "rewards": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "wall_ms": [
+          230457,
+          216481,
+          95343,
+          203955,
+          297371
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-padding-clean": {
+        "rewards": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "wall_ms": [
+          37989,
+          26519,
+          24507,
+          21878,
+          20591
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-progress-speed": {
+        "rewards": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "wall_ms": [
+          51195,
+          60789,
+          63049,
+          60871,
+          55547
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-save-leak": {
+        "rewards": [
+          1.0,
+          0.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "wall_ms": [
+          62139,
+          38056,
+          35738,
+          73689,
+          53714
+        ],
+        "mean": 0.8,
+        "min": 0.0,
+        "max": 1.0
+      },
+      "py-formatter-clean": {
+        "rewards": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "wall_ms": [
+          19584,
+          25349,
+          29674,
+          22407,
+          14246
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-guess-swallow": {
+        "rewards": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "wall_ms": [
+          27871,
+          25706,
+          31464,
+          21066,
+          23438
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-measure-normalize": {
+        "rewards": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "wall_ms": [
+          75118,
+          127757,
+          92265,
+          161075,
+          47485
+        ],
+        "mean": 0.2,
+        "min": 0.0,
+        "max": 1.0
+      }
+    },
+    "trials": 35,
+    "errors": 0,
+    "cost_usd_total": 0.595276,
+    "cost_known": true,
+    "reward_mean": 0.5714
+  },
+  "seed5-deepseek-v4-flash-trace-callers": {
+    "composition_hash": "a4a2fc6b5ee7c97a",
+    "kind": "pi",
+    "tasks": {
+      "py-markup-escape": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          275800
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-padding-clean": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          41918
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-progress-speed": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          71085
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-save-leak": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          57482
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-formatter-clean": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          37498
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-guess-swallow": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          91496
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-measure-normalize": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          579892
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      }
+    },
+    "trials": 7,
+    "errors": 0,
+    "cost_usd_total": 0.117467,
+    "cost_known": true,
+    "reward_mean": 0.4286
+  },
+  "seed6-glm-5-test-runner": {
+    "composition_hash": "3730cd9b3e7d6b4a",
+    "kind": "pi",
+    "tasks": {
+      "py-markup-escape": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          131953
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-padding-clean": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          30491
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-progress-speed": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          51089
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-save-leak": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          21533
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-formatter-clean": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          18811
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-guess-swallow": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          81586
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-measure-normalize": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          247525
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      }
+    },
+    "trials": 7,
+    "errors": 0,
+    "cost_usd_total": 0.268376,
+    "cost_known": true,
+    "reward_mean": 0.5714
+  },
+  "g1a-seed1-gpt-5-mini-checklist": {
+    "composition_hash": "8420212f9276b288",
+    "kind": "pi",
+    "tasks": {
+      "py-markup-escape": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          304855
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-padding-clean": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          31981
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-progress-speed": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          73870
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-save-leak": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          34410
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-formatter-clean": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          21251
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-guess-swallow": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          23634
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-measure-normalize": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          85325
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-export-clear": {
+        "rewards": [
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        "wall_ms": [
+          51877,
+          67772,
+          94290,
+          72858,
+          72475
+        ],
+        "mean": 0.2,
+        "min": 0.0,
+        "max": 1.0
+      },
+      "py-live-lock": {
+        "rewards": [
+          0.0,
+          1.0,
+          1.0,
+          1.0,
+          0.0
+        ],
+        "wall_ms": [
+          195923,
+          85384,
+          96754,
+          132398,
+          67655
+        ],
+        "mean": 0.6,
+        "min": 0.0,
+        "max": 1.0
+      },
+      "py-plugin-cache": {
+        "rewards": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "wall_ms": [
+          102364,
+          65144,
+          63184,
+          64662,
+          61058
+        ],
+        "mean": 0.2,
+        "min": 0.0,
+        "max": 1.0
+      }
+    },
+    "trials": 22,
+    "errors": 0,
+    "cost_usd_total": 0.391574,
+    "cost_known": true,
+    "reward_mean": 0.4545
+  },
+  "g1b-seed4-qwen3-7-plus-checklist": {
+    "composition_hash": "5d9c9dfcb0aee310",
+    "kind": "pi",
+    "tasks": {
+      "py-markup-escape": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          129536
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-padding-clean": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          36767
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-progress-speed": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          113193
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-save-leak": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          65621
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-formatter-clean": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          19663
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-guess-swallow": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          26485
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-measure-normalize": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          211134
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      }
+    },
+    "trials": 7,
+    "errors": 0,
+    "cost_usd_total": 0.144411,
+    "cost_known": true,
+    "reward_mean": 0.4286
+  },
+  "g2b-seed1-gpt-5-mini-checklist": {
+    "composition_hash": "73c5a2b2adde67a4",
+    "kind": "pi",
+    "tasks": {
+      "py-markup-escape": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          561174
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-padding-clean": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          130207
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-progress-speed": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          94575
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-save-leak": {
+        "rewards": [
+          0.8
+        ],
+        "wall_ms": [
+          71434
+        ],
+        "mean": 0.8,
+        "min": 0.8,
+        "max": 0.8
+      },
+      "py-formatter-clean": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          46913
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-guess-swallow": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          59215
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-measure-normalize": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          88322
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      }
+    },
+    "trials": 7,
+    "errors": 0,
+    "cost_usd_total": 0.187046,
+    "cost_known": true,
+    "reward_mean": 0.6857
+  },
+  "g3a-g1a-seed1-gpt-5-mini-checklist": {
+    "composition_hash": "93b0cf0b3490357f",
+    "kind": "pi",
+    "tasks": {
+      "py-markup-escape": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          263284
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-padding-clean": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          27950
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-progress-speed": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          74548
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-save-leak": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          46945
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-formatter-clean": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          21215
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-guess-swallow": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          29750
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-measure-normalize": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          156127
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      }
+    },
+    "trials": 7,
+    "errors": 0,
+    "cost_usd_total": 0.162187,
+    "cost_known": true,
+    "reward_mean": 0.5714
+  },
+  "g3b-g2b-seed1-gpt-5-mini-checklist": {
+    "composition_hash": "3c7c3cbe5648b374",
+    "kind": "pi",
+    "tasks": {
+      "py-markup-escape": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          294343
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-padding-clean": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          34400
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-progress-speed": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          69891
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-save-leak": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          63034
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-formatter-clean": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          39114
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-guess-swallow": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          153707
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-measure-normalize": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          54537
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-export-clear": {
+        "rewards": [
+          0.0,
+          1.0,
+          0.0,
+          0.8,
+          1.0
+        ],
+        "wall_ms": [
+          53900,
+          83915,
+          56921,
+          67000,
+          105509
+        ],
+        "mean": 0.56,
+        "min": 0.0,
+        "max": 1.0
+      },
+      "py-live-lock": {
+        "rewards": [
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "wall_ms": [
+          372248,
+          95275,
+          311159,
+          131745,
+          170421
+        ],
+        "mean": 0.4,
+        "min": 0.0,
+        "max": 1.0
+      },
+      "py-plugin-cache": {
+        "rewards": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          0.8
+        ],
+        "wall_ms": [
+          90002,
+          86624,
+          46204,
+          49881,
+          57031
+        ],
+        "mean": 0.96,
+        "min": 0.8,
+        "max": 1.0
+      }
+    },
+    "trials": 22,
+    "errors": 0,
+    "cost_usd_total": 0.482757,
+    "cost_known": true,
+    "reward_mean": 0.6636
+  },
+  "g4a-g1a-seed1-gpt-5-mini-checklist": {
+    "composition_hash": "c9016cc5fc0bca3b",
+    "kind": "pi",
+    "tasks": {
+      "py-markup-escape": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          243255
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-padding-clean": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          26641
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-progress-speed": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          76561
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-save-leak": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          93024
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-formatter-clean": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          16045
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-guess-swallow": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          32360
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-measure-normalize": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          87778
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      }
+    },
+    "trials": 7,
+    "errors": 0,
+    "cost_usd_total": 0.13233,
+    "cost_known": true,
+    "reward_mean": 0.5714
+  }
+}

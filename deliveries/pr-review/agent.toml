@@ -1,14 +1,15 @@
 # Delivered agent for specs/pr-review/taskspec.toml (threshold-then-cheap).
-# Selected by the Daedalus search of 2026-06-10 over arenas/pr-review-v2:
-# run runs/20260610T160533Z-search-pr-review-v0, composition hash
-# 44a9aa47e96933ed (hash binds the manifest + resolved packet text — recompute
-# after any edit). Evidence and launch contract sketch: DELIVERY.md.
+# Selected by the Daedalus certification run of 2026-06-11 over
+# arenas/pr-review-v2 v0.2.0:
+# run runs/20260611T173632Z-search-pr-review-v0, composition hash
+# 4a73f1fd213aa1a5. This manifest intentionally preserves the measured
+# prompt_packet path from the run so export recomputes the recorded hash.
 composition = 1
-id = "pr-review-glm5-specfirst-medium"
+id = "seed4-qwen3-7-plus-checklist"
 kind = "pi"
 provider_name = "openrouter"
-model = "z-ai/glm-5"
-prompt_packet = "deliveries/pr-review/packet.md"
-thinking = "medium"
+model = "qwen/qwen3.7-plus"
+prompt_packet = "/Users/phaedrus/Development/daedalus/runs/20260611T173632Z-search-pr-review-v0/packets/seed-checklist.md"
+thinking = "low"
 tools = ["read", "bash", "edit", "write"]
 timeout_sec = 600

@@ -47,6 +47,10 @@ def _seed_index(candidate_id):
     return int(m.group(1)) if m else None
 
 
+def _one_line(text):
+    return " ".join((text or "").split())
+
+
 def hypothesis_verdict(h):
     """Score a generation's predicted_effect against its measurement.
     Returns (label, detail) or None when no structured prediction exists."""
@@ -226,7 +230,7 @@ def notebook_entry(exp_dir, spec, arena_cfg):
     confirmed = [h for h in loopj.get("history", []) if h.get("improved")]
     if confirmed:
         lines.append("- confirmed hypotheses: " + "; ".join(
-            (h.get("hypothesis") or "")[:110] for h in confirmed
+            _one_line(h.get("hypothesis"))[:110] for h in confirmed
         ))
     for a in loopj.get("alarms", [])[:3]:
         lines.append(f"- alarm: {a.get('kind')} — {(a.get('detail') or '')[:140]}")

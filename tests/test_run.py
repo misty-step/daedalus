@@ -115,6 +115,26 @@ def invoke_runner(candidate, runs_dir, *extra):
     )
 
 
+def invoke_runner_env(candidate, runs_dir, env, *extra):
+    full_env = dict(env, DAEDALUS_RUNS_DIR=str(runs_dir))
+    return subprocess.run(
+        [
+            sys.executable,
+            str(REPO / "runner" / "run.py"),
+            "--candidate",
+            str(REPO / "candidates" / f"{candidate}.toml"),
+            "--arena",
+            str(REPO / "arenas" / "pr-review-v0"),
+            *extra,
+        ],
+        capture_output=True,
+        text=True,
+        env=full_env,
+        cwd=REPO,
+        timeout=120,
+    )
+
+
 def run_candidate(candidate, runs_dir, *extra):
     proc = invoke_runner(candidate, runs_dir, "--final", *extra)
     assert proc.returncode == 0, proc.stderr
@@ -232,6 +252,22 @@ def test_train_split_runs_without_final(tmp_path):
         "js-clean-rename",
         "py-auth-sqli",
     ]
+
+
+def test_max_errors_stops_candidate_invocation(tmp_path):
+    env = dict(os.environ)
+    env.pop("OPENROUTER_API_KEY", None)
+    proc = invoke_runner_env(
+        "probe-oneshot", tmp_path, env, "--split", "train", "--max-errors", "1"
+    )
+    assert proc.returncode == 0, proc.stderr
+    assert "max error limit reached (1)" in proc.stdout
+    records = []
+    for f in tmp_path.glob("*/trials.jsonl"):
+        records += [json.loads(line) for line in f.read_text().splitlines()]
+    assert len(records) == 1
+    assert records[0]["candidate_id"] == "probe-oneshot"
+    assert "OPENROUTER_API_KEY is not set" in records[0]["error"]
 
 
 def test_instruction_composed_from_template_and_intent():

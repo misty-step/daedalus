@@ -1,0 +1,46 @@
+[
+  {
+    "candidate_id": "g2b-seed1-gpt-5-mini-checklist",
+    "composition_hash": "73c5a2b2adde67a4",
+    "reward_mean": 0.6857,
+    "cost_usd_total": 0.187,
+    "cost_usd_per_trial": 0.026714,
+    "wall_mean_s": 150.3,
+    "trials": 7,
+    "certified": false,
+    "recommended": false
+  },
+  {
+    "candidate_id": "g3b-g2b-seed1-gpt-5-mini-checklist",
+    "composition_hash": "3c7c3cbe5648b374",
+    "reward_mean": 0.6636,
+    "cost_usd_total": 0.4828,
+    "cost_usd_per_trial": 0.021945,
+    "wall_mean_s": 113.0,
+    "trials": 22,
+    "certified": false,
+    "recommended": false
+  },
+  {
+    "candidate_id": "seed4-qwen3-7-plus-checklist",
+    "composition_hash": "4a73f1fd213aa1a5",
+    "reward_mean": 0.5714,
+    "cost_usd_total": 0.5953,
+    "cost_usd_per_trial": 0.017009,
+    "wall_mean_s": 70.7,
+    "trials": 35,
+    "certified": true,
+    "recommended": true
+  },
+  {
+    "candidate_id": "seed5-deepseek-v4-flash-trace-callers",
+    "composition_hash": "a4a2fc6b5ee7c97a",
+    "reward_mean": 0.4286,
+    "cost_usd_total": 0.1175,
+    "cost_usd_per_trial": 0.016786,
+    "wall_mean_s": 165.0,
+    "trials": 7,
+    "certified": false,
+    "recommended": false
+  }
+]

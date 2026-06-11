@@ -1,85 +1,87 @@
-# Delivered agent: pr-review-glm5-specfirst-medium
+# Delivered agent: seed4-qwen3-7-plus-checklist
 
-The output of the first full Daedalus cycle: spec → search space → arena
-with headroom → seeded landscape scan → hypothesis races → holdout final →
-this package. Recommended under the taskspec's **threshold-then-cheap**
-mode.
+The current certified Daedalus PR-review delivery for
+`specs/pr-review/taskspec.toml` on `arenas/pr-review-v2` v0.2.0. It is
+recommended only under the current `threshold-then-cheap` rule because it is
+the only Pareto-front candidate certified to n >= 5 on every train and
+validation task. It is not a production launch approval.
 
 ## Composition
 
-| slot | value | how it was chosen |
+| slot | value | evidence |
 |---|---|---|
-| harness | pi (headless, OpenRouter) | V1 frozen slot |
-| model | `z-ai/glm-5` | seeded landscape scan (beat 5 other models) |
-| prompt packet | `packet.md` — spec-first review stance | optimizer-authored seed stance; survived two mutation challenges |
-| thinking | `medium` | **search-discovered**: mutated from `high` (g1b), kept reward 1.0 at ~42% lower search-phase cost |
-| tools | read, bash, edit, write (`full` policy) | seeded; restricted policies never beat it |
+| harness | `pi` 0.78.1 over OpenRouter | captured by `runs/20260611T173632Z-search-pr-review-v0` |
+| model | `qwen/qwen3.7-plus` | seed landscape quality leader before certification |
+| prompt packet | checklist stance | `runs/20260611T173632Z-search-pr-review-v0/packets/seed-checklist.md` |
+| thinking | `low` | sampled seed slot |
+| tools | `read`, `bash`, `edit`, `write` | full tool policy |
 
-Composition hash at selection: `44a9aa47e96933ed`
-(candidate `g1b-seed1-glm-5-spec-first`).
+Measured composition hash: `4a73f1fd213aa1a5`.
+
+The delivery manifest intentionally preserves the measured run packet path so
+`daedalus export` recomputes the recorded hash. `packet.md` is a convenience
+copy for review; changing the manifest to point at it is a new composition.
 
 ## Evidence
 
-**Search run** (`runs/20260610T160533Z-search-pr-review-v0`): 8/8 trials
-at reward 1.000 across train, validation, and the unseen holdout task, at
-$0.0138/trial and 61.2s mean wall — best of 10 measured compositions
-(report.md, pareto.json). Rig context: oracle 1.000, null 0.250, one-shot
-saturation probe 0.000. Landscape: 6 seeds spanned 0.167–1.000 at 230×
-cost spread (reproducible with `--rng-seed 1106`); both
-accuracy-for-cost packet mutations regressed and were discarded on
-evidence (loop.json).
-
-**Certification repro** (2026-06-10, 8 further trials of this exact
-package): the in-search 1.000 does not survive larger n. Observed per-task
-success across all 16 trials of this composition:
-
-| task | success | note |
-|---|---|---|
-| py-progress-speed | 3/3 | stable |
-| py-padding-clean (FP trap) | 3/3 | stable — never invents findings |
-| py-measure-normalize | 3/5 | finds the defect every time; twice cited a line outside the key span (arena calibration, backlog 019) |
-| py-live-lock (holdout) | 2/5 | genuinely flaky on the subtle concurrency defect |
-
-Honest point estimate: **~0.69 mean reward** with high per-task variance,
-~$0.014–0.12 per trial depending on how long it deliberates. The
-*ranking* among candidates stands (all were measured under the same
-protocol), but certification at n ≥ 5 per task is now a delivery
-requirement (backlog 019) before any reward number is contract-grade.
-
-Reproduce:
+Fresh certification command:
 
 ```sh
-runner/run.py --candidate deliveries/pr-review/agent.toml \
-    --arena arenas/pr-review-v2 --final --trials 5
+bin/daedalus run specs/pr-review/taskspec.toml --rng-seed 2806 --budget-usd 8 --max-candidates 6 --trials 1 --certify-top 1 --certify-trials 5 --children-per-gen 2 --optimizer-model moonshotai/kimi-k2.6 --max-errors-per-candidate 1
 ```
 
-## Launch contract sketch (G3 — not signed; do not deploy)
+Run packet: `runs/20260611T173632Z-search-pr-review-v0`.
 
-- **Trigger intent:** GitHub PR webhook (Phase 3); manual runs until then.
-- **Input packet:** post-change checkout + unified diff, arena template
-  instruction (arenas/pr-review-v2/template.md shape).
-- **Permissions:** read-only on the repo checkout; writes only
-  `findings.json` in a throwaway workdir; env restricted to
-  `OPENROUTER_API_KEY`.
-- **Budgets:** ≤ $0.50 and ≤ 600s per review (taskspec); observed ~$0.014
-  and ~61s.
-- **Escalation:** malformed output or timeout → no findings posted, run
-  flagged for human review. Never auto-merge/auto-block; findings are
-  advisory comments until G4 grants more.
-- **Regression eval:** re-run this arena's holdout monthly and on any
-  packet/model/harness change; composition hash must match the contract.
+- Rig: oracle 1.0, null 0.20, one-shot probe 0.0; arena not saturated.
+- Search spread: real candidates ranged from the timed-out Kimi seed at 0.0
+  to uncertified `g2b` at 0.6857 and certified seed4 at 0.5714.
+- Cutoff evidence: Kimi K2.6 `trace-callers` hit one 600s timeout on
+  `py-markup-escape`; validation was skipped by the recorded candidate cutoff.
+- Holdout exposure: `g1a`, `g3b`, and `seed3` were exposed to
+  `py-live-lock`, `py-export-clear`, and `py-plugin-cache`; the ledger was
+  updated in `arenas/pr-review-v2/holdout-ledger.md`.
 
-## Residual risks
+Certified seed4 search-split results, n = 5 per train and validation task:
 
-- **Within-composition variance** is the dominant risk: the same agent
-  swings 0.0–1.0 on the two subtle tasks. The search's n=2 protocol
-  overestimated the winner; do not deploy on the search numbers alone
-  (certification gate, backlog 019).
-- Whether g1b truly beats seed1/seed5 (the other reward-1.0 candidates)
-  at production sample sizes is unresolved at this n.
-- One holdout task only; scores come from seeded synthetic defects in one
-  repo (rich); real-PR distribution shift is unmeasured until Phase 3
-  traces exist.
-- glm-5 pricing/routing can change upstream; the contract pins the model
-  id, not the provider's serving stack (provider pinning available via
-  manifest `provider` table if needed).
+| task | split | mean | observation |
+|---|---|---:|---|
+| `py-markup-escape` | train | 0.00 | stable miss; category/task calibration required |
+| `py-padding-clean` | train | 1.00 | stable clean-trap pass |
+| `py-progress-speed` | train | 1.00 | stable pass |
+| `py-save-leak` | train | 0.80 | mostly stable with one miss |
+| `py-formatter-clean` | validation | 1.00 | stable clean-trap pass; trap may be too easy |
+| `py-guess-swallow` | validation | 0.00 | stable miss |
+| `py-measure-normalize` | validation | 0.20 | search-phase 1.0 regressed under certification |
+
+Overall certified reward: 0.5714 at $0.0170/trial and 70.7s mean wall in
+`report.md`.
+
+## Handoff
+
+Generated artifacts:
+
+- `contract.toml`: launch contract with `g3_signed = false`.
+- `persona.md`: Bitter Blossom sprite-shaped prompt body tied to the measured
+  composition hash.
+- `plane-handoff.md`: current Bitter Blossom and Olympus incumbent comparison
+  plus import-shape sketches.
+- `plane-incumbents.toml`: read-only baseline facts for BB
+  `review-coordinator` and Olympus `charon`.
+
+Control-plane imports remain advisory until ticket 029 and G3/G4/G5 human
+approval. Bitter Blossom may keep its direct-comment card only with the
+existing no-approve/no-merge/no-code-edit red lines; Olympus should preserve
+orchestrator-side JSON validation and posting.
+
+## Residual Risks
+
+- The recommended agent is certified but weak: it fails two new tasks at 0/5
+  and one validation task at 1/5.
+- Higher apparent Pareto candidates (`g2b`, `g3b`) were not certified on every
+  train and validation task, so they cannot replace seed4 without another
+  certification pass.
+- `py-markup-escape`, `py-guess-swallow`, and `py-measure-normalize` are
+  promoted in the run's `arena-findings.md`; benchmark-quality publication
+  should wait for adjudication or a written waiver.
+- `approvals/G2-pr-review-v2.md` is prepared for human review but not signed
+  by this agent.

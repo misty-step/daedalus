@@ -1,0 +1,21 @@
+{
+  "composition": 1,
+  "id": "seed6-glm-5-test-runner",
+  "kind": "pi",
+  "provider_name": "openrouter",
+  "model": "z-ai/glm-5",
+  "prompt_packet": "/Users/phaedrus/Development/daedalus/runs/20260611T173632Z-search-pr-review-v0/packets/seed-test-runner.md",
+  "thinking": "medium",
+  "tools": [
+    "read",
+    "edit",
+    "write"
+  ],
+  "timeout_sec": 600,
+  "composition_hash": "3730cd9b3e7d6b4a",
+  "prompt_packet_text": "Analyze the pull request diff and repository context to identify only defects introduced by the proposed change. Ignore pre-existing issues unless the change directly exacerbates them. If tests, a runnable entrypoint, or executable scripts exist, run them, observe actual behavior, and ground findings in observed behavior. Examine the diff line-by-line to detect logic errors, race conditions, unhandled edge cases, security vulnerabilities, or regressions introduced by the modification. Cite the exact file path and line number for every finding. Structure each finding with location, observed behavior or defect, and supporting evidence from the diff or execution. Exclude stylistic preferences, formatting suggestions, and speculative improvements. If the change introduces no defects and execution passes without issue, emit an empty response and report nothing. Focus exclusively on concrete, verifiable problems backed by file and line references.\n",
+  "skills_texts": [],
+  "agents_md_text": null,
+  "harness_version": "0.78.1",
+  "runner_version": "0.1.0"
+}

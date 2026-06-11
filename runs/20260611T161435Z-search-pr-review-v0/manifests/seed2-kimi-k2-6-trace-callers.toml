@@ -1,0 +1,9 @@
+composition = 1
+id = "seed2-kimi-k2-6-trace-callers"
+kind = "pi"
+provider_name = "openrouter"
+model = "moonshotai/kimi-k2.6"
+prompt_packet = "/Users/phaedrus/Development/daedalus/runs/20260611T161435Z-search-pr-review-v0/packets/seed-trace-callers.md"
+thinking = "medium"
+tools = ["read", "bash"]
+timeout_sec = 600

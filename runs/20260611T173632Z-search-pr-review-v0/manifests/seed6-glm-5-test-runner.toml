@@ -1,0 +1,9 @@
+composition = 1
+id = "seed6-glm-5-test-runner"
+kind = "pi"
+provider_name = "openrouter"
+model = "z-ai/glm-5"
+prompt_packet = "/Users/phaedrus/Development/daedalus/runs/20260611T173632Z-search-pr-review-v0/packets/seed-test-runner.md"
+thinking = "medium"
+tools = ["read", "edit", "write"]
+timeout_sec = 600

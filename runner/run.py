@@ -144,7 +144,7 @@ def harness_version(candidate):
         out = subprocess.run(
             ["pi", "--version"], capture_output=True, text=True, timeout=30
         )
-        return out.stdout.strip() or None
+        return out.stdout.strip() or out.stderr.strip() or None
     except Exception:  # noqa: BLE001 - version capture is best-effort
         return None
 
@@ -427,6 +427,11 @@ def main():
         action="store_true",
         help="allow scoring holdout tasks (final evaluation only)",
     )
+    parser.add_argument(
+        "--max-errors",
+        type=int,
+        help="stop this candidate invocation after N errored trials",
+    )
     args = parser.parse_args()
 
     candidate = load_candidate(args.candidate)
@@ -562,6 +567,21 @@ def main():
                 f"{'  ERROR: ' + record['error'] if record['error'] else ''}",
                 flush=True,
             )
+            if (
+                args.max_errors is not None
+                and sum(1 for r in records if r.get("error")) >= args.max_errors
+            ):
+                print(
+                    f"max error limit reached ({args.max_errors}); "
+                    "stopping this candidate invocation",
+                    flush=True,
+                )
+                break
+        if (
+            args.max_errors is not None
+            and sum(1 for r in records if r.get("error")) >= args.max_errors
+        ):
+            break
 
     summary = summarize(trials_path)
     (exp_dir / "summary.json").write_text(json.dumps(summary, indent=2))

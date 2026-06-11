@@ -1,0 +1,20 @@
+{
+  "composition": 1,
+  "id": "seed5-deepseek-v4-flash-trace-callers",
+  "kind": "pi",
+  "provider_name": "openrouter",
+  "model": "deepseek/deepseek-v4-flash",
+  "prompt_packet": "/Users/phaedrus/Development/daedalus/runs/20260611T173632Z-search-pr-review-v0/packets/seed-trace-callers.md",
+  "thinking": "high",
+  "tools": [
+    "read",
+    "bash"
+  ],
+  "timeout_sec": 600,
+  "composition_hash": "a4a2fc6b5ee7c97a",
+  "prompt_packet_text": "Analyze the provided pull request diff and repository context to identify real defects introduced by the change. For every modified function, trace its callers and callees across files to understand dataflow before judging correctness. Examine how inputs propagate, how return values are consumed, and whether assumptions held by callers or callees are violated. Ground every finding in specific file and line evidence. Report only genuine functional defects, security issues, or race conditions caused by the change. Produce structured findings that cite the exact file path and line number for each issue. If the change introduces no defects, emit nothing and state that the review is clean. Do not report style issues, documentation gaps, or pre-existing bugs. Do not speculate without evidence from the diff or surrounding context.\n",
+  "skills_texts": [],
+  "agents_md_text": null,
+  "harness_version": "0.78.1",
+  "runner_version": "0.1.0"
+}

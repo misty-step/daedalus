@@ -1,0 +1,34 @@
+[bitter_blossom]
+agent = "review-coordinator"
+version = "2"
+harness = "pi"
+model = "moonshotai/kimi-k2.6"
+posting = "agent posts exactly one PR comment directly through gh"
+config_paths = [
+  "plane/agents/review-coordinator.toml",
+  "plane/tasks/review/task.toml",
+  "plane/tasks/review/card.md",
+]
+notes = [
+  "Current task is event-plane shaped with manual/webhook ingress, HMAC dedupe, repo filters, additions caps, and per-run budget controls.",
+  "Current posting boundary lives inside the review card: the agent fetches the PR and posts through gh itself.",
+  "Live evidence exists from real Bitter Blossom PR review runs, but this incumbent was not selected by Daedalus evals.",
+]
+
+[olympus]
+agent = "charon"
+version = "2"
+harness = "pi"
+model = "~moonshotai/kimi-latest"
+posting = "agent writes strict JSON artifact; orchestrator validates anchors, caps output, suppresses duplicates, and posts"
+config_paths = [
+  "orchestrator/agent-specs/charon.yaml",
+  "orchestrator/prompts/charon-review.md",
+  "orchestrator/src/charon-review-dispatcher.ts",
+  "orchestrator/src/charon-review-poster.ts",
+]
+notes = [
+  "Current Charon is AgentSpec-shaped and activation-gated, with the control plane owning GitHub posting.",
+  "Current eval evidence is promptfoo fixture acceptance plus activation receipts, not a Daedalus arena search.",
+  "The import delta should preserve Olympus' strict artifact and orchestrator-side posting boundary.",
+]

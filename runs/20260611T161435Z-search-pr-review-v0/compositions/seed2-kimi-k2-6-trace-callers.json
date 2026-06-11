@@ -1,0 +1,20 @@
+{
+  "composition": 1,
+  "id": "seed2-kimi-k2-6-trace-callers",
+  "kind": "pi",
+  "provider_name": "openrouter",
+  "model": "moonshotai/kimi-k2.6",
+  "prompt_packet": "/Users/phaedrus/Development/daedalus/runs/20260611T161435Z-search-pr-review-v0/packets/seed-trace-callers.md",
+  "thinking": "medium",
+  "tools": [
+    "read",
+    "bash"
+  ],
+  "timeout_sec": 600,
+  "composition_hash": "7b611808cfea50d7",
+  "prompt_packet_text": "Analyze the provided pull request diff and repository context to identify only real defects introduced by the change. For every modified function, trace its callers and callees across all files to understand the complete dataflow before forming any judgment. Examine how inputs propagate into the changed code and how outputs propagate to consumers. Do not flag style issues, formatting preferences, or hypothetical problems without concrete evidence. Ground every finding in explicit file and line references from the diff or repository context. Structure each finding as a clear defect description tied to specific evidence. If the change introduces no defects after completing the cross-file dataflow review, report nothing. Avoid speculation. Prioritize accuracy over volume. Only report issues that are directly attributable to the current diff and verifiable through the provided context.\n",
+  "skills_texts": [],
+  "agents_md_text": null,
+  "harness_version": "0.78.1",
+  "runner_version": "0.1.0"
+}

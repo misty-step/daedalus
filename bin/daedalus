@@ -39,7 +39,8 @@ PROBE = "candidates/probe-oneshot.toml"
 SEED_BUDGET_FRACTION = 0.6
 
 
-def sh_runner(manifest, arena_dir, exp_dir, split, trials, final=False):
+def sh_runner(manifest, arena_dir, exp_dir, split, trials, final=False,
+              max_errors=None):
     cmd = [
         sys.executable,
         str(REPO / "runner" / "run.py"),
@@ -51,6 +52,8 @@ def sh_runner(manifest, arena_dir, exp_dir, split, trials, final=False):
     ]
     if final:
         cmd.append("--final")
+    if max_errors is not None:
+        cmd += ["--max-errors", str(max_errors)]
     print(f"\n=== run {Path(manifest).stem} split={split} trials={trials}", flush=True)
     proc = subprocess.run(cmd, cwd=REPO)
     if proc.returncode != 0:
@@ -62,6 +65,22 @@ def load_records(exp_dir):
     if not path.exists():
         return []
     return [json.loads(line) for line in path.read_text().splitlines()]
+
+
+def manifest_id(manifest):
+    return tomllib.loads(Path(manifest).read_text())["id"]
+
+
+def candidate_error_count(exp_dir, cid):
+    return sum(
+        1 for r in load_records(exp_dir)
+        if r["candidate_id"] == cid and r.get("error")
+    )
+
+
+def record_cutoff(exp_dir, entry):
+    with open(exp_dir / "candidate-cutoffs.jsonl", "a") as f:
+        f.write(json.dumps(entry) + "\n")
 
 
 def main():
@@ -105,6 +124,11 @@ def main():
         help="minimum trials per search task a candidate needs to be "
         "recommendable (kills the winner's curse)",
     )
+    run_p.add_argument(
+        "--max-errors-per-candidate",
+        type=int,
+        help="stop measuring a non-reference candidate after N errored trials",
+    )
     exp_p = sub.add_parser(
         "export", help="export a delivery as control-plane artifacts "
         "(launch contract + sprite persona)"
@@ -136,6 +160,29 @@ def main():
     exp_dir.mkdir(parents=True)
     manifests = {}
     optimizer_costs = []
+
+    def run_candidate_split(manifest, split, trials, final=False):
+        cid = manifest_id(manifest)
+        remaining = None
+        if args.max_errors_per_candidate is not None:
+            errors = candidate_error_count(exp_dir, cid)
+            remaining = args.max_errors_per_candidate - errors
+            if remaining <= 0:
+                print(
+                    f"  skip {cid} split={split}: max error limit "
+                    f"{args.max_errors_per_candidate} already reached",
+                    flush=True,
+                )
+                record_cutoff(exp_dir, {
+                    "candidate_id": cid,
+                    "split": split,
+                    "errors": errors,
+                    "max_errors_per_candidate": args.max_errors_per_candidate,
+                    "reason": "max-errors-per-candidate",
+                })
+                return
+        sh_runner(manifest, arena_dir, exp_dir, split, trials, final=final,
+                  max_errors=remaining)
 
     # --- Stage 1: validate the rig (references + saturation probe) ---
     print("== stage 1: rig validation (oracle ceiling, null floor)", flush=True)
@@ -201,7 +248,7 @@ def main():
                 break
         manifests[sid] = manifest
         for split in ("train", "validation"):
-            sh_runner(manifest, arena_dir, exp_dir, split, args.trials)
+            run_candidate_split(manifest, split, args.trials)
     if not manifests:
         sys.exit("no seeds ran within the seed budget; raise --budget-usd")
 
@@ -260,7 +307,7 @@ def main():
 
     def run_child_fn(child_id):
         for split in ("train", "validation"):
-            sh_runner(manifests[child_id], arena_dir, exp_dir, split, args.trials)
+            run_candidate_split(manifests[child_id], split, args.trials)
 
     def monitor_fn(summary, generation):
         """In-loop meta-eval: notice when the arena, not the candidates, is
@@ -349,7 +396,7 @@ def main():
             have = min(task_count(records, cid, t) for t in ids)
             need = args.certify_trials - have
             if need > 0:
-                sh_runner(manifests[cid], arena_dir, exp_dir, split_name, need)
+                run_candidate_split(manifests[cid], split_name, need)
 
     # --- Stage 4: holdout final for the Pareto front (skip if no holdout) ---
     cands = report.aggregate(load_records(exp_dir))
@@ -358,8 +405,8 @@ def main():
         print("== stage 4: holdout final evaluation", flush=True)
         exposed = [cid for cid in front if cid in manifests]
         for cid in exposed:
-            sh_runner(manifests[cid], arena_dir, exp_dir, "holdout",
-                      args.certify_trials, final=True)
+            run_candidate_split(manifests[cid], "holdout",
+                                args.certify_trials, final=True)
         ledger = arena_dir / "holdout-ledger.md"
         if ledger.exists() and exposed:
             with open(ledger, "a") as f:
@@ -428,6 +475,14 @@ def main():
             f"{probe_mean} vs oracle {oracle_mean}; rewards here cannot rank "
             "agent configurations. Fix the arena before trusting this table.\n\n"
         ) + report_text
+    cutoffs_path = exp_dir / "candidate-cutoffs.jsonl"
+    if cutoffs_path.exists():
+        cutoffs = [json.loads(line) for line in cutoffs_path.read_text().splitlines()]
+        report_text += "\n## Candidate cutoffs\n\n" + "".join(
+            "- `{candidate_id}` skipped split `{split}` after {errors} errors "
+            "(limit {max_errors_per_candidate}).\n".format(**c)
+            for c in cutoffs
+        )
     (exp_dir / "report.md").write_text(report_text)
     (exp_dir / "pareto.json").write_text(json.dumps(
         [

@@ -189,6 +189,15 @@ prompt packet verbatim as the body) so control planes (Olympus, Bitter
 Blossom) import the byte-identical system prompt the lab measured; the
 embedded `daedalus.composition_hash` ties the persona back to the contract.
 
+`plane-handoff.md` is generated next to the contract and persona. It is the
+human-reviewable bridge from lab evidence to control-plane import: composition
+hash, prompt packet, model, tools, budgets, output contract, observability,
+approval state, residual risks, and per-plane import sketches for Bitter
+Blossom task/agent config and Olympus AgentSpec/activation config. When a
+delivery directory contains `plane-incumbents.toml`, export includes the
+current control-plane baselines as comparison context, but it still does not
+mutate those repos or bypass G3/G4/G5.
+
 ## Human checkpoints
 
 | Gate | What a human approves | Artifact |

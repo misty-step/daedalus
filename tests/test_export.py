@@ -3,6 +3,7 @@ the delivery dir, and the persona embeds the measured packet byte-for-byte."""
 
 import sys
 import tomllib
+import subprocess
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "runner"))
@@ -55,6 +56,11 @@ def test_export_writes_parseable_contract_and_faithful_persona(tmp_path):
     assert f"composition_hash: {cand['_hash']}" in head
     # The deployed system prompt is byte-identical to the measured packet.
     assert body == cand["_packet_text"]
+    handoff = paths["handoff"].read_text()
+    assert "Bitter Blossom import shape" in handoff
+    assert "Olympus AgentSpec import shape" in handoff
+    assert f"composition hash | `{cand['_hash']}`" in handoff
+    assert "Lab evidence is not launch approval" in handoff
 
 
 def test_export_is_deterministic(tmp_path):
@@ -62,6 +68,58 @@ def test_export_is_deterministic(tmp_path):
     a = export.export_delivery(delivery, SPEC, harness_version="9.9.9",
                                generated="2026-06-10T00:00:00Z")
     first = a["contract"].read_text()
+    first_handoff = a["handoff"].read_text()
     b = export.export_delivery(delivery, SPEC, harness_version="9.9.9",
                                generated="2026-06-10T00:00:00Z")
     assert b["contract"].read_text() == first
+    assert b["handoff"].read_text() == first_handoff
+
+
+def test_export_handoff_includes_incumbent_comparison(tmp_path):
+    delivery = build_delivery(tmp_path)
+    (delivery / "plane-incumbents.toml").write_text(
+        """
+[bitter_blossom]
+agent = "review-coordinator"
+version = "2"
+model = "moonshotai/kimi-k2.6"
+harness = "pi"
+posting = "agent posts one PR comment directly through gh"
+config_paths = [
+  "plane/agents/review-coordinator.toml",
+  "plane/tasks/review/task.toml",
+  "plane/tasks/review/card.md",
+]
+notes = ["budgeted webhook task", "direct-post red line"]
+
+[olympus]
+agent = "charon"
+version = "2"
+model = "~moonshotai/kimi-latest"
+harness = "pi"
+posting = "strict JSON artifact; orchestrator validates and posts"
+config_paths = [
+  "orchestrator/agent-specs/charon.yaml",
+  "orchestrator/prompts/charon-review.md",
+]
+notes = ["activation gated", "orchestrator-side posting"]
+"""
+    )
+    paths = export.export_delivery(delivery, SPEC, harness_version="9.9.9",
+                                   generated="2026-06-10T00:00:00Z")
+    text = paths["handoff"].read_text()
+    assert "review-coordinator v2" in text
+    assert "moonshotai/kimi-k2.6" in text
+    assert "charon v2" in text
+    assert "~moonshotai/kimi-latest" in text
+    assert "plane/agents/review-coordinator.toml" in text
+    assert "orchestrator/agent-specs/charon.yaml" in text
+    assert "G3/G4/G5" in text
+
+
+def test_pi_version_accepts_stderr(monkeypatch):
+    def fake_run(*args, **kwargs):
+        return subprocess.CompletedProcess(args[0], 0, stdout="", stderr="0.78.1\n")
+
+    monkeypatch.setattr(export.subprocess, "run", fake_run)
+    assert export.pi_version() == "0.78.1"

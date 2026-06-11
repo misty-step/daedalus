@@ -25,13 +25,39 @@ def pi_version():
     try:
         out = subprocess.run(["pi", "--version"], capture_output=True,
                              text=True, timeout=30)
-        return out.stdout.strip() or "unknown"
+        return out.stdout.strip() or out.stderr.strip() or "unknown"
     except Exception:  # noqa: BLE001 - version capture is best-effort
         return "unknown"
 
 
 def _toml_str(value):
     return '"' + str(value).replace("\\", "\\\\").replace('"', '\\"') + '"'
+
+
+def _as_list(value):
+    if value is None:
+        return []
+    return value if isinstance(value, list) else [value]
+
+
+def _md_join(values):
+    vals = [str(v) for v in _as_list(values) if str(v)]
+    return ", ".join(vals) if vals else "-"
+
+
+def _incumbent_name(data):
+    if not data:
+        return "not recorded"
+    version = data.get("version")
+    return f"{data.get('agent', 'unknown')} v{version}" if version else (
+        data.get("agent", "unknown")
+    )
+
+
+def load_incumbents(delivery_dir):
+    """Optional current-control-plane baselines for the handoff packet."""
+    path = Path(delivery_dir) / "plane-incumbents.toml"
+    return tomllib.loads(path.read_text()) if path.exists() else {}
 
 
 def render_contract(candidate, spec, harness_version, generated=None):
@@ -124,9 +150,159 @@ def render_persona(candidate, spec):
     )
 
 
+def render_handoff(candidate, spec, harness_version, generated=None,
+                   incumbents=None):
+    """Human-reviewable import bridge for current control planes. This is an
+    advisory handoff, not a deploy command: G3/G4/G5 still gate launch,
+    production writes, and production-data re-ingestion."""
+    generated = generated or datetime.now(timezone.utc).strftime(
+        "%Y-%m-%dT%H:%M:%SZ"
+    )
+    incumbents = incumbents or {}
+    budget = spec.get("budget") or {}
+    output = (spec.get("output") or {}).get("contract", "")
+    trigger = (spec.get("trigger") or {}).get("intent", "manual runs")
+    tools = ", ".join(candidate.get("tools") or [])
+    env = ", ".join(candidate.get("env_allowlist", ["OPENROUTER_API_KEY"]))
+    bb = incumbents.get("bitter_blossom") or {}
+    olympus = incumbents.get("olympus") or {}
+
+    lines = [
+        "# Cross-plane handoff: " + candidate["id"],
+        "",
+        f"Generated: `{generated}`",
+        "",
+        "Lab evidence is not launch approval. This packet is import guidance "
+        "for humans and control-plane dry runs; G3/G4/G5 approval still gates "
+        "deployment, write authority, and production-data re-ingestion.",
+        "",
+        "## Certified composition identity",
+        "",
+        "| field | value |",
+        "|---|---|",
+        f"| agent | `{candidate['id']}` |",
+        f"| composition hash | `{candidate['_hash']}` |",
+        f"| taskspec | `{spec.get('id', '')}` |",
+        f"| mode | `{spec.get('mode', '')}` |",
+        f"| harness | `{candidate['kind']}` (`{harness_version}`) |",
+        f"| provider/model | `{candidate.get('provider_name', 'openrouter')}/"
+        f"{candidate.get('model', '')}` |",
+        f"| thinking | `{candidate.get('thinking', '')}` |",
+        f"| tools | `{tools}` |",
+        f"| prompt packet | `{candidate.get('prompt_packet', '')}` |",
+        f"| output contract | `{output}` |",
+        f"| trigger intent | `{trigger}` |",
+        f"| budget | `${budget.get('max_cost_per_trial_usd', 0.5)}` and "
+        f"`{budget.get('max_wall_per_trial_sec', 600)}s` per run |",
+        f"| env | `{env}` |",
+        "| approval | `g3_signed = false` until a human signs the launch gate |",
+        "",
+        "## Incumbent comparison",
+        "",
+        "| plane | current incumbent | model | posting / output boundary | "
+        "config surfaces | import delta |",
+        "|---|---|---|---|---|---|",
+        "| Bitter Blossom | "
+        f"{_incumbent_name(bb)} | `{bb.get('model', '-')}` | "
+        f"{bb.get('posting', '-')} | {_md_join(bb.get('config_paths'))} | "
+        "Replace or overlay agent/persona fields from this packet; preserve "
+        "task filters, dedupe, budgets, and HMAC ingress. |",
+        "| Olympus | "
+        f"{_incumbent_name(olympus)} | `{olympus.get('model', '-')}` | "
+        f"{olympus.get('posting', '-')} | {_md_join(olympus.get('config_paths'))} "
+        "| Replace or overlay AgentSpec runtime/model/prompt fields from this "
+        "packet; preserve activation gating, strict artifact validation, "
+        "duplicate suppression, and orchestrator-side posting. |",
+        "",
+        "## Bitter Blossom import shape",
+        "",
+        "Map the measured composition into `plane/agents/` and keep the review "
+        "task's existing trigger/filter/budget guardrails unless a G3 launch "
+        "approval says otherwise.",
+        "",
+        "```toml",
+        f"# plane/agents/{candidate['id']}.toml",
+        f'id = "{candidate["id"]}"',
+        "version = 1",
+        'harness = "pi"',
+        f'provider = "{candidate.get("provider_name", "openrouter")}"',
+        f'model = "{candidate.get("model", "")}"',
+        f'thinking = "{candidate.get("thinking", "")}"',
+        f'composition_hash = "{candidate["_hash"]}"',
+        'contract = "contract.toml"',
+        'persona = "persona.md"',
+        "tools = [" + ", ".join(_toml_str(t) for t in candidate.get("tools") or [])
+        + "]",
+        "secrets = [" + ", ".join(
+            _toml_str(e) for e in candidate.get("env_allowlist",
+                                                ["OPENROUTER_API_KEY"])
+        ) + "]",
+        "```",
+        "",
+        "- If Bitter Blossom keeps direct `gh pr comment` posting, the task "
+        "card must retain the no-approve/no-merge/no-code-edit red lines and "
+        "the measured prompt packet must remain byte-identical.",
+        "- Preferred safer import: keep the measured review persona, have the "
+        "agent emit the structured findings contract, and let the plane own "
+        "comment formatting/posting after G3.",
+        "",
+        "## Olympus AgentSpec import shape",
+        "",
+        "Map the same measured composition into Charon or a successor AgentSpec "
+        "without weakening Olympus' control-plane-owned validation/posting "
+        "boundary.",
+        "",
+        "```yaml",
+        "id: charon",
+        "version: <human-bumped>",
+        "runtime: pi",
+        f"model: {candidate.get('model', '')}",
+        f"provider: {candidate.get('provider_name', 'openrouter')}",
+        f"thinking: {candidate.get('thinking', '')}",
+        "prompt_ref: deliveries/pr-review/persona.md",
+        f"composition_hash: {candidate['_hash']}",
+        "contract_ref: deliveries/pr-review/contract.toml",
+        "output_contract: strict findings artifact, then orchestrator review "
+        "posting",
+        "budgets:",
+        f"  max_cost_usd_per_run: {budget.get('max_cost_per_trial_usd', 0.5)}",
+        f"  max_wall_sec: {budget.get('max_wall_per_trial_sec', 600)}",
+        "activation:",
+        "  g3_signed: false",
+        "```",
+        "",
+        "- Preserve pinned-head checkout, untrusted PR metadata handling, "
+        "output caps, diff-anchor validation, hidden marker duplicate "
+        "suppression, and control-plane posting.",
+        "- Treat this packet as an AgentSpec overlay candidate, not an "
+        "automatic replacement for the live Charon config.",
+        "",
+        "## Residual risks and next gates",
+        "",
+        "- Exact replay against incumbents may be impossible when their prompts, "
+        "posting contract, runtime wrappers, or model aliases do not map to a "
+        "Daedalus composition slot; record that in the run report instead of "
+        "pretending parity.",
+        "- G3 decides whether either plane imports this packet.",
+        "- G4 is required before any production write authority expands beyond "
+        "advisory review output.",
+        "- G5 is required before production traces or PR data flow back into "
+        "arena fixtures.",
+        "",
+    ]
+    for key, title in (("bitter_blossom", "Bitter Blossom"),
+                       ("olympus", "Olympus")):
+        notes = _as_list((incumbents.get(key) or {}).get("notes"))
+        if notes:
+            lines += [f"### {title} incumbent notes", ""]
+            lines += [f"- {n}" for n in notes]
+            lines.append("")
+    return "\n".join(lines)
+
+
 def export_delivery(delivery_dir, spec, harness_version=None, generated=None):
-    """Write contract.toml and persona.md next to the delivery's agent.toml.
-    Returns {contract, persona} paths."""
+    """Write control-plane artifacts next to the delivery's agent.toml.
+    Returns {contract, persona, handoff} paths."""
     delivery_dir = Path(delivery_dir)
     candidate = load_candidate(delivery_dir / "agent.toml")
     harness_version = harness_version or pi_version()
@@ -137,4 +313,10 @@ def export_delivery(delivery_dir, spec, harness_version=None, generated=None):
     contract_path.write_text(contract_text)
     persona_path = delivery_dir / "persona.md"
     persona_path.write_text(render_persona(candidate, spec))
-    return {"contract": contract_path, "persona": persona_path}
+    handoff_path = delivery_dir / "plane-handoff.md"
+    handoff_path.write_text(
+        render_handoff(candidate, spec, harness_version, generated=generated,
+                       incumbents=load_incumbents(delivery_dir))
+    )
+    return {"contract": contract_path, "persona": persona_path,
+            "handoff": handoff_path}

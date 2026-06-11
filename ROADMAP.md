@@ -114,10 +114,16 @@ Two live harness findings recorded in primitives.md: concurrent `pi -p`
 processes deadlock (run trials sequentially); replace-mode system prompts work
 (an earlier timeout was that deadlock, not the slot).
 
-Next: the long pole is a fresh full `bin/daedalus run` on pr-review-v2 to
-certify new-task agent spread, exercise certification + alarms + lineage
-together, and produce a contract-grade delivery. Then Phase 3 (deploy/observe)
-against Olympus / Bitter Blossom via the export contract.
+Update (2026-06-11): the fresh v0.2.0 certification run is recorded at
+`runs/20260611T173632Z-search-pr-review-v0` with lineage, Pareto archive,
+artifacts index, holdout ledger entry, and a regenerated
+`deliveries/pr-review/` package plus cross-plane handoff. The result is
+useful but not triumphant: the only certified recommendation is
+`seed4-qwen3-7-plus-checklist` at 0.5714, while `py-markup-escape`,
+`py-guess-swallow`, and `py-measure-normalize` are promoted in
+`arena-findings.md` for G2 human decision. Next: human G2 review in
+`approvals/G2-pr-review-v2.md`; then Phase 3 launch/observe work remains
+ticket 029 against Olympus / Bitter Blossom via the export contract.
 
 ## Phase 0 — Prose-first pilot (current)
 

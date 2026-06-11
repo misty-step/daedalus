@@ -10,3 +10,4 @@ replacement (version bump).
 |---|---|---|---|
 | 2026-06-10 | 20260610T160533Z-search-pr-review-v0 (arena v0.1.0) | g1b-seed1-glm-5-spec-first, seed4-gpt-5-mini-spec-first | py-live-lock |
 | 2026-06-10 | delivered-agent certification repro (arena v0.1.0) | pr-review-glm5-specfirst-medium | py-live-lock ×2 runs |
+| 20260611 | 20260611T173632Z-search-pr-review-v0 | g1a-seed1-gpt-5-mini-checklist, g3b-g2b-seed1-gpt-5-mini-checklist, seed3-glm-4-7-flash-test-runner | py-live-lock, py-export-clear, py-plugin-cache |

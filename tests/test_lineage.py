@@ -120,3 +120,16 @@ def test_notebook_entry_summarizes(tmp_path):
     assert "g1a-seed1" in entry
     assert "certified=True" in entry
     assert "lineage.md" in entry
+
+
+def test_notebook_entry_collapses_hypothesis_whitespace(tmp_path):
+    exp = build_run(tmp_path)
+    loop = json.loads((exp / "loop.json").read_text())
+    loop["history"][0]["hypothesis"] = "first line\nsecond line   "
+    (exp / "loop.json").write_text(json.dumps(loop))
+    entry = lineage.notebook_entry(
+        exp, {"id": "pr-review", "mode": "threshold-then-cheap"},
+        {"id": "pr-review-v2", "version": "0.1.0"},
+    )
+    assert "first line second line" in entry
+    assert "  \n" not in entry
