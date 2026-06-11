@@ -121,9 +121,12 @@ artifacts index, holdout ledger entry, and a regenerated
 useful but not triumphant: the only certified recommendation is
 `seed4-qwen3-7-plus-checklist` at 0.5714, while `py-markup-escape`,
 `py-guess-swallow`, and `py-measure-normalize` are promoted in
-`arena-findings.md` for G2 human decision. Next: human G2 review in
-`approvals/G2-pr-review-v2.md`; then Phase 3 launch/observe work remains
-ticket 029 against Olympus / Bitter Blossom via the export contract.
+`arena-findings.md` for G2 human decision. Human G2 accepted v0.2.0 for
+internal Daedalus contract discovery and plane-handoff work only, with
+sandbox-only waivers recorded in `approvals/G2-pr-review-v2.md`; no public
+benchmark-quality claim or primary-reviewer deployment follows from this.
+Next: Phase 3 launch/observe work remains ticket 029 against Olympus / Bitter
+Blossom via the export contract.
 
 ## Phase 0 — Prose-first pilot (current)
 

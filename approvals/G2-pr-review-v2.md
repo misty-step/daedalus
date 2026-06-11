@@ -1,6 +1,6 @@
 # G2 - Eval-quality review: arena pr-review-v2 (v0.2.0)
 
-- **Status:** pending human review
+- **Status:** accepted with sandbox-only waivers
 - **Prepared:** 2026-06-11, after the v0.2.0 certification run
 - **Arena:** `arenas/pr-review-v2` version `0.2.0`
 - **Run:** `runs/20260611T173632Z-search-pr-review-v0`
@@ -74,10 +74,23 @@ remaining open items are human decisions, not concealed branch work.
 
 ## Human Review State
 
-- [ ] Human reviewer accepts v0.2.0 as a contract-grade benchmark despite the
-      residual findings.
+- [x] Human reviewer accepts v0.2.0 as a contract-grade benchmark for internal
+      Daedalus-to-plane handoff despite the residual findings.
 - [ ] Human reviewer requests v0.2.1 calibration before publication.
-- [ ] Human reviewer signs a written waiver for any task retained despite the
+- [x] Human reviewer signs a written waiver for any task retained despite the
       failures above.
 
-Prepared evidence only. This file is not a self-approval.
+## Human G2 Decision
+
+Accepted by the operator on 2026-06-11 with these constraints:
+
+- This approval is for honing Daedalus contract discovery and handoff loops,
+  not for claiming an enterprise-ready code-review agent.
+- Bitter Blossom may only receive this packet experimentally in a sandboxed
+  mode; it must not operate as the primary reviewer.
+- No public cross-agent benchmark-quality claim may depend on this run.
+- The documented `py-markup-escape`, `py-guess-swallow`,
+  `py-measure-normalize`, `py-formatter-clean`, and one-shot probe limitations
+  are waived for 028 closure only and should remain calibration follow-up.
+
+This is the human G2 approval record; it is not an agent self-approval.

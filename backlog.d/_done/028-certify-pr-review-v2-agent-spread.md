@@ -1,7 +1,7 @@
 # Certify pr-review-v2 and produce cross-plane handoff packets
 
 Priority: P0
-Status: pending G2 human review
+Status: done
 Estimate: L
 
 ## Goal
@@ -25,7 +25,7 @@ review-coordinator surfaces.
       in `holdout-ledger.md`
 - [x] The six new v0.2.0 tasks show measurable agent spread, or failures are
       promoted into an arena-iteration note before any cross-agent claim
-- [ ] Category/span calibration findings such as `py-markup-escape` are
+- [x] Category/span calibration findings such as `py-markup-escape` are
       adjudicated without weakening the grader; any key change bumps the arena
       version and reruns oracle/null/probe baselines
 - [x] The certified run compares the recommended candidate against the current
@@ -46,7 +46,7 @@ review-coordinator surfaces.
 ## Children
 1. [x] Run the full v0.2.0 search sequentially with a recorded RNG seed and
    certification depth.
-2. [ ] Convert any `arena-findings.md` alarms into either a v0.2.1 calibration
+2. [x] Convert any `arena-findings.md` alarms into either a v0.2.1 calibration
    patch or a written waiver.
 3. [x] Add the v2 G2 approval artifact and link it from `ROADMAP.md`.
 4. [x] Regenerate the PR-review delivery only from certified evidence.
@@ -62,15 +62,17 @@ review-coordinator surfaces.
 - Delivery packet: `deliveries/pr-review/`
 - Cross-plane handoff: `deliveries/pr-review/plane-handoff.md`
 - Incumbent comparison source: `deliveries/pr-review/plane-incumbents.toml`
-- G2 packet awaiting human decision: `approvals/G2-pr-review-v2.md`
+- G2 packet accepted with sandbox-only waivers:
+  `approvals/G2-pr-review-v2.md`
 - Gate: `bin/gate` passed on 2026-06-11 after packet generation
 
-## Remaining Closure Condition
+## Closure Decision
 
-Human G2 must adjudicate `arena-findings.md`: accept v0.2.0 with residual
-risks, request v0.2.1 calibration, or sign written waivers for retained
-calibration issues. Until that happens, 028 is delivered to review but not
-closable with a `Closes-backlog: 028` trailer.
+Human G2 accepted v0.2.0 on 2026-06-11 for internal Daedalus contract
+discovery and plane-handoff work only. The waiver explicitly does not make
+public benchmark-quality claims and does not authorize Bitter Blossom to run
+this packet as a primary reviewer; any pre-G3 use must be sandboxed,
+experimental, and secondary.
 
 ## Notes
 **Why:** product/eval lane. `ROADMAP.md` names the next full run, but

@@ -69,9 +69,11 @@ Generated artifacts:
   `review-coordinator` and Olympus `charon`.
 
 Control-plane imports remain advisory until ticket 029 and G3/G4/G5 human
-approval. Bitter Blossom may keep its direct-comment card only with the
-existing no-approve/no-merge/no-code-edit red lines; Olympus should preserve
-orchestrator-side JSON validation and posting.
+approval. G2 acceptance covers internal Daedalus contract discovery only. Any
+Bitter Blossom use before stronger calibration must be sandboxed and
+experimental, not the primary reviewer, and must preserve no-approve/no-merge/
+no-code-edit red lines. Olympus should preserve orchestrator-side JSON
+validation and posting.
 
 ## Residual Risks
 
@@ -81,7 +83,8 @@ orchestrator-side JSON validation and posting.
   train and validation task, so they cannot replace seed4 without another
   certification pass.
 - `py-markup-escape`, `py-guess-swallow`, and `py-measure-normalize` are
-  promoted in the run's `arena-findings.md`; benchmark-quality publication
-  should wait for adjudication or a written waiver.
-- `approvals/G2-pr-review-v2.md` is prepared for human review but not signed
-  by this agent.
+  promoted in the run's `arena-findings.md`; G2 waives them for internal
+  handoff only, and benchmark-quality publication should wait for follow-up
+  calibration.
+- `approvals/G2-pr-review-v2.md` is accepted by the human reviewer with
+  sandbox-only constraints; G3/G4/G5 remain unsigned.

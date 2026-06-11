@@ -39,3 +39,8 @@ mistake for production-ready until G3/G4/G5 approval artifacts exist.
 **Why:** harness-readiness lane. The current contract says `g3_signed = false`,
 `harness_version = "unknown"`, and trace destination `TBD`; that is acceptable
 as a lab artifact, not as a launch path.
+
+G2 for ticket 028 accepted the v0.2.0 contract only for internal Daedalus
+learning and sandboxed plane experiments. Ticket 029 must preserve that
+boundary: Bitter Blossom may not run the packet as a primary reviewer before
+G3, and any import/dry run should be secondary to the existing review path.

@@ -47,4 +47,4 @@ arena = "arenas/pr-review-v2"
 
 [approval]
 g3_signed = false
-note = "Do not deploy until approvals/G3-seed4-qwen3-7-plus-checklist.md is signed by a human."
+note = "G2 accepted internal handoff only. Do not deploy as a primary reviewer; Bitter Blossom use must be sandboxed/secondary until G3 is signed by a human."
