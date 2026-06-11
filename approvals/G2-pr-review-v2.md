@@ -39,6 +39,22 @@ timeouts for noncompetitive candidates. Cutoffs are recorded in
 - `arenas/pr-review-v2/holdout-ledger.md` records the 20260611 holdout
   exposure for `g1a`, `g3b`, and `seed3`.
 
+## Fresh-Context Critic Receipt
+
+Read-only peer review was attempted with two model-family lanes:
+
+- `pi` / OpenRouter `moonshotai/kimi-k2.6` timed out after 420 seconds with no
+  output.
+- `claude --print --model sonnet` completed a read-only review of this packet,
+  the delivery handoff, and the run report. It found no blocking non-human gap
+  before human G2. Non-blocking notes were limited to the intentionally
+  absolute prompt-packet path used for composition hash preservation and the
+  disclosed fact that the one-shot probe voided on context overflow rather than
+  producing a usable saturation signal.
+
+Critic verdict: the certification packet is ready for human G2 review; the
+remaining open items are human decisions, not concealed branch work.
+
 ## Arena Findings For Human Decision
 
 1. `py-markup-escape`: certified seed4 scored 0/5. Prior probes found the
