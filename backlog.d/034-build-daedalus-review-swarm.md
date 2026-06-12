@@ -1,7 +1,7 @@
 # Build a Daedalus-optimized PR review swarm
 
 Priority: P0
-Status: ready
+Status: in progress - G1 approval required before model spend
 Estimate: XL
 
 ## PRD Summary
@@ -380,24 +380,24 @@ Observable acceptance:
 
 ## Children
 
-1. [ ] Write `docs/review-swarm-taxonomy.md` and
+1. [x] Write `docs/review-swarm-taxonomy.md` and
    `bin/daedalus taxonomy-validate`: defect IDs, allowed lens ownership,
    overlap rules, severity rules, and ambiguity/adjudication workflow.
-2. [ ] Write `docs/adr-004-review-swarm-contract.md` selecting
+2. [x] Write `docs/adr-004-review-swarm-contract.md` selecting
    `swarm-contract.v1` and `bin/daedalus export-suite`.
-3. [ ] Define the member artifact JSON schema, required/optional member
+3. [x] Define the member artifact JSON schema, required/optional member
    failure policy, and general-reviewer precedence rules.
-4. [ ] Define `pr-review-suite` and `pr-review-master` task specs, including
+4. [x] Define `pr-review-suite` and `pr-review-master` task specs, including
    strict member-artifact and master-reviewer output contracts and the
    `threshold-then-cheap` suite objective.
-5. [ ] Build the first master-synthesis arena from bootstrapped specialist artifact
+5. [x] Build the first master-synthesis arena from bootstrapped specialist artifact
    fixtures: true findings, duplicate findings, noisy false positives,
    conflicting severities, and clean/no-finding cases, with labels hidden from
    candidate inputs.
 6. [ ] Build or adapt specialist arenas for correctness and security using
    real-repo-scale fixtures with one-shot headroom; keep general review as the
    baseline from `pr-review-v2`.
-7. [ ] Add the suite run/export verification harness: member contracts,
+7. [x] Add the suite run/export verification harness: member contracts,
    master contract, composition hashes, evidence pointers, and dry-run
    import packets.
 8. [ ] Run the first certified suite search on the vertical slice
@@ -408,8 +408,41 @@ Observable acceptance:
 10. [ ] Refresh Olympus and Bitter Blossom incumbent reads from live files and
    generate sandbox-only handoffs that preserve each plane's posting and
    validation boundary.
-11. [ ] Decide whether harness becomes a Daedalus search slot now or remains a
+11. [x] Decide whether harness becomes a Daedalus search slot now or remains a
    follow-up until comparable non-`pi` runner evidence exists.
+
+## Delivery Progress
+
+No-spend packet committed on branch `deliver-034-review-swarm`:
+
+- `docs/review-swarm-taxonomy.md`, `runner/taxonomy.py`, and
+  `bin/daedalus taxonomy-validate`.
+- `docs/adr-004-review-swarm-contract.md`, `runner/swarm.py`,
+  `bin/daedalus export-suite`, and swarm-aware `launch-pack`.
+- `specs/pr-review-suite/taskspec.toml`, required member specs, optional
+  non-runnable scaffold specs, and `specs/pr-review-master/taskspec.toml`.
+- `arenas/pr-review-master-v0` reducer arena with candidate-visible member
+  artifacts and hidden answer keys.
+- `runs/20260612T205852Z-freeze-pr-review-master-v0` oracle/null reference
+  packet.
+- `docs/review-swarm-vertical-slice.md` with current Olympus and Bitter
+  Blossom incumbent boundaries.
+
+Current hard blocker:
+
+- `approvals/G1-pr-review-suite.md` is pending. Until a human signs G1,
+  Daedalus must not run the one-shot probe, certified search, real-member
+  replay, or suite export that would spend model budget or imply a G2 packet.
+
+Remaining children after G1:
+
+- Complete child 6 by running one-shot headroom and certified member searches
+  for the required correctness/security/general vertical slice.
+- Complete child 8 with the first certified master/suite search.
+- Complete child 9 with real-member replay through the master benchmark.
+- Complete child 10 by exporting `deliveries/pr-review-swarm/` and generating
+  sandbox-only Bitter Blossom and Olympus dry-run handoffs, or explicitly
+  member-only inspection output if replay fails.
 
 ## Lead Repo Read
 
