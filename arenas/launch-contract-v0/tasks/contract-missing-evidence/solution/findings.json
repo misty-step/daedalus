@@ -1,0 +1,10 @@
+{
+  "findings": [
+    {
+      "file": "contract.toml",
+      "line": 16,
+      "category": "evidence",
+      "description": "The evidence section leaves run_dir/report/lineage/pareto/trials empty, so a reviewer cannot trace the pinned composition back to measured run records."
+    }
+  ]
+}

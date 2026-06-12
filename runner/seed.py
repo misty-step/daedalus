@@ -35,7 +35,7 @@ STANCES = [
 ]
 
 PACKET_BRIEF = """\
-Write a system prompt (a "prompt packet") for a focused code-review agent.
+Write a system prompt (a "prompt packet") for a focused review agent.
 
 Task goal: {goal}
 Review stance the packet must embody: {stance}

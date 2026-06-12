@@ -1,0 +1,14 @@
+contract = 1
+agent = "review-sandbox"
+composition_hash = "abc123"
+
+[permissions]
+workspace = "read-only checkout"
+env = ["OPENROUTER_API_KEY", "GITHUB_TOKEN"]
+write_actions = "post GitHub PR comments directly"
+
+[approval]
+g3_signed = true
+g3_approval = "approvals/G3-review-sandbox.md"
+g4_signed = false
+g5_signed = false

@@ -1,0 +1,12 @@
+{
+  "defects": [
+    {
+      "id": "empty-evidence",
+      "file": "contract.toml",
+      "line_start": 14,
+      "line_end": 22,
+      "category": "evidence",
+      "note": "The contract has empty evidence pointers despite pinning a composition."
+    }
+  ]
+}

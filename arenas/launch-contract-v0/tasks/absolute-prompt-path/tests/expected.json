@@ -1,0 +1,12 @@
+{
+  "defects": [
+    {
+      "id": "absolute-prompt",
+      "file": "import-packet.toml",
+      "line_start": 5,
+      "line_end": 7,
+      "category": "portability",
+      "note": "The control-plane import packet uses a machine-local absolute prompt path."
+    }
+  ]
+}

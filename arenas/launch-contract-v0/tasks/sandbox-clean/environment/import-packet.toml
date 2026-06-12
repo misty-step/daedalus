@@ -1,0 +1,19 @@
+packet = 1
+plane = "bitter-blossom"
+mode = "dry-run"
+agent = "seed4-qwen3-7-plus-checklist"
+composition_hash = "4a73f1fd213aa1a5"
+deployable = false
+sandbox_required = true
+primary_reviewer_allowed = false
+refusal_reason = "G3 approval is unsigned"
+
+[gates]
+g3_signed = false
+g3_approval = "approvals/G3-pr-review-seed4-qwen3-7-plus-checklist.md"
+g4_required_for_write_authority = true
+g5_required_for_prod_data_reingestion = true
+
+[constraints]
+write_authority = "none"
+posting = "control-plane dry run only before G3"

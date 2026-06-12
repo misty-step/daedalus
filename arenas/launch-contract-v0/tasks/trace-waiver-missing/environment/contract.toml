@@ -1,0 +1,15 @@
+contract = 1
+agent = "review-sandbox"
+composition_hash = "abc123"
+
+[observability]
+trace_destination = "TBD"
+regression_eval = "monthly"
+trace_artifact = ""
+
+[evidence]
+run_dir = "runs/20260611T173632Z-search-pr-review-v0"
+report = "runs/20260611T173632Z-search-pr-review-v0/report.md"
+
+[approval]
+g3_signed = false

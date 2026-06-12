@@ -86,12 +86,14 @@ comparison) or OUT-OF-SCOPE (record the rationale; the key stands). This is
 the eval-improvement flywheel: keys improve instead of silently punishing
 reviewers better than their author. Worked example: pr-review-v0 ADJ-1/ADJ-2.
 
-### Findings / answer key (pr-review domain)
+### Findings / answer key (deterministic review-like domains)
 
 Agent output `findings.json`:
-`{"findings": [{"file", "line", "category", "description"}]}` with categories
-from: `correctness`, `security`, `error-handling`, `concurrency`,
-`resource-leak`, `data-loss`.
+`{"findings": [{"file", "line", "category", "description"}]}`. The shape is
+shared; the `category` vocabulary is arena-owned. `pr-review-v2` uses
+`correctness`, `security`, `error-handling`, `concurrency`, `resource-leak`,
+and `data-loss`; `launch-contract-v0` uses `approval-gate`, `evidence`,
+`permissions`, `observability`, and `portability`.
 
 Answer key `tests/expected.json`:
 `{"defects": [{"id", "file", "line_start", "line_end", "category", "note"}]}`.

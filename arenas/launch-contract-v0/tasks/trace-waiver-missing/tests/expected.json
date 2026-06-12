@@ -1,0 +1,12 @@
+{
+  "defects": [
+    {
+      "id": "missing-trace-waiver",
+      "file": "contract.toml",
+      "line_start": 5,
+      "line_end": 8,
+      "category": "observability",
+      "note": "Trace destination is TBD and trace_artifact is empty, with no explicit waiver."
+    }
+  ]
+}

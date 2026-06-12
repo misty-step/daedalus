@@ -1,7 +1,7 @@
 # Build a second task family to pressure-test Daedalus
 
 Priority: P1
-Status: pending
+Status: pending G1 human review
 Estimate: XL
 
 ## Goal
@@ -28,12 +28,29 @@ modes, and scoring pressure.
 - [ ] `bin/gate` green
 
 ## Children
-1. Pick the domain by evidence, with backlog grooming, inbox triage, browser QA,
+1. [x] Pick the domain by evidence, with backlog grooming, inbox triage, browser QA,
    or launch-contract review as candidate families.
-2. Author the new G1 task spec and arena freeze gate.
-3. Run the first certified comparative search and delivery export.
-4. Audit hard-coded PR-review assumptions in docs, runner output, and export
+2. [ ] Author the new G1 task spec and arena freeze gate.
+3. [ ] Run the one-shot probe and prepare/sign G2 before trusting search
+   scores.
+4. [ ] Run the first certified comparative search and delivery export.
+5. [ ] Audit hard-coded PR-review assumptions in docs, runner output, and export
    contracts.
+
+## Current Evidence
+
+- Chosen second domain: `launch-contract-v0`, reviewing control-plane launch
+  contracts and import packets for approval, evidence, permission,
+  observability, and portability defects.
+- Spec: `specs/launch-contract/taskspec.toml`
+- Arena: `arenas/launch-contract-v0`
+- G1 packet: `approvals/G1-launch-contract.md` (pending human review)
+- No-spend rig run: `runs/20260612T000000Z-freeze-launch-contract-v0`
+  records oracle 1.0 and null 0.1667, matching one clean task out of six.
+- One-shot probe and comparative search are intentionally deferred until G1
+  approval because they spend model budget.
+- G2 remains required after the one-shot probe and before trusting any
+  comparative search result.
 
 ## Notes
 **Why:** premise-challenge lane. The README describes Daedalus as a general

@@ -1,0 +1,17 @@
+id = "launch-contract-v0"
+version = "0.1.0"
+taskspec = "specs/launch-contract/taskspec.toml"
+description = """
+Synthetic control-plane contract review fixtures. Tasks cover launch approval
+gates, evidence pointers, write authority, trace observability, portability,
+and a sandboxed clean dry-run packet. Harbor task-directory format; candidates
+never read tests/ or solution/.
+"""
+
+[template]
+file = "template.md"
+
+[split]
+train = ["bb-unsigned-primary", "contract-missing-evidence", "sandbox-clean"]
+validation = ["write-before-g4", "trace-waiver-missing"]
+holdout = ["absolute-prompt-path"]

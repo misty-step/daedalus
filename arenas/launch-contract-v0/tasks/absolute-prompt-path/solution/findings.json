@@ -1,0 +1,10 @@
+{
+  "findings": [
+    {
+      "file": "import-packet.toml",
+      "line": 6,
+      "category": "portability",
+      "description": "The prompt_packet field uses a machine-local /Users/... path, so another operator or control plane cannot resolve the measured prompt even though the hash is present."
+    }
+  ]
+}
