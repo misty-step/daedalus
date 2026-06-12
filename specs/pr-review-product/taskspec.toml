@@ -1,0 +1,53 @@
+# Daedalus task specification: PR-review product-intent specialist.
+# Gate G1 approval required before paid search: approvals/G1-pr-review-suite.md
+
+id = "pr-review-product"
+goal = "Given a pull request fixture plus task intent, produce structured findings only for product-owned defects: missing acceptance behavior, contradicted ticket intent, or expensive scope creep."
+domain = "code-review-specialist"
+mode = "threshold-then-cheap"
+
+[inputs]
+description = "Future PR fixtures with explicit ticket or acceptance context; this scaffold is not runnable until fixtures are authored"
+fixtures = "scaffold-only:product-fixtures-not-authored"
+
+[output]
+contract = "review-swarm member artifact with lens = product and findings in the shared member schema"
+
+[oracle]
+type = "deterministic"
+description = "Future intent-mismatch fixtures with explicit acceptance context and hidden answer keys"
+
+[risk]
+class = "low"
+notes = "Offline synthetic fixtures only; no live repos, secrets, comments, or write actions."
+
+[budget]
+max_cost_per_trial_usd = 0.50
+max_wall_per_trial_sec = 600
+
+[trigger]
+intent = "Optional review-swarm member after G3; manual sandbox runs until then"
+
+[boundaries]
+data = "Synthetic fixtures in arenas/ only. Candidates never read tests/ or solution/."
+
+[checkpoints]
+gates = ["G1-spec", "G2-eval-quality", "G3-launch-contract"]
+
+[lens]
+id = "product"
+taxonomy = "docs/review-swarm-taxonomy.md"
+owned_categories = ["intent-mismatch"]
+blocked_on = "authoring fixtures with explicit ticket context and objective acceptance-key outcomes"
+
+[negative_examples]
+bad = [
+  "implementation taste when acceptance behavior is satisfied",
+  "general correctness bugs covered by another member",
+  "suggesting product changes not present in the stated intent",
+  "blocking on missing context instead of disclosing incomplete coverage",
+]
+
+[scaffold]
+runnable = false
+blocked_on = "No intent-mismatch arena with explicit acceptance context exists yet; do not run search or spend model budget for this member until fixtures and one-shot headroom are approved."

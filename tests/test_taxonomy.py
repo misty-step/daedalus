@@ -125,6 +125,24 @@ def test_taxonomy_rejects_missing_member_spec_path(tmp_path):
     )
 
 
+def test_scaffold_only_specs_must_not_declare_search():
+    report = taxonomy.TaxonomyReport()
+    spec = {
+        "scaffold": {"runnable": False, "blocked_on": "fixtures"},
+        "search": {"base_packet": "packets/reviewer-v1.md"},
+    }
+    taxonomy._validate_scaffold(spec, report, "scaffold-spec")
+    assert not report.ok
+    assert any("must not declare [search]" in m for m in report.messages)
+
+
+def test_scaffold_only_specs_skip_base_packet_requirement():
+    report = taxonomy.TaxonomyReport()
+    spec = {"scaffold": {"runnable": False, "blocked_on": "fixtures"}}
+    taxonomy._validate_base_packet(spec, REPO, report, "scaffold-spec")
+    assert report.ok, report.messages
+
+
 def test_cli_taxonomy_validate_writes_report():
     proc = subprocess.run(
         [

@@ -13,6 +13,9 @@ not a production launch packet and not an enterprise-readiness claim.
 | general | `specs/pr-review/taskspec.toml` | certified existing baseline | `deliveries/pr-review/DELIVERY.md` |
 | correctness | `specs/pr-review-correctness/taskspec.toml` | suite spec ready; search blocked on G1 | adapted from correctness-owned `pr-review-v2` tasks |
 | security | `specs/pr-review-security/taskspec.toml` | suite spec ready; needs another unambiguous fixture before strong G2 | adapted from `py-markup-escape` plus future security fixture |
+| verification | `specs/pr-review-verification/taskspec.toml` | optional non-runnable scaffold; blocked on headroom fixtures | no recommendation yet |
+| simplification | `specs/pr-review-simplification/taskspec.toml` | optional non-runnable scaffold; blocked on deterministic taste-free fixtures | no recommendation yet |
+| product | `specs/pr-review-product/taskspec.toml` | optional non-runnable scaffold; blocked on explicit ticket-context fixtures | no recommendation yet |
 | master | `specs/pr-review-master/taskspec.toml` | synthetic member-artifact arena authored; one-shot probe blocked on G1 | `arenas/pr-review-master-v0` |
 
 The existing `pr-review-v2` arena remains the general-review baseline and the
@@ -20,6 +23,11 @@ real-repo-scale source for the first specialist adaptations. Its categories do
 not exactly match the review-swarm taxonomy, so the specialist specs declare
 owned categories and adapted tasks explicitly instead of pretending the whole
 arena is a correctness or security benchmark.
+
+The optional verification, simplification, and product specs are scaffold-only
+records. They deliberately omit `[search]`, set `[scaffold].runnable = false`,
+and use `scaffold-only:*` fixture markers so a future operator cannot mistake
+them for calibrated search targets.
 
 ## Arena State
 

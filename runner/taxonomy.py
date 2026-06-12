@@ -93,7 +93,24 @@ def _repo_root_for_paths(suite_path):
     return Path.cwd()
 
 
+def _scaffold_only(spec):
+    return (spec.get("scaffold") or {}).get("runnable") is False
+
+
+def _validate_scaffold(spec, report, label):
+    if not _scaffold_only(spec):
+        return False
+    scaffold = spec.get("scaffold") or {}
+    if "search" in spec:
+        report.fail(f"{label} is scaffold-only and must not declare [search]")
+    if not isinstance(scaffold.get("blocked_on"), str) or not scaffold.get("blocked_on"):
+        report.fail(f"{label}.scaffold.blocked_on must be non-empty")
+    return True
+
+
 def _validate_base_packet(spec, base, report, label):
+    if _scaffold_only(spec):
+        return
     packet = (spec.get("search") or {}).get("base_packet")
     if not isinstance(packet, str) or not packet:
         report.fail(f"{label}.search.base_packet must be a non-empty path")
@@ -104,6 +121,10 @@ def _validate_base_packet(spec, base, report, label):
 def _validate_lens_adapter(spec, base, report, label):
     lens = spec.get("lens") or {}
     if not lens:
+        return
+    if _scaffold_only(spec):
+        if not isinstance(lens.get("blocked_on"), str) or not lens.get("blocked_on"):
+            report.fail(f"{label}.lens.blocked_on must be non-empty")
         return
     adapted_from = lens.get("adapted_from")
     if not isinstance(adapted_from, str) or not adapted_from:
@@ -163,6 +184,11 @@ def _validate_suite_paths(suite, suite_path, required_members, optional_members,
             except tomllib.TOMLDecodeError as exc:
                 report.fail(f"suite.members.{member}.spec is invalid TOML: {exc}")
                 continue
+            _validate_scaffold(
+                member_spec,
+                report,
+                f"suite.members.{member}.spec",
+            )
             _validate_base_packet(
                 member_spec,
                 base,

@@ -3,9 +3,12 @@
 - **Status:** pending human approval
 - **Spec:** `specs/pr-review-suite/taskspec.toml`
 - **Master spec:** `specs/pr-review-master/taskspec.toml`
-- **Member specs:** `specs/pr-review/taskspec.toml`,
+- **Required member specs:** `specs/pr-review/taskspec.toml`,
   `specs/pr-review-correctness/taskspec.toml`,
   `specs/pr-review-security/taskspec.toml`
+- **Optional scaffold specs:** `specs/pr-review-verification/taskspec.toml`,
+  `specs/pr-review-simplification/taskspec.toml`,
+  `specs/pr-review-product/taskspec.toml`
 - **Taxonomy:** `docs/review-swarm-taxonomy.md`
 - **Scope:** offline synthetic PR-review swarm experimentation only
 
@@ -15,8 +18,11 @@ Not approved for paid search yet.
 
 This packet prepares the first review-swarm task family and master-synthesis
 spec. A human G1 reviewer must approve the suite spec, master spec, taxonomy,
-correctness/security member specs, budget posture, and search space before
-Daedalus spends model budget on one-shot probes or candidate search.
+required member specs, budget posture, and search space before Daedalus
+spends model budget on the vertical-slice one-shot probes or candidate
+search. The optional scaffold specs are included for boundary review only;
+they are marked non-runnable and require a later fixture/headroom approval
+before any model budget is spent on those members.
 
 ## Approval Boundary
 

@@ -78,6 +78,24 @@ role = "specialist member for credential exposure, authz, injection, and unsafe 
 status = "vertical-slice-spec"
 evidence = "docs/review-swarm-vertical-slice.md"
 
+[suite.members.verification]
+spec = "specs/pr-review-verification/taskspec.toml"
+role = "optional specialist member for gate, CI, and evidence-quality review"
+status = "scaffolded-blocked-on-headroom"
+evidence = "docs/review-swarm-vertical-slice.md"
+
+[suite.members.simplification]
+spec = "specs/pr-review-simplification/taskspec.toml"
+role = "optional specialist member for needless surface, duplicate logic, and gate weakening"
+status = "scaffolded-blocked-on-headroom"
+evidence = "docs/review-swarm-vertical-slice.md"
+
+[suite.members.product]
+spec = "specs/pr-review-product/taskspec.toml"
+role = "optional specialist member for task intent and acceptance-behavior fit"
+status = "scaffolded-blocked-on-headroom"
+evidence = "docs/review-swarm-vertical-slice.md"
+
 [member_artifact]
 schema = "review-swarm-member-artifact.v1"
 statuses = ["ok", "error", "timeout", "truncated"]

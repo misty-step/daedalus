@@ -1,0 +1,53 @@
+# Daedalus task specification: PR-review simplification specialist.
+# Gate G1 approval required before paid search: approvals/G1-pr-review-suite.md
+
+id = "pr-review-simplification"
+goal = "Given a pull request fixture, produce structured findings only for simplification-owned defects: needless surface area, duplicate logic, dead branches, shallow wrappers, and gate-weakening abstraction."
+domain = "code-review-specialist"
+mode = "threshold-then-cheap"
+
+[inputs]
+description = "Future needless-surface PR fixtures; this scaffold is not runnable until fixtures are authored"
+fixtures = "scaffold-only:simplification-fixtures-not-authored"
+
+[output]
+contract = "review-swarm member artifact with lens = simplification and findings in the shared member schema"
+
+[oracle]
+type = "deterministic"
+description = "Future seeded needless-surface fixtures with hidden answer keys; judge scoring remains diagnostic until calibrated"
+
+[risk]
+class = "low"
+notes = "Offline synthetic fixtures only; no live repos, secrets, comments, or write actions."
+
+[budget]
+max_cost_per_trial_usd = 0.50
+max_wall_per_trial_sec = 600
+
+[trigger]
+intent = "Optional review-swarm member after G3; manual sandbox runs until then"
+
+[boundaries]
+data = "Synthetic fixtures in arenas/ only. Candidates never read tests/ or solution/."
+
+[checkpoints]
+gates = ["G1-spec", "G2-eval-quality", "G3-launch-contract"]
+
+[lens]
+id = "simplification"
+taxonomy = "docs/review-swarm-taxonomy.md"
+owned_categories = ["needless-surface"]
+blocked_on = "authoring deterministic needless-surface fixtures that do not reward subjective taste"
+
+[negative_examples]
+bad = [
+  "style-only comments",
+  "micro-optimizations with no maintenance or correctness consequence",
+  "personal preference for a different abstraction",
+  "blocking on simplification unless the surface weakens a gate or creates a failure path",
+]
+
+[scaffold]
+runnable = false
+blocked_on = "No deterministic needless-surface arena exists yet; do not run search or spend model budget for this member until fixtures and one-shot headroom are approved."
