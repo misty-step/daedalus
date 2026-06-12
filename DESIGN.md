@@ -85,6 +85,9 @@ cross-version averaging becomes invalid and baselines re-run before any new
 comparison) or OUT-OF-SCOPE (record the rationale; the key stands). This is
 the eval-improvement flywheel: keys improve instead of silently punishing
 reviewers better than their author. Worked example: pr-review-v0 ADJ-1/ADJ-2.
+`docs/arena-workbench.md` names the scaffold, freeze validation, disagreement,
+and adjudication commands that enforce this flow without changing scorer
+constants.
 
 ### Findings / answer key (pr-review domain)
 

@@ -555,6 +555,8 @@ day, unlocking the Phase 0 prototype:
 
 - `DESIGN.md` — architecture, file contracts, decisions and reopen triggers.
 - `ROADMAP.md` — phases 0–4 with evidence-based exit criteria.
+- `docs/arena-workbench.md` — task scaffold, freeze validation,
+  adjudication, and calibration commands.
 - `docs/security-posture.md` — local-run risk gates, Harbor/Docker boundary,
   launch-contract validation, and residual risks.
 - `specs/pr-review/` — first task specification (gate G1 approved).
@@ -575,6 +577,10 @@ runner/run.py --candidate candidates/pi-kimi.toml --arena arenas/pr-review-v0 --
 
 # Autonomous search: spec in, Pareto archive + comparison report out:
 bin/daedalus run specs/pr-review/taskspec.toml --budget-usd 2 --max-candidates 6
+
+# Arena authoring and freeze-gate validation:
+bin/daedalus arena-validate arenas/pr-review-v2 \
+  --probe-run runs/20260611T173632Z-search-pr-review-v0
 
 # Sensitive/adversarial/user-data arenas must use Docker isolation via Harbor:
 bin/harbor-run arenas/pr-review-v0 py-auth-sqli --agent oracle
