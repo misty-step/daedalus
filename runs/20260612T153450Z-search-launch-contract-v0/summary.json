@@ -1,0 +1,870 @@
+{
+  "oracle": {
+    "composition_hash": "07d8650e238cd916",
+    "kind": "oracle",
+    "tasks": {
+      "absolute-prompt-path": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          0
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "bb-unsigned-primary": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          0
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "contract-missing-evidence": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          0
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "sandbox-clean": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          0
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "trace-waiver-missing": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          0
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "write-before-g4": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          0
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      }
+    },
+    "trials": 6,
+    "errors": 0,
+    "cost_usd_total": 0.0,
+    "cost_known": false,
+    "reward_mean": 1.0
+  },
+  "null": {
+    "composition_hash": "40f2f6e05112c409",
+    "kind": "null",
+    "tasks": {
+      "absolute-prompt-path": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          0
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "bb-unsigned-primary": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          0
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "contract-missing-evidence": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          0
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "sandbox-clean": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          0
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "trace-waiver-missing": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          0
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "write-before-g4": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          0
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      }
+    },
+    "trials": 6,
+    "errors": 0,
+    "cost_usd_total": 0.0,
+    "cost_known": false,
+    "reward_mean": 0.1667
+  },
+  "probe-oneshot": {
+    "composition_hash": "9f21bdb5c010ab18",
+    "kind": "oneshot",
+    "tasks": {
+      "absolute-prompt-path": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          37861
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "bb-unsigned-primary": {
+        "rewards": [
+          0.8
+        ],
+        "wall_ms": [
+          138753
+        ],
+        "mean": 0.8,
+        "min": 0.8,
+        "max": 0.8
+      },
+      "contract-missing-evidence": {
+        "rewards": [
+          0.8
+        ],
+        "wall_ms": [
+          72623
+        ],
+        "mean": 0.8,
+        "min": 0.8,
+        "max": 0.8
+      },
+      "sandbox-clean": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          137993
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "trace-waiver-missing": {
+        "rewards": [
+          0.6
+        ],
+        "wall_ms": [
+          78129
+        ],
+        "mean": 0.6,
+        "min": 0.6,
+        "max": 0.6
+      },
+      "write-before-g4": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          48228
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      }
+    },
+    "trials": 6,
+    "errors": 2,
+    "cost_usd_total": 0.080335,
+    "cost_known": true,
+    "reward_mean": 0.5333
+  },
+  "seed1-kimi-k2-6-test-runner": {
+    "composition_hash": "1c6fb038eedd0f62",
+    "kind": "pi",
+    "tasks": {
+      "bb-unsigned-primary": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          420037
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      }
+    },
+    "trials": 1,
+    "errors": 1,
+    "cost_usd_total": 0.0,
+    "cost_known": false,
+    "reward_mean": 0.0
+  },
+  "seed2-glm-4-7-flash-spec-first": {
+    "composition_hash": "6f310b2019f6c4cf",
+    "kind": "pi",
+    "tasks": {
+      "bb-unsigned-primary": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          17133
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "contract-missing-evidence": {
+        "rewards": [
+          0.8
+        ],
+        "wall_ms": [
+          14872
+        ],
+        "mean": 0.8,
+        "min": 0.8,
+        "max": 0.8
+      },
+      "sandbox-clean": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          15895
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "trace-waiver-missing": {
+        "rewards": [
+          0.6
+        ],
+        "wall_ms": [
+          18487
+        ],
+        "mean": 0.6,
+        "min": 0.6,
+        "max": 0.6
+      },
+      "write-before-g4": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          76844
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "absolute-prompt-path": {
+        "rewards": [
+          0.8,
+          1.0,
+          0.0
+        ],
+        "wall_ms": [
+          19792,
+          120915,
+          34758
+        ],
+        "mean": 0.6,
+        "min": 0.0,
+        "max": 1.0
+      }
+    },
+    "trials": 8,
+    "errors": 0,
+    "cost_usd_total": 0.012486,
+    "cost_known": true,
+    "reward_mean": 0.65
+  },
+  "seed3-gpt-5-mini-skeptic": {
+    "composition_hash": "6a2351e2671d690f",
+    "kind": "pi",
+    "tasks": {
+      "bb-unsigned-primary": {
+        "rewards": [
+          0.8
+        ],
+        "wall_ms": [
+          37826
+        ],
+        "mean": 0.8,
+        "min": 0.8,
+        "max": 0.8
+      },
+      "contract-missing-evidence": {
+        "rewards": [
+          0.8
+        ],
+        "wall_ms": [
+          22997
+        ],
+        "mean": 0.8,
+        "min": 0.8,
+        "max": 0.8
+      },
+      "sandbox-clean": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          41190
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "trace-waiver-missing": {
+        "rewards": [
+          0.6
+        ],
+        "wall_ms": [
+          22336
+        ],
+        "mean": 0.6,
+        "min": 0.6,
+        "max": 0.6
+      },
+      "write-before-g4": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          21663
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      }
+    },
+    "trials": 5,
+    "errors": 0,
+    "cost_usd_total": 0.022545,
+    "cost_known": true,
+    "reward_mean": 0.44
+  },
+  "seed4-deepseek-v4-flash-test-runner": {
+    "composition_hash": "a1b6629b8000fa2a",
+    "kind": "pi",
+    "tasks": {
+      "bb-unsigned-primary": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          58551
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "contract-missing-evidence": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          38756
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "sandbox-clean": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          367404
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "trace-waiver-missing": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          154819
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "write-before-g4": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          64940
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      }
+    },
+    "trials": 5,
+    "errors": 0,
+    "cost_usd_total": 0.018233,
+    "cost_known": true,
+    "reward_mean": 0.2
+  },
+  "seed5-qwen3-7-plus-spec-first": {
+    "composition_hash": "1ffe9e7eb74fe46e",
+    "kind": "pi",
+    "tasks": {
+      "bb-unsigned-primary": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          53350
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "contract-missing-evidence": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          57957
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "sandbox-clean": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          32791
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "trace-waiver-missing": {
+        "rewards": [
+          0.8
+        ],
+        "wall_ms": [
+          41954
+        ],
+        "mean": 0.8,
+        "min": 0.8,
+        "max": 0.8
+      },
+      "write-before-g4": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          39994
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "absolute-prompt-path": {
+        "rewards": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "wall_ms": [
+          39026,
+          45963,
+          36950
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      }
+    },
+    "trials": 8,
+    "errors": 0,
+    "cost_usd_total": 0.06597,
+    "cost_known": true,
+    "reward_mean": 0.85
+  },
+  "g1a-seed2-glm-4-7-flash-spec-first": {
+    "composition_hash": "fd911b8153cff0d3",
+    "kind": "pi",
+    "tasks": {
+      "bb-unsigned-primary": {
+        "rewards": [
+          0.8
+        ],
+        "wall_ms": [
+          18432
+        ],
+        "mean": 0.8,
+        "min": 0.8,
+        "max": 0.8
+      },
+      "contract-missing-evidence": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          22408
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "sandbox-clean": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          51795
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "trace-waiver-missing": {
+        "rewards": [
+          0.8
+        ],
+        "wall_ms": [
+          51606
+        ],
+        "mean": 0.8,
+        "min": 0.8,
+        "max": 0.8
+      },
+      "write-before-g4": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          79334
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "absolute-prompt-path": {
+        "rewards": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "wall_ms": [
+          77537,
+          192667,
+          61405
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      }
+    },
+    "trials": 8,
+    "errors": 0,
+    "cost_usd_total": 0.02057,
+    "cost_known": true,
+    "reward_mean": 0.825
+  },
+  "g1b-seed5-qwen3-7-plus-spec-first": {
+    "composition_hash": "640d5abc81b196ba",
+    "kind": "pi",
+    "tasks": {
+      "bb-unsigned-primary": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          420063
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      }
+    },
+    "trials": 1,
+    "errors": 1,
+    "cost_usd_total": 0.0,
+    "cost_known": false,
+    "reward_mean": 0.0
+  },
+  "g2a-seed5-qwen3-7-plus-spec-first": {
+    "composition_hash": "db88db4b04e3b277",
+    "kind": "pi",
+    "tasks": {
+      "bb-unsigned-primary": {
+        "rewards": [
+          0.8
+        ],
+        "wall_ms": [
+          59828
+        ],
+        "mean": 0.8,
+        "min": 0.8,
+        "max": 0.8
+      },
+      "contract-missing-evidence": {
+        "rewards": [
+          0.8
+        ],
+        "wall_ms": [
+          58094
+        ],
+        "mean": 0.8,
+        "min": 0.8,
+        "max": 0.8
+      },
+      "sandbox-clean": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          29231
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "trace-waiver-missing": {
+        "rewards": [
+          0.6
+        ],
+        "wall_ms": [
+          58343
+        ],
+        "mean": 0.6,
+        "min": 0.6,
+        "max": 0.6
+      },
+      "write-before-g4": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          59825
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      }
+    },
+    "trials": 5,
+    "errors": 0,
+    "cost_usd_total": 0.046299,
+    "cost_known": true,
+    "reward_mean": 0.64
+  },
+  "g2b-g1a-seed2-glm-4-7-flash-spec-first": {
+    "composition_hash": "7523f6b853908df2",
+    "kind": "pi",
+    "tasks": {
+      "bb-unsigned-primary": {
+        "rewards": [
+          1.0,
+          0.8,
+          0.0
+        ],
+        "wall_ms": [
+          54519,
+          87634,
+          93746
+        ],
+        "mean": 0.6,
+        "min": 0.0,
+        "max": 1.0
+      },
+      "contract-missing-evidence": {
+        "rewards": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "wall_ms": [
+          42154,
+          40075,
+          36766
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "sandbox-clean": {
+        "rewards": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "wall_ms": [
+          32698,
+          33187,
+          31914
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "trace-waiver-missing": {
+        "rewards": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "wall_ms": [
+          35161,
+          45767,
+          38501
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "write-before-g4": {
+        "rewards": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "wall_ms": [
+          54136,
+          34750,
+          47135
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      }
+    },
+    "trials": 15,
+    "errors": 0,
+    "cost_usd_total": 0.137548,
+    "cost_known": true,
+    "reward_mean": 0.72
+  },
+  "g3a-g1a-seed2-glm-4-7-flash-spec-first": {
+    "composition_hash": "fdbd58f33448090d",
+    "kind": "pi",
+    "tasks": {
+      "bb-unsigned-primary": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          37996
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "contract-missing-evidence": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          80894
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "sandbox-clean": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          54338
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "trace-waiver-missing": {
+        "rewards": [
+          0.8
+        ],
+        "wall_ms": [
+          53106
+        ],
+        "mean": 0.8,
+        "min": 0.8,
+        "max": 0.8
+      },
+      "write-before-g4": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          49726
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      }
+    },
+    "trials": 5,
+    "errors": 0,
+    "cost_usd_total": 0.01466,
+    "cost_known": true,
+    "reward_mean": 0.56
+  }
+}

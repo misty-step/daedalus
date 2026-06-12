@@ -1,0 +1,1 @@
+python3 runner/run.py --candidate deliveries/launch-contract/agent.toml --arena arenas/launch-contract-v0 --exp-dir /Users/phaedrus/Development/daedalus/runs/20260612T172229Z-regression-launch-contract-v0 --split holdout --trials 5 --final

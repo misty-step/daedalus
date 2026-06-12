@@ -1,0 +1,21 @@
+{
+  "composition": 1,
+  "id": "seed4-deepseek-v4-flash-test-runner",
+  "kind": "pi",
+  "provider_name": "openrouter",
+  "model": "deepseek/deepseek-v4-flash",
+  "prompt_packet": "/Users/phaedrus/Development/daedalus/runs/20260612T024051Z-search-launch-contract-v0/packets/seed-test-runner.md",
+  "thinking": "off",
+  "tools": [
+    "read",
+    "edit",
+    "write"
+  ],
+  "timeout_sec": 420,
+  "composition_hash": "ef8c4a938e22000f",
+  "prompt_packet_text": "Review every proposed agent launch contract or import packet for approval-gate, evidence, permission, observability, and portability defects before control plane consumption. Locate the runnable entrypoint or test suite and execute it. Ground every finding in observed behavior, file paths, and line numbers. If tests or entrypoints exist, run them and cite execution output as primary evidence. Map each defect to its exact file and line. Do not infer intent; cite only what the artifact and execution demonstrate. If the packet contains no defects in the five target categories, emit nothing. Do not produce summary text, greeting, or explanation for clean changes. Report only structured findings with file/line anchors and execution-backed observations. Reject any finding that lacks concrete file/line evidence or observable behavior.\n",
+  "skills_texts": [],
+  "agents_md_text": null,
+  "harness_version": "0.78.1",
+  "runner_version": "0.1.0"
+}

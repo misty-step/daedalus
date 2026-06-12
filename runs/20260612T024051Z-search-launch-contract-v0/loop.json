@@ -1,0 +1,121 @@
+{
+  "stop_reason": "max-candidates",
+  "mode": "threshold-then-cheap",
+  "history": [
+    {
+      "child_id": "g1a-seed2-glm-4-7-flash-spec-first",
+      "parent_id": "seed2-glm-4-7-flash-spec-first",
+      "slot_changed": "system_prompt_mode",
+      "value_summary": "replace",
+      "hypothesis": "The appended default coding-assistant persona is causing GLM-4.7-flash to override the packet's strict output rules and invent requirements (evidenced by false-positive summaries and hallucinated approval-gate defects in the worst-trial transcripts); replacing the system prompt with the packet should enforce structured-only output and reduce false positives without increasing cost.",
+      "predicted_effect": {
+        "reward": "up",
+        "cost": "hold"
+      },
+      "optimizer_cost_usd": 0.02715677,
+      "generation": 1,
+      "attempt": 0,
+      "parent_reward_mean": 0.6,
+      "reward_mean": 0.36,
+      "mean_task_delta": -0.24,
+      "parent_cost_per_trial": 0.000761,
+      "child_cost_per_trial": 0.001023,
+      "improved": false
+    },
+    {
+      "child_id": "g1b-seed5-qwen3-7-plus-spec-first",
+      "parent_id": "seed5-qwen3-7-plus-spec-first",
+      "slot_changed": "thinking",
+      "value_summary": "medium",
+      "hypothesis": "The low-thinking setting produces false positives (e.g., g3_signed flagged incorrectly) and misses seeded defects; increasing reasoning depth should improve precision and recall before we pivot to cost reduction.",
+      "predicted_effect": {
+        "reward": "up",
+        "cost": "up"
+      },
+      "optimizer_cost_usd": 0.0227599,
+      "generation": 1,
+      "attempt": 1,
+      "parent_reward_mean": 0.68,
+      "reward_mean": 0.36,
+      "mean_task_delta": -0.32,
+      "parent_cost_per_trial": 0.009001,
+      "child_cost_per_trial": 0.006839,
+      "improved": false
+    },
+    {
+      "child_id": "g2a-seed5-qwen3-7-plus-spec-first",
+      "parent_id": "seed5-qwen3-7-plus-spec-first",
+      "slot_changed": "prompt_packet",
+      "value_summary": "(new text)",
+      "hypothesis": "The worst-trial false positives show the model invents requirements despite the generic prohibition. Adding a mandatory citation constraint\u2014requiring the model to quote the exact specification rule or invariant violated before reporting\u2014will force grounding and eliminate hallucinated findings.",
+      "predicted_effect": {
+        "reward": "up",
+        "cost": "hold"
+      },
+      "optimizer_cost_usd": 0.04126571,
+      "generation": 2,
+      "attempt": 0,
+      "parent_reward_mean": 0.68,
+      "reward_mean": 0.64,
+      "mean_task_delta": -0.04,
+      "parent_cost_per_trial": 0.009001,
+      "child_cost_per_trial": 0.008582,
+      "improved": false
+    },
+    {
+      "child_id": "g2b-g1b-seed5-qwen3-7-plus-spec-first",
+      "parent_id": "g1b-seed5-qwen3-7-plus-spec-first",
+      "slot_changed": "thinking",
+      "value_summary": "high",
+      "hypothesis": "The worst-trial transcripts show the agent missing seeded defects and emitting false positives on nuanced approval-gate and evidence clauses; increasing thinking from medium to high should deepen invariant verification and reduce both omission and hallucination errors.",
+      "predicted_effect": {
+        "reward": "up",
+        "cost": "up"
+      },
+      "optimizer_cost_usd": 0.05069396,
+      "generation": 2,
+      "attempt": 1,
+      "parent_reward_mean": 0.36,
+      "reward_mean": 0.44,
+      "mean_task_delta": 0.08,
+      "parent_cost_per_trial": 0.006839,
+      "child_cost_per_trial": 0.008946,
+      "improved": true
+    },
+    {
+      "child_id": "g3a-seed2-glm-4-7-flash-spec-first",
+      "parent_id": "seed2-glm-4-7-flash-spec-first",
+      "slot_changed": "system_prompt_mode",
+      "value_summary": "replace",
+      "hypothesis": "The default appended coding assistant prompt promises write/edit tools that are not actually provided, confusing the model and contributing to hallucinated findings and workflow errors; replacing the system prompt with only the review packet removes this contradiction.",
+      "predicted_effect": {
+        "reward": "up",
+        "cost": "hold"
+      },
+      "optimizer_cost_usd": 0.01268345,
+      "generation": 3,
+      "attempt": 0,
+      "parent_reward_mean": 0.6,
+      "reward_mean": 0.68,
+      "mean_task_delta": 0.08,
+      "parent_cost_per_trial": 0.000761,
+      "child_cost_per_trial": 0.00093,
+      "improved": true
+    }
+  ],
+  "alarms": [],
+  "generations": 3,
+  "best_id": "g3a-seed2-glm-4-7-flash-spec-first",
+  "spend_known_usd": 0.5066,
+  "recommended": "g3a-seed2-glm-4-7-flash-spec-first",
+  "pareto_front": [
+    "seed5-qwen3-7-plus-spec-first",
+    "g2a-seed5-qwen3-7-plus-spec-first",
+    "seed3-gpt-5-mini-skeptic",
+    "seed2-glm-4-7-flash-spec-first",
+    "g3a-seed2-glm-4-7-flash-spec-first"
+  ],
+  "certified": [
+    "g3a-seed2-glm-4-7-flash-spec-first"
+  ]
+}

@@ -1,0 +1,15 @@
+# Delivered agent for specs/launch-contract/taskspec.toml
+# (threshold-then-cheap). Selected by the corrected Daedalus certification
+# run of 2026-06-12 over arenas/launch-contract-v0 v0.1.0:
+# run runs/20260612T153450Z-search-launch-contract-v0, composition hash
+# 7523f6b853908df2. This manifest intentionally preserves the measured
+# prompt_packet path from the run so export recomputes the recorded hash.
+composition = 1
+kind = "pi"
+provider_name = "openrouter"
+model = "qwen/qwen3.7-plus"
+prompt_packet = "/Users/phaedrus/Development/daedalus/runs/20260612T153450Z-search-launch-contract-v0/packets/g1a-seed2-glm-4-7-flash-spec-first.md"
+thinking = "low"
+tools = ["read", "bash"]
+timeout_sec = 420
+id = "g2b-g1a-seed2-glm-4-7-flash-spec-first"

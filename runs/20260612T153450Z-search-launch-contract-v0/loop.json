@@ -1,0 +1,122 @@
+{
+  "stop_reason": "max-candidates",
+  "mode": "threshold-then-cheap",
+  "history": [
+    {
+      "child_id": "g1a-seed2-glm-4-7-flash-spec-first",
+      "parent_id": "seed2-glm-4-7-flash-spec-first",
+      "slot_changed": "prompt_packet",
+      "value_summary": "(new text)",
+      "hypothesis": "Worst-trial evidence shows the cheap model systematically hallucinates approval-gate defects by treating unsigned g3/g4 fields as violations regardless of spec context; adding explicit conditional language to the prompt should suppress these false positives and raise reward while keeping cost minimal.",
+      "predicted_effect": {
+        "reward": "up",
+        "cost": "hold"
+      },
+      "optimizer_cost_usd": 0.0388263,
+      "generation": 1,
+      "attempt": 0,
+      "parent_reward_mean": 0.68,
+      "reward_mean": 0.72,
+      "mean_task_delta": 0.04,
+      "parent_cost_per_trial": 0.000676,
+      "child_cost_per_trial": 0.00188,
+      "improved": true
+    },
+    {
+      "child_id": "g1b-seed5-qwen3-7-plus-spec-first",
+      "parent_id": "seed5-qwen3-7-plus-spec-first",
+      "slot_changed": "model",
+      "value_summary": "z-ai/glm-4.7-flash",
+      "hypothesis": "The spec-first prompt is the main driver of the strong 0.76 reward; transplanting the proven cheaper glm-4.7-flash model tests whether threshold-level accuracy can be retained at roughly one-quarter the cost of qwen3.7-plus.",
+      "predicted_effect": {
+        "reward": "hold",
+        "cost": "down"
+      },
+      "optimizer_cost_usd": 0.02153105,
+      "donor": "g1a-seed2-glm-4-7-flash-spec-first",
+      "generation": 1,
+      "attempt": 1,
+      "parent_reward_mean": 0.76,
+      "reward_mean": 0.0,
+      "mean_task_delta": -1.0,
+      "parent_cost_per_trial": 0.008174,
+      "child_cost_per_trial": 0.0,
+      "improved": false
+    },
+    {
+      "child_id": "g2a-seed5-qwen3-7-plus-spec-first",
+      "parent_id": "seed5-qwen3-7-plus-spec-first",
+      "slot_changed": "thinking",
+      "value_summary": "medium",
+      "hypothesis": "The worst-trial evidence shows a false positive on trace-waiver-missing and a zero-reward sandbox-clean trial likely caused by insufficient reasoning depth; increasing thinking to medium should improve precision and recall.",
+      "predicted_effect": {
+        "reward": "up",
+        "cost": "up"
+      },
+      "optimizer_cost_usd": 0.0485231,
+      "generation": 2,
+      "attempt": 0,
+      "parent_reward_mean": 0.76,
+      "reward_mean": 0.64,
+      "mean_task_delta": -0.12,
+      "parent_cost_per_trial": 0.008174,
+      "child_cost_per_trial": 0.00926,
+      "improved": false
+    },
+    {
+      "child_id": "g2b-g1a-seed2-glm-4-7-flash-spec-first",
+      "parent_id": "g1a-seed2-glm-4-7-flash-spec-first",
+      "slot_changed": "model",
+      "value_summary": "qwen/qwen3.7-plus",
+      "hypothesis": "The current spec-first prompt is well-structured, but glm-4.7-flash lacks the reasoning fidelity to avoid the false positives seen in the worst-trial evidence (e.g., flagging missing local evidence files and TBD observability fields as defects); upgrading to the archive's highest-performing model should raise reward toward the threshold while accepting a higher cost.",
+      "predicted_effect": {
+        "reward": "up",
+        "cost": "up"
+      },
+      "optimizer_cost_usd": 0.05264056,
+      "generation": 2,
+      "attempt": 1,
+      "parent_reward_mean": 0.72,
+      "reward_mean": 0.8,
+      "mean_task_delta": 0.08,
+      "parent_cost_per_trial": 0.00188,
+      "child_cost_per_trial": 0.008357,
+      "improved": true
+    },
+    {
+      "child_id": "g3a-g1a-seed2-glm-4-7-flash-spec-first",
+      "parent_id": "g1a-seed2-glm-4-7-flash-spec-first",
+      "slot_changed": "prompt_packet",
+      "value_summary": "(new text)",
+      "hypothesis": "g2b is the only archive candidate to reach the 0.8 threshold and it uses the same cheap glm-4.7-flash model, so its prompt_packet likely encodes instructions that suppress false positives while preserving true defects; transplanting it should replicate that reward level on this parent.",
+      "predicted_effect": {
+        "reward": "up",
+        "cost": "up"
+      },
+      "optimizer_cost_usd": 0.03640016,
+      "donor": "g2b-g1a-seed2-glm-4-7-flash-spec-first",
+      "generation": 3,
+      "attempt": 0,
+      "parent_reward_mean": 0.72,
+      "reward_mean": 0.56,
+      "mean_task_delta": -0.16,
+      "parent_cost_per_trial": 0.00188,
+      "child_cost_per_trial": 0.002932,
+      "improved": false
+    }
+  ],
+  "alarms": [],
+  "generations": 3,
+  "best_id": "g2b-g1a-seed2-glm-4-7-flash-spec-first",
+  "spend_known_usd": 0.4947,
+  "recommended": "g2b-g1a-seed2-glm-4-7-flash-spec-first",
+  "pareto_front": [
+    "seed5-qwen3-7-plus-spec-first",
+    "g1a-seed2-glm-4-7-flash-spec-first",
+    "seed2-glm-4-7-flash-spec-first",
+    "seed3-gpt-5-mini-skeptic"
+  ],
+  "certified": [
+    "g2b-g1a-seed2-glm-4-7-flash-spec-first"
+  ]
+}

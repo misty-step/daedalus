@@ -1,0 +1,9 @@
+composition = 1
+id = "seed4-deepseek-v4-flash-test-runner"
+kind = "pi"
+provider_name = "openrouter"
+model = "deepseek/deepseek-v4-flash"
+prompt_packet = "/Users/phaedrus/Development/daedalus/runs/20260612T153450Z-search-launch-contract-v0/packets/seed-test-runner.md"
+thinking = "off"
+tools = ["read", "edit", "write"]
+timeout_sec = 420

@@ -1,6 +1,6 @@
 # G1 - Spec sign-off: launch-contract-v0
 
-- **Status:** pending human review
+- **Status:** approved by human G1 reviewer
 - **Spec:** `specs/launch-contract/taskspec.toml`
 - **Arena:** `arenas/launch-contract-v0`
 - **Prepared:** 2026-06-12
@@ -29,6 +29,15 @@ Approved execution posture, if G1 is signed:
 Approve or reject spending model budget on `launch-contract-v0` as the second
 task family for ticket 030. Approval covers offline synthetic fixtures only;
 runtime deployment remains gated by each delivery's G3/G4/G5 artifacts.
+
+## Human Approval
+
+Approved on 2026-06-12 by the human G1 reviewer:
+
+> As human G1 reviewer, I approve specs/launch-contract/taskspec.toml and
+> arenas/launch-contract-v0 as the second Daedalus task family for offline
+> synthetic experimentation. Proceed with one-shot probe, G2 eval-quality
+> packet, and first certified comparative search under the stated budget.
 
 ## No-Spend Rig Evidence
 

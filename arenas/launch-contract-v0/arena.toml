@@ -8,6 +8,10 @@ and a sandboxed clean dry-run packet. Harbor task-directory format; candidates
 never read tests/ or solution/.
 """
 
+[risk]
+class = "low"
+notes = "Offline synthetic launch-contract fixtures only; no live control-plane repos, secrets, network services, or write actions."
+
 [template]
 file = "template.md"
 

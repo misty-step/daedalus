@@ -94,6 +94,27 @@ def test_validate_model_must_be_in_search_space():
     assert (slot, value) == ("model", "z-ai/glm-5")
 
 
+def test_validate_thinking_must_be_in_search_space():
+    with pytest.raises(ValueError, match="search space"):
+        mutate.validate_proposal(
+            {"slot": "thinking", "value": "high", "hypothesis": "h"},
+            PARENT,
+            allowed_thinking=["off", "low", "medium"],
+        )
+    slot, value, _ = mutate.validate_proposal(
+        {"slot": "thinking", "value": "low", "hypothesis": "h"},
+        PARENT,
+        allowed_thinking=["off", "low", "medium"],
+    )
+    assert (slot, value) == ("thinking", "low")
+
+
+def test_proposal_instructions_list_declared_thinking_levels():
+    text = mutate.proposal_instructions(allowed_thinking=["off", "low", "medium"])
+    assert '"high"' not in text
+    assert '"medium"' in text
+
+
 def test_validate_tools_policy_mutation():
     # Unknown policy name rejected; same-as-parent rejected; valid accepted.
     with pytest.raises(ValueError, match="policy name"):
