@@ -5,7 +5,7 @@
       "line": 31,
       "category": "logic-invariant",
       "severity": "serious",
-      "description": "The cleanup now deletes records at exactly the retention boundary, violating the expected window by removing records that should still be retained."
+      "description": "The new comparison deletes records exactly at the retention boundary, violating the retention invariant."
     }
   ]
 }

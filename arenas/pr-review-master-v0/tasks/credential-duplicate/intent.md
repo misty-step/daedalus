@@ -1,3 +1,1 @@
-Synthesize member reports for a change to credentialed GitHub command
-execution. Deduplicate overlapping member claims and keep only findings
-supported by concrete member evidence.
+Consolidate review-member output for a PR that changes token forwarding in src/auth.py. Keep only substantiated defects introduced by this PR.

@@ -1,7 +1,7 @@
 # Build a Daedalus-optimized PR review swarm
 
 Priority: P0
-Status: in progress - G1 approval required before model spend
+Status: in progress - synthetic master baseline certified; specialist/replay/export remain
 Estimate: XL
 
 ## PRD Summary
@@ -413,7 +413,7 @@ Observable acceptance:
 
 ## Delivery Progress
 
-No-spend packet committed on branch `deliver-034-review-swarm`:
+Packet committed on branch `deliver-034-review-swarm`:
 
 - `docs/review-swarm-taxonomy.md`, `runner/taxonomy.py`, and
   `bin/daedalus taxonomy-validate`.
@@ -422,23 +422,40 @@ No-spend packet committed on branch `deliver-034-review-swarm`:
 - `specs/pr-review-suite/taskspec.toml`, required member specs, optional
   non-runnable scaffold specs, and `specs/pr-review-master/taskspec.toml`.
 - `arenas/pr-review-master-v0` reducer arena with candidate-visible member
-  artifacts and hidden answer keys.
-- `runs/20260612T205852Z-freeze-pr-review-master-v0` oracle/null reference
-  packet.
+  artifacts and hidden answer keys. v0.1.0 saturated under the one-shot probe;
+  v0.2.0 expands each member-artifact fixture to create context-overflow
+  headroom for one-shot probes.
+- `runs/20260612T205852Z-freeze-pr-review-master-v0` v0.1.0 oracle/null/probe
+  packet showing saturation.
+- `runs/20260612T215810Z-freeze-pr-review-master-v020` v0.2.0 freeze packet
+  showing oracle 1.0, null 0.1667, and one-shot probe 0.0.
+- `runs/20260612T220412Z-search-pr-review-master` bounded v0.2.0 search:
+  certified `seed2-qwen3-7-plus-spec-first` / `qwen/qwen3.7-plus` /
+  `491643a3b1de61e3` at reward 1.0, `$0.0180` per trial, and 93.6s mean
+  wall/task. Total known experiment spend including optimizer calls,
+  certification, and holdout: `$0.5290`.
+- `approvals/G2-pr-review-master-v0.md` pending human review packet.
 - `docs/review-swarm-vertical-slice.md` with current Olympus and Bitter
   Blossom incumbent boundaries.
 
-Current hard blocker:
+Current findings:
 
-- `approvals/G1-pr-review-suite.md` is pending. Until a human signs G1,
-  Daedalus must not run the one-shot probe, certified search, real-member
-  replay, or suite export that would spend model budget or imply a G2 packet.
+- G1 is approved for low-risk offline synthetic spend only.
+- The synthetic master arena now has one-shot headroom, but v0.2.0 includes
+  candidate-visible synthetic triage metadata and should not be treated as a
+  public benchmark or deployment-quality proof.
+- The bounded master search had no reflective children (`--max-candidates 0`);
+  it certifies a cheap baseline, not global optimality.
+- The clean trap never fired: every agent passed `clean-noise`.
+- Latency is material: Qwen averaged 93.6s/task and one certified validation
+  task took 487s.
 
-Remaining children after G1:
+Remaining children:
 
 - Complete child 6 by running one-shot headroom and certified member searches
   for the required correctness/security/general vertical slice.
-- Complete child 8 with the first certified master/suite search.
+- Complete child 8 with the first certified full suite search. The synthetic
+  master baseline is done, but the full suite is not.
 - Complete child 9 with real-member replay through the master benchmark.
 - Complete child 10 by exporting `deliveries/pr-review-swarm/` and generating
   sandbox-only Bitter Blossom and Olympus dry-run handoffs, or explicitly

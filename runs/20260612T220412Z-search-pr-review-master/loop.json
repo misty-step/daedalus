@@ -1,0 +1,21 @@
+{
+  "stop_reason": "max-candidates",
+  "mode": "threshold-then-cheap",
+  "history": [],
+  "alarms": [
+    {
+      "kind": "fp-trap-never-fired",
+      "detail": "every agent passed clean task clean-noise; the trap may be too easy to discriminate FP discipline"
+    }
+  ],
+  "generations": 0,
+  "best_id": "seed2-qwen3-7-plus-spec-first",
+  "spend_known_usd": 0.529,
+  "recommended": "seed2-qwen3-7-plus-spec-first",
+  "pareto_front": [
+    "seed2-qwen3-7-plus-spec-first"
+  ],
+  "certified": [
+    "seed2-qwen3-7-plus-spec-first"
+  ]
+}

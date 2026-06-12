@@ -654,11 +654,20 @@ def main():
                                 args.certify_trials, final=True)
         ledger = arena_dir / "holdout-ledger.md"
         if ledger.exists() and exposed:
+            ledger_header = ledger.read_text().splitlines()[0]
             with open(ledger, "a") as f:
-                f.write(
-                    f"| {stamp[:8]} | {exp_dir.name} | {', '.join(exposed)} "
-                    f"| {', '.join(holdout_ids)} |\n"
-                )
+                f.write(workbench_mod.format_holdout_ledger_row(
+                    stamp,
+                    exp_dir.name,
+                    exposed,
+                    holdout_ids,
+                    args.certify_trials,
+                    arena_version=(
+                        arena_cfg.get("version")
+                        if "arena version" in ledger_header
+                        else None
+                    ),
+                ))
     else:
         print("== stage 4: skipped (arena declares no holdout tasks)", flush=True)
 
@@ -728,6 +737,13 @@ def main():
             "(limit {max_errors_per_candidate}).\n".format(**c)
             for c in cutoffs
         )
+    total_known_spend = round(loop.known_spend(summary_fn(), optimizer_costs), 4)
+    if optimizer_costs:
+        report_text += (
+            "\n## Spend accounting\n\n"
+            f"Known spend including optimizer calls, certification, and holdout: "
+            f"${total_known_spend:.4f}.\n"
+        )
     (exp_dir / "report.md").write_text(report_text)
     (exp_dir / "pareto.json").write_text(json.dumps(
         [
@@ -749,6 +765,7 @@ def main():
     outcome["recommended"] = pick
     outcome["pareto_front"] = front
     outcome["certified"] = sorted(certified)
+    outcome["spend_known_usd"] = total_known_spend
     (exp_dir / "loop.json").write_text(json.dumps(outcome, indent=2))
 
     # Lineage: the traceable story of how this contract was discovered.

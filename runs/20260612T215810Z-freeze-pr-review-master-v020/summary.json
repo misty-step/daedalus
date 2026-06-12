@@ -1,0 +1,255 @@
+{
+  "oracle": {
+    "composition_hash": "07d8650e238cd916",
+    "kind": "oracle",
+    "tasks": {
+      "clean-noise": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          4
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "credential-duplicate": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          69
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "dual-defect-conflict": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          3
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "gate-regression": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          3
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "missing-security-member": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          12
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "runtime-crash": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          1
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      }
+    },
+    "trials": 6,
+    "errors": 0,
+    "cost_usd_total": 0.0,
+    "cost_known": false,
+    "reward_mean": 1.0
+  },
+  "null": {
+    "composition_hash": "40f2f6e05112c409",
+    "kind": "null",
+    "tasks": {
+      "clean-noise": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          5
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "credential-duplicate": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          3
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "dual-defect-conflict": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          3
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "gate-regression": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          2
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "missing-security-member": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          2
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "runtime-crash": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          23
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      }
+    },
+    "trials": 6,
+    "errors": 0,
+    "cost_usd_total": 0.0,
+    "cost_known": false,
+    "reward_mean": 0.1667
+  },
+  "probe-oneshot": {
+    "composition_hash": "9f21bdb5c010ab18",
+    "kind": "oneshot",
+    "tasks": {
+      "clean-noise": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          1762
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "credential-duplicate": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          1793
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "dual-defect-conflict": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          2323
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "gate-regression": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          1557
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "missing-security-member": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          2026
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "runtime-crash": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          1392
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      }
+    },
+    "trials": 6,
+    "errors": 6,
+    "cost_usd_total": 0.0,
+    "cost_known": true,
+    "reward_mean": 0.0
+  },
+  "pi-kimi": {
+    "composition_hash": "f44356cd3c0ceb9b",
+    "kind": "pi",
+    "tasks": {
+      "credential-duplicate": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          153620
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      }
+    },
+    "trials": 1,
+    "errors": 0,
+    "cost_usd_total": 0.030641,
+    "cost_known": true,
+    "reward_mean": 1.0
+  }
+}

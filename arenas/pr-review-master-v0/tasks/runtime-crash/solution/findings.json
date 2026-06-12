@@ -5,7 +5,7 @@
       "line": 88,
       "category": "runtime-crash",
       "severity": "blocking",
-      "description": "The handler indexes event['payload'] on a normal missing-payload path, so a valid malformed request crashes instead of returning a validation error."
+      "description": "The new direct payload lookup raises KeyError for normal ping/dry-run events without payload."
     }
   ]
 }

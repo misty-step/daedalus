@@ -6,3 +6,7 @@
 20260612T205903Z-null-credential-duplicate-t1	artifacts/null/credential-duplicate-t1-20260612T205903Z
 20260612T205903Z-null-missing-security-member-t1	artifacts/null/missing-security-member-t1-20260612T205903Z
 20260612T205903Z-null-runtime-crash-t1	artifacts/null/runtime-crash-t1-20260612T205903Z
+20260612T214744Z-probe-oneshot-clean-noise-t1	artifacts/probe-oneshot/clean-noise-t1-20260612T214744Z
+20260612T214744Z-probe-oneshot-credential-duplicate-t1	artifacts/probe-oneshot/credential-duplicate-t1-20260612T214744Z
+20260612T214744Z-probe-oneshot-missing-security-member-t1	artifacts/probe-oneshot/missing-security-member-t1-20260612T214744Z
+20260612T214744Z-probe-oneshot-runtime-crash-t1	artifacts/probe-oneshot/runtime-crash-t1-20260612T214744Z

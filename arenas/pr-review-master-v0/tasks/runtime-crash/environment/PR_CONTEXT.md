@@ -1,4 +1,3 @@
-# Synthetic PR context
+# PR Context: runtime-crash
 
-The PR changes request parsing in `src/ingest.py`. A missing `payload` field is
-valid input and should return a structured validation error, not crash.
+The PR removes defensive payload access from the ingest path. Normal webhook traffic can omit optional `payload` for ping and dry-run events. Security artifacts include one speculative field-injection concern that lacks an authorization path.

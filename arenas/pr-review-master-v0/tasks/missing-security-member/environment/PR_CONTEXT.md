@@ -1,4 +1,3 @@
-# Synthetic PR context
+# PR Context: missing-security-member
 
-The PR changes retention cleanup in `src/retention.py`. The accepted behavior
-is to preserve records younger than the configured retention window.
+The PR changes retention boundary deletion. Security review timed out, so the master must not imply complete swarm coverage. The deterministic scorer checks finding synthesis only; missing-coverage prose remains a G2 caveat.

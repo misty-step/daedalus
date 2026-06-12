@@ -7,7 +7,7 @@
       "line_end": 88,
       "category": "runtime-crash",
       "severity": "blocking",
-      "note": "A reachable crash on normal input remains blocking."
+      "note": "Reachable crash on normal input is blocking and correctness-owned."
     }
   ]
 }

@@ -1,5 +1,5 @@
-# Synthetic PR context
+# PR Context: credential-duplicate
 
-The PR adds token forwarding in `src/auth.py`. The intended behavior is to keep
-the GitHub token only in process memory and never expose it in logs, argv, or
-PR comments.
+The PR switches a helper from environment-based GitHub authentication to an explicit argument list around `gh api`. The review swarm is expected to collapse duplicate credential reports and suppress stale process-startup concerns.
+
+Relevant taxonomy pressure: credential exposure is security-owned and blocking when a reachable token can land in argv, logs, traces, or untrusted output. General-member duplicates should not downgrade the security-owned category.

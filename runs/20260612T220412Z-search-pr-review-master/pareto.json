@@ -1,0 +1,13 @@
+[
+  {
+    "candidate_id": "seed2-qwen3-7-plus-spec-first",
+    "composition_hash": "491643a3b1de61e3",
+    "reward_mean": 1.0,
+    "cost_usd_total": 0.2158,
+    "cost_usd_per_trial": 0.017983,
+    "wall_mean_s": 93.6,
+    "trials": 12,
+    "certified": true,
+    "recommended": true
+  }
+]

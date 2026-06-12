@@ -44,6 +44,10 @@ Validation is offline. It checks:
 - one-shot probe behavior from an existing run directory;
 - holdout exposure counts against the burn threshold.
 
+If a holdout ledger has an `arena version` semver column, validation counts
+only rows for the current `arena.toml` version. Legacy ledgers without that
+column are still counted by task name for backward compatibility.
+
 The validation command does not spend model budget. Run the one-shot probe
 through `bin/daedalus run` first, then pass that run directory to
 `--probe-run`.

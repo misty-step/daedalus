@@ -1,0 +1,18 @@
+{
+  "findings": [
+    {
+      "file": "src/reviews/permissions.ts",
+      "line": 117,
+      "category": "authz-bypass",
+      "severity": "blocking",
+      "description": "The publish path trusts repo membership before checking write permission, letting read-only collaborators publish reviews."
+    },
+    {
+      "file": "src/reviews/publish.ts",
+      "line": 204,
+      "category": "logic-invariant",
+      "severity": "serious",
+      "description": "The fast path marks a review as posted before persistence succeeds, violating the posted-state invariant."
+    }
+  ]
+}

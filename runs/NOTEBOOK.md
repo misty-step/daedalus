@@ -35,3 +35,11 @@ One entry per run: what was tried, what was learned. lineage.md in each run dir 
 - recommended: `g2b-g1a-seed2-glm-4-7-flash-spec-first` (hash 7523f6b853908df2, reward 0.72, certified=True)
 - confirmed hypotheses: prompt constraints reduced unsigned-gate false positives; upgrading the improved prompt to qwen raised reward at higher cost
 - full story: 20260612T153450Z-search-launch-contract-v0/lineage.md
+
+## 20260612T220412Z-search-pr-review-master
+
+- spec `pr-review-master` (mode threshold-then-cheap) on arena `pr-review-master-v0` v0.2.0
+- stop: max-candidates · spend $0.529 · generations 0
+- recommended: `seed2-qwen3-7-plus-spec-first` (hash 491643a3b1de61e3, reward 1.0, certified=True)
+- alarm: fp-trap-never-fired — every agent passed clean task clean-noise; the trap may be too easy to discriminate FP discipline
+- full story: 20260612T220412Z-search-pr-review-master/lineage.md

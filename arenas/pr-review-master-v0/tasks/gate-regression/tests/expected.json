@@ -1,0 +1,22 @@
+{
+  "defects": [
+    {
+      "id": "pytest-skip-green",
+      "file": "ci/gate.py",
+      "line_start": 67,
+      "line_end": 69,
+      "category": "verification-break",
+      "severity": "blocking",
+      "note": "A falsely green required gate is blocking and verification-owned."
+    },
+    {
+      "id": "missing-coverage-key-crash",
+      "file": "ci/gate.py",
+      "line_start": 112,
+      "line_end": 112,
+      "category": "runtime-crash",
+      "severity": "blocking",
+      "note": "Reachable crash on normal project config is blocking and correctness-owned."
+    }
+  ]
+}

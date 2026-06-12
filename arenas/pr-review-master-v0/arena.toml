@@ -1,10 +1,10 @@
 id = "pr-review-master-v0"
-version = "0.1.0"
+version = "0.2.0"
 taskspec = "specs/pr-review-master/taskspec.toml"
 description = """
-Synthetic review-swarm master synthesis fixtures. Tasks provide candidate-
-visible specialist member artifacts and hidden answer keys for the master
-reviewer to consolidate. Candidates never read tests/ or solution/.
+Synthetic review-swarm master synthesis fixtures. Tasks provide large
+candidate-visible specialist member artifacts and hidden answer keys for the
+master reviewer to consolidate. Candidates never read tests/ or solution/.
 """
 
 [risk]
@@ -15,6 +15,6 @@ notes = "Offline synthetic member-artifact fixtures only; no live repos, secrets
 file = "template.md"
 
 [split]
-train = ["credential-duplicate", "clean-noise"]
-validation = ["runtime-crash"]
+train = ["credential-duplicate", "clean-noise", "dual-defect-conflict"]
+validation = ["runtime-crash", "gate-regression"]
 holdout = ["missing-security-member"]

@@ -1,4 +1,3 @@
-# Synthetic PR context
+# PR Context: clean-noise
 
-The PR renames a local variable in `src/report.py` and updates all call sites.
-The change is behavior-preserving.
+The PR renames local variables in report rendering without changing observable output. This is the clean false-positive trap: member artifacts contain style-adjacent and stale claims, but no supported defect introduced by the change.

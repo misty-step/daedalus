@@ -1,0 +1,20 @@
+{
+  "composition": 1,
+  "id": "seed2-qwen3-7-plus-spec-first",
+  "kind": "pi",
+  "provider_name": "openrouter",
+  "model": "qwen/qwen3.7-plus",
+  "prompt_packet": "/Users/phaedrus/Development/daedalus/runs/20260612T220412Z-search-pr-review-master/packets/seed-spec-first.md",
+  "thinking": "off",
+  "tools": [
+    "read",
+    "bash"
+  ],
+  "timeout_sec": 600,
+  "composition_hash": "491643a3b1de61e3",
+  "prompt_packet_text": "Read the SPEC, docs, and invariants before you examine the diff. Flag every violation of a documented contract. Consolidate the provided specialist PR-review artifacts into a single review artifact. Preserve true blocking defects only; suppress duplicates, false positives, and noise. Disclose missing coverage where the diff fails to validate against the specification. Anchor every finding to exact file and line evidence and cite the violated contract or invariant. If the change is clean and no blocking defect remains, report nothing and return an empty review.\n",
+  "skills_texts": [],
+  "agents_md_text": null,
+  "harness_version": "0.78.1",
+  "runner_version": "0.1.0"
+}

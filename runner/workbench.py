@@ -198,7 +198,7 @@ def _validate_probe_run(probe_run, report):
         )
 
 
-def _holdout_counts(arena_dir, holdout_tasks):
+def _holdout_counts(arena_dir, holdout_tasks, arena_version=None):
     counts = {task: 0 for task in holdout_tasks}
     ledger = arena_dir / "holdout-ledger.md"
     if not holdout_tasks or not ledger.exists():
@@ -209,7 +209,10 @@ def _holdout_counts(arena_dir, holdout_tasks):
         cells = [c.strip() for c in line.strip("|").split("|")]
         if len(cells) < 4:
             continue
-        tasks_cell = cells[3]
+        version_cell = cells[1] if re.fullmatch(r"\d+\.\d+\.\d+", cells[1]) else None
+        if arena_version and version_cell and version_cell != arena_version:
+            continue
+        tasks_cell = cells[-1]
         for task in holdout_tasks:
             if task not in tasks_cell:
                 continue
@@ -219,6 +222,30 @@ def _holdout_counts(arena_dir, holdout_tasks):
                 count = int(match.group(1))
             counts[task] += count
     return counts
+
+
+def format_holdout_ledger_row(
+    stamp,
+    run_name,
+    candidates,
+    holdout_tasks,
+    trials_per_candidate,
+    arena_version=None,
+):
+    date = datetime.strptime(stamp[:8], "%Y%m%d").strftime("%Y-%m-%d")
+    exposure_count = len(candidates) * trials_per_candidate
+    holdout_cell = ", ".join(
+        f"{task} x{exposure_count}" for task in holdout_tasks
+    )
+    if arena_version:
+        return (
+            f"| {date} | {arena_version} | {run_name} | "
+            f"holdout final: {', '.join(candidates)} | {holdout_cell} |\n"
+        )
+    return (
+        f"| {date} | {run_name} | {', '.join(candidates)} "
+        f"| {holdout_cell} |\n"
+    )
 
 
 def validate_arena(arena_dir, probe_run=None, holdout_burn=5):
@@ -265,7 +292,11 @@ def validate_arena(arena_dir, probe_run=None, holdout_burn=5):
     _validate_probe_run(probe_run, report)
 
     holdout_tasks = sorted(split_buckets.get("holdout") or [])
-    report.holdout_counts = _holdout_counts(arena_dir, holdout_tasks)
+    report.holdout_counts = _holdout_counts(
+        arena_dir,
+        holdout_tasks,
+        arena_version=report.arena_version,
+    )
     if holdout_tasks and not (arena_dir / "holdout-ledger.md").exists():
         report.fail("holdout ledger missing")
     for task, count in report.holdout_counts.items():

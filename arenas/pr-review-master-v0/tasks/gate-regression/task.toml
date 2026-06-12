@@ -1,0 +1,7 @@
+id = "gate-regression"
+
+[agent]
+timeout_sec = 600
+
+[verifier]
+timeout_sec = 60

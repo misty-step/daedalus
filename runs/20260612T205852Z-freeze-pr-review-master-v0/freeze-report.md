@@ -6,9 +6,9 @@ Status: **FAIL**
 |---|---|
 | oracle mean | `1.0` |
 | null mean | `0.25` |
-| one-shot probe mean | `None` |
+| one-shot probe mean | `1.0` |
 | holdout exposures | `{"missing-security-member": 2}` |
 
 ## Findings
 
-- probe run must include oracle and one-shot records
+- one-shot probe saturates the arena: 1.0000 >= oracle 1.0000 - 0.1

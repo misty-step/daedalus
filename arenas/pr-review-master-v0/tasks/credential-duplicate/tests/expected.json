@@ -7,7 +7,7 @@
       "line_end": 42,
       "category": "credential-exposure",
       "severity": "blocking",
-      "note": "Credential exposure is security-owned and must remain blocking."
+      "note": "Credential exposure is security-owned and remains blocking even when the general member reports it as cross-lens recall."
     }
   ]
 }

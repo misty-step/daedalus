@@ -127,6 +127,39 @@ def test_validate_arena_reports_missing_split_membership(tmp_path):
     assert any("not assigned to any split: clean" in m for m in report.messages)
 
 
+def test_holdout_ledger_version_column_scopes_burn_count(tmp_path):
+    arena = write_arena(tmp_path)
+    text = (arena / "arena.toml").read_text()
+    text = text.replace('version = "0.1.0"', 'version = "0.2.0"')
+    text = text.replace('train = ["buggy"]', "train = []")
+    text = text.replace("holdout = []", 'holdout = ["buggy"]')
+    (arena / "arena.toml").write_text(text)
+    (arena / "holdout-ledger.md").write_text(
+        "| date | arena version | run | purpose | tasks |\n"
+        "|---|---|---|---|---|\n"
+        "| 2026-06-12 | 0.1.0 | old-run | old baseline | buggy x9 |\n"
+        "| 2026-06-12 | 0.2.0 | new-run | new baseline | buggy x1 |\n"
+    )
+    report = workbench.validate_arena(arena, probe_run=write_probe_run(tmp_path))
+    assert report.ok, report.messages
+    assert report.holdout_counts == {"buggy": 1}
+
+
+def test_format_holdout_ledger_row_records_version_and_exposure_count():
+    row = workbench.format_holdout_ledger_row(
+        "20260612T220412Z",
+        "runs-search",
+        ["cand-a", "cand-b"],
+        ["holdout-a", "holdout-b"],
+        trials_per_candidate=3,
+        arena_version="0.2.0",
+    )
+    assert row == (
+        "| 2026-06-12 | 0.2.0 | runs-search | "
+        "holdout final: cand-a, cand-b | holdout-a x6, holdout-b x6 |\n"
+    )
+
+
 def test_adjudicate_accept_requires_version_bump_and_baselines(tmp_path):
     arena = write_arena(tmp_path)
     with pytest.raises(workbench.WorkbenchError, match="--new-version"):
