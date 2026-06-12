@@ -6,6 +6,8 @@ import tomllib
 import subprocess
 from pathlib import Path
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "runner"))
 import export  # noqa: E402
 import run as runner  # noqa: E402
@@ -23,7 +25,8 @@ SPEC = {
 
 
 def build_delivery(tmp_path):
-    packet = tmp_path / "packet.md"
+    packet = tmp_path / "runs" / "20260611T000000Z-demo" / "packets" / "packet.md"
+    packet.parent.mkdir(parents=True)
     packet.write_text("Review with evidence. Cite file and line. Stop.\n")
     (tmp_path / "agent.toml").write_text(
         'composition = 1\nid = "demo-agent"\nkind = "pi"\n'
@@ -48,6 +51,14 @@ def test_export_writes_parseable_contract_and_faithful_persona(tmp_path):
     assert contract["budgets"]["max_cost_usd_per_run"] == 0.5
     assert contract["trigger"]["intent"] == "GitHub PR webhook"
     assert contract["approval"]["g3_signed"] is False
+    assert contract["evidence"]["run_dir"].endswith("runs/20260611T000000Z-demo")
+    assert contract["evidence"]["report"].endswith(
+        "runs/20260611T000000Z-demo/report.md"
+    )
+    assert contract["observability"]["trace_artifact"].endswith(
+        "runs/20260611T000000Z-demo/trace.otel.json"
+    )
+    assert "JSONL-only waiver" in contract["observability"]["trace_destination"]
 
     persona = paths["persona"].read_text()
     head, _, body = persona.partition("---\n\n")
@@ -73,6 +84,20 @@ def test_export_is_deterministic(tmp_path):
                                generated="2026-06-10T00:00:00Z")
     assert b["contract"].read_text() == first
     assert b["handoff"].read_text() == first_handoff
+
+
+def test_export_requires_evidence_backed_prompt_packet(tmp_path):
+    delivery = build_delivery(tmp_path)
+    packet = tmp_path / "loose-packet.md"
+    packet.write_text("No run evidence.\n")
+    (delivery / "agent.toml").write_text(
+        (delivery / "agent.toml").read_text().replace(
+            str(delivery / "runs" / "20260611T000000Z-demo" / "packets" / "packet.md"),
+            str(packet),
+        )
+    )
+    with pytest.raises(ValueError, match="evidence pointers"):
+        export.export_delivery(delivery, SPEC, harness_version="9.9.9")
 
 
 def test_export_handoff_includes_incumbent_comparison(tmp_path):

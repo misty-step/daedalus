@@ -1,0 +1,23 @@
+packet = 1
+generated = "2026-06-12T00:18:48Z"
+plane = "bitter-blossom"
+mode = "dry-run"
+source_contract = "contract.toml"
+agent = "seed4-qwen3-7-plus-checklist"
+composition_hash = "4a73f1fd213aa1a5"
+prompt_packet = "/Users/phaedrus/Development/daedalus/runs/20260611T173632Z-search-pr-review-v0/packets/seed-checklist.md"
+prompt_packet_sha256 = "4ce0f7d61af3b5b3ac6f58db7dae9e1e9278a61d169249ce8e932e3711eb9198"
+deployable = false
+sandbox_required = true
+primary_reviewer_allowed = false
+refusal_reason = "G3 approval is unsigned"
+
+[gates]
+g3_signed = false
+g3_approval = "approvals/G3-pr-review-seed4-qwen3-7-plus-checklist.md"
+g4_required_for_write_authority = true
+g5_required_for_prod_data_reingestion = true
+
+[constraints]
+write_authority = "none"
+posting = "control-plane dry run only before G3"

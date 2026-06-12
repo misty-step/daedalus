@@ -198,6 +198,15 @@ delivery directory contains `plane-incumbents.toml`, export includes the
 current control-plane baselines as comparison context, but it still does not
 mutate those repos or bypass G3/G4/G5.
 
+`bin/daedalus launch-pack <delivery> --plane <bitter-blossom|olympus>` is the
+approval-aware import boundary. With an unsigned contract it refuses by
+default; `--dry-run` emits only a sandbox packet marked non-deployable,
+non-primary-reviewer, and blocked on G3. `bin/daedalus regression <delivery>
+--spec <taskspec>` replays the delivery against the arena holdout and writes a
+trace view with `runner/trace.py`; `--dry-run` writes the exact replay command
+without spending model budget. `bin/daedalus trace <run-dir>` renders existing
+committed run records as `trace.otel.json`.
+
 ## Human checkpoints
 
 | Gate | What a human approves | Artifact |

@@ -25,11 +25,13 @@ REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO / "runner"))
 
 import export as export_mod  # noqa: E402
+import launch as launch_mod  # noqa: E402
 import lineage  # noqa: E402
 import loop  # noqa: E402
 import mutate  # noqa: E402
 import report  # noqa: E402
 import seed  # noqa: E402
+import trace as trace_mod  # noqa: E402
 from run import summarize  # noqa: E402
 
 REFERENCES = ["candidates/oracle.toml", "candidates/null.toml"]
@@ -135,6 +137,40 @@ def main():
     )
     exp_p.add_argument("delivery", help="deliveries/<id> directory")
     exp_p.add_argument("--spec", required=True, help="taskspec TOML")
+    trace_p = sub.add_parser(
+        "trace", help="render committed run records as trace.otel.json"
+    )
+    trace_p.add_argument("run_dir", help="runs/<experiment> directory")
+    launch_p = sub.add_parser(
+        "launch-pack",
+        help="emit approval-aware control-plane import packets",
+    )
+    launch_p.add_argument("delivery", help="deliveries/<id> directory")
+    launch_p.add_argument(
+        "--plane",
+        required=True,
+        choices=["bitter-blossom", "olympus"],
+        help="target control plane packet shape",
+    )
+    launch_p.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="emit a sandbox-only packet even while G3 is unsigned",
+    )
+    launch_p.add_argument("--out-dir", help="output directory")
+    regression_p = sub.add_parser(
+        "regression",
+        help="replay a delivery against the arena holdout and emit trace output",
+    )
+    regression_p.add_argument("delivery", help="deliveries/<id> directory")
+    regression_p.add_argument("--spec", required=True, help="taskspec TOML")
+    regression_p.add_argument("--trials", type=int, default=5)
+    regression_p.add_argument("--exp-dir", help="existing/new regression run dir")
+    regression_p.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="write the exact replay command without spending model budget",
+    )
     args = parser.parse_args()
 
     if args.command == "export":
@@ -142,6 +178,72 @@ def main():
         paths = export_mod.export_delivery(Path(args.delivery), spec)
         for kind, path in paths.items():
             print(f"{kind}: {path}")
+        return
+    if args.command == "trace":
+        out = trace_mod.write_trace(Path(args.run_dir))
+        print(f"trace: {out}")
+        return
+    if args.command == "launch-pack":
+        try:
+            out = launch_mod.write_import_packet(
+                Path(args.delivery),
+                plane=args.plane,
+                dry_run=args.dry_run,
+                out_dir=Path(args.out_dir) if args.out_dir else None,
+            )
+        except launch_mod.UnsignedLaunchError as exc:
+            sys.exit(f"launch refused: {exc} (use --dry-run for review artifacts)")
+        print(f"import_packet: {out}")
+        return
+    if args.command == "regression":
+        spec = tomllib.loads(Path(args.spec).read_text())
+        arena_dir = REPO / spec["inputs"]["fixtures"]
+        stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+        exp_dir = Path(args.exp_dir) if args.exp_dir else (
+            REPO / "runs" / f"{stamp}-regression-{spec['id']}"
+        )
+        cmd = [
+            sys.executable,
+            str(REPO / "runner" / "run.py"),
+            "--candidate",
+            str(Path(args.delivery) / "agent.toml"),
+            "--arena",
+            str(arena_dir),
+            "--exp-dir",
+            str(exp_dir),
+            "--split",
+            "holdout",
+            "--trials",
+            str(args.trials),
+            "--final",
+        ]
+        if args.dry_run:
+            exp_dir.mkdir(parents=True, exist_ok=True)
+            plan = exp_dir / "regression-command.txt"
+            display_cmd = [
+                "python3",
+                "runner/run.py",
+                "--candidate",
+                str(Path(args.delivery) / "agent.toml"),
+                "--arena",
+                spec["inputs"]["fixtures"],
+                "--exp-dir",
+                str(exp_dir),
+                "--split",
+                "holdout",
+                "--trials",
+                str(args.trials),
+                "--final",
+            ]
+            plan.write_text(" ".join(display_cmd) + "\n")
+            print(f"regression_command: {plan}")
+            return
+        proc = subprocess.run(cmd, cwd=REPO)
+        if proc.returncode != 0:
+            sys.exit(f"regression failed for {args.delivery}")
+        trace_out = trace_mod.write_trace(exp_dir)
+        print(f"regression: {exp_dir}")
+        print(f"trace: {trace_out}")
         return
 
     spec = tomllib.loads(Path(args.taskspec).read_text())

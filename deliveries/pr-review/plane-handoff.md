@@ -1,13 +1,8 @@
 # Cross-plane handoff: seed4-qwen3-7-plus-checklist
 
-Generated: `2026-06-11T21:51:55Z`
+Generated: `2026-06-12T00:18:48Z`
 
-Lab evidence is not launch approval. This packet is import guidance for humans
-and control-plane dry runs; G3/G4/G5 approval still gates deployment, write
-authority, and production-data re-ingestion. G2 acceptance is restricted to
-Daedalus contract-discovery work and sandboxed experiments. Bitter Blossom
-must not run this packet as the primary reviewer before stronger calibration
-and launch approval.
+Lab evidence is not launch approval. This packet is import guidance for humans and control-plane dry runs; G3/G4/G5 approval still gates deployment, write authority, and production-data re-ingestion. Unsigned use is sandbox-only and must not operate as a primary reviewer.
 
 ## Certified composition identity
 
@@ -56,9 +51,7 @@ secrets = ["OPENROUTER_API_KEY"]
 
 - If Bitter Blossom keeps direct `gh pr comment` posting, the task card must retain the no-approve/no-merge/no-code-edit red lines and the measured prompt packet must remain byte-identical.
 - Preferred safer import: keep the measured review persona, have the agent emit the structured findings contract, and let the plane own comment formatting/posting after G3.
-- Before G3, any Bitter Blossom run must be sandboxed and secondary to the
-  existing review path; it is evidence for Daedalus, not an enterprise-ready
-  reviewer deployment.
+- Before G3, any Bitter Blossom run must be sandboxed and secondary to the existing review path; it is evidence for Daedalus, not an enterprise-ready reviewer deployment.
 
 ## Olympus AgentSpec import shape
 
@@ -91,8 +84,7 @@ activation:
 - G3 decides whether either plane imports this packet.
 - G4 is required before any production write authority expands beyond advisory review output.
 - G5 is required before production traces or PR data flow back into arena fixtures.
-- The G2 waiver permits 028 closure only; it does not permit public benchmark
-  claims or primary-reviewer operation.
+- This handoff is not a public benchmark-quality claim; keep the G2 calibration caveats attached until a stronger arena version supersedes them.
 
 ### Bitter Blossom incumbent notes
 

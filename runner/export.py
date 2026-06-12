@@ -45,6 +45,41 @@ def _md_join(values):
     return ", ".join(vals) if vals else "-"
 
 
+def _repo_relative(path):
+    path = Path(path)
+    try:
+        return str(path.resolve().relative_to(Path.cwd().resolve()))
+    except ValueError:
+        try:
+            return str(path.resolve().relative_to(Path(__file__).resolve().parent.parent))
+        except ValueError:
+            return str(path)
+
+
+def evidence_paths(candidate):
+    """Infer committed run-record pointers from the measured prompt path."""
+    packet = candidate.get("prompt_packet")
+    if not packet:
+        return {}
+    path = Path(packet)
+    parts = path.parts
+    if "runs" not in parts:
+        return {}
+    idx = parts.index("runs")
+    if idx + 1 >= len(parts):
+        return {}
+    run_dir = Path(*parts[: idx + 2])
+    rel = _repo_relative(run_dir)
+    return {
+        "run_dir": rel,
+        "report": f"{rel}/report.md",
+        "lineage": f"{rel}/lineage.md",
+        "pareto": f"{rel}/pareto.json",
+        "trials": f"{rel}/trials.jsonl",
+        "trace": f"{rel}/trace.otel.json",
+    }
+
+
 def _incumbent_name(data):
     if not data:
         return "not recorded"
@@ -67,6 +102,12 @@ def render_contract(candidate, spec, harness_version, generated=None):
     arena = (spec.get("inputs") or {}).get("fixtures", "")
     output = (spec.get("output") or {}).get("contract", "")
     env = candidate.get("env_allowlist", ["OPENROUTER_API_KEY"])
+    evidence = evidence_paths(candidate)
+    if not evidence:
+        raise ValueError(
+            "delivery prompt_packet must point inside runs/<run-id>/ so "
+            "the launch contract can carry evidence pointers"
+        )
     generated = generated or datetime.now(timezone.utc).strftime(
         "%Y-%m-%dT%H:%M:%SZ"
     )
@@ -116,13 +157,22 @@ on_malformed_output = "emit nothing; flag the run for human review"
 on_timeout = "emit nothing; flag the run for human review"
 
 [observability]
-trace_destination = "TBD (Langfuse, backlog 014); JSONL run records are canonical"
 regression_eval = "re-run the arena holdout on any packet/model/harness change, and on a monthly cadence"
 arena = {_toml_str(arena)}
+trace_artifact = {_toml_str(evidence.get("trace", ""))}
+trace_destination = "JSONL-only waiver: committed trials.jsonl remains canonical; runner/trace.py emits trace.otel.json until a live sink is signed."
+
+[evidence]
+run_dir = {_toml_str(evidence.get("run_dir", ""))}
+report = {_toml_str(evidence.get("report", ""))}
+lineage = {_toml_str(evidence.get("lineage", ""))}
+pareto = {_toml_str(evidence.get("pareto", ""))}
+trials = {_toml_str(evidence.get("trials", ""))}
 
 [approval]
 g3_signed = false
-note = "Do not deploy until approvals/G3-{candidate["id"]}.md is signed by a human."
+g3_approval = "approvals/G3-pr-review-{candidate["id"]}.md"
+note = "Do not deploy as a primary reviewer until G3 is signed by a human; unsigned contracts may only produce sandbox dry-run packets."
 """
 
 
@@ -174,7 +224,9 @@ def render_handoff(candidate, spec, harness_version, generated=None,
         "",
         "Lab evidence is not launch approval. This packet is import guidance "
         "for humans and control-plane dry runs; G3/G4/G5 approval still gates "
-        "deployment, write authority, and production-data re-ingestion.",
+        "deployment, write authority, and production-data re-ingestion. "
+        "Unsigned use is sandbox-only and must not operate as a primary "
+        "reviewer.",
         "",
         "## Certified composition identity",
         "",
@@ -245,6 +297,9 @@ def render_handoff(candidate, spec, harness_version, generated=None,
         "- Preferred safer import: keep the measured review persona, have the "
         "agent emit the structured findings contract, and let the plane own "
         "comment formatting/posting after G3.",
+        "- Before G3, any Bitter Blossom run must be sandboxed and secondary "
+        "to the existing review path; it is evidence for Daedalus, not an "
+        "enterprise-ready reviewer deployment.",
         "",
         "## Olympus AgentSpec import shape",
         "",
@@ -288,6 +343,9 @@ def render_handoff(candidate, spec, harness_version, generated=None,
         "advisory review output.",
         "- G5 is required before production traces or PR data flow back into "
         "arena fixtures.",
+        "- This handoff is not a public benchmark-quality claim; keep the "
+        "G2 calibration caveats attached until a stronger arena version "
+        "supersedes them.",
         "",
     ]
     for key, title in (("bitter_blossom", "Bitter Blossom"),
