@@ -95,6 +95,114 @@ def test_validate_task_dir_rejects_symlinks(tmp_path):
     raise AssertionError("expected RuntimeError on symlinked fixture")
 
 
+def write_minimal_arena(tmp_path, risk_block="", instruction="Review this."):
+    arena = tmp_path / "arena"
+    task = arena / "tasks" / "sample"
+    (task / "environment").mkdir(parents=True)
+    (task / "environment" / "PR.diff").write_text("diff --git a/x b/x\n")
+    (task / "tests").mkdir()
+    (task / "tests" / "expected.json").write_text('{"defects": []}\n')
+    (task / "solution").mkdir()
+    (task / "solution" / "findings.json").write_text('{"findings": []}\n')
+    (task / "instruction.md").write_text(instruction)
+    (arena / "arena.toml").write_text(
+        f"""
+id = "sample"
+version = "0.1.0"
+taskspec = "specs/sample/taskspec.toml"
+{risk_block}
+
+[split]
+train = ["sample"]
+validation = []
+holdout = []
+"""
+    )
+    return arena
+
+
+def test_local_runner_refuses_sensitive_arena(tmp_path):
+    arena = write_minimal_arena(
+        tmp_path,
+        """
+[risk]
+class = "sensitive"
+needs_network = true
+""",
+    )
+    proc = subprocess.run(
+        [
+            sys.executable,
+            str(REPO / "runner" / "run.py"),
+            "--candidate",
+            str(REPO / "candidates" / "null.toml"),
+            "--arena",
+            str(arena),
+            "--split",
+            "train",
+        ],
+        capture_output=True,
+        text=True,
+        cwd=REPO,
+        timeout=120,
+    )
+    assert proc.returncode != 0
+    assert "Harbor/Docker isolation" in proc.stderr
+
+
+def test_local_runner_refuses_missing_risk_metadata(tmp_path):
+    arena = write_minimal_arena(tmp_path)
+    proc = subprocess.run(
+        [
+            sys.executable,
+            str(REPO / "runner" / "run.py"),
+            "--candidate",
+            str(REPO / "candidates" / "null.toml"),
+            "--arena",
+            str(arena),
+            "--split",
+            "train",
+        ],
+        capture_output=True,
+        text=True,
+        cwd=REPO,
+        timeout=120,
+    )
+    assert proc.returncode != 0
+    assert "missing [risk]" in proc.stderr
+
+
+def test_local_runner_refuses_absolute_grader_path_leak(tmp_path):
+    task_dir = tmp_path / "arena" / "tasks" / "sample"
+    leaked = task_dir / "tests" / "expected.json"
+    arena = write_minimal_arena(
+        tmp_path,
+        """
+[risk]
+class = "low"
+""",
+        instruction=f"Read {leaked.resolve()} before writing findings.",
+    )
+    proc = subprocess.run(
+        [
+            sys.executable,
+            str(REPO / "runner" / "run.py"),
+            "--candidate",
+            str(REPO / "candidates" / "null.toml"),
+            "--arena",
+            str(arena),
+            "--split",
+            "train",
+        ],
+        capture_output=True,
+        text=True,
+        cwd=REPO,
+        timeout=120,
+    )
+    assert proc.returncode != 0
+    assert "hidden grader path" in proc.stderr
+
+
 def invoke_runner(candidate, runs_dir, *extra):
     env = dict(os.environ, DAEDALUS_RUNS_DIR=str(runs_dir))
     return subprocess.run(

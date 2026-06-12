@@ -128,6 +128,14 @@ benchmark-quality claim or primary-reviewer deployment follows from this.
 Next: Phase 3 launch/observe work remains ticket 029 against Olympus / Bitter
 Blossom via the export contract.
 
+Update (2026-06-12): ticket 033 hardened the security boundary without waiting
+for the Rust kernel. The local runner now refuses non-low-risk arena metadata
+and candidate-visible absolute paths into hidden grader directories before run
+records are created. `launch-pack` validates contract.v1 schema, prompt-packet
+existence, approval state, and G4-before-write authority before rendering
+control-plane import packets. Rust validation remains deferred until two
+accepted task families or an external control-plane runtime dependency.
+
 ## Phase 0 — Prose-first pilot (current)
 
 The loop run by hand, every interface a file, zero framework dependencies.

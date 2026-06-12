@@ -30,6 +30,10 @@ train = ["py-progress-speed", "py-padding-clean", "py-markup-escape", "py-save-l
 validation = ["py-measure-normalize", "py-guess-swallow", "py-formatter-clean"]
 holdout = ["py-live-lock", "py-export-clear", "py-plugin-cache"]
 
+[risk]
+class = "low"
+notes = "Offline open-source snapshots only; safe for the fast local runner."
+
 # Frozen surfaces for this arena version: fixtures, answer keys, scorer
 # constants, template, and splits. Changing any requires a version bump and
 # re-running all baselines. Freeze gate status lives in provenance.md.

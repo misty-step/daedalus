@@ -146,7 +146,7 @@ contract = {_toml_str(output)}
 [permissions]
 workspace = "read-only checkout; writes only the output artifact in a throwaway workdir"
 env = [{env_s}]
-write_actions = "none — outputs are advisory until gate G4 grants more"
+write_actions = "none"
 
 [budgets]
 max_cost_usd_per_run = {budget.get("max_cost_per_trial_usd", 0.5)}

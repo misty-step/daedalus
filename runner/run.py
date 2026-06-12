@@ -33,6 +33,21 @@ from score import score  # noqa: E402
 REPO = Path(__file__).resolve().parent.parent
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 RUNNER_VERSION = "0.1.0"
+LOCAL_SAFE_RISK_CLASSES = {"low"}
+LOCAL_REFUSAL_FLAGS = {
+    "needs_network": "network",
+    "needs_secrets": "secrets",
+    "adversarial_fixtures": "adversarial fixtures",
+    "user_data": "user data",
+}
+
+
+class LocalExecutionRefused(RuntimeError):
+    """Raised when an arena requires isolation stronger than temp dirs."""
+
+
+class GraderPathLeak(RuntimeError):
+    """Raised when candidate-visible text exposes hidden grader paths."""
 
 
 def utc_stamp():
@@ -55,6 +70,62 @@ def validate_task_dir(task_dir):
     for f in task_dir.rglob("*"):
         if f.is_symlink():
             raise RuntimeError(f"fixture contains symlink: {f}")
+
+
+def validate_arena_for_local_execution(arena):
+    """Refuse arena classes that must run behind Harbor/Docker isolation."""
+    risk = arena.get("risk")
+    if risk is None:
+        raise LocalExecutionRefused(
+            "arena risk requires Harbor/Docker isolation; local temp-dir "
+            "runner refused (missing [risk] metadata). Add reviewed low-risk "
+            "metadata or use bin/harbor-run for isolated execution."
+        )
+    risk_class = str(risk.get("class", "")).lower()
+    risky_flags = [
+        label for key, label in LOCAL_REFUSAL_FLAGS.items() if bool(risk.get(key))
+    ]
+    if risk_class not in LOCAL_SAFE_RISK_CLASSES:
+        risky_flags.insert(0, f"class={risk_class}")
+    if risky_flags:
+        detail = ", ".join(dict.fromkeys(risky_flags))
+        raise LocalExecutionRefused(
+            "arena risk requires Harbor/Docker isolation; local temp-dir "
+            f"runner refused ({detail}). Use bin/harbor-run for isolated "
+            "execution, or lower the arena risk metadata only after review."
+        )
+
+
+def _read_visible_texts(candidate, instruction, env_dir):
+    yield "instruction", instruction
+    if candidate.get("_packet_text"):
+        yield "prompt_packet", candidate["_packet_text"]
+    if candidate.get("_agents_md_text"):
+        yield "agents_md", candidate["_agents_md_text"]
+    for i, text in enumerate(candidate.get("_skills_texts") or [], start=1):
+        yield f"skill[{i}]", text
+    for f in sorted(Path(env_dir).rglob("*")):
+        if not f.is_file():
+            continue
+        try:
+            yield str(f.relative_to(env_dir)), f.read_text()
+        except UnicodeDecodeError:
+            continue
+
+
+def validate_no_hidden_absolute_paths(candidate, task_dir, instruction, env_dir):
+    """Reject candidate-visible absolute paths into tests/ or solution/."""
+    hidden_roots = [
+        str((task_dir / "tests").resolve()),
+        str((task_dir / "solution").resolve()),
+    ]
+    for source, text in _read_visible_texts(candidate, instruction, env_dir):
+        for root in hidden_roots:
+            if root in text:
+                raise GraderPathLeak(
+                    f"candidate-visible {source} exposes hidden grader path: "
+                    f"{root}"
+                )
 
 
 def task_instruction(arena_dir, arena, task_dir):
@@ -437,12 +508,27 @@ def main():
     candidate = load_candidate(args.candidate)
     arena_dir = Path(args.arena)
     arena = load_toml(arena_dir / "arena.toml")
+    try:
+        validate_arena_for_local_execution(arena)
+    except LocalExecutionRefused as exc:
+        sys.exit(str(exc))
     run_fn = EXECUTORS[candidate["kind"]]
 
     task_filter = set(args.tasks.split(",")) if args.tasks else None
     task_dirs = select_tasks(arena_dir, arena, args.split, task_filter, args.final)
     if not task_dirs:
         sys.exit("no tasks matched")
+    task_inputs = []
+    for task_dir in task_dirs:
+        try:
+            validate_task_dir(task_dir)
+            instruction = task_instruction(arena_dir, arena, task_dir)
+            validate_no_hidden_absolute_paths(
+                candidate, task_dir, instruction, task_dir / "environment"
+            )
+        except RuntimeError as exc:
+            sys.exit(str(exc))
+        task_inputs.append((task_dir, instruction))
 
     stamp = utc_stamp()
     runs_root = Path(os.environ.get("DAEDALUS_RUNS_DIR", REPO / "runs"))
@@ -466,9 +552,7 @@ def main():
     trials_path = exp_dir / "trials.jsonl"
 
     records = []
-    for task_dir in task_dirs:
-        validate_task_dir(task_dir)
-        instruction = task_instruction(arena_dir, arena, task_dir)
+    for task_dir, instruction in task_inputs:
         grader_digest = tree_digest(task_dir / "tests", task_dir / "solution")
         for trial in range(1, args.trials + 1):
             record = {

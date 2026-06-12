@@ -113,6 +113,9 @@ Judgment calls you own when driving it manually:
   Unknown cost is "unknown", never an estimate stated as fact.
 - For Docker isolation, `bin/harbor-run` ports the arena to Harbor's
   built-in pi/oracle agents (docs/adr-001).
+- The fast local runner is for `[risk].class = "low"` synthetic arenas only.
+  Sensitive, networked, secret-bearing, user-data, adversarial, or untrusted
+  candidate runs must go through Harbor/Docker; see docs/security-posture.md.
 
 ## 6. Recommend, never deploy
 

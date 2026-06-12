@@ -18,3 +18,7 @@ file = "template.md"
 train = ["discount-after-tax"]
 validation = ["extract-subtotal"]
 holdout = []
+
+[risk]
+class = "low"
+notes = "Offline synthetic fixtures only; safe for the fast local runner."
