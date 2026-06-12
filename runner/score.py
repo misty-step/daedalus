@@ -17,6 +17,17 @@ import sys
 from pathlib import Path
 
 FP_PENALTY = 0.2
+SEVERITY_RANK = {"blocking": 0, "serious": 1, "minor": 2}
+
+
+def _severity_matches(finding, defect):
+    expected = defect.get("severity")
+    if expected is None:
+        return True
+    found = finding.get("severity")
+    if expected not in SEVERITY_RANK or found not in SEVERITY_RANK:
+        return False
+    return SEVERITY_RANK[found] <= SEVERITY_RANK[expected]
 
 
 def score(findings_path, expected_path):
@@ -54,6 +65,7 @@ def score(findings_path, expected_path):
                 if d["file"] == file
                 and d["category"] == category
                 and d["line_start"] <= line <= d["line_end"]
+                and _severity_matches(finding, d)
             ),
             None,
         )

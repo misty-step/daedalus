@@ -1,0 +1,61 @@
+{
+  "members": [
+    {
+      "member_id": "security-1",
+      "lens": "security",
+      "status": "ok",
+      "summary": "Reviewed credential handling.",
+      "findings": [
+        {
+          "local_id": "sec-1",
+          "path": "src/auth.py",
+          "line": 42,
+          "severity": "blocking",
+          "category": "credential-exposure",
+          "claim": "The new command includes GH_TOKEN in argv.",
+          "evidence": "cmd = ['gh', 'api', url, '--field', f'token={GH_TOKEN}']",
+          "confidence": "high"
+        }
+      ],
+      "error": null
+    },
+    {
+      "member_id": "general-1",
+      "lens": "general",
+      "status": "ok",
+      "summary": "Found one serious token handling issue.",
+      "findings": [
+        {
+          "local_id": "gen-1",
+          "path": "src/auth.py",
+          "line": 42,
+          "severity": "serious",
+          "category": "cross-lens-recall",
+          "claim": "Token forwarding can leak credentials.",
+          "evidence": "cmd = ['gh', 'api', url, '--field', f'token={GH_TOKEN}']",
+          "confidence": "medium"
+        }
+      ],
+      "error": null
+    },
+    {
+      "member_id": "correctness-1",
+      "lens": "correctness",
+      "status": "ok",
+      "summary": "Raised one unsupported crash concern.",
+      "findings": [
+        {
+          "local_id": "cor-1",
+          "path": "src/auth.py",
+          "line": 9,
+          "severity": "serious",
+          "category": "runtime-crash",
+          "claim": "The import may crash when gh is missing.",
+          "evidence": "import subprocess",
+          "confidence": "low"
+        }
+      ],
+      "error": null
+    }
+  ]
+}

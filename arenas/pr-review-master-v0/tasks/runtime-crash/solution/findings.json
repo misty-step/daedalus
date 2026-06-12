@@ -1,0 +1,11 @@
+{
+  "findings": [
+    {
+      "file": "src/ingest.py",
+      "line": 88,
+      "category": "runtime-crash",
+      "severity": "blocking",
+      "description": "The handler indexes event['payload'] on a normal missing-payload path, so a valid malformed request crashes instead of returning a validation error."
+    }
+  ]
+}

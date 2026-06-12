@@ -1,0 +1,11 @@
+{
+  "findings": [
+    {
+      "file": "src/auth.py",
+      "line": 42,
+      "category": "credential-exposure",
+      "severity": "blocking",
+      "description": "The new gh command places GH_TOKEN in argv, exposing the credential through process inspection and shell telemetry."
+    }
+  ]
+}

@@ -15,3 +15,6 @@
 - Architecture and schemas: `DESIGN.md`. Phases: `ROADMAP.md`. Work items:
   `backlog.d/` (Goal + Oracle required; close via `Closes-backlog: <id>`
   commit trailers).
+- Philosophy, vision, and operating principles: `docs/philosophy.md`. Keep
+  delivery choices consistent with that document, or update it deliberately
+  when the philosophy changes.

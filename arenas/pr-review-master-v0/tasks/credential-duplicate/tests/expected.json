@@ -1,0 +1,13 @@
+{
+  "defects": [
+    {
+      "id": "cred-leak",
+      "file": "src/auth.py",
+      "line_start": 42,
+      "line_end": 42,
+      "category": "credential-exposure",
+      "severity": "blocking",
+      "note": "Credential exposure is security-owned and must remain blocking."
+    }
+  ]
+}

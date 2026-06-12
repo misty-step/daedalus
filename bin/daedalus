@@ -32,6 +32,8 @@ import loop  # noqa: E402
 import mutate  # noqa: E402
 import report  # noqa: E402
 import seed  # noqa: E402
+import swarm as swarm_mod  # noqa: E402
+import taxonomy as taxonomy_mod  # noqa: E402
 import trace as trace_mod  # noqa: E402
 import workbench as workbench_mod  # noqa: E402
 from run import summarize  # noqa: E402
@@ -139,6 +141,12 @@ def main():
     )
     exp_p.add_argument("delivery", help="deliveries/<id> directory")
     exp_p.add_argument("--spec", required=True, help="taskspec TOML")
+    suite_export_p = sub.add_parser(
+        "export-suite",
+        help="export a review-swarm suite contract from measured summary evidence",
+    )
+    suite_export_p.add_argument("delivery", help="deliveries/<id> directory")
+    suite_export_p.add_argument("--suite", required=True, help="suite taskspec TOML")
     trace_p = sub.add_parser(
         "trace", help="render committed run records as trace.otel.json"
     )
@@ -221,6 +229,12 @@ def main():
     )
     disagreement_p.add_argument("--findings", required=True)
     disagreement_p.add_argument("--expected", required=True)
+    taxonomy_p = sub.add_parser(
+        "taxonomy-validate",
+        help="validate a review-swarm taxonomy against a suite taskspec",
+    )
+    taxonomy_p.add_argument("taxonomy", help="docs/review-swarm-taxonomy.md")
+    taxonomy_p.add_argument("--suite", required=True, help="suite taskspec TOML")
     doctor_p = sub.add_parser(
         "doctor",
         help="print cold-start readiness checks without model spend",
@@ -240,6 +254,15 @@ def main():
     if args.command == "export":
         spec = tomllib.loads(Path(args.spec).read_text())
         paths = export_mod.export_delivery(Path(args.delivery), spec)
+        for kind, path in paths.items():
+            print(f"{kind}: {path}")
+        return
+    if args.command == "export-suite":
+        suite_spec = tomllib.loads(Path(args.suite).read_text())
+        try:
+            paths = swarm_mod.export_suite(Path(args.delivery), suite_spec)
+        except swarm_mod.SwarmValidationError as exc:
+            sys.exit(f"export-suite failed: {exc}")
         for kind, path in paths.items():
             print(f"{kind}: {path}")
         return
@@ -345,6 +368,12 @@ def main():
     if args.command == "arena-disagreements":
         rows = workbench_mod.disagreements(args.findings, args.expected)
         print(json.dumps(rows, indent=2))
+        return
+    if args.command == "taxonomy-validate":
+        taxonomy_report = taxonomy_mod.validate_taxonomy(args.taxonomy, args.suite)
+        print(taxonomy_mod.render_report(taxonomy_report))
+        if not taxonomy_report.ok:
+            sys.exit(1)
         return
     if args.command == "doctor":
         today = (

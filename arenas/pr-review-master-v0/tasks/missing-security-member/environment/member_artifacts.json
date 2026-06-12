@@ -1,0 +1,50 @@
+{
+  "members": [
+    {
+      "member_id": "correctness-1",
+      "lens": "correctness",
+      "status": "ok",
+      "summary": "Found one retention invariant break.",
+      "findings": [
+        {
+          "local_id": "cor-1",
+          "path": "src/retention.py",
+          "line": 31,
+          "severity": "serious",
+          "category": "logic-invariant",
+          "claim": "The comparison deletes records at exactly the retention boundary.",
+          "evidence": "if record_age_days >= retention_days: delete(record)",
+          "confidence": "high"
+        }
+      ],
+      "error": null
+    },
+    {
+      "member_id": "security-1",
+      "lens": "security",
+      "status": "timeout",
+      "summary": "No completed security review.",
+      "findings": [],
+      "error": "member exceeded timeout before producing a security artifact"
+    },
+    {
+      "member_id": "general-1",
+      "lens": "general",
+      "status": "ok",
+      "summary": "Saw the retention issue.",
+      "findings": [
+        {
+          "local_id": "gen-1",
+          "path": "src/retention.py",
+          "line": 31,
+          "severity": "minor",
+          "category": "cross-lens-recall",
+          "claim": "Boundary deletion may be too aggressive.",
+          "evidence": "if record_age_days >= retention_days: delete(record)",
+          "confidence": "medium"
+        }
+      ],
+      "error": null
+    }
+  ]
+}

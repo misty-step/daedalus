@@ -166,3 +166,136 @@ def test_reward_never_negative(tmp_path):
     r = score(f, expected_two_defects(tmp_path))
     assert r["reward"] == 0.0
     assert r["false_positives"] == 8
+
+
+def test_expected_severity_requires_at_least_that_strict(tmp_path):
+    expected = write(
+        tmp_path,
+        "expected.json",
+        {
+            "defects": [
+                {
+                    "id": "d1",
+                    "file": "a.py",
+                    "line_start": 1,
+                    "line_end": 1,
+                    "category": "credential-exposure",
+                    "severity": "blocking",
+                }
+            ]
+        },
+    )
+    weak = findings(
+        tmp_path,
+        [
+            {
+                "file": "a.py",
+                "line": 1,
+                "category": "credential-exposure",
+                "severity": "serious",
+            }
+        ],
+    )
+    assert score(weak, expected)["matched"] == []
+    strict = findings(
+        tmp_path,
+        [
+            {
+                "file": "a.py",
+                "line": 1,
+                "category": "credential-exposure",
+                "severity": "blocking",
+            }
+        ],
+    )
+    assert score(strict, expected)["matched"] == ["d1"]
+
+
+def test_expected_serious_accepts_stricter_blocking_severity(tmp_path):
+    expected = write(
+        tmp_path,
+        "expected.json",
+        {
+            "defects": [
+                {
+                    "id": "d1",
+                    "file": "a.py",
+                    "line_start": 1,
+                    "line_end": 1,
+                    "category": "logic-invariant",
+                    "severity": "serious",
+                }
+            ]
+        },
+    )
+    f = findings(
+        tmp_path,
+        [
+            {
+                "file": "a.py",
+                "line": 1,
+                "category": "logic-invariant",
+                "severity": "blocking",
+            }
+        ],
+    )
+    assert score(f, expected)["matched"] == ["d1"]
+
+
+def test_expected_severity_rejects_missing_finding_severity(tmp_path):
+    expected = write(
+        tmp_path,
+        "expected.json",
+        {
+            "defects": [
+                {
+                    "id": "d1",
+                    "file": "a.py",
+                    "line_start": 1,
+                    "line_end": 1,
+                    "category": "credential-exposure",
+                    "severity": "blocking",
+                }
+            ]
+        },
+    )
+    f = findings(
+        tmp_path,
+        [{"file": "a.py", "line": 1, "category": "credential-exposure"}],
+    )
+    r = score(f, expected)
+    assert r["matched"] == []
+    assert r["false_positives"] == 1
+
+
+def test_expected_severity_rejects_unknown_finding_severity(tmp_path):
+    expected = write(
+        tmp_path,
+        "expected.json",
+        {
+            "defects": [
+                {
+                    "id": "d1",
+                    "file": "a.py",
+                    "line_start": 1,
+                    "line_end": 1,
+                    "category": "credential-exposure",
+                    "severity": "blocking",
+                }
+            ]
+        },
+    )
+    f = findings(
+        tmp_path,
+        [
+            {
+                "file": "a.py",
+                "line": 1,
+                "category": "credential-exposure",
+                "severity": "critical",
+            }
+        ],
+    )
+    r = score(f, expected)
+    assert r["matched"] == []
+    assert r["false_positives"] == 1

@@ -1,0 +1,11 @@
+{
+  "findings": [
+    {
+      "file": "src/retention.py",
+      "line": 31,
+      "category": "logic-invariant",
+      "severity": "serious",
+      "description": "The cleanup now deletes records at exactly the retention boundary, violating the expected window by removing records that should still be retained."
+    }
+  ]
+}

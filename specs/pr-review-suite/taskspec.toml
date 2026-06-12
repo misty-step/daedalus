@@ -1,0 +1,102 @@
+# Daedalus task specification: PR review swarm suite.
+# Gate G1 approval required before paid search: approvals/G1-pr-review-suite.md
+
+id = "pr-review-suite"
+goal = "Given a pull request fixture, run a measured portfolio of specialist review members and a master synthesis reviewer that emits one consolidated review artifact."
+domain = "code-review-swarm"
+mode = "threshold-then-cheap"
+
+[inputs]
+description = "PR fixture plus member artifacts for synthesis"
+fixtures = "arenas/pr-review-master-v0"
+
+[output]
+contract = "review-swarm summary.json plus master findings.json with validated member artifacts"
+
+[oracle]
+type = "deterministic"
+description = "Hidden true findings, false positives, duplicate groups, required-member coverage, cost, and wall-time thresholds"
+
+[risk]
+class = "low"
+notes = "Offline synthetic fixtures only; no live repos, secrets, PR comments, or write actions."
+
+[budget]
+max_cost_per_trial_usd = 2.00
+max_wall_per_trial_sec = 1200
+
+[trigger]
+intent = "GitHub PR webhook after G3; manual sandbox runs until then"
+
+[boundaries]
+data = "Synthetic fixtures and generated member artifacts. Candidates never read tests/ or solution/."
+
+[checkpoints]
+gates = ["G1-spec", "G2-eval-quality", "G3-launch-contract", "G4-write-authority", "G5-prod-data-reingestion"]
+
+[negative_examples]
+bad = [
+  "member agents posting comments directly",
+  "master reviewer treating missing required member output as full coverage",
+  "a cheap suite recommended despite missing a blocking true finding",
+  "using production PR traces before G5",
+]
+
+[suite]
+taxonomy = "docs/review-swarm-taxonomy.md"
+required_members = ["general", "correctness", "security"]
+optional_members = ["verification", "simplification", "product"]
+master_spec = "specs/pr-review-master/taskspec.toml"
+cost_ceiling_usd = 2.00
+cost_waiver_usd = 3.00
+wall_ceiling_sec = 1200
+wall_waiver_sec = 1800
+
+[suite.thresholds]
+master_recall_min = 0.90
+blocking_recall_min = 1.00
+# Absolute hidden false-positive carry-through count for the whole first
+# vertical-slice suite. Recalibrate when the arena grows.
+false_positive_carry_max = 1
+duplicate_collapse_min = 0.90
+
+[suite.members.general]
+spec = "specs/pr-review/taskspec.toml"
+role = "single-agent baseline and broad recall member"
+status = "certified-existing"
+evidence = "deliveries/pr-review/DELIVERY.md"
+
+[suite.members.correctness]
+spec = "specs/pr-review-correctness/taskspec.toml"
+role = "specialist member for logic, invariants, crashes, data loss, and concurrency"
+status = "vertical-slice-spec"
+evidence = "docs/review-swarm-vertical-slice.md"
+
+[suite.members.security]
+spec = "specs/pr-review-security/taskspec.toml"
+role = "specialist member for credential exposure, authz, injection, and unsafe input"
+status = "vertical-slice-spec"
+evidence = "docs/review-swarm-vertical-slice.md"
+
+[member_artifact]
+schema = "review-swarm-member-artifact.v1"
+statuses = ["ok", "error", "timeout", "truncated"]
+severities = ["blocking", "serious", "minor"]
+confidences = ["high", "medium", "low"]
+
+[search]
+models = [
+  "deepseek/deepseek-v4-flash",
+  "z-ai/glm-4.7-flash",
+  "openai/gpt-5-mini",
+  "moonshotai/kimi-k2.6",
+  "qwen/qwen3.7-plus",
+]
+thinking_levels = ["off", "low", "medium"]
+packet_stances = 3
+seed_count = 5
+base_packet = "packets/reviewer-v1.md"
+
+[search.tool_policies]
+explore = ["read", "bash"]
+full = ["read", "bash", "edit", "write"]

@@ -1,0 +1,61 @@
+{
+  "members": [
+    {
+      "member_id": "correctness-1",
+      "lens": "correctness",
+      "status": "ok",
+      "summary": "Found a reachable crash.",
+      "findings": [
+        {
+          "local_id": "cor-1",
+          "path": "src/ingest.py",
+          "line": 88,
+          "severity": "blocking",
+          "category": "runtime-crash",
+          "claim": "Missing payload raises KeyError on normal input.",
+          "evidence": "payload = event['payload']",
+          "confidence": "high"
+        }
+      ],
+      "error": null
+    },
+    {
+      "member_id": "security-1",
+      "lens": "security",
+      "status": "ok",
+      "summary": "Raised one speculative injection issue.",
+      "findings": [
+        {
+          "local_id": "sec-1",
+          "path": "src/ingest.py",
+          "line": 90,
+          "severity": "serious",
+          "category": "authz-bypass",
+          "claim": "The payload might contain unauthorized fields.",
+          "evidence": "process(payload)",
+          "confidence": "low"
+        }
+      ],
+      "error": null
+    },
+    {
+      "member_id": "general-1",
+      "lens": "general",
+      "status": "ok",
+      "summary": "Confirmed the crash.",
+      "findings": [
+        {
+          "local_id": "gen-1",
+          "path": "src/ingest.py",
+          "line": 88,
+          "severity": "serious",
+          "category": "cross-lens-recall",
+          "claim": "Missing payload can crash the handler.",
+          "evidence": "payload = event['payload']",
+          "confidence": "medium"
+        }
+      ],
+      "error": null
+    }
+  ]
+}

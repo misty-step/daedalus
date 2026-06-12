@@ -6,11 +6,14 @@ produce sandbox review artifacts, but any runtime-facing packet requires G3.
 """
 
 import hashlib
+import sys
 import tomllib
 from datetime import datetime, timezone
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import swarm as swarm_mod  # noqa: E402
 
 
 class UnsignedLaunchError(RuntimeError):
@@ -172,6 +175,16 @@ def _approval_file_approved(path):
     return "**Status:** approved" in text or "**Status:** signed" in text
 
 
+def _load_swarm_if_present(delivery_dir):
+    path = Path(delivery_dir) / "swarm-contract.toml"
+    if not path.exists():
+        return None
+    try:
+        return swarm_mod.load_swarm_contract(delivery_dir)
+    except swarm_mod.SwarmValidationError as exc:
+        raise ContractValidationError(str(exc)) from exc
+
+
 def require_g3(contract):
     approval = _approval(contract)
     if not approval.get("g3_signed"):
@@ -187,6 +200,15 @@ def render_import_packet(delivery_dir, plane, dry_run=False, generated=None):
     non-deployable, sandbox-only, and never primary-reviewer-capable.
     """
     delivery_dir = Path(delivery_dir)
+    swarm_contract = _load_swarm_if_present(delivery_dir)
+    if swarm_contract is not None:
+        return render_swarm_import_packet(
+            delivery_dir,
+            swarm_contract,
+            plane=plane,
+            dry_run=dry_run,
+            generated=generated,
+        )
     contract = load_contract(delivery_dir)
     refusal = ""
     if not dry_run:
@@ -224,6 +246,46 @@ g5_required_for_prod_data_reingestion = true
 [constraints]
 write_authority = "none"
 posting = "control-plane dry run only before G3"
+"""
+
+
+def render_swarm_import_packet(delivery_dir, contract, plane, dry_run=False,
+                               generated=None):
+    approval = contract.get("approval") or {}
+    if not dry_run:
+        if not approval.get("g3_signed"):
+            raise UnsignedLaunchError("G3 approval is unsigned")
+        if not _approval_file_approved(approval.get("g3_approval", "")):
+            raise UnsignedLaunchError("G3 approval file is missing or unsigned")
+    refusal = "G3 approval is unsigned" if dry_run and not approval.get("g3_signed") else ""
+    deployable = not dry_run and bool(approval.get("g3_signed"))
+    return f"""\
+packet = 1
+generated = {_toml_str(_generated(generated))}
+plane = {_toml_str(plane)}
+mode = {_toml_str("dry-run" if dry_run else "deployable")}
+source_contract = "swarm-contract.toml"
+suite = {_toml_str(contract["suite"])}
+handoff_mode = {_toml_str(contract["handoff_mode"])}
+deployable = {str(deployable).lower()}
+sandbox_required = {str(dry_run).lower()}
+primary_reviewer_allowed = false
+refusal_reason = {_toml_str(refusal)}
+
+[members]
+required = [{", ".join(_toml_str(v) for v in contract["members"]["required"])}]
+optional = [{", ".join(_toml_str(v) for v in contract["members"]["optional"])}]
+
+[gates]
+g3_signed = {str(bool(approval.get("g3_signed"))).lower()}
+g3_approval = {_toml_str(approval.get("g3_approval", ""))}
+g4_required_for_write_authority = true
+g5_required_for_prod_data_reingestion = true
+
+[constraints]
+member_posting = "none"
+review_posting = "control-plane dry run only before G3"
+write_authority = "none"
 """
 
 

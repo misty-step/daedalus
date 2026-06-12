@@ -1,0 +1,59 @@
+# Daedalus task specification: PR review master synthesis.
+# Gate G1 approval required before paid search: approvals/G1-pr-review-suite.md
+
+id = "pr-review-master"
+goal = "Given specialist PR-review member artifacts, produce one consolidated review artifact that preserves true blocking defects, suppresses duplicates and false positives, and discloses missing coverage."
+domain = "code-review-synthesis"
+mode = "threshold-then-cheap"
+
+[inputs]
+description = "Synthetic member artifacts plus PR context summary"
+fixtures = "arenas/pr-review-master-v0"
+
+[output]
+contract = "findings.json: {findings: [{file, line, category, severity, description}]} plus optional summary fields ignored by deterministic scorer"
+
+[oracle]
+type = "deterministic"
+description = "Hidden expected defects; reward = recall minus false-positive penalty with duplicate findings counted as false positives"
+
+[risk]
+class = "low"
+notes = "Offline synthetic member-artifact fixtures only; no live repos, secrets, PR comments, or write actions."
+
+[budget]
+max_cost_per_trial_usd = 0.50
+max_wall_per_trial_sec = 600
+
+[trigger]
+intent = "Master synthesis stage after specialist artifacts exist"
+
+[boundaries]
+data = "Synthetic member artifacts in arenas/ only. Candidates never read tests/ or solution/."
+
+[checkpoints]
+gates = ["G1-spec", "G2-eval-quality", "G3-launch-contract"]
+
+[negative_examples]
+bad = [
+  "copying every member finding without dedupe",
+  "dropping a blocking credential or crash finding",
+  "claiming full coverage when a required member timed out",
+  "inventing findings not supported by member evidence",
+]
+
+[search]
+models = [
+  "deepseek/deepseek-v4-flash",
+  "z-ai/glm-4.7-flash",
+  "openai/gpt-5-mini",
+  "moonshotai/kimi-k2.6",
+  "qwen/qwen3.7-plus",
+]
+thinking_levels = ["off", "low", "medium"]
+packet_stances = 3
+seed_count = 5
+base_packet = "packets/reviewer-v1.md"
+
+[search.tool_policies]
+read-artifacts = ["read", "bash"]

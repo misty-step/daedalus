@@ -1,0 +1,10 @@
+{
+  "id": "null",
+  "kind": "null",
+  "composition_hash": "40f2f6e05112c409",
+  "prompt_packet_text": null,
+  "skills_texts": [],
+  "agents_md_text": null,
+  "harness_version": null,
+  "runner_version": "0.1.0"
+}

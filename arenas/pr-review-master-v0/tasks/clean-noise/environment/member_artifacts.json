@@ -1,0 +1,39 @@
+{
+  "members": [
+    {
+      "member_id": "general-1",
+      "lens": "general",
+      "status": "ok",
+      "summary": "Raised one style-adjacent concern.",
+      "findings": [
+        {
+          "local_id": "gen-1",
+          "path": "src/report.py",
+          "line": 17,
+          "severity": "minor",
+          "category": "cross-lens-recall",
+          "claim": "The new name might confuse readers.",
+          "evidence": "summary_rows = rows",
+          "confidence": "low"
+        }
+      ],
+      "error": null
+    },
+    {
+      "member_id": "correctness-1",
+      "lens": "correctness",
+      "status": "ok",
+      "summary": "No real correctness issue.",
+      "findings": [],
+      "error": null
+    },
+    {
+      "member_id": "security-1",
+      "lens": "security",
+      "status": "ok",
+      "summary": "No reachable security issue.",
+      "findings": [],
+      "error": null
+    }
+  ]
+}

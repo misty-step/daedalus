@@ -1,0 +1,7 @@
+id = "runtime-crash"
+
+[agent]
+timeout_sec = 600
+
+[verifier]
+timeout_sec = 60
