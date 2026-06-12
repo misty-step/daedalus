@@ -24,6 +24,7 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO / "runner"))
 
+import doctor as doctor_mod  # noqa: E402
 import export as export_mod  # noqa: E402
 import launch as launch_mod  # noqa: E402
 import lineage  # noqa: E402
@@ -32,6 +33,7 @@ import mutate  # noqa: E402
 import report  # noqa: E402
 import seed  # noqa: E402
 import trace as trace_mod  # noqa: E402
+import workbench as workbench_mod  # noqa: E402
 from run import summarize  # noqa: E402
 
 REFERENCES = ["candidates/oracle.toml", "candidates/null.toml"]
@@ -171,6 +173,68 @@ def main():
         action="store_true",
         help="write the exact replay command without spending model budget",
     )
+    scaffold_p = sub.add_parser(
+        "arena-scaffold",
+        help="create Harbor-format task placeholders for arena authoring",
+    )
+    scaffold_p.add_argument("arena", help="arenas/<id> directory")
+    scaffold_p.add_argument("task_id", help="new task id")
+    scaffold_p.add_argument(
+        "--taskspec",
+        default="specs/TODO/taskspec.toml",
+        help="taskspec pointer for a new arena.toml",
+    )
+    validate_p = sub.add_parser(
+        "arena-validate",
+        help="validate an arena freeze gate without model spend",
+    )
+    validate_p.add_argument("arena", help="arenas/<id> directory")
+    validate_p.add_argument(
+        "--probe-run",
+        help="runs/<id> directory containing oracle/null/one-shot records",
+    )
+    validate_p.add_argument(
+        "--holdout-burn",
+        type=int,
+        default=5,
+        help="holdout exposure threshold before rotation is required",
+    )
+    validate_p.add_argument("--report", help="write a markdown freeze report")
+    adjudicate_p = sub.add_parser(
+        "arena-adjudicate",
+        help="append an ACCEPT or OUT-OF-SCOPE answer-key adjudication",
+    )
+    adjudicate_p.add_argument("arena", help="arenas/<id> directory")
+    adjudicate_p.add_argument("--task", required=True)
+    adjudicate_p.add_argument("--finding", required=True)
+    adjudicate_p.add_argument(
+        "--ruling",
+        required=True,
+        choices=["ACCEPT", "OUT-OF-SCOPE"],
+    )
+    adjudicate_p.add_argument("--rationale", required=True)
+    adjudicate_p.add_argument("--new-version")
+    adjudicate_p.add_argument("--baseline-run")
+    disagreement_p = sub.add_parser(
+        "arena-disagreements",
+        help="report category/span misses for findings vs an answer key",
+    )
+    disagreement_p.add_argument("--findings", required=True)
+    disagreement_p.add_argument("--expected", required=True)
+    doctor_p = sub.add_parser(
+        "doctor",
+        help="print cold-start readiness checks without model spend",
+    )
+    doctor_p.add_argument(
+        "--stale-days",
+        type=int,
+        default=30,
+        help="maximum age for docs/primitives.md model verification",
+    )
+    doctor_p.add_argument(
+        "--today",
+        help="override current date for tests, YYYY-MM-DD",
+    )
     args = parser.parse_args()
 
     if args.command == "export":
@@ -244,6 +308,55 @@ def main():
         trace_out = trace_mod.write_trace(exp_dir)
         print(f"regression: {exp_dir}")
         print(f"trace: {trace_out}")
+        return
+    if args.command == "arena-scaffold":
+        task = workbench_mod.scaffold_task(
+            Path(args.arena), args.task_id, taskspec=args.taskspec
+        )
+        print(f"task: {task}")
+        return
+    if args.command == "arena-validate":
+        result = workbench_mod.validate_arena(
+            Path(args.arena),
+            probe_run=Path(args.probe_run) if args.probe_run else None,
+            holdout_burn=args.holdout_burn,
+        )
+        text = workbench_mod.render_validation_report(result)
+        if args.report:
+            Path(args.report).write_text(text)
+            print(f"freeze report: {args.report}")
+        else:
+            print(text)
+        if not result.ok:
+            sys.exit("arena validation failed")
+        return
+    if args.command == "arena-adjudicate":
+        path = workbench_mod.record_adjudication(
+            Path(args.arena),
+            task=args.task,
+            finding=args.finding,
+            ruling=args.ruling,
+            rationale=args.rationale,
+            new_version=args.new_version,
+            baseline_run=Path(args.baseline_run) if args.baseline_run else None,
+        )
+        print(f"adjudications: {path}")
+        return
+    if args.command == "arena-disagreements":
+        rows = workbench_mod.disagreements(args.findings, args.expected)
+        print(json.dumps(rows, indent=2))
+        return
+    if args.command == "doctor":
+        today = (
+            datetime.strptime(args.today, "%Y-%m-%d").date()
+            if args.today else None
+        )
+        checks = doctor_mod.run_checks(
+            REPO, today=today, stale_days=args.stale_days
+        )
+        print(doctor_mod.render(checks), end="")
+        if doctor_mod.has_failures(checks):
+            sys.exit("doctor found blocking readiness issues")
         return
 
     spec = tomllib.loads(Path(args.taskspec).read_text())

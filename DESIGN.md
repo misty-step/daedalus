@@ -85,6 +85,9 @@ cross-version averaging becomes invalid and baselines re-run before any new
 comparison) or OUT-OF-SCOPE (record the rationale; the key stands). This is
 the eval-improvement flywheel: keys improve instead of silently punishing
 reviewers better than their author. Worked example: pr-review-v0 ADJ-1/ADJ-2.
+`docs/arena-workbench.md` names the scaffold, freeze validation, disagreement,
+and adjudication commands that enforce this flow without changing scorer
+constants.
 
 ### Findings / answer key (deterministic review-like domains)
 
@@ -235,11 +238,22 @@ holdout agrees with the automated score.
 
 Phase 0 candidates run in throwaway temp dirs with the user's local
 permissions — acceptable only because fixtures are synthetic and candidates
-are our own compositions. Phase 0 mitigations: fixture trees are validated
-(no symlinks) before copy; `tests/` and `solution/` are hashed before each
-trial and re-checked after it, so grader tampering voids the trial; crashing
-candidates score 0. Known residual hole: an unsandboxed tool-using candidate
-can still *read* answer keys via absolute paths, which detection cannot catch
-— Phase 1 (Harbor/Docker) is the real isolation boundary and a prerequisite
-for any arena with sensitive data, network access, adversarial fixtures, or
-untrusted candidate compositions.
+are our own compositions. The local runner now enforces that boundary:
+missing `[risk]` metadata, metadata outside `class = "low"`, or metadata with
+`needs_network`, `needs_secrets`, `adversarial_fixtures`, or `user_data`
+refuses local execution and points the operator to Harbor/Docker. Phase 0
+mitigations:
+fixture trees are validated (no symlinks) before copy; candidate-visible
+instructions, prompt packets, skills, `AGENTS.md` overlays, and environment
+files are scanned for absolute paths into hidden `tests/` or `solution/`;
+`tests/` and `solution/` are hashed before each trial and re-checked after it,
+so grader tampering voids the trial; crashing candidates score 0.
+
+Residual hole: an unsandboxed tool-using candidate can still guess host
+absolute paths. Phase 1 (Harbor/Docker) remains the real isolation boundary
+and is mandatory for any arena with sensitive data, network access,
+adversarial fixtures, secrets, or untrusted candidate compositions. The
+current launch-contract validator is Python (`runner/launch.py`); the Rust
+validation kernel reopens after schemas survive two accepted task families or
+an external control plane consumes contracts as a runtime dependency. See
+`docs/security-posture.md` for exact commands.

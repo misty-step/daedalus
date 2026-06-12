@@ -17,6 +17,10 @@ class UnsignedLaunchError(RuntimeError):
     """Raised when a launch/import path needs G3 but the contract is unsigned."""
 
 
+class ContractValidationError(RuntimeError):
+    """Raised when a launch contract is malformed or over-authorized."""
+
+
 def _toml_str(value):
     return '"' + str(value).replace("\\", "\\\\").replace('"', '\\"') + '"'
 
@@ -28,11 +32,129 @@ def _generated(value=None):
 def load_contract(delivery_dir):
     path = Path(delivery_dir) / "contract.toml"
     with open(path, "rb") as f:
-        return tomllib.load(f)
+        contract = tomllib.load(f)
+    validate_contract(contract, delivery_dir)
+    return contract
 
 
-def _prompt_hash(contract):
-    prompt = Path(contract["composition"]["prompt_packet"])
+def _resolve_contract_path(ref, delivery_dir):
+    path = Path(ref)
+    if path.is_absolute():
+        return path
+    local = Path(delivery_dir) / path
+    if local.exists():
+        return local
+    return REPO / path
+
+
+def _require_keys(table, keys, label):
+    missing = [k for k in keys if k not in table]
+    if missing:
+        raise ContractValidationError(
+            f"{label} missing required field(s): {', '.join(missing)}"
+        )
+
+
+def _require_type(value, expected, label):
+    if not isinstance(value, expected):
+        names = (
+            expected.__name__
+            if isinstance(expected, type)
+            else "|".join(t.__name__ for t in expected)
+        )
+        raise ContractValidationError(f"{label} must be {names}")
+
+
+def validate_contract(contract, delivery_dir):
+    """Validate contract.v1 before any import packet consumes it."""
+    _require_keys(
+        contract,
+        ["contract", "agent", "composition_hash", "taskspec", "mode"],
+        "contract",
+    )
+    if contract["contract"] != 1:
+        raise ContractValidationError("contract must be version 1")
+    for key in ("agent", "composition_hash", "taskspec", "mode"):
+        _require_type(contract[key], str, key)
+        if not contract[key]:
+            raise ContractValidationError(f"{key} must not be empty")
+
+    composition = contract.get("composition") or {}
+    _require_keys(
+        composition,
+        [
+            "harness",
+            "harness_version",
+            "provider",
+            "model",
+            "prompt_packet",
+            "timeout_sec",
+        ],
+        "composition",
+    )
+    for key in ("harness", "harness_version", "provider", "model", "prompt_packet"):
+        _require_type(composition[key], str, f"composition.{key}")
+        if not composition[key]:
+            raise ContractValidationError(f"composition.{key} must not be empty")
+    _require_type(composition["timeout_sec"], (int, float), "composition.timeout_sec")
+    prompt = _resolve_contract_path(composition["prompt_packet"], delivery_dir)
+    if not prompt.is_file():
+        raise ContractValidationError(f"prompt_packet does not exist: {prompt}")
+
+    permissions = contract.get("permissions") or {}
+    _require_keys(permissions, ["workspace", "env", "write_actions"], "permissions")
+    _require_type(permissions["env"], list, "permissions.env")
+    write_actions = str(permissions["write_actions"]).strip().lower()
+    approval = contract.get("approval") or {}
+    if write_actions != "none":
+        if not approval.get("g4_signed"):
+            raise ContractValidationError(
+                "contract grants write authority before G4 approval"
+            )
+        _require_keys(approval, ["g4_approval"], "approval")
+        _require_type(approval["g4_approval"], str, "approval.g4_approval")
+        if not _approval_file_approved(approval["g4_approval"]):
+            raise ContractValidationError(
+                "G4 approval file is missing or unsigned"
+            )
+
+    budgets = contract.get("budgets") or {}
+    _require_keys(budgets, ["max_cost_usd_per_run", "max_wall_sec"], "budgets")
+    _require_type(
+        budgets["max_cost_usd_per_run"], (int, float), "budgets.max_cost_usd_per_run"
+    )
+    _require_type(budgets["max_wall_sec"], (int, float), "budgets.max_wall_sec")
+    if budgets["max_cost_usd_per_run"] < 0 or budgets["max_wall_sec"] <= 0:
+        raise ContractValidationError("budgets must be positive")
+
+    observability = contract.get("observability") or {}
+    _require_keys(
+        observability,
+        ["arena", "trace_destination"],
+        "observability",
+    )
+
+    evidence = contract.get("evidence") or {}
+    _require_keys(evidence, ["run_dir", "trials"], "evidence")
+    for key in ("run_dir", "trials"):
+        _require_type(evidence[key], str, f"evidence.{key}")
+        path = _resolve_contract_path(evidence[key], delivery_dir)
+        if key == "run_dir" and not path.is_dir():
+            raise ContractValidationError(f"evidence.run_dir does not exist: {path}")
+        if key == "trials" and not path.is_file():
+            raise ContractValidationError(f"evidence.trials does not exist: {path}")
+
+    _require_keys(approval, ["g3_signed", "g3_approval"], "approval")
+    _require_type(approval["g3_signed"], bool, "approval.g3_signed")
+    _require_type(approval["g3_approval"], str, "approval.g3_approval")
+    if "g4_signed" in approval:
+        _require_type(approval["g4_signed"], bool, "approval.g4_signed")
+
+
+def _prompt_hash(contract, delivery_dir):
+    prompt = _resolve_contract_path(
+        contract["composition"]["prompt_packet"], delivery_dir
+    )
     return hashlib.sha256(prompt.read_bytes()).hexdigest()
 
 
@@ -87,7 +209,7 @@ source_contract = "contract.toml"
 agent = {_toml_str(contract["agent"])}
 composition_hash = {_toml_str(contract["composition_hash"])}
 prompt_packet = {_toml_str(contract["composition"]["prompt_packet"])}
-prompt_packet_sha256 = {_toml_str(_prompt_hash(contract))}
+prompt_packet_sha256 = {_toml_str(_prompt_hash(contract, delivery_dir))}
 deployable = {str(deployable).lower()}
 sandbox_required = {sandbox}
 primary_reviewer_allowed = {primary}

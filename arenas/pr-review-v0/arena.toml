@@ -28,6 +28,10 @@ train = ["py-auth-sqli", "js-cart-total", "js-clean-rename"]
 validation = ["py-file-cache", "py-pagination"]
 holdout = ["rs-retry-backoff"]
 
+[risk]
+class = "low"
+notes = "Offline synthetic fixtures only; safe for the fast local runner."
+
 # Frozen surfaces for this arena version: fixtures, answer keys, scorer
 # constants (FP_PENALTY, clean-task rule), template, and splits. Changing any
 # requires a version bump and re-running all baselines.
