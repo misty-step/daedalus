@@ -1,0 +1,9 @@
+composition = 1
+kind = "pi"
+provider_name = "openrouter"
+model = "z-ai/glm-4.7-flash"
+prompt_packet = "/Users/phaedrus/Development/daedalus/runs/20260612T153450Z-search-launch-contract-v0/packets/seed-spec-first.md"
+thinking = "low"
+tools = ["read", "bash"]
+timeout_sec = 420
+id = "g1b-seed5-qwen3-7-plus-spec-first"

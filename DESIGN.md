@@ -56,7 +56,7 @@ Deferred, with reopen triggers:
 | Master agent substrate (Claude interactive vs headless pi/SDK) | loop runs unattended |
 | Harness slot unfrozen as a search dimension | Phase 2 prompt-mutation plateau |
 | GEPA library (vs hand-rolled reflective loop) | hand-rolled reflection stops improving |
-| Rust kernel for schemas/validation/contract tooling | schemas stable across two task families |
+| Rust kernel for schemas/validation/contract tooling | **reopened 2026-06-12**: schemas survived accepted `pr-review-v2` and `launch-contract-v0` task families |
 | Repo split | Olympus/Bitter Blossom imports a brick |
 
 ## File contracts
@@ -89,12 +89,14 @@ reviewers better than their author. Worked example: pr-review-v0 ADJ-1/ADJ-2.
 and adjudication commands that enforce this flow without changing scorer
 constants.
 
-### Findings / answer key (pr-review domain)
+### Findings / answer key (deterministic review-like domains)
 
 Agent output `findings.json`:
-`{"findings": [{"file", "line", "category", "description"}]}` with categories
-from: `correctness`, `security`, `error-handling`, `concurrency`,
-`resource-leak`, `data-loss`.
+`{"findings": [{"file", "line", "category", "description"}]}`. The shape is
+shared; the `category` vocabulary is arena-owned. `pr-review-v2` uses
+`correctness`, `security`, `error-handling`, `concurrency`, `resource-leak`,
+and `data-loss`; `launch-contract-v0` uses `approval-gate`, `evidence`,
+`permissions`, `observability`, and `portability`.
 
 Answer key `tests/expected.json`:
 `{"defects": [{"id", "file", "line_start", "line_end", "category", "note"}]}`.
@@ -251,7 +253,8 @@ Residual hole: an unsandboxed tool-using candidate can still guess host
 absolute paths. Phase 1 (Harbor/Docker) remains the real isolation boundary
 and is mandatory for any arena with sensitive data, network access,
 adversarial fixtures, secrets, or untrusted candidate compositions. The
-current launch-contract validator is Python (`runner/launch.py`); the Rust
-validation kernel reopens after schemas survive two accepted task families or
-an external control plane consumes contracts as a runtime dependency. See
-`docs/security-posture.md` for exact commands.
+current launch-contract validator is Python (`runner/launch.py`). The Rust
+validation-kernel trigger is now met by two accepted task families:
+`pr-review-v2` and `launch-contract-v0`. Future schema/contract hardening may
+start from that reopened decision; see `docs/security-posture.md` for exact
+commands.

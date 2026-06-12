@@ -100,8 +100,15 @@ def recommend(cands, front, eligible=None):
     """Best mean reward; within 0.05 of the best, cheapest per trial wins.
     When `eligible` is given (certification: candidates with enough trials),
     only those may be recommended — a lucky low-n mean can rank but never
-    ship. Falls back to the whole front if nothing eligible made it."""
-    pool = [cid for cid in front if eligible is None or cid in eligible] or front
+    ship. Eligible candidates need not be on the overall Pareto front: the
+    uncertified front can dominate them, but cannot ship."""
+    if eligible is None:
+        pool = list(front)
+    else:
+        pool = [
+            cid for cid in sorted(eligible)
+            if cid in cands and cands[cid]["kind"] not in REFERENCE_KINDS
+        ]
     if not pool:
         return None
     best = max(cands[cid]["reward_mean"] for cid in pool)

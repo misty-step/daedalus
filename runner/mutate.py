@@ -67,8 +67,8 @@ def resolve_donor(proposal, archive_manifests, parent_manifest):
 
 
 def proposal_instructions(tool_policies=None, allowed_models=None,
-                          avoid_slots=(), skill_sets=None, mode=None,
-                          donors=None):
+                          allowed_thinking=None, avoid_slots=(),
+                          skill_sets=None, mode=None, donors=None):
     """Compose the slot menu from the declared search space, so the
     optimizer can only propose values the space contains. The brief asks
     for the highest-information experiment under the declared mode — no
@@ -92,7 +92,12 @@ def proposal_instructions(tool_policies=None, allowed_models=None,
         lines.append(f'- "model": one of {json.dumps(sorted(allowed_models))}.')
     else:
         lines.append('- "model": an OpenRouter model id string.')
-    lines.append('- "thinking": one of off|minimal|low|medium|high|xhigh.')
+    if allowed_thinking:
+        lines.append(
+            f'- "thinking": one of {json.dumps(sorted(allowed_thinking))}.'
+        )
+    else:
+        lines.append('- "thinking": one of off|minimal|low|medium|high|xhigh.')
     lines.append(
         '- "system_prompt_mode": "append" (packet added to pi\'s default '
         'coding prompt) or "replace" (packet IS the whole system prompt).'
@@ -272,8 +277,8 @@ def parse_proposal(text):
 
 
 def validate_proposal(proposal, parent_manifest, tool_policies=None,
-                      allowed_models=None, avoid_slots=(), skill_sets=None,
-                      donor=None):
+                      allowed_models=None, allowed_thinking=None,
+                      avoid_slots=(), skill_sets=None, donor=None):
     """Reject anything that is not a well-formed single-slot mutation drawn
     from the declared search space."""
     slot = proposal.get("slot")
@@ -303,6 +308,10 @@ def validate_proposal(proposal, parent_manifest, tool_policies=None,
     elif slot == "thinking":
         if value not in THINKING_LEVELS:
             raise ValueError(f"thinking must be one of {sorted(THINKING_LEVELS)}")
+        if allowed_thinking and value not in allowed_thinking:
+            raise ValueError(
+                f"thinking '{value}' is outside the declared search space"
+            )
         if value == parent_manifest.get("thinking"):
             raise ValueError("thinking mutation must differ from parent")
     elif slot == "tools":
@@ -399,8 +408,8 @@ def write_manifest(child, path):
 def propose(taskspec, parent_snapshot, parent_manifest, records, exp_dir,
             child_id, optimizer_model, packets_dir, manifests_dir,
             archive_summary=None, tool_policies=None, allowed_models=None,
-            avoid_slots=(), skill_sets=None, archive_manifests=None,
-            mode=None):
+            allowed_thinking=None, avoid_slots=(), skill_sets=None,
+            archive_manifests=None, mode=None):
     """Full step: evidence → LLM proposal → validation → child on disk.
     Returns (manifest_path, metadata)."""
     trials = worst_trials(records, parent_snapshot["id"])
@@ -416,6 +425,7 @@ def propose(taskspec, parent_snapshot, parent_manifest, records, exp_dir,
         instructions=proposal_instructions(
             tool_policies=tool_policies,
             allowed_models=allowed_models,
+            allowed_thinking=allowed_thinking,
             avoid_slots=avoid_slots,
             skill_sets=skill_sets,
             mode=mode,
@@ -433,6 +443,7 @@ def propose(taskspec, parent_snapshot, parent_manifest, records, exp_dir,
         proposal, parent_manifest,
         tool_policies=tool_policies,
         allowed_models=allowed_models,
+        allowed_thinking=allowed_thinking,
         avoid_slots=avoid_slots,
         skill_sets=skill_sets,
         donor=donor,

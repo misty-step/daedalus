@@ -1,0 +1,12 @@
+{
+  "defects": [
+    {
+      "id": "write-before-g4",
+      "file": "contract.toml",
+      "line_start": 5,
+      "line_end": 13,
+      "category": "permissions",
+      "note": "The contract grants direct GitHub write action and token access while G4 is false."
+    }
+  ]
+}

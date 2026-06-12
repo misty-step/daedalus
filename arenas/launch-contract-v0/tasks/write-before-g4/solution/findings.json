@@ -1,0 +1,10 @@
+{
+  "findings": [
+    {
+      "file": "contract.toml",
+      "line": 7,
+      "category": "permissions",
+      "description": "The contract allows direct GitHub PR comments and exposes GITHUB_TOKEN while g4_signed is false, expanding write authority before the human G4 gate."
+    }
+  ]
+}

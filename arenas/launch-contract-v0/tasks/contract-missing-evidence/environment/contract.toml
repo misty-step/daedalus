@@ -1,0 +1,25 @@
+contract = 1
+agent = "seed4-qwen3-7-plus-checklist"
+composition_hash = "4a73f1fd213aa1a5"
+taskspec = "launch-contract-v0"
+
+[composition]
+harness = "pi"
+harness_version = "0.78.1"
+provider = "openrouter"
+model = "qwen/qwen3.7-plus"
+prompt_packet = "runs/20260611T173632Z-search-pr-review-v0/packets/seed-checklist.md"
+
+[observability]
+trace_destination = "JSONL-only waiver"
+
+[evidence]
+run_dir = ""
+report = ""
+lineage = ""
+pareto = ""
+trials = ""
+
+[approval]
+g3_signed = false
+g3_approval = "approvals/G3-pr-review-seed4-qwen3-7-plus-checklist.md"

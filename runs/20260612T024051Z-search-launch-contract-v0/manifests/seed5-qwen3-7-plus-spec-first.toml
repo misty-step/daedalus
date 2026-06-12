@@ -1,0 +1,9 @@
+composition = 1
+id = "seed5-qwen3-7-plus-spec-first"
+kind = "pi"
+provider_name = "openrouter"
+model = "qwen/qwen3.7-plus"
+prompt_packet = "/Users/phaedrus/Development/daedalus/runs/20260612T024051Z-search-launch-contract-v0/packets/seed-spec-first.md"
+thinking = "low"
+tools = ["read", "bash"]
+timeout_sec = 420

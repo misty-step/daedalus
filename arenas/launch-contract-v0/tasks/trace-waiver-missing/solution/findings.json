@@ -1,0 +1,10 @@
+{
+  "findings": [
+    {
+      "file": "contract.toml",
+      "line": 6,
+      "category": "observability",
+      "description": "The contract leaves trace_destination as TBD and trace_artifact empty, so launch review has neither a live sink nor an explicit JSONL-only waiver."
+    }
+  ]
+}

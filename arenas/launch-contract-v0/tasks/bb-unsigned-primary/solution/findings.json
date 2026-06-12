@@ -1,0 +1,10 @@
+{
+  "findings": [
+    {
+      "file": "import-packet.toml",
+      "line": 6,
+      "category": "approval-gate",
+      "description": "The packet marks itself deployable and primary-reviewer capable even though g3_signed is false, so it bypasses the human G3 launch gate."
+    }
+  ]
+}

@@ -1,0 +1,2 @@
+{"candidate_id": "seed1-kimi-k2-6-test-runner", "split": "validation", "errors": 1, "max_errors_per_candidate": 1, "reason": "max-errors-per-candidate"}
+{"candidate_id": "g1b-seed5-qwen3-7-plus-spec-first", "split": "validation", "errors": 1, "max_errors_per_candidate": 1, "reason": "max-errors-per-candidate"}

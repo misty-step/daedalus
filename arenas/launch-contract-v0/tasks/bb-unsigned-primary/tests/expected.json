@@ -1,0 +1,12 @@
+{
+  "defects": [
+    {
+      "id": "unsigned-primary",
+      "file": "import-packet.toml",
+      "line_start": 1,
+      "line_end": 20,
+      "category": "approval-gate",
+      "note": "The packet is deployable and primary-reviewer capable while g3_signed is false."
+    }
+  ]
+}

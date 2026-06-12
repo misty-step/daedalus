@@ -1,0 +1,46 @@
+[
+  {
+    "candidate_id": "seed5-qwen3-7-plus-spec-first",
+    "composition_hash": "1ffe9e7eb74fe46e",
+    "reward_mean": 0.85,
+    "cost_usd_total": 0.066,
+    "cost_usd_per_trial": 0.00825,
+    "wall_mean_s": 43.5,
+    "trials": 8,
+    "certified": false,
+    "recommended": false
+  },
+  {
+    "candidate_id": "g1a-seed2-glm-4-7-flash-spec-first",
+    "composition_hash": "fd911b8153cff0d3",
+    "reward_mean": 0.825,
+    "cost_usd_total": 0.0206,
+    "cost_usd_per_trial": 0.002575,
+    "wall_mean_s": 69.4,
+    "trials": 8,
+    "certified": false,
+    "recommended": false
+  },
+  {
+    "candidate_id": "seed2-glm-4-7-flash-spec-first",
+    "composition_hash": "6f310b2019f6c4cf",
+    "reward_mean": 0.65,
+    "cost_usd_total": 0.0125,
+    "cost_usd_per_trial": 0.001563,
+    "wall_mean_s": 39.8,
+    "trials": 8,
+    "certified": false,
+    "recommended": false
+  },
+  {
+    "candidate_id": "seed3-gpt-5-mini-skeptic",
+    "composition_hash": "6a2351e2671d690f",
+    "reward_mean": 0.44,
+    "cost_usd_total": 0.0225,
+    "cost_usd_per_trial": 0.0045,
+    "wall_mean_s": 29.2,
+    "trials": 5,
+    "certified": false,
+    "recommended": false
+  }
+]

@@ -506,6 +506,7 @@ def main():
             },
             tool_policies=search_space.get("tool_policies"),
             allowed_models=search_space.get("models"),
+            allowed_thinking=search_space.get("thinking_levels"),
             avoid_slots=avoid_slots,
             skill_sets=search_space.get("skill_sets"),
             archive_manifests=archive,
@@ -647,7 +648,7 @@ def main():
         and all(task_count(records, cid, t) >= args.certify_trials
                 for t in search_tasks)
     }
-    pick = report.recommend(cands, front, eligible=certified or None)
+    pick = report.recommend(cands, front, eligible=certified) if certified else None
 
     # Post-run meta-eval: an FP trap every agent passed never fired.
     alarms = list(outcome.get("alarms", []))

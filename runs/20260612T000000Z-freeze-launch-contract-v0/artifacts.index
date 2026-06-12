@@ -1,0 +1,12 @@
+20260612T002511Z-oracle-absolute-prompt-path-t1	artifacts/oracle/absolute-prompt-path-t1-20260612T002511Z
+20260612T002511Z-oracle-bb-unsigned-primary-t1	artifacts/oracle/bb-unsigned-primary-t1-20260612T002511Z
+20260612T002511Z-oracle-contract-missing-evidence-t1	artifacts/oracle/contract-missing-evidence-t1-20260612T002511Z
+20260612T002511Z-oracle-sandbox-clean-t1	artifacts/oracle/sandbox-clean-t1-20260612T002511Z
+20260612T002511Z-oracle-trace-waiver-missing-t1	artifacts/oracle/trace-waiver-missing-t1-20260612T002511Z
+20260612T002511Z-oracle-write-before-g4-t1	artifacts/oracle/write-before-g4-t1-20260612T002511Z
+20260612T002511Z-null-absolute-prompt-path-t1	artifacts/null/absolute-prompt-path-t1-20260612T002511Z
+20260612T002511Z-null-bb-unsigned-primary-t1	artifacts/null/bb-unsigned-primary-t1-20260612T002511Z
+20260612T002511Z-null-contract-missing-evidence-t1	artifacts/null/contract-missing-evidence-t1-20260612T002511Z
+20260612T002511Z-null-sandbox-clean-t1	artifacts/null/sandbox-clean-t1-20260612T002511Z
+20260612T002511Z-null-trace-waiver-missing-t1	artifacts/null/trace-waiver-missing-t1-20260612T002511Z
+20260612T002511Z-null-write-before-g4-t1	artifacts/null/write-before-g4-t1-20260612T002511Z

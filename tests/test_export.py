@@ -51,6 +51,9 @@ def test_export_writes_parseable_contract_and_faithful_persona(tmp_path):
     assert contract["budgets"]["max_cost_usd_per_run"] == 0.5
     assert contract["trigger"]["intent"] == "GitHub PR webhook"
     assert contract["approval"]["g3_signed"] is False
+    assert contract["approval"]["g3_approval"] == (
+        "approvals/G3-pr-review-demo-agent.md"
+    )
     assert contract["evidence"]["run_dir"].endswith("runs/20260611T000000Z-demo")
     assert contract["evidence"]["report"].endswith(
         "runs/20260611T000000Z-demo/report.md"
@@ -71,6 +74,7 @@ def test_export_writes_parseable_contract_and_faithful_persona(tmp_path):
     assert "Bitter Blossom import shape" in handoff
     assert "Olympus AgentSpec import shape" in handoff
     assert f"composition hash | `{cand['_hash']}`" in handoff
+    assert "prompt_ref: deliveries/" in handoff
     assert "Lab evidence is not launch approval" in handoff
 
 
@@ -140,6 +144,26 @@ notes = ["activation gated", "orchestrator-side posting"]
     assert "plane/agents/review-coordinator.toml" in text
     assert "orchestrator/agent-specs/charon.yaml" in text
     assert "G3/G4/G5" in text
+
+
+def test_export_uses_delivery_and_task_identity_for_non_pr_review(tmp_path):
+    delivery = build_delivery(tmp_path / "launch-contract")
+    spec = {
+        **SPEC,
+        "id": "launch-contract-v0",
+        "goal": "Review launch contracts.",
+        "inputs": {"description": "launch packet", "fixtures": "arenas/launch-contract-v0"},
+        "trigger": {"intent": "Manual launch-contract review before G3/G4/G5 approval"},
+    }
+    paths = export.export_delivery(delivery, spec, harness_version="9.9.9",
+                                   generated="2026-06-10T00:00:00Z")
+    contract = tomllib.loads(paths["contract"].read_text())
+    assert contract["approval"]["g3_approval"] == (
+        "approvals/G3-launch-contract-demo-agent.md"
+    )
+    handoff = paths["handoff"].read_text()
+    assert "prompt_ref: deliveries/launch-contract/persona.md" in handoff
+    assert "contract_ref: deliveries/launch-contract/contract.toml" in handoff
 
 
 def test_pi_version_accepts_stderr(monkeypatch):

@@ -1,0 +1,20 @@
+{
+  "composition": 1,
+  "kind": "pi",
+  "provider_name": "openrouter",
+  "model": "qwen/qwen3.7-plus",
+  "prompt_packet": "/Users/phaedrus/Development/daedalus/runs/20260612T153450Z-search-launch-contract-v0/packets/seed-spec-first.md",
+  "thinking": "medium",
+  "tools": [
+    "read",
+    "bash"
+  ],
+  "timeout_sec": 420,
+  "id": "g2a-seed5-qwen3-7-plus-spec-first",
+  "composition_hash": "db88db4b04e3b277",
+  "prompt_packet_text": "Read the SPEC, documentation, and invariants before examining the proposed contract or import packet. Identify defects in approval gates, evidence requirements, permissions, observability, and portability. Ground every finding in exact file and line references. Flag only violations of documented contracts and invariants. Cross-check each field, claim, and dependency against the governing specification. Verify that required approval gates are present and correctly configured. Confirm evidence attachments or proofs are complete and valid. Audit permissions for least-privilege compliance and missing grants. Inspect observability hooks, telemetry schemas, and logging requirements for coverage gaps. Validate portability constraints, format compatibility, and migration paths. If the change satisfies all documented requirements without deviation, omission, or contradiction, emit no output. Do not speculate beyond the spec. Do not report style preferences or cosmetic issues. Report nothing on a clean change.\n",
+  "skills_texts": [],
+  "agents_md_text": null,
+  "harness_version": "0.78.1",
+  "runner_version": "0.1.0"
+}

@@ -1,0 +1,22 @@
+{
+  "composition": 1,
+  "id": "seed3-gpt-5-mini-skeptic",
+  "kind": "pi",
+  "provider_name": "openrouter",
+  "model": "openai/gpt-5-mini",
+  "prompt_packet": "/Users/phaedrus/Development/daedalus/runs/20260612T153450Z-search-launch-contract-v0/packets/seed-skeptic.md",
+  "thinking": "medium",
+  "tools": [
+    "read",
+    "bash",
+    "edit",
+    "write"
+  ],
+  "timeout_sec": 420,
+  "composition_hash": "6a2351e2671d690f",
+  "prompt_packet_text": "Analyze the proposed agent launch contract or import packet. Identify only concrete defects in approval-gate configuration, evidence requirements, permission grants, observability hooks, and portability constraints. Report a finding only when you can prove it directly from the code in front of you. If you are unsure or the code is ambiguous, remain silent. Ground every reported defect with specific file and line references. Structure each finding as the defect category, the exact location, the violated requirement, and the supporting evidence. If the packet contains no provable defects, state that it is clean and output no findings. Do not speculate, infer intent, or flag stylistic preferences. Reject hypothetical risks and undefined behavior claims unless explicitly demonstrated by the provided code. Maintain minimal false positives: precision outweighs coverage. Output only the structured findings or a clean verdict.\n",
+  "skills_texts": [],
+  "agents_md_text": null,
+  "harness_version": "0.78.1",
+  "runner_version": "0.1.0"
+}

@@ -143,8 +143,8 @@ def test_recommend_restricted_to_certified_candidates():
     assert "lucky" in front
     assert report.recommend(cands, front) == "lucky"
     assert report.recommend(cands, front, eligible={"steady"}) == "steady"
-    # Nothing eligible on the front -> fall back rather than recommend None.
-    assert report.recommend(cands, front, eligible={"ghost"}) == "lucky"
+    # Nothing eligible -> no recommendation; never fall back to uncertified.
+    assert report.recommend(cands, front, eligible={"ghost"}) is None
 
 
 def test_unknown_cost_treated_as_worst_in_dominance():

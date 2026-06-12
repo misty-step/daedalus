@@ -140,6 +140,14 @@ Update (2026-06-12): ticket 032 made cold-start operation explicit in
 `docs/operator-sop.md` and `bin/daedalus doctor`. Future phase work should link
 to that SOP instead of duplicating run/export/approval command sequences.
 
+Update (2026-06-12): ticket 030 produced the second task family
+`launch-contract-v0` and a corrected certified run at
+`runs/20260612T153450Z-search-launch-contract-v0`. Human G2 accepted it for
+internal Daedalus second-family benchmarking, contract-discovery, and
+sandbox-only delivery export. This meets the two-family trigger for reopening
+the Rust validation-kernel decision; it is still not a public benchmark-quality
+claim or deployment approval.
+
 ## Phase 0 — Prose-first pilot (current)
 
 The loop run by hand, every interface a file, zero framework dependencies.
