@@ -555,6 +555,8 @@ day, unlocking the Phase 0 prototype:
 
 - `DESIGN.md` — architecture, file contracts, decisions and reopen triggers.
 - `ROADMAP.md` — phases 0–4 with evidence-based exit criteria.
+- `docs/operator-sop.md` — the maintained cold-start sequence for spec,
+  arena validation, certified runs, export, approvals, trace, and closeout.
 - `docs/arena-workbench.md` — task scaffold, freeze validation,
   adjudication, and calibration commands.
 - `docs/security-posture.md` — local-run risk gates, Harbor/Docker boundary,
@@ -569,24 +571,13 @@ day, unlocking the Phase 0 prototype:
 
 ### Quickstart
 
+The full operator sequence is maintained in `docs/operator-sop.md`. Keep that
+file as the source of truth for spec, validation, run, export, approval, trace,
+and closeout commands.
+
 ```sh
 bin/gate                                   # offline tests (grader + runner)
-
-# One candidate against a low-risk arena (local, fast, no Docker):
-runner/run.py --candidate candidates/pi-kimi.toml --arena arenas/pr-review-v0 --final
-
-# Autonomous search: spec in, Pareto archive + comparison report out:
-bin/daedalus run specs/pr-review/taskspec.toml --budget-usd 2 --max-candidates 6
-
-# Arena authoring and freeze-gate validation:
-bin/daedalus arena-validate arenas/pr-review-v2 \
-  --probe-run runs/20260611T173632Z-search-pr-review-v0
-
-# Sensitive/adversarial/user-data arenas must use Docker isolation via Harbor:
-bin/harbor-run arenas/pr-review-v0 py-auth-sqli --agent oracle
-
-# Launch import packets are schema- and approval-validated before rendering:
-bin/daedalus launch-pack deliveries/pr-review --plane bitter-blossom --dry-run
+bin/daedalus doctor                        # readiness summary, no model spend
 ```
 
 `runner/report.py runs/<exp-id>` renders a comparison report from any run.

@@ -24,6 +24,7 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO / "runner"))
 
+import doctor as doctor_mod  # noqa: E402
 import export as export_mod  # noqa: E402
 import launch as launch_mod  # noqa: E402
 import lineage  # noqa: E402
@@ -220,6 +221,20 @@ def main():
     )
     disagreement_p.add_argument("--findings", required=True)
     disagreement_p.add_argument("--expected", required=True)
+    doctor_p = sub.add_parser(
+        "doctor",
+        help="print cold-start readiness checks without model spend",
+    )
+    doctor_p.add_argument(
+        "--stale-days",
+        type=int,
+        default=30,
+        help="maximum age for docs/primitives.md model verification",
+    )
+    doctor_p.add_argument(
+        "--today",
+        help="override current date for tests, YYYY-MM-DD",
+    )
     args = parser.parse_args()
 
     if args.command == "export":
@@ -330,6 +345,18 @@ def main():
     if args.command == "arena-disagreements":
         rows = workbench_mod.disagreements(args.findings, args.expected)
         print(json.dumps(rows, indent=2))
+        return
+    if args.command == "doctor":
+        today = (
+            datetime.strptime(args.today, "%Y-%m-%d").date()
+            if args.today else None
+        )
+        checks = doctor_mod.run_checks(
+            REPO, today=today, stale_days=args.stale_days
+        )
+        print(doctor_mod.render(checks), end="")
+        if doctor_mod.has_failures(checks):
+            sys.exit("doctor found blocking readiness issues")
         return
 
     spec = tomllib.loads(Path(args.taskspec).read_text())

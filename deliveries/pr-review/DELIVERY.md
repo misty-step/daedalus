@@ -6,6 +6,10 @@ recommended only under the current `threshold-then-cheap` rule because it is
 the only Pareto-front candidate certified to n >= 5 on every train and
 validation task. It is not a production launch approval.
 
+For the maintained export, trace, launch-pack, approval, and closeout sequence,
+use `docs/operator-sop.md`. This delivery file records the historical evidence
+for this specific agent.
+
 ## Composition
 
 | slot | value | evidence |

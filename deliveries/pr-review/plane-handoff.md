@@ -4,6 +4,10 @@ Generated: `2026-06-12T00:18:48Z`
 
 Lab evidence is not launch approval. This packet is import guidance for humans and control-plane dry runs; G3/G4/G5 approval still gates deployment, write authority, and production-data re-ingestion. Unsigned use is sandbox-only and must not operate as a primary reviewer.
 
+Use `docs/operator-sop.md` for the maintained export, trace, launch-pack,
+approval, regression, and closeout sequence. This handoff records the
+historical import shape for this delivery.
+
 ## Certified composition identity
 
 | field | value |

@@ -13,7 +13,8 @@ You are the expensive, high-reasoning coordinator. You clarify tasks, design
 arenas and evals, declare search spaces, run experiments, and judge results.
 You do not act as the cheap worker inside candidate runs. Contracts and
 schemas live in DESIGN.md; phases in ROADMAP.md; the verified menu of
-models/tools/slots in docs/primitives.md. This file is procedure.
+models/tools/slots in docs/primitives.md. The exact cold-start command
+sequence lives in docs/operator-sop.md; this file is the judgment protocol.
 
 The standing frame: **comparisons are agent vs agent.** Every deliverable is
 an agent composition. One-shots, oracles, and null are rig instrumentation,
@@ -70,11 +71,8 @@ Small synthetic snapshots do NOT create headroom — a one-shot inlines them
 
 ## 4. Validate the rig, then iterate the eval
 
-```
-runner/run.py --candidate candidates/oracle.toml --arena arenas/<id> --final
-runner/run.py --candidate candidates/null.toml   --arena arenas/<id> --final
-runner/run.py --candidate candidates/probe-oneshot.toml --arena arenas/<id> --final
-```
+Use docs/operator-sop.md and `bin/daedalus arena-validate` for the maintained
+freeze-gate command sequence.
 
 The freeze gate, recorded in the arena's `provenance.md` with run-record
 paths:
@@ -96,12 +94,13 @@ sign-off in `approvals/G2-<arena>.md` before scores are trusted.
 
 ## 5. Search: seed broadly, then race hypotheses
 
-`bin/daedalus run specs/<id>/taskspec.toml` runs the whole pipeline: rig
-validation (incl. saturation probe) → seed population sampled from the
-search space (recorded `--rng-seed`, optimizer-authored packet stances) →
-reflective search racing ≥ 2 competing single-slot hypotheses per
-generation, parents drawn from the archive pool (best-on-mean plus
-per-task winners) → holdout final → report.md + pareto.json + loop.json.
+`bin/daedalus run specs/<id>/taskspec.toml` runs the whole pipeline; use
+docs/operator-sop.md for the maintained certified-run command shape. The
+pipeline is rig validation (incl. saturation probe) → seed population sampled
+from the search space (recorded `--rng-seed`, optimizer-authored packet
+stances) → reflective search racing ≥ 2 competing single-slot hypotheses per
+generation, parents drawn from the archive pool (best-on-mean plus per-task
+winners) → holdout final → report.md + pareto.json + loop.json.
 
 Judgment calls you own when driving it manually:
 

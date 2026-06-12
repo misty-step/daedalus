@@ -136,6 +136,10 @@ existence, approval state, and G4-before-write authority before rendering
 control-plane import packets. Rust validation remains deferred until two
 accepted task families or an external control-plane runtime dependency.
 
+Update (2026-06-12): ticket 032 made cold-start operation explicit in
+`docs/operator-sop.md` and `bin/daedalus doctor`. Future phase work should link
+to that SOP instead of duplicating run/export/approval command sequences.
+
 ## Phase 0 — Prose-first pilot (current)
 
 The loop run by hand, every interface a file, zero framework dependencies.
