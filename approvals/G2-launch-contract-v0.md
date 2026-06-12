@@ -1,6 +1,6 @@
 # G2 - Eval-quality review: arena launch-contract-v0 (v0.1.0)
 
-- **Status:** pending human review
+- **Status:** accepted with sandbox-only waivers
 - **Prepared:** 2026-06-12, after the corrected launch-contract certification run
 - **Arena:** `arenas/launch-contract-v0` version `0.1.0`
 - **Run:** `runs/20260612T153450Z-search-launch-contract-v0`
@@ -78,7 +78,7 @@ disallow primary-reviewer use, and refuse deployment because G3 is unsigned.
 
 ## Human Review State
 
-- [ ] Human reviewer accepts `launch-contract-v0` as an internal
+- [x] Human reviewer accepts `launch-contract-v0` as an internal
       Daedalus second-family benchmark with the limitations above.
 - [ ] Human reviewer requests `launch-contract-v0.1.1` calibration before any
       scores from this family are trusted.
@@ -86,4 +86,14 @@ disallow primary-reviewer use, and refuse deployment because G3 is unsigned.
 
 ## Human G2 Decision
 
-Pending human review. This file is not an agent self-approval.
+Accepted by the operator on 2026-06-12 with these constraints:
+
+- This approval is for internal Daedalus second-family benchmarking,
+  contract-discovery, and sandbox-only delivery export.
+- The documented `write-before-g4`, probe-noise, timeout, and certification
+  caveats are waived for ticket 030 closure.
+- This approval is not a public benchmark-quality claim.
+- This approval is not deployment approval; G3 remains required before any
+  launch, and unsigned packets remain sandbox-only and non-primary.
+
+This is the human G2 approval record; it is not an agent self-approval.

@@ -1,7 +1,7 @@
 # Build a second task family to pressure-test Daedalus
 
 Priority: P1
-Status: pending G2 human review
+Status: done
 Estimate: XL
 
 ## Goal
@@ -23,15 +23,15 @@ modes, and scoring pressure.
 - [x] Any schema or runner assumptions discovered during the second family are
       either generalized behind file contracts or deliberately rejected in
       `DESIGN.md`
-- [ ] The result updates the reopen trigger for a Rust validation kernel with
+- [x] The result updates the reopen trigger for a Rust validation kernel with
       evidence from two task families
-- [ ] `bin/gate` green
+- [x] `bin/gate` green
 
 ## Children
 1. [x] Pick the domain by evidence, with backlog grooming, inbox triage, browser QA,
    or launch-contract review as candidate families.
 2. [x] Author the new G1 task spec and arena freeze gate.
-3. [ ] Run the one-shot probe and prepare/sign G2 before trusting search
+3. [x] Run the one-shot probe and prepare/sign G2 before trusting search
    scores.
 4. [x] Run the first certified comparative search and delivery export.
 5. [x] Audit hard-coded PR-review assumptions in docs, runner output, and export
@@ -60,9 +60,12 @@ modes, and scoring pressure.
   Bitter Blossom and Olympus dry-run import packets. G3 remains unsigned, so
   the packets are sandbox-only, non-deployable, and not primary-reviewer
   capable.
-- G2 packet: `approvals/G2-launch-contract-v0.md` (pending human review).
-  Search scores and Rust-kernel trigger updates should not be treated as
-  accepted until a human signs or rejects this packet.
+- G2 packet: `approvals/G2-launch-contract-v0.md` (accepted by the operator on
+  2026-06-12 for internal Daedalus second-family benchmarking,
+  contract-discovery, and sandbox-only delivery export).
+- Rust validation-kernel trigger: now met by two accepted task families,
+  `pr-review-v2` and `launch-contract-v0`; `DESIGN.md` and `ROADMAP.md` record
+  that the validation-kernel decision is reopened for future implementation.
 
 ## Notes
 **Why:** premise-challenge lane. The README describes Daedalus as a general

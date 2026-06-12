@@ -142,10 +142,11 @@ to that SOP instead of duplicating run/export/approval command sequences.
 
 Update (2026-06-12): ticket 030 produced the second task family
 `launch-contract-v0` and a corrected certified run at
-`runs/20260612T153450Z-search-launch-contract-v0`. G2 is drafted at
-`approvals/G2-launch-contract-v0.md` but remains a human decision; do not treat
-launch-contract scores as accepted benchmark evidence or reopen the Rust
-validation-kernel trigger until that G2 packet is signed.
+`runs/20260612T153450Z-search-launch-contract-v0`. Human G2 accepted it for
+internal Daedalus second-family benchmarking, contract-discovery, and
+sandbox-only delivery export. This meets the two-family trigger for reopening
+the Rust validation-kernel decision; it is still not a public benchmark-quality
+claim or deployment approval.
 
 ## Phase 0 — Prose-first pilot (current)
 
