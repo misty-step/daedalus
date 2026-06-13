@@ -454,6 +454,16 @@ Packet committed on branch `deliver-034-review-swarm`:
   search: certified `seed1-gpt-5-mini-spec-first` / `openai/gpt-5-mini` /
   `f090f8060cf36637` at reward `0.5714`, `$0.0103` per trial, and 49.6s
   mean wall/task. Total known spend: `$0.6253`.
+- `arenas/pr-review-correctness-v0` v0.2.0 adds
+  `py-formatter-missing-crash` for the owned `runtime-crash` category.
+  `runs/20260613T213700Z-freeze-pr-review-correctness-v020` froze the arena
+  with oracle `1.0`, null `0.25`, and one-shot probe `0.0`.
+- `runs/20260613T214006Z-search-pr-review-correctness` bounded v0.2 search:
+  runner-certified `g1a-seed3-qwen3-7-plus-skeptic` /
+  `z-ai/glm-4.7-flash` / `196352774b5cab55` at reward `0.5625`, `$0.0173`
+  per trial, and 96.9s mean wall/task. Total known spend: `$1.3002`. This is
+  not sandbox-ready; it records a failed quality iteration and useful
+  postmortem evidence.
 - `approvals/G2-pr-review-specialists-v0.md` pending human review packet.
 - `docs/review-swarm-vertical-slice.md` with refreshed 2026-06-13 Olympus and
   Bitter Blossom incumbent boundaries.
@@ -479,9 +489,12 @@ Current findings:
 - Specialist search found spread but not enterprise-ready member quality:
   security is promising on credential exposure but unstable on injection;
   correctness repeatedly missed seeded defects and failed clean traps.
-- Correctness v0.1 also lacks a seeded `runtime-crash` task even though
-  `runtime-crash` is an owned correctness category. v0.2 should repair that
-  arena gap before another full suite recommendation attempt.
+- Correctness v0.2 repaired the missing `runtime-crash` coverage but still did
+  not produce an enterprise-credible or sandbox-ready member. Qwen found the
+  new crash task and swept holdout but was not certified across all search
+  tasks; the certified GLM child was weaker and unstable. The v0.2 holdout is
+  now burned above the default threshold and must rotate before another
+  certified holdout search.
 - A diagnostic interrupted run,
   `runs/20260613T151153Z-search-pr-review-security`, exposed degenerate
   optimizer-authored packet text. The branch now adds prompt-packet sanity
@@ -489,11 +502,11 @@ Current findings:
 
 Remaining children:
 
-- Complete the correctness v0.2 autoresearch loop described in
-  `docs/review-autoresearch-loop.md`, then complete child 8 with the first
-  certified full suite search. The synthetic master baseline and measured
-  specialist baselines exist, but the correctness member quality is weak and
-  should get the v0.2 iteration before a full-swarm recommendation.
+- Continue correctness autoresearch with targeted train/validation
+  certification on frozen v0.2.0 or rotate holdouts into v0.3.0 before another
+  certified holdout search. Focus on Qwen/GPT candidates, live-lock,
+  clean-trap stability, and runtime-crash repeatability. Only then complete
+  child 8 with the first certified full suite search.
 - Complete child 9 with real-member replay through the master benchmark.
 - Promote `deliveries/pr-review-swarm/` from member-only inspection to
   full-swarm only after real-member replay passes and the G2 specialist

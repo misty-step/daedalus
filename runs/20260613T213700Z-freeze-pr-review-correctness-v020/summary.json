@@ -1,0 +1,222 @@
+{
+  "oracle": {
+    "composition_hash": "07d8650e238cd916",
+    "kind": "oracle",
+    "tasks": {
+      "py-export-clear": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          45
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-formatter-clean": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          83
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-formatter-missing-crash": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          118
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-live-lock": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          64
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-measure-normalize": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          47
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-padding-clean": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          73
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-plugin-cache": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          97
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-progress-speed": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          29
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      }
+    },
+    "trials": 8,
+    "errors": 0,
+    "cost_usd_total": 0.0,
+    "cost_known": false,
+    "reward_mean": 1.0
+  },
+  "null": {
+    "composition_hash": "40f2f6e05112c409",
+    "kind": "null",
+    "tasks": {
+      "py-export-clear": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          28
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-formatter-clean": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          100
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-formatter-missing-crash": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          71
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-live-lock": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          27
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-measure-normalize": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          26
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-padding-clean": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          27
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-plugin-cache": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          66
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-progress-speed": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          28
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      }
+    },
+    "trials": 8,
+    "errors": 0,
+    "cost_usd_total": 0.0,
+    "cost_known": false,
+    "reward_mean": 0.25
+  },
+  "probe-oneshot": {
+    "composition_hash": "9f21bdb5c010ab18",
+    "kind": "oneshot",
+    "tasks": {
+      "py-export-clear": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          1304
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      }
+    },
+    "trials": 1,
+    "errors": 1,
+    "cost_usd_total": 0.0,
+    "cost_known": true,
+    "reward_mean": 0.0
+  }
+}

@@ -41,3 +41,64 @@ Evaluation caveat: the certified baseline is not strong enough for sandbox
 member import. It repeatedly missed defects and repeatedly failed the
 `py-padding-clean` clean trap. Treat the run as spread/headroom evidence and
 as a model-pruning input for the next specialist iteration.
+
+## v0.2.0 correctness autoresearch loop
+
+Hypothesis: v0.1 under-specifies the correctness lens because it declares
+`runtime-crash` ownership but contains no seeded runtime-crash fixture. v0.2.0
+adds `py-formatter-missing-crash`, adapted from the existing Pygments
+formatter workspace, to test normal-input crash detection without changing the
+clean traps.
+
+The new task changes the unknown-formatter error path in
+`pygments/formatters/__init__.py`: the refactor keeps the assignment
+expression but interpolates undefined `alias` instead of `_alias`, so an
+unknown formatter alias raises `NameError` before the documented
+`ClassNotFound` can be raised.
+
+Freeze packet: `runs/20260613T213700Z-freeze-pr-review-correctness-v020`
+
+- oracle mean: `1.0`
+- null mean: `0.25`
+- one-shot probe mean: `0.0`
+- freeze report:
+  `runs/20260613T213700Z-freeze-pr-review-correctness-v020/freeze-report.md`
+
+Bounded search with one reflective child:
+`runs/20260613T214006Z-search-pr-review-correctness`
+
+- command: `bin/daedalus run specs/pr-review-correctness/taskspec.toml --rng-seed 12 --budget-usd 1.25 --max-candidates 1 --trials 1 --certify-top 1 --certify-trials 2 --children-per-gen 1 --optimizer-model moonshotai/kimi-k2.6 --max-errors-per-candidate 2`
+- runner-recommended certified baseline:
+  `g1a-seed3-qwen3-7-plus-skeptic`
+- model: `z-ai/glm-4.7-flash`
+- composition hash: `196352774b5cab55`
+- certified: yes, under this run shape
+- mean reward: `0.5625`
+- total known spend: `$1.3002`
+
+Postmortem: v0.2.0 is a better arena, not a sandbox-ready member. The new
+runtime-crash fixture discriminates agents: `seed3-qwen3-7-plus-skeptic`
+found it once and the certified child found it once during certification, but
+most candidates missed it. The runner recommendation is not quality-credible
+for sandbox import: it is lower-reward than the non-certified Qwen seed, missed
+`py-live-lock` in both measured trials, was unstable on `py-padding-clean`,
+`py-progress-speed`, `py-plugin-cache`, and the new runtime-crash task, and
+carried long-tail latency. The useful result is the diagnosis:
+
+- `py-live-lock` remains the hardest train defect for most configurations;
+- `py-measure-normalize` is expensive and inconsistent across stronger models;
+- Qwen found the new runtime-crash task and swept holdout, but was not
+  certified across all search tasks;
+- the cost-saving GLM child did not preserve Qwen's quality profile.
+
+Next loop: keep v0.2.0 frozen for comparability, then run targeted
+certification or a v0.2b search that certifies the high-signal Qwen/GPT
+candidates across all train and validation tasks before any suite replay.
+If clean-trap instability persists, write a plateau postmortem instead of
+exporting a correctness member.
+
+Post-search holdout state: `py-export-clear` and `py-plugin-cache` each have
+eight v0.2.0 exposures, above the default burn threshold of five. Do not run
+another certified holdout search against v0.2.0 without rotating holdouts and
+bumping the arena version, or explicitly raising the burn threshold in a
+documented diagnostic-only command.

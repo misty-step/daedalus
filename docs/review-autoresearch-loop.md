@@ -19,7 +19,7 @@ first_lane = "correctness"
 next_arena_iteration = "pr-review-correctness-v0.2"
 sandbox_boundary = "member-artifacts-only-before-g3"
 do_not_average_across_arena_versions = true
-full_swarm_blocked_until = ["correctness-v0.2", "real-member-replay"]
+full_swarm_blocked_until = ["correctness-member-quality", "real-member-replay"]
 required_loop_evidence = [
   "primitive-refresh",
   "arena-freeze",

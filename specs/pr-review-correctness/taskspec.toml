@@ -40,6 +40,7 @@ taxonomy = "docs/review-swarm-taxonomy.md"
 owned_categories = ["logic-invariant", "runtime-crash"]
 adapted_from = "arenas/pr-review-v2"
 adapted_tasks = ["py-progress-speed", "py-measure-normalize", "py-plugin-cache", "py-live-lock", "py-export-clear", "py-padding-clean", "py-formatter-clean"]
+authored_tasks = ["py-formatter-missing-crash"]
 blocked_on = "G2 specialist eval-quality review and v0.2 quality iteration before sandbox import"
 
 [negative_examples]

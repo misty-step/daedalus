@@ -1,0 +1,40 @@
+{
+  "stop_reason": "max-candidates",
+  "mode": "threshold-then-cheap",
+  "history": [
+    {
+      "child_id": "g1a-seed3-qwen3-7-plus-skeptic",
+      "parent_id": "seed3-qwen3-7-plus-skeptic",
+      "slot_changed": "model",
+      "value_summary": "z-ai/glm-4.7-flash",
+      "hypothesis": "The current prompt packet yields 0.667 reward on qwen3.7-plus but costs $0.240; seed2 achieves the same reward on glm-4.7-flash for $0.080. Transplanting the cheap model while keeping the current prompt tests whether the strong prompt can run on a cheaper backbone, directly addressing the cost side of the threshold-then-cheap objective.",
+      "predicted_effect": {
+        "reward": "hold",
+        "cost": "down"
+      },
+      "optimizer_cost_usd": 0.0396428,
+      "donor": "seed2-glm-4-7-flash-test-runner",
+      "generation": 1,
+      "attempt": 0,
+      "parent_reward_mean": 0.6667,
+      "reward_mean": 0.6667,
+      "mean_task_delta": 0.0,
+      "parent_cost_per_trial": 0.040054,
+      "child_cost_per_trial": 0.006572,
+      "improved": true
+    }
+  ],
+  "alarms": [],
+  "generations": 1,
+  "best_id": "g1a-seed3-qwen3-7-plus-skeptic",
+  "spend_known_usd": 1.3002,
+  "recommended": "g1a-seed3-qwen3-7-plus-skeptic",
+  "pareto_front": [
+    "seed3-qwen3-7-plus-skeptic",
+    "seed4-gpt-5-mini-checklist",
+    "seed1-deepseek-v4-flash-checklist"
+  ],
+  "certified": [
+    "g1a-seed3-qwen3-7-plus-skeptic"
+  ]
+}

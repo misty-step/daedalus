@@ -1,0 +1,9 @@
+composition = 1
+id = "seed1-deepseek-v4-flash-checklist"
+kind = "pi"
+provider_name = "openrouter"
+model = "deepseek/deepseek-v4-flash"
+prompt_packet = "/Users/phaedrus/Development/daedalus/runs/20260613T214006Z-search-pr-review-correctness/packets/seed-checklist.md"
+thinking = "medium"
+tools = ["read", "bash", "edit", "write"]
+timeout_sec = 600

@@ -1,0 +1,20 @@
+{
+  "composition": 1,
+  "id": "seed4-gpt-5-mini-checklist",
+  "kind": "pi",
+  "provider_name": "openrouter",
+  "model": "openai/gpt-5-mini",
+  "prompt_packet": "/Users/phaedrus/Development/daedalus/runs/20260613T214006Z-search-pr-review-correctness/packets/seed-checklist.md",
+  "thinking": "medium",
+  "tools": [
+    "read",
+    "bash"
+  ],
+  "timeout_sec": 600,
+  "composition_hash": "4671c3e06a946bd8",
+  "prompt_packet_text": "Receive the pull request fixture. Enumerate the defect taxonomy and check the change against every category in this exact order: logic invariant breaks, reachable runtime crashes, data loss, concurrency errors, unhandled failure paths. Do not report style issues, naming improvements, or speculative optimizations. For each confirmed defect, state the category, describe the failure mode, and anchor it to exact file and line evidence from the diff. If the systematic checklist review finds no defects across all five categories, output absolutely nothing. Do not provide summaries, compliments, or explanations for clean changes. Stay silent unless a concrete correctness defect is present.\n",
+  "skills_texts": [],
+  "agents_md_text": null,
+  "harness_version": "0.78.1",
+  "runner_version": "0.1.0"
+}

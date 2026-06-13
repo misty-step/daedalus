@@ -23,7 +23,7 @@ def test_review_autoresearch_loop_contract_is_scoped_to_next_lane():
     assert contract["sandbox_boundary"] == "member-artifacts-only-before-g3"
     assert contract["do_not_average_across_arena_versions"] is True
     assert contract["full_swarm_blocked_until"] == [
-        "correctness-v0.2",
+        "correctness-member-quality",
         "real-member-replay",
     ]
     assert contract["required_loop_evidence"] == [
@@ -38,5 +38,5 @@ def test_review_swarm_backlog_points_at_autoresearch_loop():
     text = (REPO / "backlog.d/034-build-daedalus-review-swarm.md").read_text()
 
     assert "docs/review-autoresearch-loop.md" in text
-    assert "correctness v0.2 autoresearch loop" in text
+    assert "Correctness v0.2" in text
     assert "runtime-crash" in text

@@ -1,0 +1,13 @@
+{
+  "defects": [
+    {
+      "id": "py-formatter-missing-crash",
+      "file": "pygments/formatters/__init__.py",
+      "line_start": 70,
+      "line_end": 80,
+      "category": "runtime-crash",
+      "severity": "serious",
+      "note": "The missing-alias error path now interpolates undefined alias instead of _alias, so normal invalid input raises NameError before ClassNotFound can be raised. Callers that catch ClassNotFound for unknown formatter aliases now see an unexpected runtime crash."
+    }
+  ]
+}

@@ -91,6 +91,18 @@ Observed:
 - caveat: this is a measured best bounded baseline, not a correctness member
   that should be imported as a sandbox reviewer without more arena/search work.
 
+Correctness v0.2.0 adds `py-formatter-missing-crash`, an adapted Pygments
+runtime-crash fixture for the owned `runtime-crash` category. Freeze evidence
+is `runs/20260613T213700Z-freeze-pr-review-correctness-v020`: oracle `1.0`,
+null `0.25`, one-shot probe `0.0`, status `PASS`. The first v0.2 search,
+`runs/20260613T214006Z-search-pr-review-correctness`, used one reflective
+child and known spend `$1.3002`. The runner certified
+`g1a-seed3-qwen3-7-plus-skeptic` / `z-ai/glm-4.7-flash` /
+`196352774b5cab55` at reward `0.5625`, but this is still not a sandbox-ready
+correctness member: the child missed `py-live-lock`, was unstable on the new
+runtime-crash fixture and clean trap, and lost to the non-certified Qwen seed
+on mean reward. v0.2 improves coverage; it does not unblock full-swarm export.
+
 ## Arena State
 
 `arenas/pr-review-master-v0` contains six synthetic master-synthesis tasks in

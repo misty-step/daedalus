@@ -1,0 +1,11 @@
+{
+  "findings": [
+    {
+      "file": "pygments/formatters/__init__.py",
+      "line": 79,
+      "category": "runtime-crash",
+      "severity": "serious",
+      "description": "The missing-formatter branch now formats {alias!r}, but alias is not defined in get_formatter_by_name; unknown aliases raise NameError instead of the documented ClassNotFound that callers handle."
+    }
+  ]
+}

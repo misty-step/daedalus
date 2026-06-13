@@ -2,12 +2,14 @@
 
 - **Status:** pending human G2 review
 - **Prepared:** 2026-06-13, after explicit correctness/security arena splits
-- **Arenas:** `arenas/pr-review-correctness-v0` v0.1.0 and
+- **Arenas:** `arenas/pr-review-correctness-v0` v0.2.0 and
   `arenas/pr-review-security-v0` v0.1.0
 - **Freeze runs:**
+  `runs/20260613T213700Z-freeze-pr-review-correctness-v020`,
   `runs/20260613T151035Z-freeze-pr-review-correctness-v0`,
   `runs/20260613T151035Z-freeze-pr-review-security-v0`
 - **Search runs:**
+  `runs/20260613T214006Z-search-pr-review-correctness`,
   `runs/20260613T161359Z-search-pr-review-correctness`,
   `runs/20260613T153751Z-search-pr-review-security`
 
@@ -46,6 +48,16 @@ Correctness v0.1.0:
   `{"py-export-clear": 0, "py-plugin-cache": 0}` at freeze time
 - freeze report: `runs/20260613T151035Z-freeze-pr-review-correctness-v0/freeze-report.md`
 
+Correctness v0.2.0:
+
+- oracle mean: `1.0`
+- null mean: `0.25`
+- one-shot probe mean: `0.0`
+- holdout exposure:
+  `{"py-export-clear": 4, "py-plugin-cache": 4}` at freeze time
+- freeze report:
+  `runs/20260613T213700Z-freeze-pr-review-correctness-v020/freeze-report.md`
+
 ## Search Evidence
 
 Security bounded baseline:
@@ -73,6 +85,23 @@ Correctness bounded baseline:
   `py-padding-clean` false-positive trap and missed multiple defect tasks,
   including `py-export-clear` holdout.
 
+Correctness v0.2 loop:
+
+- arena addition: `py-formatter-missing-crash` for the owned `runtime-crash`
+  category
+- runner-recommended composition: `g1a-seed3-qwen3-7-plus-skeptic`
+- model: `z-ai/glm-4.7-flash`
+- composition hash: `196352774b5cab55`
+- certified: yes, under this run shape
+- mean reward: `0.5625`
+- total known spend: `$1.3002`
+- caveat: this is a failed quality iteration, not a sandbox member. The
+  certified child was unstable on the clean trap and runtime-crash task,
+  missed `py-live-lock`, and lost on mean reward to a non-certified Qwen seed.
+  The v0.2 holdout is now burned above the default threshold after this search;
+  further certified holdout search requires rotation/version bump or an
+  explicit diagnostic-only waiver.
+
 ## Evidence Artifacts
 
 - `runs/20260613T153751Z-search-pr-review-security/report.md`
@@ -85,6 +114,12 @@ Correctness bounded baseline:
 - `runs/20260613T161359Z-search-pr-review-correctness/loop.json`
 - `runs/20260613T161359Z-search-pr-review-correctness/lineage.md`
 - `runs/20260613T161359Z-search-pr-review-correctness/trials.jsonl`
+- `runs/20260613T213700Z-freeze-pr-review-correctness-v020/freeze-report.md`
+- `runs/20260613T214006Z-search-pr-review-correctness/report.md`
+- `runs/20260613T214006Z-search-pr-review-correctness/pareto.json`
+- `runs/20260613T214006Z-search-pr-review-correctness/loop.json`
+- `runs/20260613T214006Z-search-pr-review-correctness/lineage.md`
+- `runs/20260613T214006Z-search-pr-review-correctness/trials.jsonl`
 - `runs/20260613T151153Z-search-pr-review-security/diagnostic.md`
 
 ## Arena Findings For Human Decision
@@ -98,8 +133,9 @@ Correctness bounded baseline:
 3. The security arena has only one adapted injection defect, one authored
    credential-exposure defect, and one clean task. It is adequate for internal
    spread evidence, not public benchmark quality.
-4. The correctness arena has broader task count, but no candidate approached
-   enterprise-quality review behavior in this bounded seed-only run.
+4. The correctness arena now covers both owned categories, but no candidate
+   approached enterprise-quality review behavior in the bounded v0.1/v0.2
+   runs.
 5. The first security search attempt found a harness bug: optimizer-authored
    prompt packets could be syntactically corrupted yet still enter the seed
    pool. The current branch adds packet sanity guards and regression tests.
