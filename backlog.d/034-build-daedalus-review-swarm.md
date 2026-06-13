@@ -105,6 +105,8 @@ strong enough for sandbox-only Olympus and Bitter Blossom trials.
   incumbent comparison, and pre-G3 sandbox boundary.
 - `docs/operator-sop.md` - maintained G1/G2/search/export/launch-pack
   command sequence.
+- `docs/review-autoresearch-loop.md` - one-lens-at-a-time research protocol,
+  primitive inventory discipline, stop conditions, and correctness v0.2 plan.
 - `runner/export.py` - current single-agent contract/persona/handoff export
   boundary that a suite export must extend rather than bypass.
 - `docs/premises/review-swarm-2026-06-12.md` - durable operator-premise
@@ -409,7 +411,10 @@ Observable acceptance:
    generate sandbox-only handoffs that preserve each plane's posting and
    validation boundary.
 11. [x] Decide whether harness becomes a Daedalus search slot now or remains a
-   follow-up until comparable non-`pi` runner evidence exists.
+    follow-up until comparable non-`pi` runner evidence exists.
+12. [x] Codify the review autoresearch loop: one focused reviewer at a time,
+    live primitive refresh before search-space changes, controlled hypotheses,
+    plateau postmortems, and the correctness v0.2 execution plan.
 
 ## Delivery Progress
 
@@ -452,6 +457,8 @@ Packet committed on branch `deliver-034-review-swarm`:
 - `approvals/G2-pr-review-specialists-v0.md` pending human review packet.
 - `docs/review-swarm-vertical-slice.md` with refreshed 2026-06-13 Olympus and
   Bitter Blossom incumbent boundaries.
+- `docs/review-autoresearch-loop.md` with the durable Karpathy-style
+  autoresearch protocol and first correctness v0.2 loop plan.
 - `deliveries/pr-review-swarm/` member-only delivery. It includes measured
   member/master contracts, `summary.json`, `swarm-contract.toml`, and
   sandbox-only dry-run import packets for Bitter Blossom and Olympus. The
@@ -472,6 +479,9 @@ Current findings:
 - Specialist search found spread but not enterprise-ready member quality:
   security is promising on credential exposure but unstable on injection;
   correctness repeatedly missed seeded defects and failed clean traps.
+- Correctness v0.1 also lacks a seeded `runtime-crash` task even though
+  `runtime-crash` is an owned correctness category. v0.2 should repair that
+  arena gap before another full suite recommendation attempt.
 - A diagnostic interrupted run,
   `runs/20260613T151153Z-search-pr-review-security`, exposed degenerate
   optimizer-authored packet text. The branch now adds prompt-packet sanity
@@ -479,10 +489,11 @@ Current findings:
 
 Remaining children:
 
-- Complete child 8 with the first certified full suite search. The synthetic
-  master baseline and measured specialist baselines exist, but the correctness
-  member quality is weak and should get a v0.2 iteration before a full-swarm
-  recommendation.
+- Complete the correctness v0.2 autoresearch loop described in
+  `docs/review-autoresearch-loop.md`, then complete child 8 with the first
+  certified full suite search. The synthetic master baseline and measured
+  specialist baselines exist, but the correctness member quality is weak and
+  should get the v0.2 iteration before a full-swarm recommendation.
 - Complete child 9 with real-member replay through the master benchmark.
 - Promote `deliveries/pr-review-swarm/` from member-only inspection to
   full-swarm only after real-member replay passes and the G2 specialist
