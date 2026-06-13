@@ -1,6 +1,7 @@
 import subprocess
 import sys
 import textwrap
+import tomllib
 from pathlib import Path
 
 import pytest
@@ -123,6 +124,30 @@ def test_taxonomy_rejects_missing_member_spec_path(tmp_path):
         "suite.members.security.spec does not exist" in m
         for m in report.messages
     )
+
+
+def test_taxonomy_rejects_missing_authored_lens_task(tmp_path):
+    spec_path = tmp_path / "security.toml"
+    spec_path.write_text(
+        textwrap.dedent(
+            """
+            id = "security"
+
+            [inputs]
+            fixtures = "arenas/pr-review-security-v0"
+
+            [lens]
+            adapted_from = "arenas/pr-review-v2"
+            adapted_tasks = ["py-markup-escape"]
+            authored_tasks = ["missing-security-task"]
+            """
+        )
+    )
+    spec = tomllib.loads(spec_path.read_text())
+    report = taxonomy.TaxonomyReport()
+    taxonomy._validate_lens_adapter(spec, REPO, report, "security")
+    assert not report.ok
+    assert any("security.lens.authored_tasks missing task" in m for m in report.messages)
 
 
 def test_scaffold_only_specs_must_not_declare_search():

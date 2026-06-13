@@ -1,0 +1,9 @@
+composition = 1
+id = "seed4-gpt-5-mini-skeptic"
+kind = "pi"
+provider_name = "openrouter"
+model = "openai/gpt-5-mini"
+prompt_packet = "/Users/phaedrus/Development/daedalus/runs/20260613T151153Z-search-pr-review-security/packets/seed-skeptic.md"
+thinking = "low"
+tools = ["read", "bash", "edit", "write"]
+timeout_sec = 600

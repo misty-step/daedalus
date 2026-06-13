@@ -1,0 +1,11 @@
+{
+  "findings": [
+    {
+      "file": "rich/live.py",
+      "line": 216,
+      "category": "logic-invariant",
+      "severity": "serious",
+      "description": "The renderable assignment and its paired refresh are no longer atomic with respect to _RefreshThread.run, which takes the same lock before calling refresh(); a concurrent update can interleave so the display shows stale or torn state, and the GIL-atomicity claim does not hold for non-CPython runtimes."
+    }
+  ]
+}

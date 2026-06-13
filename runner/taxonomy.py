@@ -143,6 +143,21 @@ def _validate_lens_adapter(spec, base, report, label):
             report.fail(f"{label}.lens.adapted_tasks contains a non-string task")
         elif not (arena / "tasks" / task).is_dir():
             report.fail(f"{label}.lens.adapted_tasks missing task: {task}")
+    authored = lens.get("authored_tasks") or []
+    if authored:
+        if not isinstance(authored, list):
+            report.fail(f"{label}.lens.authored_tasks must be a list")
+            return
+        fixtures = (spec.get("inputs") or {}).get("fixtures")
+        fixture_arena = base / fixtures if isinstance(fixtures, str) else None
+        if fixture_arena is None or not fixture_arena.is_dir():
+            report.fail(f"{label}.inputs.fixtures must point at an arena for authored_tasks")
+            return
+        for task in authored:
+            if not isinstance(task, str) or not task:
+                report.fail(f"{label}.lens.authored_tasks contains a non-string task")
+            elif not (fixture_arena / "tasks" / task).is_dir():
+                report.fail(f"{label}.lens.authored_tasks missing task: {task}")
 
 
 def _validate_suite_paths(suite, suite_path, required_members, optional_members, report):

@@ -1,0 +1,29 @@
+diff -ruN a/pygments/lexers/__init__.py b/pygments/lexers/__init__.py
+--- a/pygments/lexers/__init__.py
++++ b/pygments/lexers/__init__.py
+@@ -29,6 +29,7 @@
+            'guess_lexer', 'load_lexer_from_file'] + list(LEXERS) + list(COMPAT)
+ 
+ _lexer_cache = {}
++_plugin_lexer_cache = {}
+ _pattern_cache = {}
+ 
+ 
+@@ -125,10 +126,15 @@
+             if name not in _lexer_cache:
+                 _load_lexers(module_name)
+             return _lexer_cache[name](**options)
+-    # continue with lexers from setuptools entrypoints
++    # continue with lexers from setuptools entrypoints (cached:
++    # entry-point iteration is slow)
++    cached = _plugin_lexer_cache.get(_alias.lower())
++    if cached is not None:
++        return cached
+     for cls in find_plugin_lexers():
+         if _alias.lower() in cls.aliases:
+-            return cls(**options)
++            _plugin_lexer_cache[_alias.lower()] = instance = cls(**options)
++            return instance
+     raise ClassNotFound(f'no lexer for alias {_alias!r} found')
+ 
+ 

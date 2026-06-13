@@ -62,13 +62,25 @@ def test_validate_rejects_no_op_mutations():
 
 
 def test_validate_rejects_thin_packet_and_missing_hypothesis():
-    with pytest.raises(ValueError, match="substantial"):
+    with pytest.raises(ValueError, match="sanity"):
         mutate.validate_proposal(
             {"slot": "prompt_packet", "value": "be good", "hypothesis": "h"}, PARENT
         )
     with pytest.raises(ValueError, match="hypothesis"):
         mutate.validate_proposal(
             {"slot": "thinking", "value": "high", "hypothesis": " "}, PARENT
+        )
+
+
+def test_validate_rejects_degenerate_packet_mutation():
+    with pytest.raises(ValueError, match="sanity"):
+        mutate.validate_proposal(
+            {
+                "slot": "prompt_packet",
+                "value": "The" + "!" * 5000,
+                "hypothesis": "try an optimizer-authored replacement packet",
+            },
+            PARENT,
         )
 
 

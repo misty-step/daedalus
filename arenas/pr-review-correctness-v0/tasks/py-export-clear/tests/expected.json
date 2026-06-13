@@ -1,0 +1,13 @@
+{
+  "defects": [
+    {
+      "id": "py-export-clear",
+      "file": "rich/console.py",
+      "line_start": 2168,
+      "line_end": 2199,
+      "category": "logic-invariant",
+      "severity": "blocking",
+      "note": "buffer is an alias, not ownership: del self._record_buffer[:] empties the same list object, so with clear=True (the default) the export renders an empty buffer \u2014 the recorded segments are destroyed and the caller gets an empty string. Ownership transfer needs a copy or list() before the del."
+    }
+  ]
+}

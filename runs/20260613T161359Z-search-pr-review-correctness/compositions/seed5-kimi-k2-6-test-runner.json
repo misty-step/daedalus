@@ -1,0 +1,22 @@
+{
+  "composition": 1,
+  "id": "seed5-kimi-k2-6-test-runner",
+  "kind": "pi",
+  "provider_name": "openrouter",
+  "model": "moonshotai/kimi-k2.6",
+  "prompt_packet": "/Users/phaedrus/Development/daedalus/runs/20260613T161359Z-search-pr-review-correctness/packets/seed-test-runner.md",
+  "thinking": "low",
+  "tools": [
+    "read",
+    "bash",
+    "edit",
+    "write"
+  ],
+  "timeout_sec": 600,
+  "composition_hash": "a907bf70ed95f25e",
+  "prompt_packet_text": "Review the provided pull request fixture exclusively for correctness defects. Identify only logic invariant breaks, reachable runtime crashes, data loss, concurrency errors, and unhandled failure paths. Do not report style issues, refactoring suggestions, or performance optimizations.\n\nWhen the fixture includes tests or a runnable entrypoint, execute them. Ground every finding in observed behavior from test output or runtime execution. If no tests or runnable entrypoint exist, base findings on static analysis of the code paths.\n\nFor each defect found, provide the exact file path and line number. Describe the invariant violated, the reachable trigger condition, and the resulting failure mode. Include reproduction steps or test names when execution is performed.\n\nIf the change introduces no correctness defects, output nothing. Do not generate congratulatory text, summaries, or sign-offs. Remain silent on clean changes.\n\nStick strictly to evidence. Do not speculate about hypothetical bugs without a concrete stack trace, test failure, or identifiable flawed control flow. Prioritize crashes, races, and data corruption over defensive coding advice.\n",
+  "skills_texts": [],
+  "agents_md_text": null,
+  "harness_version": "0.78.1",
+  "runner_version": "0.1.0"
+}

@@ -1,0 +1,20 @@
+{
+  "composition": 1,
+  "id": "seed5-kimi-k2-6-checklist",
+  "kind": "pi",
+  "provider_name": "openrouter",
+  "model": "moonshotai/kimi-k2.6",
+  "prompt_packet": "/Users/phaedrus/Development/daedalus/runs/20260613T153751Z-search-pr-review-security/packets/seed-checklist.md",
+  "thinking": "medium",
+  "tools": [
+    "read",
+    "bash"
+  ],
+  "timeout_sec": 600,
+  "composition_hash": "d112f8dd00b0f84b",
+  "prompt_packet_text": "Enumerate the security defect taxonomy in this exact order: credential exposure, authorization bypass, injection, unsafe input handling, secret persistence. Examine the pull request fixture against each category sequentially. Inspect every changed file and line for vulnerabilities belonging to the current category. When you find a defect, produce a structured finding that cites the exact file path and line number, names the vulnerability class, and explains how the change introduces or worsens the flaw. Skip categories that produce no findings. Do not report style issues, performance problems, or non-security bugs. If no security defects exist across all five categories, emit absolutely no output. Ground every finding only in the provided diff. Never infer missing context or assume external mitigations.\n",
+  "skills_texts": [],
+  "agents_md_text": null,
+  "harness_version": "0.78.1",
+  "runner_version": "0.1.0"
+}

@@ -8,7 +8,7 @@ mode = "threshold-then-cheap"
 
 [inputs]
 description = "Post-change repository files plus PR.diff, filtered by the security lens"
-fixtures = "arenas/pr-review-v2"
+fixtures = "arenas/pr-review-security-v0"
 
 [output]
 contract = "review-swarm member artifact with lens = security and findings in the shared member schema"
@@ -37,10 +37,11 @@ gates = ["G1-spec", "G2-eval-quality", "G3-launch-contract"]
 [lens]
 id = "security"
 taxonomy = "docs/review-swarm-taxonomy.md"
-owned_categories = ["credential-exposure", "authz-bypass"]
+owned_categories = ["credential-exposure", "authz-bypass", "injection"]
 adapted_from = "arenas/pr-review-v2"
-adapted_tasks = ["py-markup-escape"]
-blocked_on = "one-shot headroom for the suite-approved security subset and at least one additional unambiguous security fixture"
+adapted_tasks = ["py-markup-escape", "py-padding-clean"]
+authored_tasks = ["py-save-token-leak"]
+blocked_on = "G2 specialist eval-quality review and real-member replay before full suite export"
 
 [negative_examples]
 bad = [

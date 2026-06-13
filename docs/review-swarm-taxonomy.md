@@ -48,6 +48,13 @@ blocking_rule = "Always blocking when reachable."
 allowed_overlaps = ["product"]
 
 [[category]]
+id = "injection"
+lens = "security"
+description = "User-controlled input can be interpreted as markup, code, shell, query, template, link, or another active syntax in a context that expected inert text."
+blocking_rule = "Blocking when reachable through user-controlled or untrusted input."
+allowed_overlaps = ["correctness", "product"]
+
+[[category]]
 id = "verification-break"
 lens = "verification"
 description = "The change disables, weakens, bypasses, or misreports the gate that should catch the defect."

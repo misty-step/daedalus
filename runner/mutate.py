@@ -10,6 +10,8 @@ import time
 import urllib.request
 from pathlib import Path
 
+from prompt_packet import is_sane_prompt_packet
+
 REPO = Path(__file__).resolve().parent.parent
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 
@@ -294,8 +296,8 @@ def validate_proposal(proposal, parent_manifest, tool_policies=None,
     if not hypothesis or not str(hypothesis).strip():
         raise ValueError("proposal missing hypothesis")
     if slot == "prompt_packet":
-        if not isinstance(value, str) or len(value.strip()) < 20:
-            raise ValueError("prompt_packet value must be substantial packet text")
+        if not is_sane_prompt_packet(value):
+            raise ValueError("prompt_packet value failed sanity check")
     elif slot == "model":
         if not isinstance(value, str) or "/" not in value:
             raise ValueError("model value must be an OpenRouter model id")

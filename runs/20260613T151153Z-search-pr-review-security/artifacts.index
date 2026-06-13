@@ -1,0 +1,17 @@
+20260613T151153Z-oracle-py-markup-escape-t1	artifacts/oracle/py-markup-escape-t1-20260613T151153Z
+20260613T151153Z-oracle-py-padding-clean-t1	artifacts/oracle/py-padding-clean-t1-20260613T151153Z
+20260613T151153Z-oracle-py-save-token-leak-t1	artifacts/oracle/py-save-token-leak-t1-20260613T151153Z
+20260613T151153Z-null-py-markup-escape-t1	artifacts/null/py-markup-escape-t1-20260613T151153Z
+20260613T151153Z-null-py-padding-clean-t1	artifacts/null/py-padding-clean-t1-20260613T151153Z
+20260613T151153Z-null-py-save-token-leak-t1	artifacts/null/py-save-token-leak-t1-20260613T151153Z
+20260613T151153Z-probe-oneshot-py-markup-escape-t1	artifacts/probe-oneshot/py-markup-escape-t1-20260613T151153Z
+20260613T151153Z-probe-oneshot-py-padding-clean-t1	artifacts/probe-oneshot/py-padding-clean-t1-20260613T151153Z
+20260613T151153Z-probe-oneshot-py-save-token-leak-t1	artifacts/probe-oneshot/py-save-token-leak-t1-20260613T151153Z
+20260613T151559Z-seed1-qwen3-7-plus-skeptic-py-markup-escape-t1	artifacts/seed1-qwen3-7-plus-skeptic/py-markup-escape-t1-20260613T151559Z
+20260613T151832Z-seed1-qwen3-7-plus-skeptic-py-padding-clean-t1	artifacts/seed1-qwen3-7-plus-skeptic/py-padding-clean-t1-20260613T151832Z
+20260613T151851Z-seed2-deepseek-v4-flash-checklist-py-markup-escape-t1	artifacts/seed2-deepseek-v4-flash-checklist/py-markup-escape-t1-20260613T151851Z
+20260613T152223Z-seed2-deepseek-v4-flash-checklist-py-padding-clean-t1	artifacts/seed2-deepseek-v4-flash-checklist/py-padding-clean-t1-20260613T152223Z
+20260613T152252Z-seed3-glm-4-7-flash-spec-first-py-markup-escape-t1	artifacts/seed3-glm-4-7-flash-spec-first/py-markup-escape-t1-20260613T152252Z
+20260613T153253Z-seed3-glm-4-7-flash-spec-first-py-padding-clean-t1	artifacts/seed3-glm-4-7-flash-spec-first/py-padding-clean-t1-20260613T153253Z
+20260613T153322Z-seed4-gpt-5-mini-skeptic-py-markup-escape-t1	artifacts/seed4-gpt-5-mini-skeptic/py-markup-escape-t1-20260613T153322Z
+20260613T153338Z-seed4-gpt-5-mini-skeptic-py-padding-clean-t1	artifacts/seed4-gpt-5-mini-skeptic/py-padding-clean-t1-20260613T153338Z

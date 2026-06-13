@@ -1,0 +1,7 @@
+id = "py-progress-speed"
+
+[agent]
+timeout_sec = 900
+
+[verifier]
+timeout_sec = 60

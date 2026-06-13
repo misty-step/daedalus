@@ -1,0 +1,11 @@
+{
+  "findings": [
+    {
+      "file": "rich/console.py",
+      "line": 2211,
+      "category": "credential-exposure",
+      "severity": "blocking",
+      "description": "save_text reads RICH_SAVE_TOKEN and writes it through Console.log, exposing a credential to terminal output, record buffers, and downstream log collection."
+    }
+  ]
+}

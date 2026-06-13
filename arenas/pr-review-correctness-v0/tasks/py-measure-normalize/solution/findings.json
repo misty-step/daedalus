@@ -1,0 +1,11 @@
+{
+  "findings": [
+    {
+      "file": "rich/measure.py",
+      "line": 108,
+      "category": "logic-invariant",
+      "severity": "serious",
+      "description": "Measurement.get no longer clamps the renderable's __rich_measure__ result with with_maximum(max_width) or normalize(), so measurements can exceed the console width or violate minimum <= maximum; layout consumers such as table column sizing assume the clamped invariant and now miscompute widths."
+    }
+  ]
+}

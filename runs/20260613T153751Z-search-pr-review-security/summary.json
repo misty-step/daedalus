@@ -1,0 +1,329 @@
+{
+  "oracle": {
+    "composition_hash": "07d8650e238cd916",
+    "kind": "oracle",
+    "tasks": {
+      "py-markup-escape": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          81
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-padding-clean": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          56
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-save-token-leak": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          45
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      }
+    },
+    "trials": 3,
+    "errors": 0,
+    "cost_usd_total": 0.0,
+    "cost_known": false,
+    "reward_mean": 1.0
+  },
+  "null": {
+    "composition_hash": "40f2f6e05112c409",
+    "kind": "null",
+    "tasks": {
+      "py-markup-escape": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          44
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-padding-clean": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          41
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-save-token-leak": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          37
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      }
+    },
+    "trials": 3,
+    "errors": 0,
+    "cost_usd_total": 0.0,
+    "cost_known": false,
+    "reward_mean": 0.3333
+  },
+  "probe-oneshot": {
+    "composition_hash": "9f21bdb5c010ab18",
+    "kind": "oneshot",
+    "tasks": {
+      "py-markup-escape": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          1766
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-padding-clean": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          1602
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-save-token-leak": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          1450
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      }
+    },
+    "trials": 3,
+    "errors": 3,
+    "cost_usd_total": 0.0,
+    "cost_known": true,
+    "reward_mean": 0.0
+  },
+  "seed1-qwen3-7-plus-skeptic": {
+    "composition_hash": "7fbfbfbdb1909b1c",
+    "kind": "pi",
+    "tasks": {
+      "py-markup-escape": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          174669
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-padding-clean": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          17960
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      }
+    },
+    "trials": 2,
+    "errors": 0,
+    "cost_usd_total": 0.043362,
+    "cost_known": true,
+    "reward_mean": 0.5
+  },
+  "seed2-deepseek-v4-flash-checklist": {
+    "composition_hash": "743a42bac423828d",
+    "kind": "pi",
+    "tasks": {
+      "py-markup-escape": {
+        "rewards": [
+          0.8
+        ],
+        "wall_ms": [
+          317628
+        ],
+        "mean": 0.8,
+        "min": 0.8,
+        "max": 0.8
+      },
+      "py-padding-clean": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          53333
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      }
+    },
+    "trials": 2,
+    "errors": 0,
+    "cost_usd_total": 0.022477,
+    "cost_known": true,
+    "reward_mean": 0.4
+  },
+  "seed3-glm-4-7-flash-spec-first": {
+    "composition_hash": "67eaf3b04bf30b16",
+    "kind": "pi",
+    "tasks": {
+      "py-markup-escape": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          600074
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-padding-clean": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          11037
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      }
+    },
+    "trials": 2,
+    "errors": 1,
+    "cost_usd_total": 0.000585,
+    "cost_known": false,
+    "reward_mean": 0.5
+  },
+  "seed4-gpt-5-mini-skeptic": {
+    "composition_hash": "724026968317addc",
+    "kind": "pi",
+    "tasks": {
+      "py-markup-escape": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          12267
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-padding-clean": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          5851
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-save-token-leak": {
+        "rewards": [
+          1.0,
+          0.0
+        ],
+        "wall_ms": [
+          22440,
+          20359
+        ],
+        "mean": 0.5,
+        "min": 0.0,
+        "max": 1.0
+      }
+    },
+    "trials": 4,
+    "errors": 0,
+    "cost_usd_total": 0.016009,
+    "cost_known": true,
+    "reward_mean": 0.5
+  },
+  "seed5-kimi-k2-6-checklist": {
+    "composition_hash": "d112f8dd00b0f84b",
+    "kind": "pi",
+    "tasks": {
+      "py-markup-escape": {
+        "rewards": [
+          1.0,
+          0.0
+        ],
+        "wall_ms": [
+          147398,
+          373609
+        ],
+        "mean": 0.5,
+        "min": 0.0,
+        "max": 1.0
+      },
+      "py-padding-clean": {
+        "rewards": [
+          1.0,
+          1.0
+        ],
+        "wall_ms": [
+          81566,
+          22411
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-save-token-leak": {
+        "rewards": [
+          1.0,
+          1.0
+        ],
+        "wall_ms": [
+          30645,
+          78103
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      }
+    },
+    "trials": 6,
+    "errors": 0,
+    "cost_usd_total": 0.25024,
+    "cost_known": true,
+    "reward_mean": 0.8333
+  }
+}

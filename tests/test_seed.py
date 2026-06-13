@@ -101,6 +101,29 @@ def test_packet_author_failure_falls_back_to_base(tmp_path):
         assert path.read_text() == "Base reviewer packet.\n"
 
 
+def test_packet_author_degenerate_text_falls_back_to_base(tmp_path):
+    fallback = (
+        "You are a precise code-review agent. Ground every finding in file "
+        "and line evidence. Report zero findings on a clean change.\n"
+    )
+
+    def degenerate_call(prompt, model):
+        return "The" + "!" * 5000, 0.123
+
+    with pytest.raises(ValueError, match="degenerate"):
+        seed.author_packets(
+            SPEC, 1, "m", random.Random(1), tmp_path / "p1",
+            call=degenerate_call,
+        )
+    packets, costs = seed.author_packets(
+        SPEC, 1, "m", random.Random(1), tmp_path / "p2",
+        call=degenerate_call, fallback_text=fallback,
+    )
+    assert costs == [0.123]  # the optimizer call succeeded and spent tokens
+    assert len(packets) == 1
+    assert packets[0][1].read_text() == fallback
+
+
 def test_optional_axes_sampled_when_declared(tmp_path):
     skill = tmp_path / "skill.md"
     skill.write_text("# skill")

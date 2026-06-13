@@ -1,0 +1,13 @@
+{
+  "defects": [
+    {
+      "id": "py-markup-escape",
+      "file": "rich/markup.py",
+      "line_start": 48,
+      "line_end": 62,
+      "category": "injection",
+      "severity": "blocking",
+      "note": "Pre-existing backslashes are no longer doubled: input like '\\\\[red]x' becomes '\\\\\\\\[red]x' minus one level \u2014 the parser (_parse, below in this file) consumes the doubled backslash as an escaped literal and the bracket tag goes LIVE, so user-controlled text can inject markup (styles, [link=...]) through escape(). The trailing-lone-backslash guard is also gone, letting user text ending in a backslash swallow adjacent application markup."
+    }
+  ]
+}

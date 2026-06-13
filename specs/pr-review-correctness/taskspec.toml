@@ -8,7 +8,7 @@ mode = "threshold-then-cheap"
 
 [inputs]
 description = "Post-change repository files plus PR.diff, filtered by the correctness lens"
-fixtures = "arenas/pr-review-v2"
+fixtures = "arenas/pr-review-correctness-v0"
 
 [output]
 contract = "review-swarm member artifact with lens = correctness and findings in the shared member schema"
@@ -39,8 +39,8 @@ id = "correctness"
 taxonomy = "docs/review-swarm-taxonomy.md"
 owned_categories = ["logic-invariant", "runtime-crash"]
 adapted_from = "arenas/pr-review-v2"
-adapted_tasks = ["py-progress-speed", "py-measure-normalize", "py-plugin-cache"]
-blocked_on = "one-shot headroom for the suite-approved correctness subset"
+adapted_tasks = ["py-progress-speed", "py-measure-normalize", "py-plugin-cache", "py-live-lock", "py-export-clear", "py-padding-clean", "py-formatter-clean"]
+blocked_on = "G2 specialist eval-quality review and v0.2 quality iteration before sandbox import"
 
 [negative_examples]
 bad = [

@@ -13,6 +13,7 @@ import random
 from pathlib import Path
 
 import mutate
+from prompt_packet import is_sane_prompt_packet
 
 REPO = Path(__file__).resolve().parent.parent
 
@@ -81,8 +82,11 @@ def sample_compositions(search, n, rng):
 
 def author_packets(taskspec, k, optimizer_model, rng, packets_dir,
                    call=None, fallback_text=None):
-    """k stance packets written by the optimizer. A failed call falls back to
-    the base packet (diversity lost, validity kept) when one is declared."""
+    """k stance packets written by the optimizer.
+
+    Failed or visibly corrupted calls fall back to the base packet (diversity
+    lost, validity kept) when one is declared.
+    """
     call = call or mutate.call_optimizer
     stances = list(STANCES)
     rng.shuffle(stances)
@@ -98,6 +102,11 @@ def author_packets(taskspec, k, optimizer_model, rng, packets_dir,
             if fallback_text is None:
                 raise
             text = fallback_text
+        else:
+            if not is_sane_prompt_packet(text):
+                if fallback_text is None:
+                    raise ValueError("optimizer returned degenerate packet text")
+                text = fallback_text
         path = packets_dir / f"seed-{name}.md"
         path.write_text(text)
         packets.append((name, path))

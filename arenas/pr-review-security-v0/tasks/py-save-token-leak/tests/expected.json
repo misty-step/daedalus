@@ -1,0 +1,13 @@
+{
+  "defects": [
+    {
+      "id": "py-save-token-leak",
+      "file": "rich/console.py",
+      "line_start": 2210,
+      "line_end": 2212,
+      "category": "credential-exposure",
+      "severity": "blocking",
+      "note": "save_text now reads RICH_SAVE_TOKEN and logs it through Console.log before writing the export. Environment tokens are credentials; logging them exposes secrets to terminal output, record buffers, and downstream log collectors."
+    }
+  ]
+}

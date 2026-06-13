@@ -11,8 +11,8 @@ not a production launch packet and not an enterprise-readiness claim.
 | member | task spec | current status | measured source |
 |---|---|---|---|
 | general | `specs/pr-review/taskspec.toml` | certified existing baseline | `deliveries/pr-review/DELIVERY.md` |
-| correctness | `specs/pr-review-correctness/taskspec.toml` | suite spec ready; search blocked on G1 | adapted from correctness-owned `pr-review-v2` tasks |
-| security | `specs/pr-review-security/taskspec.toml` | suite spec ready; needs another unambiguous fixture before strong G2 | adapted from `py-markup-escape` plus future security fixture |
+| correctness | `specs/pr-review-correctness/taskspec.toml` | v0.1 arena frozen; bounded seed-only search produced a certified weak baseline, not a sandbox-ready member | `runs/20260613T161359Z-search-pr-review-correctness` |
+| security | `specs/pr-review-security/taskspec.toml` | v0.1 arena frozen; bounded seed-only search produced a certified baseline with injection instability caveat | `runs/20260613T153751Z-search-pr-review-security` |
 | verification | `specs/pr-review-verification/taskspec.toml` | optional non-runnable scaffold; blocked on headroom fixtures | no recommendation yet |
 | simplification | `specs/pr-review-simplification/taskspec.toml` | optional non-runnable scaffold; blocked on deterministic taste-free fixtures | no recommendation yet |
 | product | `specs/pr-review-product/taskspec.toml` | optional non-runnable scaffold; blocked on explicit ticket-context fixtures | no recommendation yet |
@@ -28,6 +28,68 @@ The optional verification, simplification, and product specs are scaffold-only
 records. They deliberately omit `[search]`, set `[scaffold].runnable = false`,
 and use `scaffold-only:*` fixture markers so a future operator cannot mistake
 them for calibrated search targets.
+
+## Specialist Arena Evidence
+
+`arenas/pr-review-security-v0` version `0.1.0` is the first explicit
+security-specialist arena. It contains `py-markup-escape`,
+`py-save-token-leak`, and the clean trap `py-padding-clean`.
+
+Freeze/search evidence:
+
+```sh
+bin/daedalus arena-validate arenas/pr-review-security-v0 --probe-run runs/20260613T151035Z-freeze-pr-review-security-v0 --report runs/20260613T151035Z-freeze-pr-review-security-v0/freeze-report.md
+bin/daedalus run specs/pr-review-security/taskspec.toml --rng-seed 9 --budget-usd 0.40 --max-candidates 0 --trials 1 --certify-top 1 --certify-trials 2 --children-per-gen 1 --optimizer-model moonshotai/kimi-k2.6 --max-errors-per-candidate 2
+```
+
+Observed:
+
+- freeze report status: `PASS`
+- oracle mean: `1.0`
+- null mean: `0.3333`
+- one-shot probe mean: `0.0` with HTTP 400 probe errors and known `$0.0000`
+  cost
+- certified recommendation:
+  `seed5-kimi-k2-6-checklist` / `moonshotai/kimi-k2.6` /
+  `d112f8dd00b0f84b`
+- certified reward: `0.8333` overall; `1.0` on credential-token holdout,
+  `0.5` on repeated markup-injection train trials
+- total known experiment spend: `$0.3527`
+- caveat: the first attempted run,
+  `runs/20260613T151153Z-search-pr-review-security`, was interrupted after a
+  degenerate optimizer-authored packet (`seed-spec-first.md`) created a
+  timeout-heavy diagnostic run. `runner/prompt_packet.py` now guards seed and
+  mutation prompt packets against this class of corruption.
+
+`arenas/pr-review-correctness-v0` version `0.1.0` is the first explicit
+correctness-specialist arena. It contains seven adapted Rich fixtures:
+`py-progress-speed`, `py-measure-normalize`, `py-plugin-cache`,
+`py-live-lock`, `py-export-clear`, and clean traps `py-padding-clean` and
+`py-formatter-clean`.
+
+Freeze/search evidence:
+
+```sh
+bin/daedalus arena-validate arenas/pr-review-correctness-v0 --probe-run runs/20260613T151035Z-freeze-pr-review-correctness-v0 --report runs/20260613T151035Z-freeze-pr-review-correctness-v0/freeze-report.md
+bin/daedalus run specs/pr-review-correctness/taskspec.toml --rng-seed 11 --budget-usd 0.75 --max-candidates 0 --trials 1 --certify-top 1 --certify-trials 2 --children-per-gen 1 --optimizer-model moonshotai/kimi-k2.6 --max-errors-per-candidate 2
+```
+
+Observed:
+
+- freeze report status: `PASS`
+- oracle mean: `1.0`
+- null mean: `0.2857`
+- one-shot probe mean: `0.0` with HTTP 400 probe errors and known `$0.0000`
+  cost
+- certified recommendation:
+  `seed1-gpt-5-mini-spec-first` / `openai/gpt-5-mini` /
+  `f090f8060cf36637`
+- certified reward: `0.5714` overall; repeated misses on `py-live-lock`,
+  `py-measure-normalize`, and `py-export-clear`, plus repeated false positives
+  on `py-padding-clean`
+- total known experiment spend: `$0.6253`
+- caveat: this is a measured best bounded baseline, not a correctness member
+  that should be imported as a sandbox reviewer without more arena/search work.
 
 ## Arena State
 
@@ -144,8 +206,8 @@ experiments. The next human gate is G2 review of
 
 Remaining work before any suite export:
 
-1. run correctness/security specialist candidate searches or explicitly defer
-   them behind stronger specialist arenas;
+1. strengthen or rerun the correctness/security specialist searches if the
+   suite requires sandbox-ready member quality rather than measured baselines;
 2. replay the master benchmark with artifacts emitted by real member
    candidates, not generated synthetic member artifacts;
 3. export `deliveries/pr-review-swarm/` only if replay and budget gates pass;

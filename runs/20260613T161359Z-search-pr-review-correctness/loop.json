@@ -1,0 +1,18 @@
+{
+  "stop_reason": "max-candidates",
+  "mode": "threshold-then-cheap",
+  "history": [],
+  "alarms": [],
+  "generations": 0,
+  "best_id": "seed1-gpt-5-mini-spec-first",
+  "spend_known_usd": 0.6253,
+  "recommended": "seed1-gpt-5-mini-spec-first",
+  "pareto_front": [
+    "seed4-qwen3-7-plus-spec-first",
+    "seed1-gpt-5-mini-spec-first",
+    "seed3-glm-4-7-flash-skeptic"
+  ],
+  "certified": [
+    "seed1-gpt-5-mini-spec-first"
+  ]
+}

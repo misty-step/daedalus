@@ -394,7 +394,7 @@ Observable acceptance:
    fixtures: true findings, duplicate findings, noisy false positives,
    conflicting severities, and clean/no-finding cases, with labels hidden from
    candidate inputs.
-6. [ ] Build or adapt specialist arenas for correctness and security using
+6. [x] Build or adapt specialist arenas for correctness and security using
    real-repo-scale fixtures with one-shot headroom; keep general review as the
    baseline from `pr-review-v2`.
 7. [x] Add the suite run/export verification harness: member contracts,
@@ -435,6 +435,21 @@ Packet committed on branch `deliver-034-review-swarm`:
   wall/task. Total known experiment spend including optimizer calls,
   certification, and holdout: `$0.5290`.
 - `approvals/G2-pr-review-master-v0.md` pending human review packet.
+- `arenas/pr-review-security-v0` v0.1.0 and
+  `arenas/pr-review-correctness-v0` v0.1.0, explicit specialist fixture roots
+  instead of full-arena lens pointers.
+- `runs/20260613T151035Z-freeze-pr-review-security-v0` and
+  `runs/20260613T151035Z-freeze-pr-review-correctness-v0` freeze packets:
+  oracle `1.0`, null floors `0.3333` / `0.2857`, and one-shot probe `0.0`.
+- `runs/20260613T153751Z-search-pr-review-security` bounded security search:
+  certified `seed5-kimi-k2-6-checklist` / `moonshotai/kimi-k2.6` /
+  `d112f8dd00b0f84b` at reward `0.8333`, `$0.0417` per trial, and 122.3s
+  mean wall/task. Total known spend: `$0.3527`.
+- `runs/20260613T161359Z-search-pr-review-correctness` bounded correctness
+  search: certified `seed1-gpt-5-mini-spec-first` / `openai/gpt-5-mini` /
+  `f090f8060cf36637` at reward `0.5714`, `$0.0103` per trial, and 49.6s
+  mean wall/task. Total known spend: `$0.6253`.
+- `approvals/G2-pr-review-specialists-v0.md` pending human review packet.
 - `docs/review-swarm-vertical-slice.md` with current Olympus and Bitter
   Blossom incumbent boundaries.
 
@@ -449,13 +464,20 @@ Current findings:
 - The clean trap never fired: every agent passed `clean-noise`.
 - Latency is material: Qwen averaged 93.6s/task and one certified validation
   task took 487s.
+- Specialist search found spread but not enterprise-ready member quality:
+  security is promising on credential exposure but unstable on injection;
+  correctness repeatedly missed seeded defects and failed clean traps.
+- A diagnostic interrupted run,
+  `runs/20260613T151153Z-search-pr-review-security`, exposed degenerate
+  optimizer-authored packet text. The branch now adds prompt-packet sanity
+  guards for seed packets and mutation proposals.
 
 Remaining children:
 
-- Complete child 6 by running one-shot headroom and certified member searches
-  for the required correctness/security/general vertical slice.
 - Complete child 8 with the first certified full suite search. The synthetic
-  master baseline is done, but the full suite is not.
+  master baseline and measured specialist baselines exist, but the correctness
+  member quality is weak and may justify a v0.2 specialist iteration before
+  replay/export.
 - Complete child 9 with real-member replay through the master benchmark.
 - Complete child 10 by exporting `deliveries/pr-review-swarm/` and generating
   sandbox-only Bitter Blossom and Olympus dry-run handoffs, or explicitly

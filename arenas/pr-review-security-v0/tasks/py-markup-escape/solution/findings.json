@@ -1,0 +1,11 @@
+{
+  "findings": [
+    {
+      "file": "rich/markup.py",
+      "line": 61,
+      "category": "injection",
+      "severity": "blocking",
+      "description": "escape() no longer doubles pre-existing backslashes or guards a trailing lone backslash, so crafted user input such as a backslash before a tag survives escaping as live markup \u2014 markup/link injection through every API that wraps user text in escape() (see _parse's backslash handling below in this file)."
+    }
+  ]
+}

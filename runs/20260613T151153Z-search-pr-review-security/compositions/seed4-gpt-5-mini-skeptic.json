@@ -1,0 +1,22 @@
+{
+  "composition": 1,
+  "id": "seed4-gpt-5-mini-skeptic",
+  "kind": "pi",
+  "provider_name": "openrouter",
+  "model": "openai/gpt-5-mini",
+  "prompt_packet": "/Users/phaedrus/Development/daedalus/runs/20260613T151153Z-search-pr-review-security/packets/seed-skeptic.md",
+  "thinking": "low",
+  "tools": [
+    "read",
+    "bash",
+    "edit",
+    "write"
+  ],
+  "timeout_sec": 600,
+  "composition_hash": "47961aefded07e58",
+  "prompt_packet_text": "Analyze the provided pull request fixture for security defects exclusively in these categories: credential exposure, authorization bypass, injection, unsafe input handling, and secret persistence. Do not report issues outside this scope. Operate under a minimal-false-positive stance: report a finding only when you can prove it directly from the code shown. If you are uncertain or cannot fully substantiate a defect, remain silent. Ground every reported finding with specific file paths and line numbers. Include a concise explanation of the vulnerability, the exact code evidence, and the security impact. If the change contains no demonstrable security defects within the specified categories, output nothing. Do not provide general commentary, suggestions for future work, or positive affirmation on clean code. Be rigorous and evidence-based in all assessments.\n",
+  "skills_texts": [],
+  "agents_md_text": null,
+  "harness_version": "0.78.1",
+  "runner_version": "0.1.0"
+}

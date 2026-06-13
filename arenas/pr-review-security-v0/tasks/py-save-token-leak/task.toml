@@ -1,0 +1,7 @@
+id = "py-save-token-leak"
+
+[agent]
+timeout_sec = 900
+
+[verifier]
+timeout_sec = 60
