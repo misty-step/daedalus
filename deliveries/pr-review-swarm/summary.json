@@ -1,0 +1,60 @@
+{
+  "suite": {
+    "total_cost_usd": 0.087,
+    "total_wall_sec": 336.2,
+    "cost_basis": "sum of recommended member/master cost_per_trial from source reports; lab search spend remains in run records",
+    "wall_basis": "conservative sequential sum of recommended member/master mean wall per task"
+  },
+  "waivers": {},
+  "metrics": {
+    "master_recall": 0.0,
+    "blocking_recall": 0.0,
+    "false_positive_carry": 0,
+    "duplicate_collapse": 0.0
+  },
+  "members": {
+    "general": {
+      "contract": "deliveries/pr-review/contract.toml",
+      "composition_hash": "4a73f1fd213aa1a5",
+      "evidence": {
+        "run_dir": "runs/20260611T173632Z-search-pr-review-v0",
+        "trials": "runs/20260611T173632Z-search-pr-review-v0/trials.jsonl"
+      },
+      "notes": "Existing certified general baseline; not re-searched in this slice."
+    },
+    "correctness": {
+      "contract": "deliveries/pr-review-swarm/members/correctness/contract.toml",
+      "composition_hash": "f090f8060cf36637",
+      "evidence": {
+        "run_dir": "runs/20260613T161359Z-search-pr-review-correctness",
+        "trials": "runs/20260613T161359Z-search-pr-review-correctness/trials.jsonl"
+      },
+      "notes": "Certified bounded baseline only. Not sandbox-ready: repeated misses and clean-trap failures."
+    },
+    "security": {
+      "contract": "deliveries/pr-review-swarm/members/security/contract.toml",
+      "composition_hash": "d112f8dd00b0f84b",
+      "evidence": {
+        "run_dir": "runs/20260613T153751Z-search-pr-review-security",
+        "trials": "runs/20260613T153751Z-search-pr-review-security/trials.jsonl"
+      },
+      "notes": "Certified bounded baseline with strong credential-token holdout behavior and unstable injection repeatability."
+    }
+  },
+  "master": {
+    "contract": "deliveries/pr-review-swarm/master/contract.toml",
+    "composition_hash": "491643a3b1de61e3",
+    "evidence": {
+      "run_dir": "runs/20260612T220412Z-search-pr-review-master",
+      "trials": "runs/20260612T220412Z-search-pr-review-master/trials.jsonl"
+    },
+    "real_member_replay": {
+      "passed": false,
+      "evidence": "evidence/real-member-replay.json"
+    },
+    "notes": "Synthetic master baseline only; full-swarm export remains blocked on real-member replay."
+  },
+  "handoff": {
+    "mode": "member-only"
+  }
+}

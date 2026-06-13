@@ -1,7 +1,7 @@
 # Build a Daedalus-optimized PR review swarm
 
 Priority: P0
-Status: in progress - synthetic master baseline certified; specialist/replay/export remain
+Status: in progress - member-only swarm handoff emitted; full replay/export remain
 Estimate: XL
 
 ## PRD Summary
@@ -405,7 +405,7 @@ Observable acceptance:
 9. [ ] Replay the master-synthesis benchmark with artifacts emitted by the
    certified member candidates; block export if synthetic-artifact performance
    does not transfer, except for explicitly member-only inspection handoff.
-10. [ ] Refresh Olympus and Bitter Blossom incumbent reads from live files and
+10. [x] Refresh Olympus and Bitter Blossom incumbent reads from live files and
    generate sandbox-only handoffs that preserve each plane's posting and
    validation boundary.
 11. [x] Decide whether harness becomes a Daedalus search slot now or remains a
@@ -450,8 +450,13 @@ Packet committed on branch `deliver-034-review-swarm`:
   `f090f8060cf36637` at reward `0.5714`, `$0.0103` per trial, and 49.6s
   mean wall/task. Total known spend: `$0.6253`.
 - `approvals/G2-pr-review-specialists-v0.md` pending human review packet.
-- `docs/review-swarm-vertical-slice.md` with current Olympus and Bitter
-  Blossom incumbent boundaries.
+- `docs/review-swarm-vertical-slice.md` with refreshed 2026-06-13 Olympus and
+  Bitter Blossom incumbent boundaries.
+- `deliveries/pr-review-swarm/` member-only delivery. It includes measured
+  member/master contracts, `summary.json`, `swarm-contract.toml`, and
+  sandbox-only dry-run import packets for Bitter Blossom and Olympus. The
+  handoff mode is deliberately `member-only` because real-member replay has
+  not passed.
 
 Current findings:
 
@@ -476,12 +481,12 @@ Remaining children:
 
 - Complete child 8 with the first certified full suite search. The synthetic
   master baseline and measured specialist baselines exist, but the correctness
-  member quality is weak and may justify a v0.2 specialist iteration before
-  replay/export.
+  member quality is weak and should get a v0.2 iteration before a full-swarm
+  recommendation.
 - Complete child 9 with real-member replay through the master benchmark.
-- Complete child 10 by exporting `deliveries/pr-review-swarm/` and generating
-  sandbox-only Bitter Blossom and Olympus dry-run handoffs, or explicitly
-  member-only inspection output if replay fails.
+- Promote `deliveries/pr-review-swarm/` from member-only inspection to
+  full-swarm only after real-member replay passes and the G2 specialist
+  caveats are accepted or resolved.
 
 ## Lead Repo Read
 

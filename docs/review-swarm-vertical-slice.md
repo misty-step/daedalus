@@ -173,22 +173,29 @@ Observed:
 
 ## Plane Incumbents
 
-Current Bitter Blossom surfaces, read on 2026-06-12:
+Current Bitter Blossom surfaces, refreshed from
+`/Users/phaedrus/Development/bitterblossom` on 2026-06-13:
 
 - `plane/tasks/correctness/card.md` and `plane/tasks/security/card.md` are
   read-only verdict commissions. They fetch the target rev, review one lens,
   emit one strict JSON verdict, and never post, push, merge, or edit code.
-- `plane/tasks/review/card.md` is the older general reviewer path; it posts
-  exactly one PR comment with `gh pr comment`, so it is not the preferred
-  swarm-member boundary.
+- `plane/tasks/correctness/task.toml` and `plane/tasks/security/task.toml`
+  run as `storm-correctness` and `storm-security` on `sprites` with manual
+  triggers, 30-45 minute timeouts, and per-run cost caps.
+- `plane/tasks/review/card.md` and `plane/tasks/review/task.toml` remain the
+  posting review-coordinator path. Measurement mode can suppress comments, but
+  webhook mode posts exactly one PR comment with `gh pr comment`, so this is
+  not the preferred swarm-member boundary.
 - `plane/tasks/arbiter/card.md` settles one disputed blocking finding and
   preserves fingerprints.
 
-Current Olympus Charon surfaces, read on 2026-06-12:
+Current Olympus Charon surfaces, refreshed from
+`/Users/phaedrus/Development/adminifi/olympus` on 2026-06-13:
 
 - `orchestrator/agent-specs/charon.yaml` defines Charon v3 on `pi` with
   `moonshotai/kimi-k2.7-code`, high reasoning effort, a 20 minute timeout,
-  and a $3 per-run budget.
+  and a $3 per-run budget. The local checkout was on
+  `design/lab-002-operator-journeys`, not `master`, at refresh time.
 - `orchestrator/prompts/charon-review.md` requires strict JSON output to
   `/home/sprite/review/charon-review.json`; the agent never posts.
 - `orchestrator/src/charon-review-poster.ts` validates JSON shape and
@@ -210,6 +217,8 @@ Remaining work before any suite export:
    suite requires sandbox-ready member quality rather than measured baselines;
 2. replay the master benchmark with artifacts emitted by real member
    candidates, not generated synthetic member artifacts;
-3. export `deliveries/pr-review-swarm/` only if replay and budget gates pass;
-4. otherwise emit a `member-only` inspection packet with the failing master
-   evidence attached.
+3. strengthen the weak correctness member before a full-swarm recommendation;
+4. keep `deliveries/pr-review-swarm/` in `member-only` mode until replay and
+   budget gates pass. Current dry-run packets:
+   `deliveries/pr-review-swarm/launch-dry-run/bitter-blossom.import-packet.toml`
+   and `deliveries/pr-review-swarm/launch-dry-run/olympus.import-packet.toml`.

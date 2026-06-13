@@ -1,0 +1,9 @@
+composition = 1
+id = "seed5-kimi-k2-6-checklist"
+kind = "pi"
+provider_name = "openrouter"
+model = "moonshotai/kimi-k2.6"
+prompt_packet = "/Users/phaedrus/Development/daedalus/runs/20260613T153751Z-search-pr-review-security/packets/seed-checklist.md"
+thinking = "medium"
+tools = ["read", "bash"]
+timeout_sec = 600
