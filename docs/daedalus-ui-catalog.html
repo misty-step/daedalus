@@ -1,0 +1,2432 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Daedalus UI Design Catalog</title>
+  <link rel="stylesheet" href="../../aesthetic/aesthetic.css">
+  <style>
+    :root {
+      --ae-accent: #315f8d;
+      --ae-accent-dark: #9eb9d7;
+      --bg: var(--ae-surface);
+      --surface: var(--ae-surface);
+      --surface-2: var(--ae-wash);
+      --surface-3: var(--ae-wash);
+      --ink: var(--ae-ink);
+      --muted: var(--ae-ink-muted);
+      --faint: var(--ae-ink-faint);
+      --line: var(--ae-line);
+      --line-dark: var(--ae-line);
+      --teal: var(--ae-accent);
+      --teal-soft: var(--ae-wash);
+      --rust: var(--ae-accent);
+      --rust-soft: var(--ae-wash);
+      --gold: var(--ae-warn);
+      --gold-soft: var(--ae-wash);
+      --blue: var(--ae-accent);
+      --blue-soft: var(--ae-wash);
+      --green: var(--ae-ok);
+      --green-soft: var(--ae-wash);
+      --danger: var(--ae-err);
+      --danger-soft: var(--ae-wash);
+      --shadow: none;
+      --mono: var(--ae-font-mono);
+      --sans: var(--ae-font);
+      --radius: var(--ae-radius);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--sans);
+      font-size: 14px;
+      line-height: 1.45;
+      letter-spacing: 0;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    button,
+    .button {
+      min-height: 32px;
+      border: 1px solid var(--line-dark);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--ink);
+      font: inherit;
+      font-weight: 650;
+      padding: 6px 10px;
+      cursor: default;
+    }
+
+    button:focus-visible,
+    a:focus-visible {
+      outline: 3px solid var(--gold);
+      outline-offset: 2px;
+    }
+
+    .catalog-shell {
+      min-height: 100vh;
+    }
+
+    .catalog-nav {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(245, 246, 242, 0.96);
+      padding: 10px 22px;
+    }
+
+    .mark {
+      width: 34px;
+      height: 34px;
+      border: 2px solid var(--ink);
+      border-radius: var(--radius);
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 3px;
+      padding: 4px;
+      background: var(--surface);
+      flex: 0 0 auto;
+    }
+
+    .mark span {
+      background: var(--ink);
+      border-radius: 1px;
+    }
+
+    .nav-title {
+      display: grid;
+      gap: 0;
+      min-width: 176px;
+    }
+
+    .nav-title strong {
+      font-size: 14px;
+      line-height: 1.1;
+    }
+
+    .nav-title small {
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.25;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding: 2px 0;
+      margin-left: auto;
+    }
+
+    .nav-links a {
+      white-space: nowrap;
+      text-decoration: none;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      padding: 6px 9px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .hero {
+      padding: 34px 22px 18px;
+      max-width: 1480px;
+      margin: 0 auto;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(280px, 1.2fr) minmax(280px, 0.8fr);
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin: 0;
+    }
+
+    h1 {
+      font-size: clamp(28px, 4vw, 56px);
+      line-height: 0.95;
+      max-width: 860px;
+      letter-spacing: 0;
+    }
+
+    .hero-copy {
+      display: grid;
+      gap: 16px;
+      align-content: start;
+    }
+
+    .hero-copy p {
+      color: var(--muted);
+      max-width: 760px;
+      font-size: 16px;
+    }
+
+    .brief-panel {
+      display: grid;
+      gap: 12px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .brief-panel h2 {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    .dial-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .dial {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 10px;
+      background: var(--surface-2);
+    }
+
+    .dial b {
+      display: block;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    .dial span {
+      display: block;
+      margin-top: 4px;
+      font-weight: 750;
+    }
+
+    .summary-grid {
+      max-width: 1480px;
+      margin: 0 auto;
+      padding: 0 22px 24px;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .summary-card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      padding: 14px;
+      min-height: 148px;
+      display: grid;
+      gap: 10px;
+      align-content: start;
+    }
+
+    .summary-card h3 {
+      font-size: 15px;
+    }
+
+    .summary-card p,
+    .summary-card li {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .summary-card ul {
+      margin: 0;
+      padding-left: 17px;
+      display: grid;
+      gap: 5px;
+    }
+
+    .model-band {
+      max-width: 1480px;
+      margin: 0 auto 28px;
+      padding: 0 22px;
+      scroll-margin-top: 112px;
+    }
+
+    .model-shell {
+      border: 1px solid var(--line-dark);
+      border-radius: var(--radius);
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      display: grid;
+      grid-template-columns: minmax(280px, 0.72fr) minmax(460px, 1.28fr);
+      min-height: 410px;
+    }
+
+    .model-copy {
+      padding: 18px;
+      border-right: 1px solid var(--line);
+      display: grid;
+      gap: 16px;
+      align-content: start;
+      background: #25302c;
+      color: #f4f7f0;
+    }
+
+    .model-copy .kicker,
+    .model-copy .fine {
+      color: #b5c1bb;
+    }
+
+    .model-copy h2 {
+      font-size: 29px;
+      line-height: 1.05;
+    }
+
+    .object-chain {
+      padding: 14px;
+      display: grid;
+      gap: 12px;
+      align-content: start;
+      min-width: 0;
+    }
+
+    .node-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .object-node {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface-2);
+      padding: 10px;
+      min-height: 98px;
+      display: grid;
+      gap: 5px;
+      align-content: start;
+    }
+
+    .object-node.root {
+      background: var(--teal-soft);
+      border-color: #9dc9c4;
+    }
+
+    .object-node strong {
+      font-size: 14px;
+    }
+
+    .relation-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .relation {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      padding: 10px;
+      display: grid;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .relation b {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    .flow-strip {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 1px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .flow-step {
+      background: var(--surface-2);
+      padding: 10px;
+      min-height: 82px;
+      display: grid;
+      gap: 5px;
+      align-content: start;
+    }
+
+    .flow-step strong {
+      font-size: 13px;
+    }
+
+    .tag-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 23px;
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      padding: 3px 7px;
+      background: var(--surface-2);
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .tag.good {
+      background: var(--green-soft);
+      color: var(--green);
+      border-color: #adcba7;
+    }
+
+    .tag.warn {
+      background: var(--gold-soft);
+      color: var(--gold);
+      border-color: #d6c27c;
+    }
+
+    .tag.stop {
+      background: var(--danger-soft);
+      color: var(--danger);
+      border-color: #d3a9aa;
+    }
+
+    .tag.info {
+      background: var(--blue-soft);
+      color: var(--blue);
+      border-color: #b7cadd;
+    }
+
+    .option {
+      max-width: 1480px;
+      margin: 0 auto 28px;
+      padding: 0 22px;
+      scroll-margin-top: 112px;
+    }
+
+    .option-head {
+      display: grid;
+      grid-template-columns: minmax(220px, 0.7fr) minmax(280px, 1.3fr);
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .option-title,
+    .tradeoffs {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      padding: 14px;
+    }
+
+    .option-title {
+      display: grid;
+      gap: 8px;
+      align-content: start;
+    }
+
+    .option-title .kicker {
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 11px;
+      text-transform: uppercase;
+    }
+
+    .option-title h2 {
+      font-size: 25px;
+      line-height: 1.05;
+    }
+
+    .option-title p,
+    .tradeoffs p {
+      color: var(--muted);
+    }
+
+    .tradeoffs {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .tradeoff-block {
+      border-left: 2px solid var(--line-dark);
+      padding-left: 10px;
+    }
+
+    .tradeoff-block b {
+      display: block;
+      margin-bottom: 3px;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    .tradeoff-block p {
+      font-size: 13px;
+    }
+
+    .mock {
+      overflow: hidden;
+      border: 1px solid var(--line-dark);
+      border-radius: var(--radius);
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+
+    .mock-top {
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 0 14px;
+      border-bottom: 1px solid var(--line);
+      background: var(--surface-2);
+    }
+
+    .mock-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .mock-brand strong {
+      font-size: 14px;
+    }
+
+    .mock-brand span {
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 12px;
+    }
+
+    .mock-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: end;
+    }
+
+    .mock-body {
+      min-height: 560px;
+    }
+
+    .metric {
+      display: grid;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .metric span {
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 700;
+    }
+
+    .metric b {
+      font-family: var(--mono);
+      font-size: 20px;
+      letter-spacing: 0;
+    }
+
+    .metric small {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .status-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      display: inline-block;
+      background: var(--line-dark);
+      margin-right: 6px;
+    }
+
+    .status-dot.good {
+      background: var(--green);
+    }
+
+    .status-dot.warn {
+      background: var(--gold);
+    }
+
+    .status-dot.stop {
+      background: var(--danger);
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .data-table th,
+    .data-table td {
+      border-bottom: 1px solid var(--line);
+      padding: 8px 7px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .data-table th {
+      color: var(--muted);
+      background: var(--surface-2);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+    }
+
+    .data-table td.value {
+      font-family: var(--mono);
+    }
+
+    .mono {
+      font-family: var(--mono);
+      font-size: 12px;
+    }
+
+    .fine {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .pane-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      min-height: 43px;
+    }
+
+    .pane-title h3 {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    .pane-content {
+      padding: 12px;
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--line);
+      margin: 10px 0;
+    }
+
+    .console-grid {
+      display: grid;
+      grid-template-columns: 196px minmax(400px, 1fr) 310px;
+      min-height: 560px;
+    }
+
+    .sidebar {
+      border-right: 1px solid var(--line);
+      background: #25302c;
+      color: #f4f7f0;
+      padding: 14px;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 18px;
+    }
+
+    .sidebar h3 {
+      font-size: 12px;
+      color: #aebbb4;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 8px;
+    }
+
+    .side-list {
+      display: grid;
+      gap: 5px;
+    }
+
+    .side-list a {
+      color: #f4f7f0;
+      text-decoration: none;
+      border-radius: var(--radius);
+      padding: 7px 8px;
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 13px;
+    }
+
+    .side-list a.active {
+      background: #394842;
+    }
+
+    .side-list span {
+      color: #aebbb4;
+      font-family: var(--mono);
+      font-size: 11px;
+    }
+
+    .main-work {
+      display: grid;
+      grid-template-rows: auto auto 1fr;
+      min-width: 0;
+    }
+
+    .metric-row {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      padding: 12px;
+      border-bottom: 1px solid var(--line);
+      background: var(--surface);
+    }
+
+    .metric-box {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface-2);
+      padding: 10px;
+      min-width: 0;
+    }
+
+    .work-toolbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .right-inspector {
+      border-left: 1px solid var(--line);
+      background: var(--surface);
+      display: grid;
+      grid-template-rows: auto 1fr;
+      min-width: 0;
+    }
+
+    .evidence-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .evidence {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 9px;
+      background: var(--surface-2);
+      display: grid;
+      gap: 5px;
+    }
+
+    .evidence b {
+      font-size: 12px;
+    }
+
+    .board-body {
+      padding: 14px;
+      display: grid;
+      grid-template-columns: 230px minmax(520px, 1fr);
+      gap: 12px;
+      min-height: 560px;
+      background: #eef1ec;
+    }
+
+    .lane-list {
+      display: grid;
+      gap: 10px;
+      align-content: start;
+    }
+
+    .lane-card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 10px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .lane-card.active {
+      border-color: var(--teal);
+      box-shadow: inset 3px 0 0 var(--teal);
+    }
+
+    .lane-card h3 {
+      font-size: 14px;
+    }
+
+    .pipeline {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(130px, 1fr));
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .pipeline-col {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      min-width: 0;
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+
+    .pipeline-col h3 {
+      padding: 10px;
+      border-bottom: 1px solid var(--line);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    .pipeline-items {
+      padding: 10px;
+      display: grid;
+      gap: 8px;
+      align-content: start;
+    }
+
+    .research-card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 9px;
+      background: var(--surface-2);
+      display: grid;
+      gap: 7px;
+      min-height: 92px;
+    }
+
+    .research-card strong {
+      font-size: 13px;
+    }
+
+    .trace-body {
+      display: grid;
+      grid-template-columns: 250px minmax(360px, 1fr) 330px;
+      min-height: 560px;
+    }
+
+    .task-rail,
+    .artifact-rail {
+      background: var(--surface);
+      border-right: 1px solid var(--line);
+      min-width: 0;
+    }
+
+    .artifact-rail {
+      border-right: 0;
+      border-left: 1px solid var(--line);
+    }
+
+    .task-item {
+      border-bottom: 1px solid var(--line);
+      padding: 10px 12px;
+      display: grid;
+      gap: 5px;
+    }
+
+    .task-item.active {
+      background: var(--teal-soft);
+    }
+
+    .trace-center {
+      min-width: 0;
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+
+    .trace-ladder {
+      padding: 14px;
+      display: grid;
+      gap: 10px;
+      align-content: start;
+    }
+
+    .trace-step {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      padding: 10px;
+      display: grid;
+      grid-template-columns: 86px 1fr auto;
+      gap: 12px;
+      align-items: start;
+    }
+
+    .trace-step .time {
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 12px;
+    }
+
+    .code-block {
+      background: #202622;
+      color: #e7ede7;
+      border-radius: var(--radius);
+      padding: 10px;
+      overflow: auto;
+      font-family: var(--mono);
+      font-size: 11px;
+      line-height: 1.5;
+      max-height: 190px;
+    }
+
+    .gate-body {
+      display: grid;
+      grid-template-columns: 260px minmax(430px, 1fr) 320px;
+      min-height: 560px;
+    }
+
+    .gate-rail {
+      border-right: 1px solid var(--line);
+      background: #f0f2ec;
+    }
+
+    .gate-step {
+      border-bottom: 1px solid var(--line);
+      padding: 13px 14px;
+      display: grid;
+      gap: 5px;
+    }
+
+    .gate-step.active {
+      background: var(--gold-soft);
+      box-shadow: inset 4px 0 0 var(--gold);
+    }
+
+    .contract-panel {
+      padding: 14px;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .contract-summary {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .contract-card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      padding: 10px;
+      display: grid;
+      gap: 5px;
+      min-width: 0;
+    }
+
+    .plane-panel {
+      border-left: 1px solid var(--line);
+      background: var(--surface);
+      min-width: 0;
+    }
+
+    .matrix-body {
+      display: grid;
+      grid-template-columns: minmax(530px, 1fr) 360px;
+      min-height: 560px;
+    }
+
+    .matrix-main {
+      min-width: 0;
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+
+    .heatmap {
+      overflow: auto;
+      padding: 12px;
+    }
+
+    .score-grid {
+      display: grid;
+      grid-template-columns: 190px repeat(8, 100px);
+      min-width: 990px;
+      border: 1px solid var(--line);
+      border-bottom: 0;
+      border-right: 0;
+      font-size: 12px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .score-grid div {
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      padding: 8px;
+      min-height: 36px;
+      min-width: 0;
+      background: var(--surface);
+      overflow-wrap: anywhere;
+    }
+
+    .score-grid .head {
+      background: var(--surface-2);
+      color: var(--muted);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-weight: 750;
+      word-break: normal;
+    }
+
+    .score-grid .candidate {
+      font-weight: 750;
+    }
+
+    .score-grid .s100 {
+      background: var(--green-soft);
+      color: var(--green);
+    }
+
+    .score-grid .s80 {
+      background: #e6efd9;
+      color: var(--green);
+    }
+
+    .score-grid .s50 {
+      background: var(--gold-soft);
+      color: var(--gold);
+    }
+
+    .score-grid .s0 {
+      background: var(--danger-soft);
+      color: var(--danger);
+    }
+
+    .compare-panel {
+      border-left: 1px solid var(--line);
+      background: var(--surface);
+      min-width: 0;
+    }
+
+    .idea-body {
+      min-height: 560px;
+      display: grid;
+      grid-template-columns: 300px minmax(420px, 1fr) 320px;
+    }
+
+    .idea-left {
+      border-right: 1px solid var(--line);
+      background: #26312c;
+      color: #f4f7f0;
+      padding: 14px;
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }
+
+    .idea-left .tag {
+      background: #394842;
+      color: #dbe5df;
+      border-color: #55645d;
+    }
+
+    .idea-map {
+      padding: 14px;
+      min-width: 0;
+      background: var(--surface-2);
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }
+
+    .idea-row {
+      display: grid;
+      grid-template-columns: 170px 1fr;
+      gap: 12px;
+      align-items: stretch;
+    }
+
+    .idea-label {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      padding: 10px;
+    }
+
+    .idea-cards {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .idea-card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      padding: 9px;
+      min-height: 88px;
+      display: grid;
+      gap: 5px;
+      align-content: start;
+    }
+
+    .idea-right {
+      border-left: 1px solid var(--line);
+      background: var(--surface);
+    }
+
+    .recommendation {
+      max-width: 1480px;
+      margin: 0 auto 42px;
+      padding: 0 22px;
+      scroll-margin-top: 112px;
+    }
+
+    .recommendation-inner {
+      border: 2px solid var(--ink);
+      border-radius: var(--radius);
+      background: var(--surface);
+      padding: 18px;
+      display: grid;
+      grid-template-columns: minmax(260px, 0.8fr) minmax(320px, 1.2fr);
+      gap: 14px;
+    }
+
+    .recommendation h2 {
+      font-size: 24px;
+      line-height: 1.05;
+    }
+
+    .recommendation p,
+    .recommendation li {
+      color: var(--muted);
+    }
+
+    .recommendation ul {
+      margin: 0;
+      padding-left: 18px;
+      display: grid;
+      gap: 6px;
+    }
+
+    @media (max-width: 1120px) {
+      .hero-grid,
+      .option-head,
+      .recommendation-inner {
+        grid-template-columns: 1fr;
+      }
+
+      .summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .tradeoffs {
+        grid-template-columns: 1fr;
+      }
+
+      .console-grid,
+      .trace-body,
+      .gate-body,
+      .idea-body,
+      .matrix-body,
+      .board-body,
+      .model-shell {
+        grid-template-columns: 1fr;
+        min-width: 0;
+      }
+
+      .sidebar,
+      .right-inspector,
+      .task-rail,
+      .artifact-rail,
+      .gate-rail,
+      .plane-panel,
+      .compare-panel,
+      .idea-left,
+      .idea-right {
+        border: 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .model-copy {
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .node-grid,
+      .relation-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .flow-strip {
+        grid-template-columns: 1fr;
+      }
+
+      .pipeline {
+        grid-template-columns: minmax(180px, 1fr);
+      }
+
+      .contract-summary,
+      .metric-row,
+      .dial-grid,
+      .idea-cards {
+        grid-template-columns: 1fr;
+      }
+
+      .mock,
+      .mock-body,
+      .main-work,
+      .right-inspector,
+      .trace-center,
+      .contract-panel,
+      .matrix-main,
+      .idea-map {
+        min-width: 0;
+        max-width: 100%;
+      }
+
+      .pane-content {
+        overflow-x: auto;
+      }
+
+      .contract-panel > .mock {
+        overflow-x: auto;
+      }
+
+      .data-table {
+        min-width: 620px;
+      }
+
+      .right-inspector .data-table,
+      .plane-panel .data-table,
+      .idea-right .data-table {
+        min-width: 0;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .catalog-nav {
+        align-items: flex-start;
+        flex-wrap: wrap;
+        padding: 10px 12px;
+      }
+
+      .nav-links {
+        width: 100%;
+        margin-left: 0;
+        flex-wrap: wrap;
+        overflow-x: visible;
+        padding-bottom: 2px;
+      }
+
+      .hero,
+      .summary-grid,
+      .model-band,
+      .option,
+      .recommendation {
+        padding-left: 12px;
+        padding-right: 12px;
+      }
+
+      .summary-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .node-grid,
+      .relation-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .mock-top {
+        height: auto;
+        min-height: 48px;
+        align-items: flex-start;
+        flex-direction: column;
+        padding: 10px 12px;
+      }
+
+      .trace-step {
+        grid-template-columns: 1fr;
+      }
+
+      .idea-row {
+        grid-template-columns: 1fr;
+      }
+
+      .score-grid {
+        grid-template-columns: 160px repeat(8, 96px);
+        min-width: 928px;
+      }
+    }
+
+    /* Misty Step aesthetic adoption: keep Daedalus-specific layout, inherit the
+       kit's visual law. */
+    html {
+      scroll-behavior: auto;
+    }
+
+    body {
+      background: var(--ae-surface);
+      color: var(--ae-ink);
+      font-family: var(--ae-font);
+      font-size: 16px;
+      line-height: 1.8;
+      cursor: default;
+      overflow: hidden;
+    }
+
+    .catalog-shell {
+      height: 100dvh;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .catalog-stage {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+    }
+
+    .catalog-nav {
+      position: static;
+      flex: none;
+      border-bottom-color: var(--ae-line);
+      background: var(--ae-surface);
+    }
+
+    h1,
+    h2,
+    h3,
+    .option-title h2,
+    .model-copy h2,
+    .metric b,
+    .summary-card h3,
+    .mock-brand strong,
+    .lane-card h3,
+    .research-card strong,
+    .object-node strong,
+    .flow-step strong,
+    .recommendation h2 {
+      font-size: 1em;
+      line-height: inherit;
+      font-weight: var(--ae-w-black);
+      letter-spacing: 0;
+    }
+
+    .hero-copy p,
+    .option-title p,
+    .tradeoffs p,
+    .summary-card p,
+    .summary-card li,
+    .recommendation p,
+    .recommendation li {
+      font-size: 1em;
+      color: var(--ae-ink-muted);
+    }
+
+    .nav-title small,
+    .nav-links a,
+    .fine,
+    .mono,
+    .tag,
+    .data-table,
+    .data-table th,
+    .option-title .kicker,
+    .tradeoff-block b,
+    .metric span,
+    .metric small,
+    .pane-title h3,
+    .sidebar,
+    .sidebar h3,
+    .side-list span,
+    .score-grid,
+    .score-grid .head,
+    .kicker {
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    button,
+    .button {
+      min-height: 2.2em;
+      border-radius: 0;
+      border: 1px solid var(--ae-line);
+      background: transparent;
+      color: var(--ae-ink);
+      font-weight: var(--ae-w-medium);
+      cursor: pointer;
+    }
+
+    .mock-actions button:first-child,
+    .work-toolbar button,
+    .recommendation button {
+      background: var(--ae-ink);
+      border-color: var(--ae-ink);
+      color: var(--ae-surface);
+    }
+
+    button:disabled {
+      color: var(--ae-ink-faint);
+      border-color: var(--ae-line);
+      background: transparent;
+      cursor: default;
+    }
+
+    .mock,
+    .brief-panel,
+    .summary-card,
+    .model-shell,
+    .option-title,
+    .tradeoffs,
+    .metric-box,
+    .evidence,
+    .lane-card,
+    .research-card,
+    .pipeline-col,
+    .object-node,
+    .relation,
+    .contract-card,
+    .idea-card,
+    .flow-strip,
+    .contract-panel > .mock,
+    .recommendation-inner {
+      border-radius: 0;
+      box-shadow: none;
+      border-color: var(--ae-line);
+    }
+
+    .mock,
+    .brief-panel,
+    .summary-card,
+    .model-shell,
+    .option-title,
+    .tradeoffs,
+    .metric-box,
+    .evidence,
+    .pipeline-col,
+    .contract-card,
+    .idea-card,
+    .recommendation-inner {
+      background: var(--ae-surface);
+    }
+
+    .model-copy,
+    .sidebar,
+    .idea-left {
+      background: var(--ae-wash);
+      color: var(--ae-ink);
+    }
+
+    .model-copy .kicker,
+    .model-copy .fine,
+    .sidebar h3,
+    .side-list span,
+    .idea-left .fine {
+      color: var(--ae-ink-muted);
+    }
+
+    .side-list a,
+    .side-list a.active {
+      color: var(--ae-ink);
+      background: transparent;
+      border-radius: 0;
+      padding-inline: 0;
+    }
+
+    .side-list a.active {
+      font-weight: var(--ae-w-medium);
+      color: var(--ae-accent);
+    }
+
+    .mark,
+    .mark span {
+      border-radius: 0;
+    }
+
+    .nav-links a {
+      border-radius: 0;
+      border: 0;
+      border-bottom: 1px solid transparent;
+      background: transparent;
+      color: var(--ae-ink-muted);
+      padding-inline: 0;
+    }
+
+    .nav-links a:hover {
+      color: var(--ae-ink);
+      border-bottom-color: var(--ae-ink);
+    }
+
+    .tag {
+      gap: 0.45em;
+      min-height: 0;
+      border-radius: 0;
+      background: transparent;
+      color: var(--ae-ink-muted);
+      border-color: var(--ae-line);
+      font-family: var(--ae-font-mono);
+      text-transform: none;
+      letter-spacing: 0.04em;
+    }
+
+    .tag::before {
+      color: var(--ae-accent);
+      content: "i";
+      font-weight: var(--ae-w-black);
+    }
+
+    .tag.good::before {
+      color: var(--ae-ok);
+      content: "+";
+    }
+
+    .tag.warn::before {
+      color: var(--ae-warn);
+      content: "!";
+    }
+
+    .tag.stop::before {
+      color: var(--ae-err);
+      content: "x";
+    }
+
+    .tag.good,
+    .tag.warn,
+    .tag.stop,
+    .tag.info,
+    .idea-left .tag {
+      background: transparent;
+      color: var(--ae-ink-muted);
+      border-color: var(--ae-line);
+    }
+
+    .status-dot {
+      border-radius: 0;
+      width: 0.75em;
+      height: 0.75em;
+    }
+
+    .score-grid .s100,
+    .score-grid .s80,
+    .score-grid .s50,
+    .score-grid .s0 {
+      background: var(--ae-surface);
+      color: var(--ae-ink);
+    }
+
+    .score-grid .s100::before,
+    .score-grid .s80::before,
+    .score-grid .s50::before,
+    .score-grid .s0::before {
+      margin-right: 0.35em;
+      font-weight: var(--ae-w-black);
+    }
+
+    .score-grid .s100::before,
+    .score-grid .s80::before {
+      content: "+";
+      color: var(--ae-ok);
+    }
+
+    .score-grid .s50::before {
+      content: "!";
+      color: var(--ae-warn);
+    }
+
+    .score-grid .s0::before {
+      content: "x";
+      color: var(--ae-err);
+    }
+  </style>
+</head>
+<body>
+  <div class="catalog-shell">
+    <nav class="catalog-nav" aria-label="Catalog sections">
+      <div class="mark" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+      <div class="nav-title">
+        <strong>Daedalus UI Catalog</strong>
+        <small>Visual prototype</small>
+      </div>
+      <div class="nav-links">
+        <a href="#task-model">Task model</a>
+        <a href="#console">Dossier</a>
+        <a href="#loop-board">Hypotheses</a>
+        <a href="#trace-lab">Trace lab</a>
+        <a href="#gate-room">Gate room</a>
+        <a href="#matrix">Matrix</a>
+        <a href="#recommendation">Recommendation</a>
+      </div>
+    </nav>
+
+    <main class="catalog-stage">
+    <header class="hero">
+      <div class="hero-grid">
+        <div class="hero-copy">
+          <h1>Make each task the root of the foundry.</h1>
+          <p>Daedalus needs an operator interface where every benchmark, hypothesis, candidate composition, run, trace, and launch package hangs off a task contract. This pass keeps the strongest workbench views and pivots the information architecture around bespoke agent discovery.</p>
+          <div class="tag-row" aria-label="Current program context">
+            <span class="tag info">task pr-review-correctness</span>
+            <span class="tag warn">benchmark v0.2 not ready</span>
+            <span class="tag good">gate 174 passed</span>
+            <span class="tag stop">G3 unsigned</span>
+          </div>
+        </div>
+        <aside class="brief-panel">
+          <h2>Design read</h2>
+          <p class="fine">Surface kind: task-first agent workbench. Audience: Daedalus operator shaping bespoke agents, reading evidence, and preparing plane handoffs. Desired feel: measured, serious, inspectable, low ceremony.</p>
+          <div class="dial-grid">
+            <div class="dial"><b>Variance</b><span>Medium</span></div>
+            <div class="dial"><b>Motion</b><span>Low</span></div>
+            <div class="dial"><b>Density</b><span>High</span></div>
+          </div>
+        </aside>
+      </div>
+    </header>
+
+    <section class="summary-grid" aria-label="Research summary">
+      <article class="summary-card">
+        <h3>Research pattern</h3>
+        <ul>
+          <li>Eval products foreground regression catching and failure debugging.</li>
+          <li>Experiment trackers foreground run tables, metrics, artifacts, and reproduction.</li>
+          <li>LLM observability products foreground trace trees, cost, latency, and prompt versions.</li>
+        </ul>
+      </article>
+      <article class="summary-card">
+        <h3>Product truth</h3>
+        <ul>
+          <li>The task contract is the root object.</li>
+          <li>Human gates are real and visible.</li>
+          <li>Scores cannot be averaged across arena versions.</li>
+        </ul>
+      </article>
+      <article class="summary-card">
+        <h3>Core object model</h3>
+        <ul>
+          <li>Task, benchmark, hypothesis, composition, run, trial, trace, gate, launch package.</li>
+          <li>Every screen needs a route from aggregate score to evidence.</li>
+          <li>Every launch surface needs residual risk in the same frame.</li>
+        </ul>
+      </article>
+      <article class="summary-card">
+        <h3>Catalog verdict</h3>
+        <p>Use the Console aesthetic as a Task Workbench, Matrix as the comparison core, Trace Lab as drill-down, and Gate Room as the launch boundary. Keep Loop Board for hypothesis planning.</p>
+      </article>
+    </section>
+
+    <section class="model-band" id="task-model">
+      <div class="model-shell">
+        <aside class="model-copy">
+          <div class="kicker">Task-first model</div>
+          <h2>The UI root is the task contract, not the lab.</h2>
+          <p class="fine">A task can be single-agent, such as launch-contract review, or suite-shaped, such as PR review with specialist members and a master synthesizer. The interface keeps that distinction visible without forcing the operator into separate products.</p>
+          <div class="tag-row">
+            <span class="tag good">task-owned</span>
+            <span class="tag info">evidence-routed</span>
+            <span class="tag warn">gate-aware</span>
+          </div>
+        </aside>
+        <div class="object-chain">
+          <div class="node-grid" aria-label="Task object graph">
+            <div class="object-node root">
+              <strong>Task</strong>
+              <p class="fine">Goal, domain, output schema, risk, budget, trigger, and search space.</p>
+              <span class="mono">taskspec.toml</span>
+            </div>
+            <div class="object-node">
+              <strong>Benchmark</strong>
+              <p class="fine">Arena version, fixtures, scorer, oracle/null/probe baselines, adjudications.</p>
+              <span class="mono">arena.toml</span>
+            </div>
+            <div class="object-node">
+              <strong>Hypothesis</strong>
+              <p class="fine">A proposed improvement and the slot it mutates: model, prompt, skill, tool policy, harness.</p>
+              <span class="mono">loop.json</span>
+            </div>
+            <div class="object-node">
+              <strong>Composition</strong>
+              <p class="fine">Hashed candidate package with provider, model, harness, prompt packet, tools, and skills.</p>
+              <span class="mono">manifest</span>
+            </div>
+            <div class="object-node">
+              <strong>Run</strong>
+              <p class="fine">Comparable candidate execution under one benchmark version and budget posture.</p>
+              <span class="mono">summary.json</span>
+            </div>
+            <div class="object-node">
+              <strong>Trial</strong>
+              <p class="fine">Atomic candidate-task observation with reward, cost, latency, error, and artifact pointer.</p>
+              <span class="mono">trials.jsonl</span>
+            </div>
+            <div class="object-node">
+              <strong>Trace</strong>
+              <p class="fine">Evidence path from aggregate score to transcript, output, scorer, and retained artifacts.</p>
+              <span class="mono">trace.otel.json</span>
+            </div>
+            <div class="object-node">
+              <strong>Launch package</strong>
+              <p class="fine">Promotion boundary: agent contract, persona, plane handoff, approvals, residual risk.</p>
+              <span class="mono">deliveries/</span>
+            </div>
+          </div>
+          <div class="relation-grid" aria-label="Task relationship types">
+            <div class="relation">
+              <b>Single task</b>
+              <p class="fine">One task owns one benchmark family, one search loop, and one winning composition.</p>
+            </div>
+            <div class="relation">
+              <b>Suite task</b>
+              <p class="fine">A high-level task owns member subtasks, each with its own benchmark and candidate search.</p>
+            </div>
+            <div class="relation">
+              <b>Master task</b>
+              <p class="fine">An orchestrator or synthesizer task consumes member artifacts and has its own eval story.</p>
+            </div>
+          </div>
+          <div class="flow-strip" aria-label="Primary user flows">
+            <div class="flow-step"><strong>Define</strong><p class="fine">Write the task contract and output schema.</p></div>
+            <div class="flow-step"><strong>Ground</strong><p class="fine">Build or select a benchmark that represents the task.</p></div>
+            <div class="flow-step"><strong>Search</strong><p class="fine">Explore typed composition slots under the declared mode.</p></div>
+            <div class="flow-step"><strong>Inspect</strong><p class="fine">Move from score to trial evidence before trusting a result.</p></div>
+            <div class="flow-step"><strong>Promote</strong><p class="fine">Export a launch package only through signed gates.</p></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="option" id="console">
+      <div class="option-head">
+        <div class="option-title">
+          <div class="kicker">Direction 01</div>
+          <h2>Task Dossier</h2>
+          <p>A dense task home that keeps goal, oracle, benchmark, hypotheses, candidates, runs, traces, swarm topology, and launch state in one navigable surface.</p>
+        </div>
+        <div class="tradeoffs">
+          <div class="tradeoff-block"><b>Best for</b><p>Returning to a task, seeing status, opening evidence, and deciding the next experiment.</p></div>
+          <div class="tradeoff-block"><b>Sacrifice</b><p>Less expressive for brainstorming new research hypotheses.</p></div>
+          <div class="tradeoff-block"><b>Design bet</b><p>The task thread stays visible while each downstream object becomes a tab or inspector.</p></div>
+        </div>
+      </div>
+
+      <div class="mock" role="img" aria-label="Task Dossier mockup">
+        <div class="mock-top">
+          <div class="mock-brand">
+            <strong>Daedalus</strong>
+            <span>/ tasks / pr-review-correctness</span>
+          </div>
+          <div class="mock-actions">
+            <button>Run next hypothesis</button>
+            <button>Certify candidate</button>
+            <button>Export dry run</button>
+          </div>
+        </div>
+        <div class="mock-body console-grid">
+          <aside class="sidebar">
+            <div>
+              <h3>Tasks</h3>
+              <div class="side-list">
+                <a class="active" href="#console">PR correctness <span>G2</span></a>
+                <a href="#console">PR security <span>G3</span></a>
+                <a href="#console">PR master <span>G1</span></a>
+                <a href="#console">Launch contract <span>G2</span></a>
+              </div>
+            </div>
+            <div>
+              <h3>Task views</h3>
+              <div class="side-list">
+                <a href="#console">Brief <span>goal</span></a>
+                <a href="#console">Evals <span>v0.2</span></a>
+                <a href="#console">Hypotheses <span>3</span></a>
+                <a href="#console">Candidates <span>18</span></a>
+                <a href="#console">Runs <span>31</span></a>
+                <a href="#console">Traces <span>open</span></a>
+                <a href="#console">Swarm <span>suite</span></a>
+                <a href="#console">Launch <span>G3</span></a>
+              </div>
+            </div>
+            <p class="fine">Current branch: deliver-034-review-swarm</p>
+          </aside>
+          <main class="main-work">
+            <div class="metric-row">
+              <div class="metric-box metric"><span>Oracle</span><b>Deterministic</b><small>recall minus false positives</small></div>
+              <div class="metric-box metric"><span>Latest eval</span><b>0.2.0</b><small>runtime-crash added</small></div>
+              <div class="metric-box metric"><span>Best candidate</span><b>0.5625</b><small>certified GLM child</small></div>
+              <div class="metric-box metric"><span>Launch state</span><b>Blocked</b><small>G3 unsigned</small></div>
+            </div>
+            <div class="work-toolbar">
+              <div class="tag-row">
+                <span class="tag info">current hypothesis: force caller-path search</span>
+                <span class="tag warn">holdout burned</span>
+                <span class="tag stop">not sandbox-ready</span>
+                <span class="tag good">freeze pass</span>
+              </div>
+              <button>Open selected run</button>
+            </div>
+            <div class="pane-content">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Run</th>
+                    <th>Hypothesis</th>
+                    <th>Changed slot</th>
+                    <th>Recommended</th>
+                    <th>Reward</th>
+                    <th>Cost</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="mono">20260613T214006Z</td>
+                    <td>Detect runtime crashes without clean-trap regression</td>
+                    <td>packet stance</td>
+                    <td>g1a-seed3-qwen3-7-plus-skeptic</td>
+                    <td class="value">0.5625</td>
+                    <td class="value">$1.3002</td>
+                    <td><span class="status-dot stop"></span>weak member</td>
+                  </tr>
+                  <tr>
+                    <td class="mono">20260613T213700Z</td>
+                    <td>Prove benchmark headroom before search</td>
+                    <td>arena version</td>
+                    <td>oracle/null/probe</td>
+                    <td class="value">1.0 / 0.25 / 0.0</td>
+                    <td class="value">$0.0000</td>
+                    <td><span class="status-dot good"></span>pass</td>
+                  </tr>
+                  <tr>
+                    <td class="mono">20260613T161359Z</td>
+                    <td>Spec-first packet beats generic checklist</td>
+                    <td>model + packet</td>
+                    <td>seed1-gpt-5-mini-spec-first</td>
+                    <td class="value">0.5714</td>
+                    <td class="value">$0.6253</td>
+                    <td><span class="status-dot warn"></span>obsolete arena</td>
+                  </tr>
+                  <tr>
+                    <td class="mono">20260613T153751Z</td>
+                    <td>Security member earns suite slot</td>
+                    <td>task lens</td>
+                    <td>security baseline</td>
+                    <td class="value">spread</td>
+                    <td class="value">recorded</td>
+                    <td><span class="status-dot warn"></span>promising</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </main>
+          <aside class="right-inspector">
+            <div class="pane-title">
+              <h3>Task inspector</h3>
+              <span class="tag stop">do not export</span>
+            </div>
+            <div class="pane-content evidence-list">
+              <div class="evidence">
+                <b>Goal</b>
+                <p class="fine">Find correctness defects in pull request fixtures: logic invariant breaks, runtime crashes, data loss, concurrency, and unhandled failure paths.</p>
+              </div>
+              <div class="evidence">
+                <b>Source refs</b>
+                <p class="mono">specs/pr-review-correctness/taskspec.toml<br>arenas/pr-review-correctness-v0/arena.toml<br>runs/20260613T214006Z-search-pr-review-correctness<br>deliveries/pr-review-swarm/members/correctness</p>
+              </div>
+              <div class="evidence">
+                <b>Composition</b>
+                <p class="mono">provider openrouter<br>model qwen/qwen3.7-plus<br>harness pi<br>packet seed-skeptic.md<br>tools read,bash,edit,write<br>hash 196352774b5cab55</p>
+              </div>
+              <div class="evidence">
+                <b>Swarm relation</b>
+                <p class="fine">Correctness is a required member task in the PR-review suite. Member artifacts flow to pr-review-master for synthesis after each member earns trust.</p>
+              </div>
+              <div class="evidence">
+                <b>Failure read</b>
+                <p class="fine">Certified child missed py-live-lock and was unstable on runtime-crash and clean-trap tasks.</p>
+              </div>
+              <div class="evidence">
+                <b>Next action</b>
+                <p class="fine">Targeted Qwen/GPT train and validation certification before any full-suite replay.</p>
+              </div>
+              <div class="evidence">
+                <b>Boundary</b>
+                <p class="fine">Member artifacts only before G3. No primary reviewer deployment.</p>
+              </div>
+              <div class="evidence">
+                <b>Artifacts</b>
+                <p class="mono">report.md<br>loop.json<br>trials.jsonl<br>pareto.json</p>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="option" id="loop-board">
+      <div class="option-head">
+        <div class="option-title">
+          <div class="kicker">Direction 02</div>
+          <h2>Hypothesis Board</h2>
+          <p>A task-owned planning tab where each specialist lane moves through hypothesis, freeze, search, postmortem, and export.</p>
+        </div>
+        <div class="tradeoffs">
+          <div class="tradeoff-block"><b>Best for</b><p>Planning reviewer teams and seeing the autoresearch loop as task-owned hypotheses.</p></div>
+          <div class="tradeoff-block"><b>Sacrifice</b><p>Less precise for row-by-row score inspection.</p></div>
+          <div class="tradeoff-block"><b>Design bet</b><p>Failed loops remain attached to the task and feed the next mutation.</p></div>
+        </div>
+      </div>
+
+      <div class="mock" role="img" aria-label="Research Loop Board mockup">
+        <div class="mock-top">
+          <div class="mock-brand">
+            <strong>Review-swarm research</strong>
+            <span>one reviewer lens at a time</span>
+          </div>
+          <div class="mock-actions">
+            <button>Add lane</button>
+            <button>Write hypothesis</button>
+          </div>
+        </div>
+        <div class="mock-body board-body">
+          <aside class="lane-list">
+            <div class="lane-card active">
+              <h3>Correctness</h3>
+              <div class="tag-row"><span class="tag warn">v0.2</span><span class="tag stop">weak</span></div>
+              <p class="fine">Runtime-crash coverage exists. Member quality still below bar.</p>
+            </div>
+            <div class="lane-card">
+              <h3>Security</h3>
+              <div class="tag-row"><span class="tag warn">v0.1</span><span class="tag info">promising</span></div>
+              <p class="fine">Credential exposure works better than injection stability.</p>
+            </div>
+            <div class="lane-card">
+              <h3>Verification</h3>
+              <div class="tag-row"><span class="tag">scaffold</span></div>
+              <p class="fine">Needs fixtures that reward execution-aware review.</p>
+            </div>
+            <div class="lane-card">
+              <h3>Master</h3>
+              <div class="tag-row"><span class="tag info">synthetic</span></div>
+              <p class="fine">Blocked until real member artifacts exist.</p>
+            </div>
+          </aside>
+          <main class="pipeline">
+            <section class="pipeline-col">
+              <h3>Hypothesis</h3>
+              <div class="pipeline-items">
+                <div class="research-card">
+                  <strong>Qwen skeptic repeatability</strong>
+                  <p class="fine">Can Qwen detect runtime crashes without clean-trap regressions?</p>
+                  <span class="tag info">next</span>
+                </div>
+                <div class="research-card">
+                  <strong>Live-lock tactic</strong>
+                  <p class="fine">Require caller-path search before final findings.</p>
+                  <span class="tag">draft</span>
+                </div>
+              </div>
+            </section>
+            <section class="pipeline-col">
+              <h3>Freeze</h3>
+              <div class="pipeline-items">
+                <div class="research-card">
+                  <strong>v0.2 freeze</strong>
+                  <p class="fine">Oracle 1.0, null 0.25, probe 0.0.</p>
+                  <span class="tag good">pass</span>
+                </div>
+              </div>
+            </section>
+            <section class="pipeline-col">
+              <h3>Search</h3>
+              <div class="pipeline-items">
+                <div class="research-card">
+                  <strong>Bounded v0.2</strong>
+                  <p class="fine">Certified GLM child scored 0.5625.</p>
+                  <span class="tag stop">not enough</span>
+                </div>
+                <div class="research-card">
+                  <strong>Targeted cert</strong>
+                  <p class="fine">Train and validation only. Protect burned holdout.</p>
+                  <span class="tag warn">queued</span>
+                </div>
+              </div>
+            </section>
+            <section class="pipeline-col">
+              <h3>Postmortem</h3>
+              <div class="pipeline-items">
+                <div class="research-card">
+                  <strong>v0.2 read</strong>
+                  <p class="fine">Better arena. No credible member.</p>
+                  <span class="tag good">recorded</span>
+                </div>
+              </div>
+            </section>
+            <section class="pipeline-col">
+              <h3>Export</h3>
+              <div class="pipeline-items">
+                <div class="research-card">
+                  <strong>Member artifacts</strong>
+                  <p class="fine">Sandbox inspection only until G2/G3 and replay.</p>
+                  <span class="tag stop">blocked</span>
+                </div>
+              </div>
+            </section>
+          </main>
+        </div>
+      </div>
+    </section>
+
+    <section class="option" id="trace-lab">
+      <div class="option-head">
+        <div class="option-title">
+          <div class="kicker">Direction 03</div>
+          <h2>Trace Lab</h2>
+          <p>A debugging-first task tab that starts from task misses and opens the transcript, output, scorer result, and artifact index together.</p>
+        </div>
+        <div class="tradeoffs">
+          <div class="tradeoff-block"><b>Best for</b><p>Understanding why an agent failed, then improving prompt packets or arena keys.</p></div>
+          <div class="tradeoff-block"><b>Sacrifice</b><p>Too narrow as the default landing page for the whole system.</p></div>
+          <div class="tradeoff-block"><b>Design bet</b><p>A failure is a first-class object with trace, artifact, and next mutation.</p></div>
+        </div>
+      </div>
+
+      <div class="mock" role="img" aria-label="Trace Lab mockup">
+        <div class="mock-top">
+          <div class="mock-brand">
+            <strong>Trace Lab</strong>
+            <span>g1a-seed3-qwen3-7-plus-skeptic / py-live-lock</span>
+          </div>
+          <div class="mock-actions">
+            <button>Open trial JSON</button>
+            <button>Create mutation</button>
+          </div>
+        </div>
+        <div class="mock-body trace-body">
+          <aside class="task-rail">
+            <div class="pane-title"><h3>Task grid</h3><span class="tag stop">miss</span></div>
+            <div class="task-item active">
+              <strong>py-live-lock</strong>
+              <span class="fine">0.00 reward, 2 trials</span>
+            </div>
+            <div class="task-item">
+              <strong>py-formatter-missing-crash</strong>
+              <span class="fine">0.50 reward, 2 trials</span>
+            </div>
+            <div class="task-item">
+              <strong>py-padding-clean</strong>
+              <span class="fine">0.50 reward, clean trap</span>
+            </div>
+            <div class="task-item">
+              <strong>py-measure-normalize</strong>
+              <span class="fine">1.00 reward, expensive</span>
+            </div>
+            <div class="task-item">
+              <strong>py-plugin-cache</strong>
+              <span class="fine">0.50 reward, holdout</span>
+            </div>
+          </aside>
+          <main class="trace-center">
+            <div class="pane-title">
+              <h3>Trial trace</h3>
+              <span class="mono">wall 96.9s mean</span>
+            </div>
+            <div class="trace-ladder">
+              <div class="trace-step">
+                <span class="time">00:00</span>
+                <div>
+                  <strong>Workspace copied</strong>
+                  <p class="fine">Candidate-visible environment only. Hidden tests and solution withheld.</p>
+                </div>
+                <span class="tag good">isolated</span>
+              </div>
+              <div class="trace-step">
+                <span class="time">00:14</span>
+                <div>
+                  <strong>Search narrowed to diff</strong>
+                  <p class="fine">No caller-path evidence recorded before final finding.</p>
+                </div>
+                <span class="tag warn">thin context</span>
+              </div>
+              <div class="trace-step">
+                <span class="time">01:31</span>
+                <div>
+                  <strong>Finding emitted</strong>
+                  <p class="fine">Report missed the live-lock invariant and did not match the answer key.</p>
+                </div>
+                <span class="tag stop">reward 0</span>
+              </div>
+              <div class="trace-step">
+                <span class="time">01:37</span>
+                <div>
+                  <strong>Scorer result</strong>
+                  <p class="fine">Recall 0.0. False positives 0. Matched defects empty.</p>
+                </div>
+                <span class="tag stop">miss</span>
+              </div>
+            </div>
+          </main>
+          <aside class="artifact-rail">
+            <div class="pane-title"><h3>Artifact viewer</h3><span class="tag info">finding</span></div>
+            <div class="pane-content">
+              <div class="code-block">{
+  "candidate": "g1a-seed3-qwen3-7-plus-skeptic",
+  "task": "py-live-lock",
+  "reward": 0.0,
+  "matched": [],
+  "false_positives": 0,
+  "next_mutation": "force caller-path search"
+}</div>
+              <div class="divider"></div>
+              <div class="evidence">
+                <b>Mutation seed</b>
+                <p class="fine">Before final findings, inspect call sites, documented invariants, and reachable runtime paths.</p>
+              </div>
+              <div class="evidence">
+                <b>Adjudication</b>
+                <p class="fine">No new human adjudication needed. Candidate simply missed seeded defect.</p>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="option" id="gate-room">
+      <div class="option-head">
+        <div class="option-title">
+          <div class="kicker">Direction 04</div>
+          <h2>Contract Gate Room</h2>
+          <p>A task launch tab centered on human approvals, residual risk, and downstream plane handoff.</p>
+        </div>
+        <div class="tradeoffs">
+          <div class="tradeoff-block"><b>Best for</b><p>Preparing Olympus and Bitter Blossom imports without blurring lab evidence into deployment trust.</p></div>
+          <div class="tradeoff-block"><b>Sacrifice</b><p>Too governance-heavy for early research exploration.</p></div>
+          <div class="tradeoff-block"><b>Design bet</b><p>The gate is not a modal. It is the screen.</p></div>
+        </div>
+      </div>
+
+      <div class="mock" role="img" aria-label="Contract Gate Room mockup">
+        <div class="mock-top">
+          <div class="mock-brand">
+            <strong>Launch contract</strong>
+            <span>deliveries/pr-review-swarm</span>
+          </div>
+          <div class="mock-actions">
+            <button>Dry-run packet</button>
+            <button disabled>Export to plane</button>
+          </div>
+        </div>
+        <div class="mock-body gate-body">
+          <aside class="gate-rail">
+            <div class="gate-step">
+              <strong>G1 Spec</strong>
+              <span class="fine">task family approved</span>
+              <span class="tag good">signed</span>
+            </div>
+            <div class="gate-step active">
+              <strong>G2 Eval quality</strong>
+              <span class="fine">specialist arenas pending trust</span>
+              <span class="tag warn">review</span>
+            </div>
+            <div class="gate-step">
+              <strong>G3 Launch</strong>
+              <span class="fine">no production deployment</span>
+              <span class="tag stop">unsigned</span>
+            </div>
+            <div class="gate-step">
+              <strong>G4 Write authority</strong>
+              <span class="fine">not requested</span>
+              <span class="tag stop">blocked</span>
+            </div>
+            <div class="gate-step">
+              <strong>G5 Re-ingestion</strong>
+              <span class="fine">no production data flow</span>
+              <span class="tag stop">blocked</span>
+            </div>
+          </aside>
+          <main class="contract-panel">
+            <div class="contract-summary">
+              <div class="contract-card">
+                <span class="fine">Composition</span>
+                <strong>196352774b5cab55</strong>
+                <span class="tag stop">not selected</span>
+              </div>
+              <div class="contract-card">
+                <span class="fine">Evidence</span>
+                <strong>v0.2 failed quality</strong>
+                <span class="tag warn">postmortem</span>
+              </div>
+              <div class="contract-card">
+                <span class="fine">Permission</span>
+                <strong>Sandbox only</strong>
+                <span class="tag good">read-only</span>
+              </div>
+            </div>
+            <div class="mock">
+              <div class="pane-title"><h3>Contract clauses</h3><span class="tag stop">launch blocked</span></div>
+              <table class="data-table">
+                <tbody>
+                  <tr><th>Trigger</th><td>PR open event, non-primary reviewer only</td></tr>
+                  <tr><th>Output</th><td>Structured findings, evidence, confidence, residual risk</td></tr>
+                  <tr><th>Budget</th><td>Threshold-then-cheap. Cost and wall-clock visible per run.</td></tr>
+                  <tr><th>Escalation</th><td>Human review before posting, promotion, or write authority</td></tr>
+                  <tr><th>Observability</th><td>Trace destination plus regression replay cadence</td></tr>
+                  <tr><th>Residual risk</th><td>Correctness member misses live-lock and clean traps</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </main>
+          <aside class="plane-panel">
+            <div class="pane-title"><h3>Plane handoff</h3><span class="tag info">dry run</span></div>
+            <div class="pane-content evidence-list">
+              <div class="evidence">
+                <b>Bitter Blossom</b>
+                <p class="fine">Import as sandbox review agent only. Do not post as primary reviewer.</p>
+              </div>
+              <div class="evidence">
+                <b>Olympus</b>
+                <p class="fine">AgentSpec can consume contract shape after G3. Current packet is inspection-only.</p>
+              </div>
+              <div class="evidence">
+                <b>Required before launch</b>
+                <p class="fine">G2 eval trust, G3 launch signature, real-member replay, and stable correctness member.</p>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="option" id="matrix">
+      <div class="option-head">
+        <div class="option-title">
+          <div class="kicker">Direction 05</div>
+          <h2>Experiment Matrix</h2>
+          <p>A task comparison tab where candidates are judged by task-level reward, cost, latency, certification, and failure pattern.</p>
+        </div>
+        <div class="tradeoffs">
+          <div class="tradeoff-block"><b>Best for</b><p>Choosing the next candidate mutation from measured deltas rather than vibes.</p></div>
+          <div class="tradeoff-block"><b>Sacrifice</b><p>Less useful for onboarding or explaining the full Daedalus lifecycle.</p></div>
+          <div class="tradeoff-block"><b>Design bet</b><p>The task grid is the truth. The mean score is only an entry point.</p></div>
+        </div>
+      </div>
+
+      <div class="mock" role="img" aria-label="Experiment Matrix mockup">
+        <div class="mock-top">
+          <div class="mock-brand">
+            <strong>Experiment Matrix</strong>
+            <span>runs/20260613T214006Z-search-pr-review-correctness</span>
+          </div>
+          <div class="mock-actions">
+            <button>Compare packet</button>
+            <button>Certify selected</button>
+          </div>
+        </div>
+        <div class="mock-body matrix-body">
+          <main class="matrix-main">
+            <div class="metric-row">
+              <div class="metric-box metric"><span>Pareto leader</span><b>Qwen</b><small>0.8000 mean</small></div>
+              <div class="metric-box metric"><span>Certified</span><b>GLM</b><small>0.5625 mean</small></div>
+              <div class="metric-box metric"><span>Cheapest viable</span><b>DeepSeek</b><small>$0.0052 per trial</small></div>
+              <div class="metric-box metric"><span>Hardest task</span><b>live-lock</b><small>mostly missed</small></div>
+            </div>
+            <div class="heatmap">
+              <div class="score-grid" aria-label="Candidate task score grid">
+                <div class="head">Candidate</div>
+                <div class="head">export</div>
+                <div class="head">formatter</div>
+                <div class="head">crash</div>
+                <div class="head">live-lock</div>
+                <div class="head">measure</div>
+                <div class="head">clean</div>
+                <div class="head">plugin</div>
+                <div class="head">progress</div>
+
+                <div class="candidate">seed3-qwen3.7-skeptic</div>
+                <div class="s100">1.00</div><div class="s100">1.00</div><div class="s100">1.00</div><div class="s0">0.00</div><div class="s0">0.00</div><div class="s100">1.00</div><div class="s100">1.00</div><div class="s100">1.00</div>
+
+                <div class="candidate">seed4-gpt-5-mini-checklist</div>
+                <div class="s50">0.50</div><div class="s100">1.00</div><div class="s0">0.00</div><div class="s0">0.00</div><div class="s80">0.80</div><div class="s100">1.00</div><div class="s100">1.00</div><div class="s100">1.00</div>
+
+                <div class="candidate">seed1-deepseek-v4</div>
+                <div class="s50">0.50</div><div class="s0">0.00</div><div class="s0">0.00</div><div class="s0">0.00</div><div class="s100">1.00</div><div class="s100">1.00</div><div class="s100">1.00</div><div class="s100">1.00</div>
+
+                <div class="candidate">g1a-qwen-skeptic-on-glm</div>
+                <div class="s50">0.50</div><div class="s100">1.00</div><div class="s50">0.50</div><div class="s0">0.00</div><div class="s100">1.00</div><div class="s50">0.50</div><div class="s50">0.50</div><div class="s50">0.50</div>
+              </div>
+            </div>
+          </main>
+          <aside class="compare-panel">
+            <div class="pane-title"><h3>Candidate read</h3><span class="tag warn">choose next</span></div>
+            <div class="pane-content evidence-list">
+              <div class="evidence">
+                <b>Why Qwen matters</b>
+                <p class="fine">Best task coverage and found new runtime-crash fixture, but not certified across all search tasks.</p>
+              </div>
+              <div class="evidence">
+                <b>Why GLM fails</b>
+                <p class="fine">Certification exists, but quality regressed from Qwen and clean-trap behavior is unstable.</p>
+              </div>
+              <div class="evidence">
+                <b>Next experiment</b>
+                <p class="fine">Certify Qwen and GPT on train and validation only. Rotate holdout before final search.</p>
+              </div>
+              <table class="data-table">
+                <tbody>
+                  <tr><th>Cost leader</th><td>DeepSeek at $0.0052 per trial</td></tr>
+                  <tr><th>Quality leader</th><td>Qwen at 0.8000 mean</td></tr>
+                  <tr><th>Certified</th><td>GLM child only</td></tr>
+                  <tr><th>Risk</th><td>Holdout burned</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="option" id="idea-map">
+      <div class="option-head">
+        <div class="option-title">
+          <div class="kicker">Supplement</div>
+          <h2>Pre-G1 Idea Map</h2>
+          <p>A lower-density shaping surface for draft tasks and reviewer lanes before they become signed specs and arenas.</p>
+        </div>
+        <div class="tradeoffs">
+          <div class="tradeoff-block"><b>Best for</b><p>Exploring specialist teams before they become specs and arenas.</p></div>
+          <div class="tradeoff-block"><b>Sacrifice</b><p>Not enough precision for completed run analysis.</p></div>
+          <div class="tradeoff-block"><b>Design bet</b><p>Separate raw ideas from measured evidence so speculation never looks certified.</p></div>
+        </div>
+      </div>
+
+      <div class="mock" role="img" aria-label="Idea Map mockup">
+        <div class="mock-top">
+          <div class="mock-brand">
+            <strong>Reviewer Team Map</strong>
+            <span>draft lanes before G1</span>
+          </div>
+          <div class="mock-actions">
+            <button>Create task spec</button>
+            <button>Add negative example</button>
+          </div>
+        </div>
+        <div class="mock-body idea-body">
+          <aside class="idea-left">
+            <h3>Design constraints</h3>
+            <p class="fine">Each lane earns an arena, scorer story, risk boundary, and promotion rule before entering the suite.</p>
+            <div class="tag-row">
+              <span class="tag">task-specific</span>
+              <span class="tag">human-gated</span>
+              <span class="tag">evidence-first</span>
+            </div>
+          </aside>
+          <main class="idea-map">
+            <div class="idea-row">
+              <div class="idea-label">
+                <strong>Correctness</strong>
+                <p class="fine">Logic invariants and runtime crashes.</p>
+              </div>
+              <div class="idea-cards">
+                <div class="idea-card"><strong>Caller-path defects</strong><span class="fine">Out-of-diff behavior.</span></div>
+                <div class="idea-card"><strong>Runtime crash</strong><span class="fine">Normal-input failure.</span></div>
+                <div class="idea-card"><strong>Clean traps</strong><span class="fine">False-positive discipline.</span></div>
+              </div>
+            </div>
+            <div class="idea-row">
+              <div class="idea-label">
+                <strong>Security</strong>
+                <p class="fine">Exploitability and data exposure.</p>
+              </div>
+              <div class="idea-cards">
+                <div class="idea-card"><strong>Credential leak</strong><span class="fine">Secret persistence.</span></div>
+                <div class="idea-card"><strong>Injection</strong><span class="fine">Untrusted data path.</span></div>
+                <div class="idea-card"><strong>Authz bypass</strong><span class="fine">Caller privilege boundary.</span></div>
+              </div>
+            </div>
+            <div class="idea-row">
+              <div class="idea-label">
+                <strong>Verification</strong>
+                <p class="fine">Reviewers that run the right proof.</p>
+              </div>
+              <div class="idea-cards">
+                <div class="idea-card"><strong>Test honesty</strong><span class="fine">Does not praise weak gates.</span></div>
+                <div class="idea-card"><strong>Execution path</strong><span class="fine">Uses project commands.</span></div>
+                <div class="idea-card"><strong>Evidence quality</strong><span class="fine">Findings cite proof.</span></div>
+              </div>
+            </div>
+          </main>
+          <aside class="idea-right">
+            <div class="pane-title"><h3>Promote lane when</h3><span class="tag info">G1</span></div>
+            <div class="pane-content evidence-list">
+              <div class="evidence"><b>Goal</b><p class="fine">One sentence job and output contract.</p></div>
+              <div class="evidence"><b>Oracle</b><p class="fine">Deterministic scorer or calibrated judge story.</p></div>
+              <div class="evidence"><b>Negative examples</b><p class="fine">What the lane must not reward.</p></div>
+              <div class="evidence"><b>Budget posture</b><p class="fine">Max-quality, threshold-then-cheap, or Pareto.</p></div>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="recommendation" id="recommendation">
+      <div class="recommendation-inner">
+        <div>
+          <div class="kicker">Recommendation</div>
+          <h2>Build a Task Dossier shell with Matrix, Trace, Hypothesis, Swarm, and Launch tabs.</h2>
+        </div>
+        <div>
+          <ul>
+            <li>Default screen: Task Dossier, because Daedalus is task-first and every downstream object needs the task thread.</li>
+            <li>Primary work tab: Experiment Matrix, because task-level score grids prevent mean-score overclaiming.</li>
+            <li>Deep inspection: Trace Lab, because every failed trial needs a path from score to artifact.</li>
+            <li>Launch handoff: Gate Room, because human approvals and plane boundaries are product truth.</li>
+            <li>Planning surface: Hypothesis Board, because task research needs visible hypotheses and postmortems.</li>
+            <li>Pre-G1 shaping: Idea Map, because raw reviewer-lane speculation belongs outside measured evidence.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,260 @@
+:root {
+  --ae-accent: #315f8d;
+  --ae-accent-dark: #9eb9d7;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--ae-surface);
+  color: var(--ae-ink);
+  font: 16px/1.8 var(--ae-font);
+  letter-spacing: 0;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  min-height: 32px;
+  border: 1px solid var(--ae-line);
+  border-radius: 0;
+  background: var(--ae-surface);
+  color: var(--ae-ink);
+  padding: 0 10px;
+  font-weight: 550;
+}
+
+button.is-active,
+button.primary {
+  background: var(--ae-ink);
+  border-color: var(--ae-ink);
+  color: var(--ae-surface);
+}
+
+button:focus-visible,
+input:focus-visible,
+iframe:focus-visible {
+  outline: 2px solid var(--ae-accent);
+  outline-offset: 2px;
+}
+
+.lab-shell {
+  height: 100dvh;
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  grid-template-rows: 58px minmax(0, 1fr);
+}
+
+.lab-top {
+  grid-column: 1 / -1;
+  border-bottom: 1px solid var(--ae-line);
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 0 16px;
+  min-width: 0;
+}
+
+.lab-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 258px;
+}
+
+.lab-brand span:last-child {
+  display: grid;
+  line-height: 1.1;
+}
+
+.lab-brand small,
+.scale-readout,
+.registry-head span,
+.registry-notes p,
+.option-button small,
+.viewport-controls label {
+  font-size: 13px;
+  color: var(--ae-ink-muted);
+  font-weight: 400;
+}
+
+.lab-mark {
+  width: 34px;
+  height: 34px;
+  border: 2px solid var(--ae-ink);
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 3px;
+  padding: 4px;
+}
+
+.lab-mark i {
+  display: block;
+  background: var(--ae-ink);
+}
+
+.viewport-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  overflow-x: auto;
+  padding: 6px 0;
+}
+
+.viewport-controls input {
+  width: 64px;
+  min-height: 32px;
+  border: 1px solid var(--ae-line);
+  border-radius: 0;
+  background: var(--ae-surface);
+  color: var(--ae-ink);
+  padding: 0 8px;
+  font-family: var(--ae-font-mono);
+}
+
+.scale-readout {
+  margin-left: auto;
+  white-space: nowrap;
+  font-family: var(--ae-font-mono);
+}
+
+.registry {
+  border-right: 1px solid var(--ae-line);
+  background: var(--ae-wash);
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+.registry-head,
+.registry-notes {
+  padding: 16px;
+  border-bottom: 1px solid var(--ae-line);
+  display: grid;
+  gap: 4px;
+}
+
+.registry-notes {
+  border-top: 1px solid var(--ae-line);
+  border-bottom: 0;
+}
+
+.registry-notes p {
+  margin: 0;
+}
+
+.option-list {
+  overflow: auto;
+  min-height: 0;
+}
+
+.option-button {
+  width: 100%;
+  min-height: 76px;
+  border: 0;
+  border-bottom: 1px solid var(--ae-line);
+  background: transparent;
+  color: var(--ae-ink);
+  text-align: left;
+  display: grid;
+  align-content: center;
+  gap: 2px;
+  padding: 12px 16px;
+}
+
+.option-button b {
+  font-weight: 800;
+}
+
+.option-button small {
+  display: block;
+}
+
+.option-button[aria-current="true"] {
+  background: var(--ae-surface);
+  color: var(--ae-ink);
+}
+
+.preview-area {
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--ae-wash);
+  position: relative;
+  padding: 18px;
+}
+
+.preview-frame {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform-origin: center center;
+  background: var(--ae-surface);
+  border: 1px solid var(--ae-line);
+}
+
+iframe {
+  display: block;
+  width: 1440px;
+  height: 900px;
+  border: 0;
+  background: var(--ae-surface);
+}
+
+@media (max-width: 860px) {
+  .lab-shell {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 178px minmax(0, 1fr);
+  }
+
+  .lab-top {
+    flex-wrap: wrap;
+    height: auto;
+    padding: 10px 12px;
+  }
+
+  .lab-brand {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .viewport-controls {
+    flex-wrap: wrap;
+    overflow-x: visible;
+  }
+
+  .registry {
+    border-right: 0;
+    border-bottom: 1px solid var(--ae-line);
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  .registry-notes {
+    display: none;
+  }
+
+  .option-list {
+    display: flex;
+    overflow-x: auto;
+  }
+
+  .option-button {
+    min-width: 220px;
+    border-right: 1px solid var(--ae-line);
+  }
+
+  .preview-area {
+    padding: 10px;
+  }
+}

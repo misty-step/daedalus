@@ -1,0 +1,1870 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>DAEDALUS · SHEET 1 · pr-review-correctness · REV g1</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #f6f8fb;
+        --grid: #e3e8ef;
+        --grid-major: #d6dde7;
+        --ink: #16202e;
+        --dim: #5b6b80;
+        --wire: #aebacb;
+        --node: #ffffff;
+        --live: #1f6dff;
+        --red: #e5484d;
+        --ok: #2f9e6f;
+        --warn: #c08a2e;
+        --err: #e5484d;
+        --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", monospace;
+        --sans: "IBM Plex Sans", system-ui, sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: var(--sans);
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+      }
+
+      /* ============ THE SHEET ============ */
+      .sheet {
+        position: relative;
+        width: 1440px;
+        height: 900px;
+        margin: 0 auto;
+        background: var(--bg);
+        /* faint blueprint grid: fine 24px + major 120px */
+        background-image: linear-gradient(var(--grid) 1px, transparent 1px),
+          linear-gradient(90deg, var(--grid) 1px, transparent 1px),
+          linear-gradient(var(--grid-major) 1px, transparent 1px),
+          linear-gradient(90deg, var(--grid-major) 1px, transparent 1px);
+        background-size: 24px 24px, 24px 24px, 120px 120px, 120px 120px;
+        background-position: -1px -1px, -1px -1px, -1px -1px, -1px -1px;
+        overflow: hidden;
+      }
+
+      /* outer drafting border + tick frame */
+      .sheet::before {
+        content: "";
+        position: absolute;
+        inset: 14px;
+        border: 1.5px solid var(--ink);
+        pointer-events: none;
+      }
+      .sheet::after {
+        content: "";
+        position: absolute;
+        inset: 20px;
+        border: 1px solid var(--wire);
+        pointer-events: none;
+      }
+
+      /* drafting frame tick marks on the border */
+      .frame-ticks {
+        position: absolute;
+        inset: 14px;
+        pointer-events: none;
+        z-index: 1;
+      }
+      .frame-ticks line {
+        stroke: var(--ink);
+        stroke-width: 1;
+      }
+
+      /* ============ TYPE PRIMITIVES ============ */
+      .lbl {
+        font-family: var(--mono);
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        font-size: 10px;
+        line-height: 1.2;
+        color: var(--dim);
+        font-weight: 500;
+      }
+      .lbl-ink {
+        color: var(--ink);
+      }
+      .dim-lbl {
+        font-family: var(--mono);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-size: 8.5px;
+        color: var(--dim);
+        font-weight: 400;
+      }
+      .num {
+        font-family: var(--mono);
+        font-variant-numeric: tabular-nums;
+        letter-spacing: 0.01em;
+      }
+
+      /* ============ CONTENT LAYERS ============ */
+      .layer {
+        position: absolute;
+        inset: 20px;
+        z-index: 2;
+      }
+      .wires {
+        position: absolute;
+        inset: 0;
+        width: 1400px;
+        height: 860px;
+        pointer-events: none;
+        z-index: 2;
+        overflow: visible;
+      }
+
+      /* ============ TITLE BLOCK (bottom-right, real drawing block) ============ */
+      .titleblock {
+        position: absolute;
+        right: 20px;
+        bottom: 20px;
+        width: 420px;
+        background: var(--node);
+        border: 1.5px solid var(--ink);
+        z-index: 6;
+        font-family: var(--mono);
+      }
+      .tb-row {
+        display: grid;
+        border-bottom: 1px solid var(--wire);
+      }
+      .tb-row:last-child {
+        border-bottom: none;
+      }
+      .tb-cell {
+        padding: 5px 9px;
+        border-right: 1px solid var(--wire);
+        min-width: 0;
+      }
+      .tb-cell:last-child {
+        border-right: none;
+      }
+      .tb-k {
+        font-size: 7.5px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--dim);
+        margin-bottom: 2px;
+      }
+      .tb-v {
+        font-size: 11px;
+        letter-spacing: 0.03em;
+        color: var(--ink);
+        font-weight: 500;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .tb-title {
+        background: var(--ink);
+        color: var(--bg);
+        padding: 7px 9px;
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+      }
+      .tb-title .t-main {
+        font-size: 11px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        font-weight: 600;
+      }
+      .tb-title .t-sub {
+        font-size: 8px;
+        letter-spacing: 0.1em;
+        color: var(--wire);
+      }
+
+      /* ============ SHEET HEADER STRIP ============ */
+      .sheet-head {
+        position: absolute;
+        left: 20px;
+        top: 20px;
+        right: 20px;
+        height: 38px;
+        border-bottom: 1px solid var(--wire);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 16px;
+        z-index: 5;
+        background: linear-gradient(var(--bg), var(--bg));
+      }
+      .sh-left {
+        display: flex;
+        align-items: baseline;
+        gap: 14px;
+      }
+      .sh-mark {
+        font-family: var(--mono);
+        font-weight: 600;
+        letter-spacing: 0.26em;
+        font-size: 13px;
+        color: var(--ink);
+      }
+      .sh-sub {
+        font-family: var(--mono);
+        font-size: 9px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--dim);
+      }
+      .sh-right {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+      }
+      .sh-tag {
+        font-family: var(--mono);
+        font-size: 9px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--dim);
+      }
+      .sh-tag b {
+        color: var(--ink);
+        font-weight: 600;
+      }
+      .live-dot {
+        display: inline-block;
+        width: 6px;
+        height: 6px;
+        background: var(--live);
+        border-radius: 50%;
+        margin-right: 5px;
+        box-shadow: 0 0 0 3px rgba(31, 109, 255, 0.16);
+        vertical-align: middle;
+      }
+
+      /* ============ ZONE TAGS (drawing region labels) ============ */
+      .zone-tag {
+        position: absolute;
+        font-family: var(--mono);
+        font-size: 9px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--dim);
+        z-index: 4;
+      }
+      .zone-tag b {
+        color: var(--ink);
+        font-weight: 600;
+      }
+      .zone-tag::before {
+        content: "";
+        display: inline-block;
+        width: 18px;
+        border-top: 1px solid var(--wire);
+        vertical-align: middle;
+        margin-right: 7px;
+      }
+
+      /* ============ PIPELINE NODES ============ */
+      .pnode {
+        position: absolute;
+        background: var(--node);
+        border: 1.25px solid var(--ink);
+        z-index: 4;
+      }
+      .pnode .pn-head {
+        font-family: var(--mono);
+        font-size: 8px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--dim);
+        padding: 4px 8px 0;
+        display: flex;
+        justify-content: space-between;
+      }
+      .pnode .pn-title {
+        font-family: var(--mono);
+        font-size: 12px;
+        letter-spacing: 0.04em;
+        font-weight: 600;
+        color: var(--ink);
+        padding: 1px 8px 0;
+        font-variant: small-caps;
+      }
+      .pnode .pn-meta {
+        font-family: var(--mono);
+        font-size: 8.5px;
+        letter-spacing: 0.04em;
+        color: var(--dim);
+        padding: 1px 8px 6px;
+        font-variant-numeric: tabular-nums;
+      }
+      /* current/live stage */
+      .pnode.is-live {
+        border-color: var(--live);
+        border-width: 1.5px;
+        box-shadow: 0 0 0 3px rgba(31, 109, 255, 0.1);
+      }
+      .pnode.is-live .pn-head,
+      .pnode.is-live .pn-title {
+        color: var(--live);
+      }
+      .pnode.is-live .pn-head .pn-idx {
+        color: var(--live);
+      }
+      /* locked downstream stage */
+      .pnode.is-locked {
+        border-color: var(--wire);
+        border-style: dashed;
+        background: rgba(255, 255, 255, 0.55);
+      }
+      .pnode.is-locked .pn-title {
+        color: var(--dim);
+      }
+      .pn-idx {
+        color: var(--dim);
+        font-weight: 600;
+      }
+
+      /* gates inside the GATES node */
+      .gates-strip {
+        display: flex;
+        gap: 5px;
+        padding: 4px 8px 7px;
+      }
+      .gate {
+        flex: 1;
+        text-align: center;
+        border: 1px solid var(--wire);
+        padding: 4px 0 3px;
+        background: var(--bg);
+      }
+      .gate .g-id {
+        font-family: var(--mono);
+        font-size: 9px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        color: var(--ink);
+      }
+      .gate .g-st {
+        font-family: var(--mono);
+        font-size: 11px;
+        line-height: 1;
+        margin-top: 2px;
+      }
+      .gate.g-ok {
+        border-color: var(--ok);
+      }
+      .gate.g-ok .g-st {
+        color: var(--ok);
+      }
+      .gate.g-pending {
+        border-color: var(--warn);
+      }
+      .gate.g-pending .g-id {
+        color: var(--warn);
+      }
+      .gate.g-pending .g-st {
+        color: var(--warn);
+      }
+      .gate.g-locked {
+        border-style: dashed;
+      }
+      .gate.g-locked .g-id,
+      .gate.g-locked .g-st {
+        color: var(--dim);
+        opacity: 0.7;
+      }
+
+      /* ============ CANDIDATE CHIPS (wired into SEARCH) ============ */
+      .chip {
+        position: absolute;
+        width: 150px;
+        background: var(--node);
+        border: 1px solid var(--wire);
+        z-index: 4;
+        padding: 4px 7px 5px;
+      }
+      .chip .c-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+      }
+      .chip .c-name {
+        font-family: var(--mono);
+        font-size: 9.5px;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+        color: var(--ink);
+      }
+      .chip .c-reward {
+        font-family: var(--mono);
+        font-size: 13px;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+        color: var(--ink);
+        line-height: 1;
+      }
+      .chip .c-meta {
+        font-family: var(--mono);
+        font-size: 7.5px;
+        letter-spacing: 0.03em;
+        color: var(--dim);
+        margin-top: 2px;
+        font-variant-numeric: tabular-nums;
+      }
+      .chip .c-tag {
+        font-family: var(--mono);
+        font-size: 7px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        margin-top: 3px;
+        font-weight: 500;
+      }
+      .chip.is-chosen {
+        border-color: var(--live);
+        border-width: 1.5px;
+        box-shadow: 0 0 0 2.5px rgba(31, 109, 255, 0.1);
+      }
+      .chip.is-chosen .c-name,
+      .chip.is-chosen .c-reward {
+        color: var(--live);
+      }
+      .chip.is-dominated {
+        background: rgba(229, 72, 77, 0.03);
+        border-color: rgba(229, 72, 77, 0.4);
+        border-style: dashed;
+      }
+      .tag-ok {
+        color: var(--ok);
+      }
+      .tag-warn {
+        color: var(--warn);
+      }
+      .tag-err {
+        color: var(--err);
+      }
+      .tag-dim {
+        color: var(--dim);
+      }
+      .tag-live {
+        color: var(--live);
+      }
+
+      /* small bar of cert state */
+      .cert-pill {
+        display: inline-block;
+        font-family: var(--mono);
+        font-size: 7px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        padding: 1px 4px;
+        border: 1px solid currentColor;
+        line-height: 1.3;
+      }
+
+      /* ============ INSTRUMENT PANELS ============ */
+      .panel {
+        position: absolute;
+        background: var(--node);
+        border: 1.25px solid var(--ink);
+        z-index: 4;
+      }
+      .panel-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        border-bottom: 1px solid var(--wire);
+        padding: 6px 10px 5px;
+      }
+      .panel-head .ph-title {
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        font-weight: 600;
+        color: var(--ink);
+      }
+      .panel-head .ph-sub {
+        font-family: var(--mono);
+        font-size: 8px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--dim);
+      }
+
+      /* ============ COVERAGE TRUTH TABLE ============ */
+      table.truth {
+        border-collapse: collapse;
+        width: 100%;
+        font-family: var(--mono);
+      }
+      table.truth th,
+      table.truth td {
+        border: 1px solid var(--grid-major);
+        padding: 0;
+        text-align: center;
+        height: 18px;
+      }
+      table.truth thead th {
+        font-size: 7.5px;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--dim);
+        font-weight: 600;
+        background: var(--bg);
+        height: 22px;
+      }
+      table.truth td.task,
+      table.truth th.task {
+        text-align: left;
+        padding-left: 8px;
+        font-size: 8.5px;
+        letter-spacing: 0.02em;
+        color: var(--ink);
+        white-space: nowrap;
+        width: 200px;
+      }
+      table.truth td.task .t-split {
+        color: var(--dim);
+        font-size: 7px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      table.truth td.cell {
+        font-size: 9px;
+        font-variant-numeric: tabular-nums;
+        position: relative;
+        color: var(--ink);
+      }
+      /* pass/partial/miss tinting */
+      td.cell.pass {
+        background: rgba(47, 158, 111, 0.1);
+        color: #1f6e4d;
+        font-weight: 600;
+      }
+      td.cell.partial {
+        background: rgba(192, 138, 46, 0.12);
+        color: #8a6212;
+      }
+      td.cell.miss {
+        background: rgba(229, 72, 77, 0.12);
+        color: #b32d31;
+        font-weight: 600;
+      }
+      td.cell.zero {
+        background: rgba(229, 72, 77, 0.18);
+        color: #b32d31;
+        font-weight: 600;
+      }
+      /* oracle / null reference columns dimmed */
+      td.cell.ref {
+        color: var(--dim);
+        background: repeating-linear-gradient(
+          45deg,
+          transparent,
+          transparent 3px,
+          rgba(174, 186, 203, 0.13) 3px,
+          rgba(174, 186, 203, 0.13) 4px
+        );
+      }
+      /* chosen candidate column highlight */
+      table.truth col.chosen + col {
+        background: rgba(31, 109, 255, 0.04);
+      }
+      th.chosen-h {
+        color: var(--live) !important;
+        position: relative;
+      }
+      td.cell.chosen-c {
+        box-shadow: inset 1.5px 0 0 rgba(31, 109, 255, 0.45),
+          inset -1.5px 0 0 rgba(31, 109, 255, 0.45);
+      }
+      tr.means td {
+        border-top: 1.5px solid var(--ink);
+        background: var(--bg);
+        font-weight: 600;
+        height: 21px;
+      }
+      tr.means td.cell {
+        font-size: 10px;
+        color: var(--ink);
+      }
+      tr.means td.task {
+        font-size: 8px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--dim);
+      }
+      .uncov-flag {
+        position: absolute;
+        right: -2px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 4px;
+        height: 4px;
+        background: var(--red);
+      }
+
+      /* ============ CALLOUTS (leader-line annotations) ============ */
+      .callout {
+        position: absolute;
+        z-index: 7;
+        font-family: var(--mono);
+        max-width: 200px;
+      }
+      .callout .co-tab {
+        display: inline-block;
+        background: var(--node);
+        border: 1px solid var(--red);
+        border-left-width: 3px;
+        padding: 4px 7px;
+      }
+      .callout .co-k {
+        font-size: 8px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--red);
+        font-weight: 600;
+        display: block;
+        margin-bottom: 1px;
+      }
+      .callout .co-v {
+        font-size: 8.5px;
+        letter-spacing: 0.02em;
+        color: var(--ink);
+        line-height: 1.35;
+        display: block;
+      }
+      .callout.co-live .co-tab {
+        border-color: var(--live);
+      }
+      .callout.co-live .co-k {
+        color: var(--live);
+      }
+      .callout.co-neutral .co-tab {
+        border-color: var(--ink);
+      }
+      .callout.co-neutral .co-k {
+        color: var(--ink);
+      }
+
+      /* ============ THE READ (annotated synthesis) ============ */
+      .read {
+        position: absolute;
+        z-index: 6;
+        background: var(--node);
+        border: 1.5px solid var(--ink);
+        border-top-width: 4px;
+        border-top-color: var(--live);
+      }
+      .read-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        padding: 7px 11px 5px;
+        border-bottom: 1px solid var(--wire);
+      }
+      .read-head .rh-t {
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        font-weight: 600;
+        color: var(--ink);
+      }
+      .read-head .rh-s {
+        font-family: var(--mono);
+        font-size: 8px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--live);
+      }
+      .read-body {
+        padding: 9px 11px 10px;
+      }
+      .read-body p {
+        margin: 0 0 7px;
+        font-family: var(--sans);
+        font-size: 11px;
+        line-height: 1.5;
+        color: var(--ink);
+      }
+      .read-body p:last-child {
+        margin-bottom: 0;
+      }
+      .read-body .em {
+        font-family: var(--mono);
+        font-size: 10px;
+        font-weight: 600;
+        color: var(--ink);
+        font-variant-numeric: tabular-nums;
+      }
+      .read-body .em-live {
+        color: var(--live);
+      }
+      .read-body .em-red {
+        color: var(--red);
+      }
+      .read-next {
+        border-top: 1px dashed var(--wire);
+        padding: 8px 11px 9px;
+        display: flex;
+        gap: 9px;
+        align-items: flex-start;
+      }
+      .read-next .nx-k {
+        font-family: var(--mono);
+        font-size: 8px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        font-weight: 600;
+        color: var(--live);
+        white-space: nowrap;
+        padding-top: 1px;
+      }
+      .read-next .nx-v {
+        font-family: var(--sans);
+        font-size: 10.5px;
+        line-height: 1.45;
+        color: var(--ink);
+      }
+      .read-next .nx-v .mono {
+        font-family: var(--mono);
+        font-weight: 600;
+      }
+
+      /* ============ HEADROOM RAIL ============ */
+      .headroom {
+        position: absolute;
+        z-index: 4;
+        background: var(--node);
+        border: 1.25px solid var(--ink);
+        padding: 8px 11px 10px;
+      }
+      .hr-title {
+        font-family: var(--mono);
+        font-size: 9px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        font-weight: 600;
+        color: var(--ink);
+        margin-bottom: 9px;
+        display: flex;
+        justify-content: space-between;
+      }
+      .hr-title .hr-gap {
+        color: var(--ok);
+      }
+      .hr-scale {
+        position: relative;
+        height: 30px;
+      }
+      .hr-track {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 12px;
+        height: 0;
+        border-top: 1.5px solid var(--ink);
+      }
+      .hr-mark {
+        position: absolute;
+        top: 6px;
+        width: 0;
+        border-left: 1px solid var(--ink);
+        height: 12px;
+      }
+      .hr-mark.tick {
+        top: 9px;
+        height: 6px;
+        border-left: 1px solid var(--wire);
+      }
+      .hr-mark .hm-v {
+        position: absolute;
+        top: -14px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-family: var(--mono);
+        font-size: 8.5px;
+        font-variant-numeric: tabular-nums;
+        color: var(--ink);
+        font-weight: 600;
+        white-space: nowrap;
+      }
+      .hr-mark .hm-k {
+        position: absolute;
+        top: 16px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-family: var(--mono);
+        font-size: 7px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--dim);
+        white-space: nowrap;
+      }
+      .hr-mark.live .hm-v {
+        color: var(--live);
+      }
+      .hr-mark.live {
+        border-color: var(--live);
+        border-left-width: 1.5px;
+      }
+      .hr-span {
+        position: absolute;
+        top: 12px;
+        height: 5px;
+        background: repeating-linear-gradient(
+          90deg,
+          rgba(31, 109, 255, 0.5) 0 4px,
+          transparent 4px 7px
+        );
+      }
+
+      /* ============ SCATTER PLOT INSTRUMENT ============ */
+      .scatter-wrap {
+        position: absolute;
+        inset: 0;
+      }
+      text.axis-lbl {
+        font-family: var(--mono);
+        font-size: 8px;
+        letter-spacing: 0.06em;
+        fill: var(--dim);
+        text-transform: uppercase;
+      }
+      text.axis-title {
+        font-family: var(--mono);
+        font-size: 8.5px;
+        letter-spacing: 0.16em;
+        fill: var(--ink);
+        text-transform: uppercase;
+        font-weight: 600;
+      }
+      text.tick-num {
+        font-family: var(--mono);
+        font-size: 8px;
+        fill: var(--dim);
+      }
+      text.pt-lbl {
+        font-family: var(--mono);
+        font-size: 8px;
+        fill: var(--ink);
+        letter-spacing: 0.01em;
+      }
+      text.pt-val {
+        font-family: var(--mono);
+        font-size: 9px;
+        font-weight: 600;
+        fill: var(--ink);
+      }
+
+      .corner-cut {
+        position: absolute;
+        width: 9px;
+        height: 9px;
+        border: 1px solid var(--ink);
+        background: var(--node);
+        z-index: 5;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="sheet">
+      <!-- ====== DRAFTING FRAME TICKS ====== -->
+      <svg class="frame-ticks" viewBox="0 0 1412 872" preserveAspectRatio="none">
+        <!-- top + bottom edge ticks every ~70px -->
+        <g>
+          <!-- generated tick marks: column rulers A..T along top, numbers along side -->
+        </g>
+      </svg>
+
+      <!-- ====== SHEET HEADER ====== -->
+      <div class="sheet-head">
+        <div class="sh-left">
+          <span class="sh-mark">DAEDALUS</span>
+          <span class="sh-sub">agent foundry · systems sheet</span>
+        </div>
+        <div class="sh-right">
+          <span class="sh-tag">arena <b>v0.2.0</b></span>
+          <span class="sh-tag">round <b>g1</b></span>
+          <span class="sh-tag">n=<b>10</b>/seed</span>
+          <span class="sh-tag"
+            ><span class="live-dot"></span>stage <b>SEARCH</b></span
+          >
+        </div>
+      </div>
+
+      <!-- ====== WIRE LAYER (orthogonal routing, SVG) ====== -->
+      <svg class="wires" viewBox="0 0 1400 860">
+        <defs>
+          <marker
+            id="dot"
+            markerWidth="6"
+            markerHeight="6"
+            refX="3"
+            refY="3"
+            markerUnits="userSpaceOnUse"
+          >
+            <circle cx="3" cy="3" r="2.4" fill="#16202e" />
+          </marker>
+          <marker
+            id="dot-live"
+            markerWidth="6"
+            markerHeight="6"
+            refX="3"
+            refY="3"
+            markerUnits="userSpaceOnUse"
+          >
+            <circle cx="3" cy="3" r="2.4" fill="#1f6dff" />
+          </marker>
+          <marker
+            id="dot-open"
+            markerWidth="7"
+            markerHeight="7"
+            refX="3.5"
+            refY="3.5"
+            markerUnits="userSpaceOnUse"
+          >
+            <circle
+              cx="3.5"
+              cy="3.5"
+              r="2.6"
+              fill="#ffffff"
+              stroke="#aebacb"
+              stroke-width="1"
+            />
+          </marker>
+          <marker
+            id="arr"
+            markerWidth="9"
+            markerHeight="9"
+            refX="6"
+            refY="4.5"
+            orient="auto"
+            markerUnits="userSpaceOnUse"
+          >
+            <path d="M1,1 L7,4.5 L1,8" fill="none" stroke="#16202e" stroke-width="1.2" />
+          </marker>
+          <marker
+            id="arr-live"
+            markerWidth="9"
+            markerHeight="9"
+            refX="6"
+            refY="4.5"
+            orient="auto"
+            markerUnits="userSpaceOnUse"
+          >
+            <path d="M1,1 L7,4.5 L1,8" fill="none" stroke="#1f6dff" stroke-width="1.4" />
+          </marker>
+          <marker
+            id="arr-lock"
+            markerWidth="9"
+            markerHeight="9"
+            refX="6"
+            refY="4.5"
+            orient="auto"
+            markerUnits="userSpaceOnUse"
+          >
+            <path d="M1,1 L7,4.5 L1,8" fill="none" stroke="#aebacb" stroke-width="1.2" />
+          </marker>
+        </defs>
+
+        <!-- ===== PIPELINE SPINE: TASK → ARENA → SEARCH → GATES → LAUNCH ===== -->
+        <!-- node band centered at y≈92 (within the 20px layer offset) -->
+        <!-- TASK(40..186) -> ARENA(214..368) -->
+        <path
+          d="M186,92 H214"
+          fill="none"
+          stroke="#16202e"
+          stroke-width="1.5"
+          marker-start="url(#dot)"
+          marker-end="url(#arr)"
+        />
+        <!-- ARENA(368) -> SEARCH(396) : entering the live stage -->
+        <path
+          d="M368,92 H396"
+          fill="none"
+          stroke="#1f6dff"
+          stroke-width="1.75"
+          marker-start="url(#dot)"
+          marker-end="url(#arr-live)"
+        />
+        <!-- SEARCH(636) -> GATES(664) : leaving live stage -->
+        <path
+          d="M636,92 H664"
+          fill="none"
+          stroke="#1f6dff"
+          stroke-width="1.75"
+          marker-start="url(#dot-live)"
+          marker-end="url(#arr)"
+        />
+        <!-- GATES(956) -> LAUNCH(984): locked path (dashed, dim) -->
+        <path
+          d="M956,92 H1004"
+          fill="none"
+          stroke="#aebacb"
+          stroke-width="1.5"
+          stroke-dasharray="5 4"
+          marker-start="url(#dot)"
+          marker-end="url(#arr-lock)"
+        />
+
+        <!-- ===== CANDIDATE CHIPS WIRED INTO SEARCH NODE ===== -->
+        <!-- SEARCH node spans x 396..636, y 56..128. chips hang below, bus from node bottom-center (516,128) -->
+        <!-- vertical drop bus from SEARCH bottom -->
+        <path
+          d="M516,128 V196"
+          fill="none"
+          stroke="#1f6dff"
+          stroke-width="1.5"
+          marker-start="url(#dot-live)"
+        />
+        <!-- horizontal bus bar across chip tops at y=196 -->
+        <path
+          d="M150,196 H882"
+          fill="none"
+          stroke="#aebacb"
+          stroke-width="1.25"
+        />
+        <!-- live junction where drop meets bus -->
+        <circle cx="516" cy="196" r="3" fill="#1f6dff" />
+        <!-- drops from bus to each chip top-center -->
+        <!-- chip1 seed3 x-center 150 ; chip2 seed4 332 ; chip3 seed1 514 ; chip4 g1a 700 ; refs 854 -->
+        <path d="M150,196 V214" fill="none" stroke="#aebacb" stroke-width="1.25" marker-end="url(#dot)" />
+        <path d="M332,196 V214" fill="none" stroke="#1f6dff" stroke-width="1.5" marker-end="url(#dot-live)" />
+        <path d="M514,196 V214" fill="none" stroke="#aebacb" stroke-width="1.25" marker-end="url(#dot)" />
+        <path d="M700,196 V214" fill="none" stroke="#aebacb" stroke-width="1.25" stroke-dasharray="4 3" marker-end="url(#dot-open)" />
+        <path d="M854,196 V214" fill="none" stroke="#aebacb" stroke-width="1.25" marker-end="url(#dot)" />
+
+        <!-- ===== WIRE: candidates feed the instruments below ===== -->
+        <!-- from chip bus down the left margin into the SCATTER + TABLE block -->
+        <path
+          d="M150,288 V330"
+          fill="none"
+          stroke="#aebacb"
+          stroke-width="1.25"
+          marker-start="url(#dot)"
+          marker-end="url(#arr-lock)"
+        />
+        <!-- routing label tap -->
+        <path
+          d="M332,288 V312 H332"
+          fill="none"
+          stroke="#aebacb"
+          stroke-width="1.25"
+        />
+
+        <!-- ===== LEADER LINE: chosen point → READ callout ===== -->
+        <!-- drawn in DOM-positioned SVGs below for precision -->
+      </svg>
+
+      <!-- corner registration cuts -->
+      <div class="corner-cut" style="left: 16px; top: 64px"></div>
+      <div class="corner-cut" style="right: 16px; top: 64px"></div>
+
+      <!-- ====== ZONE TAGS ====== -->
+      <div class="zone-tag" style="left: 8px; top: 50px">
+        A · <b>FOUNDRY PIPELINE</b> — task to launch
+      </div>
+      <div class="zone-tag" style="left: 8px; top: 332px">
+        B · <b>COST × QUALITY</b> — pareto instrument
+      </div>
+      <div class="zone-tag" style="left: 470px; top: 332px">
+        C · <b>COVERAGE</b> — reward×100 per task · truth table
+      </div>
+
+      <!-- ====================================================== -->
+      <!-- ZONE A — PIPELINE NODE GRAPH                            -->
+      <!-- ====================================================== -->
+      <div class="layer">
+        <!-- TASK -->
+        <div class="pnode" style="left: 40px; top: 56px; width: 146px; height: 72px">
+          <div class="pn-head"><span class="pn-idx">01</span><span>TASK</span></div>
+          <div class="pn-title">pr-review-correctness</div>
+          <div class="pn-meta">logic-invariant +<br />runtime-crash defects</div>
+        </div>
+
+        <!-- ARENA -->
+        <div class="pnode" style="left: 214px; top: 56px; width: 154px; height: 72px">
+          <div class="pn-head"><span class="pn-idx">02</span><span>ARENA · FROZEN</span></div>
+          <div class="pn-title">v0.2.0 · low-risk</div>
+          <div class="pn-meta">8 tasks · n=10 trials/seed</div>
+        </div>
+
+        <!-- SEARCH (LIVE) -->
+        <div class="pnode is-live" style="left: 396px; top: 56px; width: 240px; height: 72px">
+          <div class="pn-head">
+            <span class="pn-idx">03</span><span>SEARCH ROUND ◄ CURRENT</span>
+          </div>
+          <div class="pn-title">g1 · 6 candidates raced</div>
+          <div class="pn-meta">
+            composition 4a73f1fd · seeded + 1 child mutation
+          </div>
+        </div>
+
+        <!-- GATES -->
+        <div class="pnode" style="left: 664px; top: 48px; width: 292px; height: 88px">
+          <div class="pn-head"><span class="pn-idx">04</span><span>HUMAN GATES</span></div>
+          <div class="gates-strip">
+            <div class="gate g-ok">
+              <div class="g-id">G1</div>
+              <div class="g-st">✓</div>
+            </div>
+            <div class="gate g-pending">
+              <div class="g-id">G2</div>
+              <div class="g-st">◔</div>
+            </div>
+            <div class="gate g-locked">
+              <div class="g-id">G3</div>
+              <div class="g-st">✗</div>
+            </div>
+            <div class="gate g-locked">
+              <div class="g-id">G4</div>
+              <div class="g-st">✗</div>
+            </div>
+            <div class="gate g-locked">
+              <div class="g-id">G5</div>
+              <div class="g-st">✗</div>
+            </div>
+          </div>
+          <div class="pn-meta" style="padding-top: 0">
+            spend✓ · eval-trust◔ · launch✗ · write✗ · re-ingest✗
+          </div>
+        </div>
+
+        <!-- LAUNCH (locked) -->
+        <div class="pnode is-locked" style="left: 1004px; top: 56px; width: 130px; height: 72px">
+          <div class="pn-head"><span class="pn-idx">05</span><span>LAUNCH</span></div>
+          <div class="pn-title">— locked —</div>
+          <div class="pn-meta">awaits G2…G5<br />clearance</div>
+        </div>
+
+        <!-- ===== CANDIDATE CHIPS ===== -->
+        <!-- y top 214, height ~74 -->
+        <!-- seed3 — quality leader -->
+        <div class="chip" style="left: 75px; top: 214px">
+          <div class="c-top">
+            <span class="c-name">seed3-qwen-skeptic</span>
+            <span class="c-reward">0.80</span>
+          </div>
+          <div class="c-meta">$0.0270 · 71s · qwen3.7-plus</div>
+          <div class="c-tag tag-ok">
+            ▲ QUALITY LEADER
+            <span class="cert-pill tag-warn" style="margin-left: 4px"
+              >UNCERTIFIED</span
+            >
+          </div>
+          <div class="c-tag tag-err" style="margin-top: 2px">misses py-live-lock</div>
+        </div>
+
+        <!-- seed4 — CURRENT DELIVERY (chosen) -->
+        <div class="chip is-chosen" style="left: 257px; top: 214px">
+          <div class="c-top">
+            <span class="c-name">seed4-checklist</span>
+            <span class="c-reward">0.68</span>
+          </div>
+          <div class="c-meta">$0.0111 · 38s · gpt-5-mini</div>
+          <div class="c-tag tag-live">
+            ◄ CURRENT DELIVERY
+            <span class="cert-pill tag-warn" style="margin-left: 4px">G2-PENDING</span>
+          </div>
+          <div class="c-tag tag-dim" style="margin-top: 2px">incumbent to beat</div>
+        </div>
+
+        <!-- seed1 — cheapest -->
+        <div class="chip" style="left: 439px; top: 214px">
+          <div class="c-top">
+            <span class="c-name">seed1-checklist</span>
+            <span class="c-reward">0.60</span>
+          </div>
+          <div class="c-meta">$0.0052 · 29s · deepseek-v4</div>
+          <div class="c-tag tag-ok">▼ CHEAPEST</div>
+          <div class="c-tag tag-dim" style="margin-top: 2px">floor of frontier</div>
+        </div>
+
+        <!-- g1a — child, dominated -->
+        <div class="chip is-dominated" style="left: 625px; top: 214px">
+          <div class="c-top">
+            <span class="c-name">g1a-skeptic</span>
+            <span class="c-reward">0.62</span>
+          </div>
+          <div class="c-meta">$0.0289 · 88s · qwen3.7-plus</div>
+          <div class="c-tag tag-err">✗ DOMINATED · child</div>
+          <div class="c-tag tag-dim" style="margin-top: 2px">worse than seed3, costs more</div>
+        </div>
+
+        <!-- reference rails: oracle / null -->
+        <div
+          class="chip"
+          style="
+            left: 804px;
+            top: 214px;
+            width: 100px;
+            border-style: dashed;
+            background: repeating-linear-gradient(45deg, #fff, #fff 4px, #f1f4f8 4px, #f1f4f8 5px);
+          "
+        >
+          <div class="c-top">
+            <span class="c-name" style="color: var(--dim)">oracle</span>
+            <span class="c-reward" style="color: var(--ok)">1.00</span>
+          </div>
+          <div class="c-meta">ceiling reference</div>
+          <div class="c-top" style="margin-top: 5px">
+            <span class="c-name" style="color: var(--dim)">null</span>
+            <span class="c-reward" style="color: var(--dim)">0.00</span>
+          </div>
+          <div class="c-meta">floor reference</div>
+        </div>
+      </div>
+
+      <!-- ====================================================== -->
+      <!-- ZONE B — COST × QUALITY SCATTER INSTRUMENT             -->
+      <!-- ====================================================== -->
+      <div class="panel" style="left: 20px; top: 350px; width: 430px; height: 420px">
+        <div class="panel-head">
+          <span class="ph-title">Cost × Quality</span>
+          <span class="ph-sub">pareto frontier · g1</span>
+        </div>
+        <svg class="scatter-wrap" viewBox="0 0 430 392" style="top: 28px; height: 392px">
+          <!-- ===== PLOT GEOMETRY ===== -->
+          <!-- plot box: x 70..400  (width 330), y 36..330 (height 294) -->
+          <!-- x = cost 0..0.030 ; y = reward 0..1.0 (inverted in svg) -->
+
+          <!-- grid ticks (faint) -->
+          <g stroke="#e3e8ef" stroke-width="1">
+            <!-- vertical gridlines at cost 0,.005,.010,.015,.020,.025,.030 -->
+            <line x1="70" y1="36" x2="70" y2="330" />
+            <line x1="125" y1="36" x2="125" y2="330" />
+            <line x1="180" y1="36" x2="180" y2="330" />
+            <line x1="235" y1="36" x2="235" y2="330" />
+            <line x1="290" y1="36" x2="290" y2="330" />
+            <line x1="345" y1="36" x2="345" y2="330" />
+            <line x1="400" y1="36" x2="400" y2="330" />
+            <!-- horizontal gridlines reward 0,.2,.4,.6,.8,1.0 -->
+            <line x1="70" y1="330" x2="400" y2="330" />
+            <line x1="70" y1="271.2" x2="400" y2="271.2" />
+            <line x1="70" y1="212.4" x2="400" y2="212.4" />
+            <line x1="70" y1="153.6" x2="400" y2="153.6" />
+            <line x1="70" y1="94.8" x2="400" y2="94.8" />
+            <line x1="70" y1="36" x2="400" y2="36" />
+          </g>
+
+          <!-- ORACLE ceiling (reward 1.0) -->
+          <line x1="70" y1="36" x2="400" y2="36" stroke="#2f9e6f" stroke-width="1" stroke-dasharray="6 4" />
+          <text class="tick-num" x="404" y="39" fill="#2f9e6f">1.00 oracle ▲</text>
+          <!-- NULL floor (reward 0.0) -->
+          <line x1="70" y1="330" x2="400" y2="330" stroke="#aebacb" stroke-width="1" stroke-dasharray="6 4" />
+          <text class="tick-num" x="404" y="333" fill="#5b6b80">0.00 null ▼</text>
+
+          <!-- axes (heavier) -->
+          <line x1="70" y1="36" x2="70" y2="330" stroke="#16202e" stroke-width="1.5" />
+          <line x1="70" y1="330" x2="400" y2="330" stroke="#16202e" stroke-width="1.5" />
+
+          <!-- X dimension ticks + labels (cost) -->
+          <g>
+            <line x1="70" y1="330" x2="70" y2="336" stroke="#16202e" stroke-width="1" />
+            <line x1="125" y1="330" x2="125" y2="336" stroke="#16202e" stroke-width="1" />
+            <line x1="180" y1="330" x2="180" y2="336" stroke="#16202e" stroke-width="1" />
+            <line x1="235" y1="330" x2="235" y2="336" stroke="#16202e" stroke-width="1" />
+            <line x1="290" y1="330" x2="290" y2="336" stroke="#16202e" stroke-width="1" />
+            <line x1="345" y1="330" x2="345" y2="336" stroke="#16202e" stroke-width="1" />
+            <line x1="400" y1="330" x2="400" y2="336" stroke="#16202e" stroke-width="1" />
+            <text class="tick-num" x="70" y="346" text-anchor="middle">0</text>
+            <text class="tick-num" x="125" y="346" text-anchor="middle">.005</text>
+            <text class="tick-num" x="180" y="346" text-anchor="middle">.010</text>
+            <text class="tick-num" x="235" y="346" text-anchor="middle">.015</text>
+            <text class="tick-num" x="290" y="346" text-anchor="middle">.020</text>
+            <text class="tick-num" x="345" y="346" text-anchor="middle">.025</text>
+            <text class="tick-num" x="400" y="346" text-anchor="middle">.030</text>
+            <text class="axis-title" x="235" y="364" text-anchor="middle">
+              COST · $ PER TRIAL →
+            </text>
+          </g>
+
+          <!-- Y dimension ticks + labels (reward) -->
+          <g>
+            <line x1="64" y1="330" x2="70" y2="330" stroke="#16202e" stroke-width="1" />
+            <line x1="64" y1="271.2" x2="70" y2="271.2" stroke="#16202e" stroke-width="1" />
+            <line x1="64" y1="212.4" x2="70" y2="212.4" stroke="#16202e" stroke-width="1" />
+            <line x1="64" y1="153.6" x2="70" y2="153.6" stroke="#16202e" stroke-width="1" />
+            <line x1="64" y1="94.8" x2="70" y2="94.8" stroke="#16202e" stroke-width="1" />
+            <line x1="64" y1="36" x2="70" y2="36" stroke="#16202e" stroke-width="1" />
+            <text class="tick-num" x="60" y="333" text-anchor="end">0</text>
+            <text class="tick-num" x="60" y="274.2" text-anchor="end">.2</text>
+            <text class="tick-num" x="60" y="215.4" text-anchor="end">.4</text>
+            <text class="tick-num" x="60" y="156.6" text-anchor="end">.6</text>
+            <text class="tick-num" x="60" y="97.8" text-anchor="end">.8</text>
+            <text class="tick-num" x="60" y="39" text-anchor="end">1.0</text>
+            <text
+              class="axis-title"
+              x="22"
+              y="183"
+              text-anchor="middle"
+              transform="rotate(-90 22 183)"
+            >
+              REWARD ↑
+            </text>
+          </g>
+
+          <!-- ===== PARETO FRONTIER LINE ===== -->
+          <!-- points (cost→x, reward→y):
+               seed1 (.005,.60) = (125, 153.6)
+               seed4 (.011,.68) = (185, 130.08)
+               seed3 (.027,.80) = (367, 94.8)
+               g1a   (.029,.62) = (389, 147.72)  [dominated, below]
+          -->
+          <!-- frontier polyline seed1 -> seed4 -> seed3 -->
+          <polyline
+            points="125,153.6 185,130.08 367,94.8"
+            fill="none"
+            stroke="#16202e"
+            stroke-width="1.4"
+          />
+          <!-- frontier dominance shading: area under frontier (subtle hatch) -->
+          <polygon
+            points="125,153.6 185,130.08 367,94.8 367,330 125,330"
+            fill="rgba(31,109,255,0.04)"
+            stroke="none"
+          />
+
+          <!-- dimension leader from seed3 down to x-axis (delivery dim style) -->
+          <line x1="367" y1="94.8" x2="367" y2="330" stroke="#aebacb" stroke-width="1" stroke-dasharray="3 3" />
+          <line x1="70" y1="94.8" x2="367" y2="94.8" stroke="#aebacb" stroke-width="1" stroke-dasharray="3 3" />
+          <!-- dimension leader from seed4 (chosen) -->
+          <line x1="185" y1="130.08" x2="185" y2="330" stroke="#1f6dff" stroke-width="1" stroke-dasharray="3 3" />
+          <line x1="70" y1="130.08" x2="185" y2="130.08" stroke="#1f6dff" stroke-width="1" stroke-dasharray="3 3" />
+
+          <!-- DOMINATED marker: g1a, x to seed3 showing it's strictly worse -->
+          <line x1="367" y1="94.8" x2="389" y2="147.72" stroke="#e5484d" stroke-width="0.9" stroke-dasharray="2 2" />
+
+          <!-- ===== PLOTTED POINTS ===== -->
+          <!-- seed1 (cheapest) -->
+          <g>
+            <circle cx="125" cy="153.6" r="4.5" fill="#ffffff" stroke="#16202e" stroke-width="1.5" />
+            <text class="pt-lbl" x="125" y="146" text-anchor="middle">seed1</text>
+            <text class="tick-num" x="125" y="170" text-anchor="middle" fill="#5b6b80">.60</text>
+          </g>
+          <!-- seed3 (quality leader) -->
+          <g>
+            <circle cx="367" cy="94.8" r="5" fill="#16202e" stroke="#16202e" stroke-width="1.5" />
+            <text class="pt-val" x="356" y="86" text-anchor="end">seed3 ▲</text>
+            <text class="tick-num" x="356" y="98" text-anchor="end" fill="#16202e">0.80</text>
+          </g>
+          <!-- g1a (dominated) -->
+          <g>
+            <circle cx="389" cy="147.72" r="4" fill="#fdecec" stroke="#e5484d" stroke-width="1.4" />
+            <text class="pt-lbl" x="389" y="163" text-anchor="middle" fill="#b32d31">g1a ✗</text>
+          </g>
+          <!-- seed4 (chosen / accent) — draw last, on top -->
+          <g>
+            <circle cx="185" cy="130.08" r="6.5" fill="#1f6dff" stroke="#1f6dff" stroke-width="2" />
+            <circle cx="185" cy="130.08" r="10" fill="none" stroke="#1f6dff" stroke-width="1" opacity="0.4" />
+          </g>
+        </svg>
+      </div>
+
+      <!-- ====================================================== -->
+      <!-- ZONE C — COVERAGE TRUTH TABLE                          -->
+      <!-- ====================================================== -->
+      <div class="panel" style="left: 470px; top: 350px; width: 510px; height: 420px">
+        <div class="panel-head">
+          <span class="ph-title">Coverage</span>
+          <span class="ph-sub">reward×100 · ✓≥70 · ‑30–69 · ✗&lt;30</span>
+        </div>
+        <div style="padding: 8px 10px 10px">
+          <table class="truth">
+            <colgroup>
+              <col />
+              <col class="chosen" />
+              <col />
+              <col />
+              <col />
+              <col />
+              <col />
+            </colgroup>
+            <thead>
+              <tr>
+                <th class="task">TASK · SPLIT</th>
+                <th>seed3</th>
+                <th class="chosen-h">seed4</th>
+                <th>seed1</th>
+                <th>g1a</th>
+                <th>orc</th>
+                <th>null</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="task">progress-speed <span class="t-split">train</span></td>
+                <td class="cell pass">100</td>
+                <td class="cell pass chosen-c">100</td>
+                <td class="cell pass">100</td>
+                <td class="cell pass">100</td>
+                <td class="cell ref">100</td>
+                <td class="cell ref">0</td>
+              </tr>
+              <tr>
+                <td class="task">padding-clean <span class="t-split">train</span></td>
+                <td class="cell pass">100</td>
+                <td class="cell pass chosen-c">100</td>
+                <td class="cell pass">100</td>
+                <td class="cell pass">100</td>
+                <td class="cell ref">100</td>
+                <td class="cell ref">0</td>
+              </tr>
+              <tr>
+                <td class="task">live-lock <span class="t-split">train</span></td>
+                <td class="cell zero">0<span class="uncov-flag"></span></td>
+                <td class="cell partial chosen-c">50</td>
+                <td class="cell zero">0</td>
+                <td class="cell partial">50</td>
+                <td class="cell ref">100</td>
+                <td class="cell ref">0</td>
+              </tr>
+              <tr>
+                <td class="task">measure-normalize <span class="t-split">val</span></td>
+                <td class="cell pass">90</td>
+                <td class="cell partial chosen-c">50</td>
+                <td class="cell partial">50</td>
+                <td class="cell partial">50</td>
+                <td class="cell ref">100</td>
+                <td class="cell ref">0</td>
+              </tr>
+              <tr>
+                <td class="task">formatter-clean <span class="t-split">val</span></td>
+                <td class="cell pass">100</td>
+                <td class="cell pass chosen-c">100</td>
+                <td class="cell pass">100</td>
+                <td class="cell partial">50</td>
+                <td class="cell ref">100</td>
+                <td class="cell ref">0</td>
+              </tr>
+              <tr>
+                <td class="task">
+                  formatter-missing-crash <span class="t-split">val</span>
+                </td>
+                <td class="cell partial">60</td>
+                <td class="cell zero chosen-c">0<span class="uncov-flag"></span></td>
+                <td class="cell zero">0</td>
+                <td class="cell zero">0</td>
+                <td class="cell ref">100</td>
+                <td class="cell ref">0</td>
+              </tr>
+              <tr>
+                <td class="task">plugin-cache <span class="t-split">holdout n=2</span></td>
+                <td class="cell pass">90</td>
+                <td class="cell partial chosen-c">50</td>
+                <td class="cell partial">50</td>
+                <td class="cell partial">50</td>
+                <td class="cell ref">100</td>
+                <td class="cell ref">0</td>
+              </tr>
+              <tr>
+                <td class="task">export-clear <span class="t-split">holdout n=2</span></td>
+                <td class="cell pass">100</td>
+                <td class="cell pass chosen-c">100</td>
+                <td class="cell pass">80</td>
+                <td class="cell pass">100</td>
+                <td class="cell ref">100</td>
+                <td class="cell ref">0</td>
+              </tr>
+              <tr class="means">
+                <td class="task">CANDIDATE MEANS</td>
+                <td class="cell">80</td>
+                <td class="cell chosen-c">68</td>
+                <td class="cell">60</td>
+                <td class="cell">62</td>
+                <td class="cell ref">100</td>
+                <td class="cell ref">0</td>
+              </tr>
+            </tbody>
+          </table>
+          <div
+            style="
+              margin-top: 7px;
+              font-family: var(--mono);
+              font-size: 7.5px;
+              letter-spacing: 0.04em;
+              color: var(--dim);
+              display: flex;
+              justify-content: space-between;
+            "
+          >
+            <span><span style="color: var(--red)">■</span> live-lock &amp; fmt-crash UNCOVERED by all candidates</span>
+            <span>holdout n=2 — THIN · cert needs n≥5</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ====================================================== -->
+      <!-- ZONE D — THE READ (synthesis callout)                  -->
+      <!-- ====================================================== -->
+      <div class="read" style="left: 1000px; top: 350px; width: 384px; height: 250px">
+        <div class="read-head">
+          <span class="rh-t">The Read</span>
+          <span class="rh-s">g1 · uncertified</span>
+        </div>
+        <div class="read-body">
+          <p>
+            <span class="em">seed3</span> leads at
+            <span class="em">0.80</span> but buys
+            <span class="em em-live">+0.12 reward</span> for
+            <span class="em">2.4×</span> the delivery's cost
+            (<span class="em">seed4 · $0.011</span>).
+          </p>
+          <p>
+            Its lead sits <span class="em em-red">inside the spread</span> —
+            seed3 (0.80) and seed4 (0.68) intervals
+            <span class="em">overlap at n=10</span>, so the win is
+            <span class="em em-red">NOT certified</span>. It scores
+            <span class="em em-red">0</span> on py-live-lock.
+          </p>
+        </div>
+        <div class="read-next">
+          <span class="nx-k">NEXT ▶</span>
+          <span class="nx-v">
+            Mutate <span class="mono">seed3</span> to recover live-lock recall,
+            then <span class="mono">re-certify</span> before requesting
+            <span class="mono">G2</span>.
+          </span>
+        </div>
+      </div>
+
+      <!-- ====================================================== -->
+      <!-- CONFIDENCE / INTERVAL READOUT (right column, mid)      -->
+      <!-- ====================================================== -->
+      <div
+        class="panel"
+        style="left: 1000px; top: 618px; width: 384px; height: 64px; z-index: 5"
+      >
+        <div class="panel-head" style="border-bottom: none; padding-bottom: 0">
+          <span class="ph-title" style="font-size: 9px">Confidence · n=10</span>
+          <span class="ph-sub" style="color: var(--warn)">LEAD NOT CERTIFIED</span>
+        </div>
+        <svg viewBox="0 0 384 30" style="display: block; width: 100%; height: 30px">
+          <!-- interval bars, reward axis 0.5..0.9 mapped to x 70..360 -->
+          <!-- map: r -> 70 + (r-0.5)/(0.4) * 290 -->
+          <!-- gridline at reward labels -->
+          <line x1="70" y1="6" x2="360" y2="6" stroke="#e3e8ef" stroke-width="1" />
+          <line x1="70" y1="22" x2="360" y2="22" stroke="#e3e8ef" stroke-width="1" />
+
+          <!-- seed4 interval ~ [0.58,0.78] center 0.68 -> x: c=200.5, lo=130.5, hi=273.0 -->
+          <line x1="130.5" y1="6" x2="273.0" y2="6" stroke="#1f6dff" stroke-width="1.5" />
+          <line x1="130.5" y1="2.5" x2="130.5" y2="9.5" stroke="#1f6dff" stroke-width="1.5" />
+          <line x1="273.0" y1="2.5" x2="273.0" y2="9.5" stroke="#1f6dff" stroke-width="1.5" />
+          <circle cx="200.5" cy="6" r="2.6" fill="#1f6dff" />
+          <text x="64" y="9" text-anchor="end" class="tick-num" fill="#1f6dff">seed4</text>
+          <text x="206" y="3.5" class="tick-num" fill="#1f6dff" font-size="7">.68</text>
+
+          <!-- seed3 interval ~ [0.70,0.90] center 0.80 -> c=287.5, lo=215.0, hi=360.0 -->
+          <line x1="215.0" y1="22" x2="360.0" y2="22" stroke="#16202e" stroke-width="1.5" />
+          <line x1="215.0" y1="18.5" x2="215.0" y2="25.5" stroke="#16202e" stroke-width="1.5" />
+          <line x1="360.0" y1="18.5" x2="360.0" y2="25.5" stroke="#16202e" stroke-width="1.5" />
+          <circle cx="287.5" cy="22" r="2.6" fill="#16202e" />
+          <text x="64" y="25" text-anchor="end" class="tick-num" fill="#16202e">seed3</text>
+          <text x="293" y="19.5" class="tick-num" font-size="7">.80</text>
+
+          <!-- OVERLAP band: from seed3.lo(215) to seed4.hi(273) -->
+          <rect x="215.0" y="0" width="58" height="28" fill="rgba(192,138,46,0.13)" />
+          <line x1="215.0" y1="0" x2="215.0" y2="28" stroke="#c08a2e" stroke-width="0.75" stroke-dasharray="2 2" />
+          <line x1="273.0" y1="0" x2="273.0" y2="28" stroke="#c08a2e" stroke-width="0.75" stroke-dasharray="2 2" />
+          <text x="244" y="16" text-anchor="middle" class="tick-num" fill="#8a6212" font-size="6.5" letter-spacing="0.1em">OVERLAP</text>
+        </svg>
+      </div>
+
+      <!-- ====================================================== -->
+      <!-- LEADER-LINE CALLOUTS (absolute, over the sheet)        -->
+      <!-- ====================================================== -->
+
+      <!-- callout: chosen point on scatter → "DELIVERY · G3 pending" -->
+      <!-- seed4 dot sits at panel(20,350)+svg(top28)+(185,130) ≈ (205, 508) -->
+      <svg
+        style="
+          position: absolute;
+          left: 205px;
+          top: 470px;
+          width: 230px;
+          height: 60px;
+          z-index: 7;
+          overflow: visible;
+        "
+        viewBox="0 0 230 60"
+      >
+        <path d="M0,38 L40,12 L150,12" fill="none" stroke="#1f6dff" stroke-width="1.1" />
+        <circle cx="0" cy="38" r="2.4" fill="#1f6dff" />
+        <circle cx="150" cy="12" r="1.8" fill="#1f6dff" />
+      </svg>
+      <div class="callout co-live" style="left: 357px; top: 466px; max-width: 150px">
+        <span class="co-tab">
+          <span class="co-k">◄ DELIVERY · seed4</span>
+          <span class="co-v">on frontier · 0.68 / $0.011 · G3 pending</span>
+        </span>
+      </div>
+
+      <!-- callout: seed3 quality-buys-cost (neutral) -->
+      <svg
+        style="
+          position: absolute;
+          left: 387px;
+          top: 444px;
+          width: 60px;
+          height: 30px;
+          z-index: 7;
+          overflow: visible;
+        "
+        viewBox="0 0 60 30"
+      >
+        <path d="M0,28 L18,6 L52,6" fill="none" stroke="#16202e" stroke-width="1.1" />
+        <circle cx="0" cy="28" r="2.4" fill="#16202e" />
+      </svg>
+      <div class="callout co-neutral" style="left: 432px; top: 432px; max-width: 130px">
+        <span class="co-tab">
+          <span class="co-k">▲ seed3 · LEADER</span>
+          <span class="co-v">0.80 but +2.4× cost · uncertified</span>
+        </span>
+      </div>
+
+      <!-- callout: live-lock UNCOVERED → row in truth table -->
+      <!-- live-lock row: table panel(470,350)+head(28)+padding(8)+thead(22)+2*18 ≈ y 444; seed3 cell x≈470+200+? -->
+      <svg
+        style="
+          position: absolute;
+          left: 478px;
+          top: 452px;
+          width: 90px;
+          height: 60px;
+          z-index: 7;
+          overflow: visible;
+        "
+        viewBox="0 0 90 60"
+      >
+        <!-- from the red flag near live-lock seed3=0 cell, leader out to left margin callout -->
+        <path d="M88,8 L40,8 L20,44 L0,44" fill="none" stroke="#e5484d" stroke-width="1.1" />
+        <circle cx="88" cy="8" r="2.4" fill="#e5484d" />
+      </svg>
+      <div class="callout" style="left: 472px; top: 502px; max-width: 178px">
+        <span class="co-tab">
+          <span class="co-k">live-lock : 0 — UNCOVERED</span>
+          <span class="co-v">py-live-lock missed by leader; arena hole every candidate falls into</span>
+        </span>
+      </div>
+
+      <!-- callout: holdout THIN → bottom of truth table -->
+      <div class="callout co-neutral" style="left: 700px; top: 726px; max-width: 168px; z-index: 8">
+        <span class="co-tab" style="border-color: #c08a2e">
+          <span class="co-k" style="color: #c08a2e">n=2 — THIN</span>
+          <span class="co-v">holdout trials too few; certification needs n≥5</span>
+        </span>
+      </div>
+
+      <!-- callout: dominated child g1a -->
+      <svg
+        style="
+          position: absolute;
+          left: 700px;
+          top: 200px;
+          width: 80px;
+          height: 26px;
+          z-index: 7;
+          overflow: visible;
+        "
+        viewBox="0 0 80 26"
+      >
+        <path d="M0,22 L24,6 L74,6" fill="none" stroke="#e5484d" stroke-width="1" stroke-dasharray="3 2" />
+        <circle cx="0" cy="22" r="2.2" fill="#e5484d" />
+      </svg>
+
+      <!-- ====================================================== -->
+      <!-- HEADROOM INSTRUMENT (bottom band, full-width gauge)    -->
+      <!-- ====================================================== -->
+      <div class="headroom" style="left: 20px; top: 786px; width: 540px; height: 90px">
+        <div class="hr-title">
+          <span>Headroom · arena discriminates</span>
+          <span class="hr-gap">GAP 0.80</span>
+        </div>
+        <div class="hr-scale">
+          <div class="hr-track"></div>
+          <!-- span bracket between null floor and oracle ceiling = the usable gap -->
+          <!-- scale: reward 0..1.0 over track width; left edge=0, right edge=1.0 -->
+          <!-- track inset: use 2%..98% so marks have room; map r -> 2 + r*96 (%) -->
+          <div class="hr-span" style="left: 2%; width: 96%"></div>
+
+          <!-- null floor 0.00 -->
+          <div class="hr-mark" style="left: 2%">
+            <span class="hm-v">0.00</span>
+            <span class="hm-k">null floor ▼</span>
+          </div>
+          <!-- one-shot saturation probe 0.20 (live) -->
+          <div class="hr-mark tick live" style="left: 21.2%">
+            <span class="hm-v">0.20</span>
+            <span class="hm-k">one-shot probe</span>
+          </div>
+          <!-- delivery seed4 0.68 marker (tick reference) -->
+          <div class="hr-mark tick" style="left: 67.28%">
+            <span class="hm-v" style="color: var(--dim)">0.68</span>
+            <span class="hm-k">delivery</span>
+          </div>
+          <!-- leader seed3 0.80 (tick reference) -->
+          <div class="hr-mark tick" style="left: 78.8%">
+            <span class="hm-v" style="color: var(--dim)">0.80</span>
+            <span class="hm-k">leader</span>
+          </div>
+          <!-- oracle ceiling 1.00 -->
+          <div class="hr-mark" style="left: 98%">
+            <span class="hm-v" style="color: var(--ok)">1.00</span>
+            <span class="hm-k">oracle ▲</span>
+          </div>
+        </div>
+        <div
+          style="
+            margin-top: 16px;
+            font-family: var(--mono);
+            font-size: 8px;
+            letter-spacing: 0.04em;
+            color: var(--dim);
+            display: flex;
+            justify-content: space-between;
+          "
+        >
+          <span>one-shot probe <b style="color: var(--ink)">0.20</b> — saturation clear, not a candidate</span>
+          <span>ceiling − floor = <b style="color: var(--ok)">0.80</b> → arena ranks</span>
+        </div>
+      </div>
+
+      <!-- ====================================================== -->
+      <!-- TITLE BLOCK (bottom-right, drawing standard)           -->
+      <!-- ====================================================== -->
+      <div class="titleblock">
+        <div class="tb-title">
+          <span class="t-main">DAEDALUS · SHEET 1</span>
+          <span class="t-sub">SYSTEMS DWG</span>
+        </div>
+        <div class="tb-row" style="grid-template-columns: 1.4fr 1fr">
+          <div class="tb-cell">
+            <div class="tb-k">subject</div>
+            <div class="tb-v">pr-review-correctness</div>
+          </div>
+          <div class="tb-cell">
+            <div class="tb-k">arena</div>
+            <div class="tb-v">v0.2.0 · low-risk</div>
+          </div>
+        </div>
+        <div class="tb-row" style="grid-template-columns: 1fr 1fr 1fr">
+          <div class="tb-cell">
+            <div class="tb-k">rev</div>
+            <div class="tb-v" style="color: #1f6dff">g1</div>
+          </div>
+          <div class="tb-cell">
+            <div class="tb-k">round</div>
+            <div class="tb-v">6 candidates</div>
+          </div>
+          <div class="tb-cell">
+            <div class="tb-k">trials</div>
+            <div class="tb-v">n=10/seed</div>
+          </div>
+        </div>
+        <div class="tb-row" style="grid-template-columns: 1.6fr 1fr">
+          <div class="tb-cell">
+            <div class="tb-k">composition</div>
+            <div class="tb-v">4a73f1fd</div>
+          </div>
+          <div class="tb-cell">
+            <div class="tb-k">stage</div>
+            <div class="tb-v" style="color: #1f6dff">SEARCH · g1</div>
+          </div>
+        </div>
+        <div class="tb-row" style="grid-template-columns: 1fr 1fr 1fr">
+          <div class="tb-cell">
+            <div class="tb-k">drawn</div>
+            <div class="tb-v">runner 20260613</div>
+          </div>
+          <div class="tb-cell">
+            <div class="tb-k">scale</div>
+            <div class="tb-v">1:1 · 1440²</div>
+          </div>
+          <div class="tb-cell">
+            <div class="tb-k">sheet</div>
+            <div class="tb-v">1 / 1</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== FRAME TICK GENERATION (vanilla, decorative drafting ruler) ====== -->
+    <script>
+      (function () {
+        var svg = document.querySelector(".frame-ticks");
+        if (!svg) return;
+        var W = 1412,
+          H = 872;
+        var ns = "http://www.w3.org/2000/svg";
+        function tick(x1, y1, x2, y2, faint) {
+          var l = document.createElementNS(ns, "line");
+          l.setAttribute("x1", x1);
+          l.setAttribute("y1", y1);
+          l.setAttribute("x2", x2);
+          l.setAttribute("y2", y2);
+          if (faint) l.setAttribute("stroke", "#aebacb");
+          svg.appendChild(l);
+        }
+        // top + bottom rulers: major tick every 60px, minor every 20px
+        for (var x = 0; x <= W; x += 20) {
+          var major = x % 60 === 0;
+          var len = major ? 8 : 4;
+          tick(x, 0, x, len, !major); // top
+          tick(x, H, x, H - len, !major); // bottom
+        }
+        // left + right rulers
+        for (var y = 0; y <= H; y += 20) {
+          var maj = y % 60 === 0;
+          var l2 = maj ? 8 : 4;
+          tick(0, y, l2, y, !maj); // left
+          tick(W, y, W - l2, y, !maj); // right
+        }
+        // column letter labels A.. across top, row numbers down left (drafting coords)
+        var letters = "ABCDEFGHIJKLMNOPQRST".split("");
+        for (var c = 0; c < letters.length; c++) {
+          var t = document.createElementNS(ns, "text");
+          var cx = 35 + c * 70;
+          if (cx > W - 10) break;
+          t.setAttribute("x", cx);
+          t.setAttribute("y", 13);
+          t.setAttribute("text-anchor", "middle");
+          t.setAttribute("font-family", "'IBM Plex Mono', monospace");
+          t.setAttribute("font-size", "7");
+          t.setAttribute("fill", "#5b6b80");
+          t.setAttribute("letter-spacing", "0.1em");
+          t.textContent = letters[c];
+          svg.appendChild(t);
+        }
+        for (var r = 1; r <= 12; r++) {
+          var tr = document.createElementNS(ns, "text");
+          var ry = 35 + (r - 1) * 70;
+          if (ry > H - 10) break;
+          tr.setAttribute("x", 11);
+          tr.setAttribute("y", ry + 3);
+          tr.setAttribute("text-anchor", "middle");
+          tr.setAttribute("font-family", "'IBM Plex Mono', monospace");
+          tr.setAttribute("font-size", "7");
+          tr.setAttribute("fill", "#5b6b80");
+          tr.textContent = r;
+          svg.appendChild(tr);
+        }
+      })();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Daedalus — pr-review-correctness · comparison</title>
+    <script>
+      try {
+        var m = localStorage.getItem('ae-mode');
+        if (m === 'dark' || m === 'light') {
+          document.documentElement.classList.add(m);
+          document.documentElement.style.colorScheme = m;
+        }
+      } catch (e) {}
+    </script>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&display=swap"
+    />
+    <link rel="stylesheet" href="../../../../aesthetic/aesthetic.css" />
+    <link rel="stylesheet" href="lab.css" />
+  </head>
+  <body>
+    <svg style="display: none" xmlns="http://www.w3.org/2000/svg">
+      <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" /><path d="M12 2v2" /><path d="M12 20v2" /><path d="m4.93 4.93 1.41 1.41" /><path d="m17.66 17.66 1.41 1.41" /><path d="M2 12h2" /><path d="M20 12h2" /><path d="m6.34 17.66-1.41 1.41" /><path d="m19.07 4.93-1.41 1.41" /></symbol>
+      <symbol id="i-moon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" /></symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5" /></symbol>
+      <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></symbol>
+      <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14" /></symbol>
+      <symbol id="i-alert" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" /><path d="M12 9v4" /><path d="M12 17h.01" /></symbol>
+    </svg>
+
+    <div class="ae-shell">
+      <aside class="ae-rail">
+        <p class="ae-name" style="letter-spacing: 0.22em; color: var(--ae-ink)">DAEDALUS</p>
+        <p class="ae-chrome" style="margin-top: 0.2em">agent foundry</p>
+
+        <p class="ae-h">FOUNDRY</p>
+        <a href="console.html">Console</a>
+        <a href="comparison.html" aria-current="page">Comparison</a>
+        <a href="trial.html">Trial</a>
+        <a href="#">Arenas</a>
+        <a href="gates.html">Gates &amp; launch</a>
+
+        <p class="ae-h">TASK</p>
+        <a href="#" class="is-active">pr-review-correctness</a>
+        <a href="#">Spec &amp; taxonomy</a>
+        <a href="#">Swarm members</a>
+        <a href="#">Delivery</a>
+
+        <div class="ae-rail-foot">
+          <p class="ae-chrome">arena v0.2.0 · low-risk</p>
+          <p class="ae-chrome">runner 20260613</p>
+          <p style="margin-top: 1em">
+            <button class="ae-mode" aria-label="toggle color mode">
+              <svg class="ae-icon ae-sun"><use href="#i-sun" /></svg>
+              <svg class="ae-icon ae-moon"><use href="#i-moon" /></svg>
+            </button>
+          </p>
+        </div>
+      </aside>
+
+      <main class="ae-desk lab-desk">
+        <nav class="ae-crumbs" aria-label="breadcrumb" style="margin-bottom: 1.4em">
+          <ol>
+            <li><a href="#">foundry</a></li>
+            <li><a href="console.html">correctness</a></li>
+            <li><span aria-current="page">comparison</span></li>
+          </ol>
+        </nav>
+
+        <div class="lab-bar">
+          <div>
+            <h1 style="display: inline">Comparison</h1>
+            <span class="ae-dim"> — cost × quality, candidate × task</span>
+          </div>
+          <div class="ae-chrome" style="font-family: var(--ae-font-mono)">
+            6 candidates · 8 tasks · g1 round · n=10/seed
+          </div>
+        </div>
+
+        <div class="lab-cols is-2" style="align-items: start; margin-bottom: 2.4em">
+          <!-- FIG 1 · the cost×quality plane with the Pareto frontier -->
+          <figure style="margin: 0">
+            <p class="ae-plate-cap">FIG 1 · COST × QUALITY · the efficient frontier</p>
+            <div class="ae-scatter">
+              <p class="ae-axis-title is-y">quality · mean reward</p>
+              <div class="ae-scatter-plot is-ruled">
+                <div style="position: absolute; left: 0; right: 0; top: 0; border-top: 1px dashed var(--ae-ink-faint)"></div>
+                <span style="position: absolute; right: 0.3em; top: 0.2em; font-family: var(--ae-font-mono); font-size: 11px; color: var(--ae-ink-faint)">oracle 1.00</span>
+                <!-- the frontier guide: seed1 → seed4 → seed3 -->
+                <svg class="ae-scatter-line" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+                  <polyline points="17,40 37,32 88,20" />
+                </svg>
+                <!-- candidates, placed on a linear x = cost/$0.030, y = reward -->
+                <span class="ae-dot is-named" data-label="seed1" style="left: 17%; bottom: 60%"></span>
+                <span class="ae-dot is-chosen" data-label="seed4 · delivery" style="left: 37%; bottom: 68%"></span>
+                <span class="ae-dot is-named" data-label="seed3 · leader" style="left: 88%; bottom: 80%"></span>
+                <span class="ae-dot is-dominated" data-label="g1a child" style="left: 96%; bottom: 62%"></span>
+                <!-- y ticks -->
+                <span class="ae-scatter-yt" style="left: -1.9em; bottom: -0.6em">0.00</span>
+                <span class="ae-scatter-yt" style="left: -1.9em; bottom: calc(50% - 0.6em)">0.50</span>
+                <span class="ae-scatter-yt" style="left: -1.9em; bottom: calc(100% - 0.6em)">1.00</span>
+                <!-- x ticks: a true linear scale, $0 to $0.030 -->
+                <span class="ae-scatter-xt" style="left: 0; bottom: -1.5em">$0.000</span>
+                <span class="ae-scatter-xt" style="left: calc(50% - 1.4em); bottom: -1.5em">$0.015</span>
+                <span class="ae-scatter-xt" style="right: -0.6em; bottom: -1.5em">$0.030</span>
+              </div>
+              <p class="ae-axis-title is-x">cost · usd per trial →</p>
+            </div>
+            <div class="ae-legend" style="margin-top: 0.6em">
+              <span><i class="is-chosen"></i> delivery (G3 pending)</span>
+              <span><i></i> on frontier</span>
+              <span><i class="is-dominated"></i> dominated</span>
+            </div>
+          </figure>
+
+          <!-- THE READ · the decision, named -->
+          <div>
+            <p class="ae-h">THE READ</p>
+            <p>
+              <span class="ae-item">seed3-qwen-skeptic</span> sits highest at
+              <span class="ae-num">0.80</span>, but it buys
+              <span class="ae-num">+0.12</span> reward for
+              <span class="ae-num">2.4×</span> the cost of the current delivery —
+              and its lead is inside the spread.
+            </p>
+
+            <div style="margin: 1.4em 0 0.4em">
+              <div class="lab-spread">
+                <span class="ae-item">seed3</span>
+                <span class="ae-num ae-dim">0.80 · n=10</span>
+              </div>
+              <div class="ae-ci" style="margin: 0.55em 0 1.2em">
+                <span class="ae-ci-band" style="left: 58%; right: 8%"></span>
+                <span class="ae-ci-mean" style="left: 80%"></span>
+              </div>
+              <div class="lab-spread">
+                <span class="ae-item">seed4 <span class="lab-state">delivery</span></span>
+                <span class="ae-num ae-dim">0.68 · n=10</span>
+              </div>
+              <div class="ae-ci" style="margin: 0.55em 0 0">
+                <span class="ae-ci-band" style="left: 48%; right: 18%"></span>
+                <span class="ae-ci-mean" style="left: 68%"></span>
+              </div>
+            </div>
+            <p class="ae-chrome" style="margin-top: 0.8em">
+              <svg class="ae-icon ae-warn" style="width: 1em; height: 1em"><use href="#i-alert" /></svg>
+              intervals overlap — the gap is not yet a certified win.
+            </p>
+
+            <p style="margin-top: 1.4em">
+              The deciding row is <span class="ae-num">live-lock</span>: seed3
+              scores <span class="ae-num">0</span> there. Recovering it without
+              losing the clean-trap is the next mutation.
+            </p>
+          </div>
+        </div>
+
+        <!-- TABLE 2 · the coverage matrix — glyph + figure + ruled bar -->
+        <p class="ae-plate-cap" style="margin-bottom: 0.9em">
+          TABLE 2 · COVERAGE · task × candidate · reward 0–100
+        </p>
+        <div class="mx-scroll">
+          <table class="matrix">
+            <thead>
+              <tr>
+                <th class="mx-corner" scope="col">task</th>
+                <th scope="col">seed3<span class="cand-meta">qwen3.7</span></th>
+                <th scope="col" class="mx-pick">seed4<span class="cand-meta">gpt-5-mini</span></th>
+                <th scope="col">seed1<span class="cand-meta">deepseek</span></th>
+                <th scope="col">g1a<span class="cand-meta">qwen·child</span></th>
+                <th scope="col" class="mx-ref">oracle<span class="cand-meta">ref</span></th>
+                <th scope="col" class="mx-ref">null<span class="cand-meta">ref</span></th>
+                <th scope="col">n</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th class="mx-task" scope="row">progress-speed<span class="mx-task-id">train</span></th>
+                <td><span class="cell is-best"><span class="cell-head"><svg class="ae-icon ae-ok"><use href="#i-check" /></svg><span class="cell-fig">100</span></span></span></td>
+                <td><span class="cell is-best"><span class="cell-head"><svg class="ae-icon ae-ok"><use href="#i-check" /></svg><span class="cell-fig">100</span></span></span></td>
+                <td><span class="cell is-best"><span class="cell-head"><svg class="ae-icon ae-ok"><use href="#i-check" /></svg><span class="cell-fig">100</span></span></span></td>
+                <td><span class="cell is-best"><span class="cell-head"><svg class="ae-icon ae-ok"><use href="#i-check" /></svg><span class="cell-fig">100</span></span></span></td>
+                <td><span class="cell"><span class="cell-head"><svg class="ae-icon ae-dim"><use href="#i-check" /></svg><span class="cell-fig">100</span></span></span></td>
+                <td><span class="cell is-fail"><span class="cell-head"><svg class="ae-icon ae-dim"><use href="#i-x" /></svg><span class="cell-fig">0</span></span></span></td>
+                <td>10</td>
+              </tr>
+              <tr>
+                <th class="mx-task" scope="row">padding-clean<span class="mx-task-id">train</span></th>
+                <td><span class="cell is-best"><span class="cell-head"><svg class="ae-icon ae-ok"><use href="#i-check" /></svg><span class="cell-fig">100</span></span></span></td>
+                <td><span class="cell is-best"><span class="cell-head"><svg class="ae-icon ae-ok"><use href="#i-check" /></svg><span class="cell-fig">100</span></span></span></td>
+                <td><span class="cell is-best"><span class="cell-head"><svg class="ae-icon ae-ok"><use href="#i-check" /></svg><span class="cell-fig">100</span></span></span></td>
+                <td><span class="cell is-best"><span class="cell-head"><svg class="ae-icon ae-ok"><use href="#i-check" /></svg><span class="cell-fig">100</span></span></span></td>
+                <td><span class="cell"><span class="cell-head"><svg class="ae-icon ae-dim"><use href="#i-check" /></svg><span class="cell-fig">100</span></span></span></td>
+                <td><span class="cell is-fail"><span class="cell-head"><svg class="ae-icon ae-dim"><use href="#i-x" /></svg><span class="cell-fig">0</span></span></span></td>
+                <td>10</td>
+              </tr>
+              <tr>
+                <th class="mx-task" scope="row">live-lock<span class="mx-task-id">train · the hole</span></th>
+                <td><span class="cell is-fail"><span class="cell-head"><svg class="ae-icon ae-err"><use href="#i-x" /></svg><span class="cell-fig">0</span></span></span></td>
+                <td><span class="cell is-best"><span class="cell-head"><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg><span class="cell-fig">50</span></span></span></td>
+                <td><span class="cell is-fail"><span class="cell-head"><svg class="ae-icon ae-err"><use href="#i-x" /></svg><span class="cell-fig">0</span></span></span></td>
+                <td><span class="cell is-best"><span class="cell-head"><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg><span class="cell-fig">50</span></span></span></td>
+                <td><span class="cell"><span class="cell-head"><svg class="ae-icon ae-dim"><use href="#i-check" /></svg><span class="cell-fig">100</span></span></span></td>
+                <td><span class="cell is-fail"><span class="cell-head"><svg class="ae-icon ae-dim"><use href="#i-x" /></svg><span class="cell-fig">0</span></span></span></td>
+                <td>10</td>
+              </tr>
+              <tr>
+                <th class="mx-task" scope="row">measure-normalize<span class="mx-task-id">validation</span></th>
+                <td><span class="cell is-best"><span class="cell-head"><svg class="ae-icon ae-ok"><use href="#i-check" /></svg><span class="cell-fig">90</span></span></span></td>
+                <td><span class="cell"><span class="cell-head"><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg><span class="cell-fig">50</span></span></span></td>
+                <td><span class="cell"><span class="cell-head"><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg><span class="cell-fig">50</span></span></span></td>
+                <td><span class="cell"><span class="cell-head"><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg><span class="cell-fig">50</span></span></span></td>
+                <td><span class="cell"><span class="cell-head"><svg class="ae-icon ae-dim"><use href="#i-check" /></svg><span class="cell-fig">100</span></span></span></td>
+                <td><span class="cell is-fail"><span class="cell-head"><svg class="ae-icon ae-dim"><use href="#i-x" /></svg><span class="cell-fig">0</span></span></span></td>
+                <td>10</td>
+              </tr>
+              <tr>
+                <th class="mx-task" scope="row">formatter-clean<span class="mx-task-id">validation</span></th>
+                <td><span class="cell is-best"><span class="cell-head"><svg class="ae-icon ae-ok"><use href="#i-check" /></svg><span class="cell-fig">100</span></span></span></td>
+                <td><span class="cell is-best"><span class="cell-head"><svg class="ae-icon ae-ok"><use href="#i-check" /></svg><span class="cell-fig">100</span></span></span></td>
+                <td><span class="cell is-best"><span class="cell-head"><svg class="ae-icon ae-ok"><use href="#i-check" /></svg><span class="cell-fig">100</span></span></span></td>
+                <td><span class="cell"><span class="cell-head"><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg><span class="cell-fig">50</span></span></span></td>
+                <td><span class="cell"><span class="cell-head"><svg class="ae-icon ae-dim"><use href="#i-check" /></svg><span class="cell-fig">100</span></span></span></td>
+                <td><span class="cell is-fail"><span class="cell-head"><svg class="ae-icon ae-dim"><use href="#i-x" /></svg><span class="cell-fig">0</span></span></span></td>
+                <td>10</td>
+              </tr>
+              <tr>
+                <th class="mx-task" scope="row">formatter-missing-crash<span class="mx-task-id">validation · the hole</span></th>
+                <td><span class="cell is-best"><span class="cell-head"><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg><span class="cell-fig">60</span></span></span></td>
+                <td><span class="cell is-fail"><span class="cell-head"><svg class="ae-icon ae-err"><use href="#i-x" /></svg><span class="cell-fig">0</span></span></span></td>
+                <td><span class="cell is-fail"><span class="cell-head"><svg class="ae-icon ae-err"><use href="#i-x" /></svg><span class="cell-fig">0</span></span></span></td>
+                <td><span class="cell is-fail"><span class="cell-head"><svg class="ae-icon ae-err"><use href="#i-x" /></svg><span class="cell-fig">0</span></span></span></td>
+                <td><span class="cell"><span class="cell-head"><svg class="ae-icon ae-dim"><use href="#i-check" /></svg><span class="cell-fig">100</span></span></span></td>
+                <td><span class="cell is-fail"><span class="cell-head"><svg class="ae-icon ae-dim"><use href="#i-x" /></svg><span class="cell-fig">0</span></span></span></td>
+                <td>10</td>
+              </tr>
+              <tr>
+                <th class="mx-task" scope="row">plugin-cache<span class="mx-task-id">holdout</span></th>
+                <td><span class="cell is-best"><span class="cell-head"><svg class="ae-icon ae-ok"><use href="#i-check" /></svg><span class="cell-fig">90</span></span></span></td>
+                <td><span class="cell"><span class="cell-head"><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg><span class="cell-fig">50</span></span></span></td>
+                <td><span class="cell"><span class="cell-head"><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg><span class="cell-fig">50</span></span></span></td>
+                <td><span class="cell"><span class="cell-head"><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg><span class="cell-fig">50</span></span></span></td>
+                <td><span class="cell"><span class="cell-head"><svg class="ae-icon ae-dim"><use href="#i-check" /></svg><span class="cell-fig">100</span></span></span></td>
+                <td><span class="cell is-fail"><span class="cell-head"><svg class="ae-icon ae-dim"><use href="#i-x" /></svg><span class="cell-fig">0</span></span></span></td>
+                <td><span style="color: var(--ae-warn)">2 !</span></td>
+              </tr>
+              <tr>
+                <th class="mx-task" scope="row">export-clear<span class="mx-task-id">holdout</span></th>
+                <td><span class="cell is-best"><span class="cell-head"><svg class="ae-icon ae-ok"><use href="#i-check" /></svg><span class="cell-fig">100</span></span></span></td>
+                <td><span class="cell is-best"><span class="cell-head"><svg class="ae-icon ae-ok"><use href="#i-check" /></svg><span class="cell-fig">100</span></span></span></td>
+                <td><span class="cell"><span class="cell-head"><svg class="ae-icon ae-ok"><use href="#i-check" /></svg><span class="cell-fig">80</span></span></span></td>
+                <td><span class="cell is-best"><span class="cell-head"><svg class="ae-icon ae-ok"><use href="#i-check" /></svg><span class="cell-fig">100</span></span></span></td>
+                <td><span class="cell"><span class="cell-head"><svg class="ae-icon ae-dim"><use href="#i-check" /></svg><span class="cell-fig">100</span></span></span></td>
+                <td><span class="cell is-fail"><span class="cell-head"><svg class="ae-icon ae-dim"><use href="#i-x" /></svg><span class="cell-fig">0</span></span></span></td>
+                <td><span style="color: var(--ae-warn)">2 !</span></td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr>
+                <th class="mx-task" scope="row">mean · /100</th>
+                <td><span class="ae-strong">80</span></td>
+                <td><span class="ae-strong">68</span></td>
+                <td><span class="ae-strong">60</span></td>
+                <td><span class="ae-strong">62</span></td>
+                <td class="mx-ref">100</td>
+                <td class="mx-ref">0</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+        <div class="mx-legend">
+          <span class="lg"><svg class="ae-icon ae-ok"><use href="#i-check" /></svg> pass</span>
+          <span class="lg"><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg> partial</span>
+          <span class="lg"><svg class="ae-icon ae-err"><use href="#i-x" /></svg> miss</span>
+          <span class="lg"><span class="ibar"><i style="width: 66%"></i></span> reward magnitude</span>
+          <span class="lg" style="color: var(--ae-accent)">seed4 = delivery (G3 pending)</span>
+          <span class="lg"><span style="color: var(--ae-warn)">!</span> n &lt; 5 · holdout thin</span>
+        </div>
+        <p class="ae-plate-note" style="border: 0; margin-top: 1em; padding: 0">
+          The <span class="ae-num">live-lock</span> and
+          <span class="ae-num">fmt-crash</span> rows are the arena's hard spine —
+          no candidate covers both. Holdout tasks carry only
+          <span class="ae-num">n=2</span>: certification needs n≥5 before any
+          winner claim.
+        </p>
+      </main>
+    </div>
+    <script src="../../../../aesthetic/site/recipes.js"></script>
+  </body>
+</html>
