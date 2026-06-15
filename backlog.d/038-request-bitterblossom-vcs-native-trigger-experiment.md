@@ -56,7 +56,8 @@ research and implementation probes when Daedalus turns it into an arena.
 | alternate critic | Pi | `qwen/qwen3-coder-next` or `z-ai/glm-5.1` | different model family for trigger tradeoff critique |
 | council fallback | OpenRouter | `openrouter/fusion` | use only for high-leverage architecture comparison |
 
-`z-ai/glm-5.2` remains pending until OpenRouter lists it and Pi can smoke it.
+`z-ai/glm-5.2` is page-visible on OpenRouter but remains API-pending until the
+OpenRouter catalog lists it and Pi can smoke it.
 
 ## Requested Daedalus Work
 

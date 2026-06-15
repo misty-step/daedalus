@@ -64,9 +64,10 @@ Member lanes:
 | `product` | ticket fit, UX/API intent, scope mismatch | Pi `moonshotai/kimi-k2.7-code`; Pi `z-ai/glm-5.1` |
 | `master` | consolidate member artifacts, dedupe, severity calibration | Pi `deepseek/deepseek-v4-pro`; Pi `moonshotai/kimi-k2.7-code`; Fusion only for council experiments |
 
-`z-ai/glm-5.2` is requested by the operator but was not listed in the
-OpenRouter catalog on 2026-06-15. Include it only after a live catalog check
-and Pi smoke receipt.
+`z-ai/glm-5.2` is requested by the operator and its OpenRouter model page was
+visible on 2026-06-15 as released, with API access releasing 2026-06-16. It was
+not listed in the OpenRouter API catalog on 2026-06-15. Include it only after a
+live catalog check and Pi smoke receipt prove it dispatchable.
 
 ## Artifact Contract
 

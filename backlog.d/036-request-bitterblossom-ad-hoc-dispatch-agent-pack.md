@@ -58,10 +58,12 @@ Non-goals:
 
 These are seeds for Daedalus search, not launch recommendations.
 
-OpenRouter catalog facts were checked on 2026-06-15 from
-`https://openrouter.ai/api/v1/models`. `z-ai/glm-5.2` was not listed at that
-time; keep it as a requested/pending model until the catalog and a local Pi
-smoke prove it. All model ids, including subscription-auth lane names, remain
+OpenRouter facts were checked on 2026-06-15 from both the model page and
+`https://openrouter.ai/api/v1/models`. `z-ai/glm-5.2` is page-visible at
+`https://openrouter.ai/z-ai/glm-5.2` as released on 2026-06-15 with API access
+releasing 2026-06-16, but it was not listed in the API catalog on 2026-06-15.
+Keep it as page-visible/API-pending until the catalog and a local Pi smoke prove
+it dispatchable. All model ids, including subscription-auth lane names, remain
 subject to the requested `docs/primitives.md` refresh before any import
 recommendation.
 
@@ -76,7 +78,7 @@ recommendation.
 | verifier | Pi | `deepseek/deepseek-v4-flash`, low/medium thinking, `read,bash` | cheap evidence gathering and gate interpretation |
 | release-support | Pi | `moonshotai/kimi-k2.7-code` or `z-ai/glm-5.1`, medium thinking | structured prose and repo-aware summary candidate |
 | architecture council | OpenRouter | `openrouter/fusion` | use only for research/council questions worth multi-model routing; not a routine coding lane |
-| pending GLM | Pi | `z-ai/glm-5.2` | requested by operator; do not use until listed and smoke-tested |
+| pending GLM | Pi | `z-ai/glm-5.2` | requested by operator; page-visible/API-pending; do not use until catalog-listed and smoke-tested |
 
 ## Requested Daedalus Work
 
@@ -108,8 +110,8 @@ recommendation.
       slice, including `moonshotai/kimi-k2.7-code`,
       `deepseek/deepseek-v4-pro`, and `deepseek/deepseek-v4-flash`, with
       run records showing cost, latency, traces, and composition hashes.
-- [ ] `z-ai/glm-5.2` is either verified live and smoke-tested or explicitly
-      waived as unavailable; `z-ai/glm-5.1` may be used as the available GLM
+- [ ] `z-ai/glm-5.2` is either catalog-listed and smoke-tested or explicitly
+      waived as API-pending; `z-ai/glm-5.1` may be used as the available GLM
       comparator.
 - [ ] The launch recommendation names a quality/cost/latency mode for each
       family rather than using one universal "best model" claim.
