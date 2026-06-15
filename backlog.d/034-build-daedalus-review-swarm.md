@@ -1,7 +1,7 @@
 # Build a Daedalus-optimized PR review swarm
 
 Priority: P0
-Status: in progress - member-only swarm handoff emitted; full replay/export remain
+Status: in progress - member-only slice verified (offline oracle green); full-swarm replay/export remain
 Estimate: XL
 
 ## PRD Summary
@@ -511,6 +511,26 @@ Remaining children:
 - Promote `deliveries/pr-review-swarm/` from member-only inspection to
   full-swarm only after real-member replay passes and the G2 specialist
   caveats are accepted or resolved.
+
+Verification (2026-06-15):
+
+- The member-only slice's full offline oracle is green: `bin/gate` (174
+  passed), `bin/daedalus doctor` (only the named-acceptable unsigned-G3 and
+  local-run-artifact warnings), `taxonomy-validate`,
+  `arena-validate arenas/pr-review-master-v0`, `export-suite`, and both
+  `launch-pack --dry-run` packets all exit 0; the `summary.json` cost
+  (`$0.087 <= 2.0`), wall (`336.2s <= 1200`), and member-only/replay jq checks
+  pass. `export-suite` reproduces byte-for-byte modulo its `generated`
+  timestamp.
+- The two open children are the full-swarm stretch the oracle makes
+  conditional on the member-only escape, and both need fresh model-budget
+  search runs: child 8 (first certified full-suite search) is blocked on a
+  sandbox-ready certified correctness member — the autoresearch loop has not
+  cleared the plateau and the v0.2.0 holdout is burned, so it must rotate to
+  v0.3.0 before another certified holdout search; child 9 (real-member replay)
+  needs the certified members run through the master benchmark, which on the
+  current weak correctness member is expected to confirm member-only rather
+  than unlock full-swarm.
 
 ## Lead Repo Read
 
