@@ -62,15 +62,18 @@ Run the Rust gate: `cargo test`. Run the Python gate: `bin/gate`.
 
 ## Module DAG & status
 
-Source LOC from the `migrate-daedalus-rust` branch. Layering is by *runner*
-dependency (file formats are the seams; orchestration uses dependency
-injection). **All 17 runner modules ported + parity-verified** (deterministic
-cores), behind **19 parity oracles** + shared `pycompat`/`pyrandom`. Remaining:
-the **live execution glue** (run's `run_pi`/`run_oneshot`/`main`, mutate's
-`call_optimizer` — subprocess + OpenRouter HTTP, not parity-testable offline),
-the **`bin/daedalus` composition root** → `daedalus-cli` (clap), `bin/gate` →
-`cargo test`, then **deleting the Python** once the Rust CLI is verified
-end-to-end on the no-spend (null/oracle) paths.
+> **✅ MIGRATION COMPLETE.** All 17 `runner/` modules + `bin/daedalus` + the
+> pytest suite are ported to Rust and the Python is **fully retired** — zero
+> Daedalus `.py` files remain (`find runner bin -name '*.py'` → empty). Daedalus
+> is three crates: `daedalus-core` (kernel), `daedalus-cli` (the `daedalus`
+> binary, replacing `bin/daedalus`), and `daedalus-score` (a static-musl scorer
+> for the Harbor container). Every module was parity-verified against live
+> Python before deletion; the Harbor/Docker isolation path is Docker-verified
+> (oracle run → reward 1.000, no model spend). `bin/gate` is pure Rust.
+
+Layering was by *runner* dependency (file formats are the seams; orchestration
+uses dependency injection); all 17 modules were ported behind parity oracles +
+shared `pycompat`/`pyrandom`. The table below is the historical port record.
 
 ### Ported + parity-verified ✅
 | Module | LOC | Rust | Parity oracle |
@@ -161,18 +164,29 @@ can no longer run, so retirement is a coordinated, irreversible step:
 5. **Spend-gated**: a full `daedalus run` is unproven e2e without OpenRouter
    budget; only the no-spend rig-validation (null/oracle) is verified.
 
-**Done (committed `7a5df21`):** the Python implementation is retired — 15
-`runner/` modules, the whole `tests/` pytest suite, `bin/daedalus`, and 16
-parity oracles deleted (51 files, ~18.3k lines). Daedalus is now `daedalus-core`
-+ `daedalus-cli`. `bin/gate` = `cargo test` + `clippy` + `py_compile` of the two
-shims. **The only Python left is the Harbor sandbox toolchain**
-(`runner/score.py`, `runner/port_harbor.py`), a named platform boundary held
-bit-faithful by `parity_score.rs` / `parity_port_harbor.rs`.
+**Retirement, phase 1 (`7a5df21`):** deleted 15 `runner/` modules, the whole
+`tests/` pytest suite, `bin/daedalus`, and 16 parity oracles (51 files, ~18.3k
+lines), leaving only the Harbor sandbox shims `runner/score.py` +
+`runner/port_harbor.py`.
 
-**Residuals (documented, externally gated):**
-1. Migrating the two Harbor shims off Python needs a Rust binary baked into the
-   `python:3.12-slim` Harbor image — a Docker change verifiable only with Docker.
-2. A full `daedalus run` search is unproven end-to-end without OpenRouter spend.
+**Retirement, phase 2 — COMPLETE (`85ad1a6`, integrated `998a0ac`):** the last
+two Python files are gone. `ureq` was feature-gated out of `daedalus-core`
+(`default = ["http"]`) so a new `daedalus-score` crate cross-compiles to a
+755 KB **static-musl** binary (no TLS/C deps); `port_harbor` copies it into the
+Harbor container's `tests/` and the verifier runs `/tests/daedalus-score`
+instead of `python3 score.py`. `bin/harbor-run`, the `port-harbor` CLI
+subcommand, all 33 arena `test.sh`, and `workbench`'s template moved off Python.
+**Docker-verified, no model spend:** `bin/harbor-run … --agent oracle` → the
+Rust scorer ran inside `python:3.12-slim` → reward **1.000**, 0 exceptions.
+`find runner bin -name '*.py'` → empty. `bin/gate` is now pure Rust
+(`cargo test` + `clippy`).
+
+**Residuals (non-blocking, not Python):**
+1. A full `daedalus run` *search* is unproven end-to-end without OpenRouter
+   spend (optimizer + `pi` + one-shot probe); the no-spend rig-validation stage
+   and the whole runner are verified.
+2. The Harbor image is still `FROM python:3.12-slim` — Python is present but
+   **no longer used for scoring**; an Alpine base would drop it entirely.
 3. Prose docs (operator-sop/DESIGN/ROADMAP) still cite legacy `runner/run.py` /
    `bin/daedalus` names; subcommands map 1:1 to `daedalus`.
 
