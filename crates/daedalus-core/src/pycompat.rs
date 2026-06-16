@@ -56,6 +56,41 @@ pub fn mean(values: &[f64]) -> f64 {
     values.iter().sum::<f64>() / values.len() as f64
 }
 
+/// Current UTC time formatted as `%Y-%m-%dT%H:%M:%SZ` — the `generated`-field
+/// default used by swarm/export when no timestamp is supplied
+/// (`value or datetime.now(timezone.utc).strftime(...)`). Wall-clock, so it is
+/// never parity-tested; the deterministic formatting is.
+pub fn utc_now_iso() -> String {
+    let secs = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs() as i64)
+        .unwrap_or(0);
+    format_unix_utc(secs)
+}
+
+/// Format Unix seconds as `%Y-%m-%dT%H:%M:%SZ` (UTC).
+fn format_unix_utc(secs: i64) -> String {
+    let days = secs.div_euclid(86_400);
+    let rem = secs.rem_euclid(86_400);
+    let (h, m, s) = (rem / 3600, (rem % 3600) / 60, rem % 60);
+    let (y, mo, d) = civil_from_days(days);
+    format!("{y:04}-{mo:02}-{d:02}T{h:02}:{m:02}:{s:02}Z")
+}
+
+/// Howard Hinnant's days-from-civil inverse: days since 1970-01-01 → (y, m, d).
+fn civil_from_days(z: i64) -> (i64, u32, u32) {
+    let z = z + 719_468;
+    let era = if z >= 0 { z } else { z - 146_096 } / 146_097;
+    let doe = z - era * 146_097;
+    let yoe = (doe - doe / 1460 + doe / 36524 - doe / 146_096) / 365;
+    let y = yoe + era * 400;
+    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+    let mp = (5 * doy + 2) / 153;
+    let d = (doy - (153 * mp + 2) / 5 + 1) as u32;
+    let m = if mp < 10 { mp + 3 } else { mp - 9 } as i64;
+    (y + i64::from(m <= 2), m as u32, d)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -89,5 +124,12 @@ mod tests {
         assert_eq!(py_str(&json!(false)), "False");
         assert_eq!(py_str(&json!("seed1")), "seed1");
         assert_eq!(py_str(&json!(3)), "3");
+    }
+
+    #[test]
+    fn formats_unix_utc_at_known_epochs() {
+        assert_eq!(format_unix_utc(0), "1970-01-01T00:00:00Z");
+        assert_eq!(format_unix_utc(946_684_800), "2000-01-01T00:00:00Z");
+        assert_eq!(format_unix_utc(1_000_000_000), "2001-09-09T01:46:40Z");
     }
 }

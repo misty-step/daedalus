@@ -8,12 +8,16 @@
 //!
 //! Migration status, module DAG, and strategy: `docs/rust-migration.md`.
 
+pub mod doctor;
 pub mod judge;
 pub mod lineage;
+pub mod mutate;
 pub mod port_harbor;
 pub mod prompt_packet;
 pub mod pycompat;
 pub mod report;
 pub mod score;
+pub mod swarm;
 pub mod taxonomy;
 pub mod trace;
+pub mod workbench;
