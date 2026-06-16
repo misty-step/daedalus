@@ -131,6 +131,28 @@ disjoint) and run the unified gate. Validated on 5 modules across 2 batches.
 - **judge**: `statistics.mean` exact-Fraction vs f64 — agrees on all tested rank
   vectors; revisit only if a future divergence appears.
 
+## Final phase — retiring Python (checklist)
+
+The parity oracles (`tests/parity_*.rs`) work by shelling to `python3 runner/*.py`
+as the reference. They are the migration *scaffold*: once Python is deleted they
+can no longer run, so retirement is a coordinated, irreversible step:
+
+1. Land the `daedalus-cli` (clap) replacing `bin/daedalus`; `run_oneshot`
+   (ureq) replacing the stub. Verify deterministic subcommands smoke-match
+   `python3 bin/daedalus <cmd>`; confirm `run` stage-1 rig validation passes on
+   null/oracle (no spend).
+2. **Spend-gated**: a full `daedalus run` (optimizer + pi + oneshot probe) can
+   only be verified with OpenRouter budget. Until then `cmd_run` is wired +
+   unit-tested with fakes, not e2e-proven.
+3. Delete `runner/*.py`, `tests/test_*.py`, `bin/daedalus`; remove the
+   `tests/parity_*.rs` (their Python reference is gone — the ported Rust
+   `#[cfg(test)]` unit tests remain the gate). Point `bin/gate` at
+   `cargo test` (drop `py_compile`/pytest). `bin/harbor-run` may stay (thin
+   Docker launcher).
+4. This deletion is irreversible and removes the user's test suite + reference
+   impl — **confirm with the user before executing**, and note the search is
+   not yet e2e-verified without spend.
+
 ## Log
 
 - **2026-06-16** — Branch off `deliver-034-review-swarm`. Stood up the workspace;
@@ -156,4 +178,12 @@ disjoint) and run the unified gate. Validated on 5 modules across 2 batches.
   **seed** (sampled compositions match Python under shared seeds via PyRandom),
   and **export** (byte-exact contract/persona on real deliveries, reusing
   `run::load_candidate`). **All 17 module cores done; 19 parity oracles green.**
-  Next: run's live execution glue + the `bin/daedalus` CLI, then retire Python.
+- **2026-06-16 (cont.)** — Added the run **execution glue** (`run_pi` +
+  `run_arena`, a faithful port of `run.py`'s `main()` loop): `parity_run_e2e.rs`
+  runs the **null and oracle** candidates against `arenas/pr-review-v0` through
+  BOTH Python `runner/run.py` and Rust `run_arena` and matches every
+  deterministic record field (no model spend). Added `clap` + `ureq` deps.
+  Dispatched the composition-root CLI lane (`daedalus-cli` replacing
+  `bin/daedalus` + `run_oneshot` via ureq + the `run` search wiring). **20 test
+  suites green** (`cargo test`/`clippy`/`fmt` + `bin/gate` 174). Remaining: land
+  the CLI, then the spend-gated `run` e2e + the (user-confirmed) Python deletion.
