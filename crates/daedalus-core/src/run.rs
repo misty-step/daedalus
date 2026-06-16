@@ -1267,23 +1267,156 @@ pub fn run_pi(
     Ok(())
 }
 
-/// Stub for the OpenRouter oneshot executor (not yet ported — needs HTTP client).
+/// Port of `runner/run.py::run_oneshot`.
 ///
-/// Returns `Err` immediately so the trial records an error and the arena loop
-/// continues. A follow-up change adds `reqwest` or `ureq` and ports
-/// `run_oneshot` from Python.
+/// Calls OpenRouter's chat-completions endpoint with the candidate's model,
+/// extracts findings, writes `workdir/findings.json`, and merges provider/
+/// token/cost fields into `record`.  Requires `OPENROUTER_API_KEY` in the
+/// environment.  This is a live-I/O boundary; it is NOT parity-tested.
 pub fn run_oneshot(
-    _candidate: &Map<String, Value>,
-    _instruction: &str,
+    candidate: &Map<String, Value>,
+    instruction: &str,
     _task_dir: &Path,
-    _workdir: &Path,
-    _record: &mut Map<String, Value>,
+    workdir: &Path,
+    record: &mut Map<String, Value>,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    // ─── ONESHOT BOUNDARY ──────────────────────────────────────────────────
-    // The OpenRouter HTTP call requires an async HTTP client (reqwest/ureq).
-    // No new deps may be added in this change (boundary constraint). Port in a
-    // follow-up that also adds the dep to Cargo.toml.
-    Err("oneshot executor (OpenRouter HTTP) not yet ported — needs an HTTP client".into())
+    const OPENROUTER_URL: &str = "https://openrouter.ai/api/v1/chat/completions";
+
+    let key = std::env::var("OPENROUTER_API_KEY").map_err(|_| "OPENROUTER_API_KEY is not set")?;
+
+    let prompt = format!(
+        "{instruction}\n\n## Workspace files\n{}\nRespond with ONLY the findings JSON object, no prose.",
+        workspace_listing(workdir)
+    );
+
+    let system = candidate
+        .get("_packet_text")
+        .and_then(Value::as_str)
+        .unwrap_or("You are a precise code-review agent. Output only valid JSON.");
+
+    // messages built inline in the body below (not used separately)
+
+    let temperature = candidate
+        .get("temperature")
+        .and_then(Value::as_f64)
+        .unwrap_or(0.2);
+    let max_tokens = candidate
+        .get("max_tokens")
+        .and_then(Value::as_i64)
+        .unwrap_or(8192);
+
+    let mut body = serde_json::json!({
+        "model": candidate.get("model").cloned().unwrap_or(Value::Null),
+        "messages": [
+            {"role": "system", "content": system},
+            {"role": "user", "content": prompt},
+        ],
+        "temperature": temperature,
+        "max_tokens": max_tokens,
+        "usage": {"include": true},
+    });
+    if let Some(provider) = candidate.get("provider") {
+        body.as_object_mut()
+            .unwrap()
+            .insert("provider".to_string(), provider.clone());
+    }
+
+    let timeout_sec = candidate
+        .get("timeout_sec")
+        .and_then(Value::as_u64)
+        .unwrap_or(300);
+
+    let agent = ureq::AgentBuilder::new()
+        .timeout(std::time::Duration::from_secs(timeout_sec))
+        .build();
+
+    let resp = agent
+        .post(OPENROUTER_URL)
+        .set("Authorization", &format!("Bearer {key}"))
+        .set("Content-Type", "application/json")
+        .send_json(&body);
+
+    let payload: Value = match resp {
+        Ok(r) => r.into_json()?,
+        Err(ureq::Error::Status(code, r)) => {
+            // A rejected request bills nothing — record $0 so known-spend stays honest.
+            record.insert("cost_usd".to_string(), Value::from(0.0));
+            let reason = r.status_text().to_string();
+            return Err(format!("HTTP Error {code}: {reason}").into());
+        }
+        Err(e) => return Err(e.into()),
+    };
+
+    let usage = payload
+        .get("usage")
+        .and_then(Value::as_object)
+        .cloned()
+        .unwrap_or_default();
+
+    record.insert(
+        "provider_served".to_string(),
+        payload.get("provider").cloned().unwrap_or(Value::Null),
+    );
+    record.insert(
+        "tokens_prompt".to_string(),
+        usage.get("prompt_tokens").cloned().unwrap_or(Value::Null),
+    );
+    record.insert(
+        "tokens_completion".to_string(),
+        usage
+            .get("completion_tokens")
+            .cloned()
+            .unwrap_or(Value::Null),
+    );
+    record.insert(
+        "tokens_cached".to_string(),
+        usage
+            .get("prompt_tokens_details")
+            .and_then(|d| d.get("cached_tokens"))
+            .cloned()
+            .unwrap_or(Value::Null),
+    );
+    record.insert(
+        "cost_usd".to_string(),
+        usage.get("cost").cloned().unwrap_or(Value::Null),
+    );
+
+    let choice = payload
+        .get("choices")
+        .and_then(|c| c.get(0))
+        .ok_or("oneshot response missing choices")?;
+    let content = choice
+        .get("message")
+        .and_then(|m| m.get("content"))
+        .and_then(Value::as_str)
+        .ok_or_else(|| {
+            let fr = choice
+                .get("finish_reason")
+                .and_then(Value::as_str)
+                .unwrap_or("?");
+            format!("model returned empty content (finish_reason={fr})")
+        })?;
+
+    if content.is_empty() {
+        let fr = choice
+            .get("finish_reason")
+            .and_then(Value::as_str)
+            .unwrap_or("?");
+        return Err(format!("model returned empty content (finish_reason={fr})").into());
+    }
+
+    record.insert(
+        "_response_text".to_string(),
+        Value::String(content.to_string()),
+    );
+
+    let findings = extract_json_object(content)?;
+    std::fs::write(
+        workdir.join("findings.json"),
+        serde_json::to_string_pretty(&findings)?,
+    )?;
+
+    Ok(())
 }
 
 /// Inputs resolved before the trial loop, passed to `run_arena`.
