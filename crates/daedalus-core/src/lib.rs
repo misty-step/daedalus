@@ -9,6 +9,7 @@
 //! Migration status, module DAG, and strategy: `docs/rust-migration.md`.
 
 pub mod doctor;
+pub mod export;
 pub mod judge;
 pub mod launch;
 pub mod lineage;
@@ -21,6 +22,7 @@ pub mod report;
 pub mod run;
 pub mod score;
 pub mod search_loop; // ports runner/loop.py (`loop` is a Rust keyword)
+pub mod seed;
 pub mod swarm;
 pub mod taxonomy;
 pub mod trace;
