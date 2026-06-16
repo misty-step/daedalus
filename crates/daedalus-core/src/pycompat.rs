@@ -48,6 +48,14 @@ pub fn py_str(value: &Value) -> String {
     }
 }
 
+/// Arithmetic mean of a non-empty slice. Mirrors `statistics.mean` for typical
+/// small float sequences. (CPython's `statistics.mean` sums exactly via
+/// `Fraction`, so results can differ by 1 ULP on adversarial inputs; ports that
+/// need bit-exactness against it should parity-test and note any divergence.)
+pub fn mean(values: &[f64]) -> f64 {
+    values.iter().sum::<f64>() / values.len() as f64
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

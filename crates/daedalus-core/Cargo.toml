@@ -7,3 +7,6 @@ description = "Deterministic kernel of the Daedalus agent foundry (Rust port of 
 [dependencies]
 serde = { workspace = true }
 serde_json = { workspace = true }
+toml = { workspace = true }
+sha2 = { workspace = true }
+regex = { workspace = true }
