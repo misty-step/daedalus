@@ -64,7 +64,11 @@ Run the Rust gate: `cargo test`. Run the Python gate: `bin/gate`.
 
 Source LOC from the `migrate-daedalus-rust` branch. Layering is by *runner*
 dependency (file formats are the seams; orchestration uses dependency
-injection). **8 of 17 runner modules ported + parity-verified.**
+injection). **13 of 17 runner modules ported + parity-verified.** Done: score,
+prompt_packet, trace, report, lineage, judge, taxonomy, port_harbor, swarm,
+doctor, workbench, loop, launch (+ shared `pycompat`, `pyrandom`). Remaining:
+**run** (pi/OpenRouter I/O boundary — lead-owned), **mutate** (calls pi),
+**seed** (→mutate), **export** (→run), then the entrypoints.
 
 ### Ported + parity-verified ✅
 | Module | LOC | Rust | Parity oracle |
@@ -134,4 +138,12 @@ disjoint) and run the unified gate. Validated on 5 modules across 2 batches.
   oracle). Enabled `serde_json` `preserve_order` (byte-reproducible JSON).
   Established + validated the parallel worktree-lane mechanism (2 batches, 5
   modules). Gates green throughout: `cargo test`/`clippy`/`fmt` + `bin/gate` 174.
-  Next: Layer-0 `swarm`/`doctor` (parallel) and lead-owned `loop`; then Layer 1.
+- **2026-06-16 (cont.)** — Parallel lanes ported **swarm, doctor, workbench**
+  (doctor surfaced a latent Python crash on a missing primitives file — the Rust
+  port fails gracefully and documents it) and **launch**. Added `pyrandom`, a
+  CPython-exact MT19937 (`shuffle`/`getrandbits` parity-verified) needed by the
+  loop and seeder. Lead-ported **loop** (`search_loop`) on it: all `test_loop.py`
+  scenarios + a live-Python parity harness incl. a multi-parent shuffle
+  trajectory. **13/17 done.** Next: lead-owned **run** (the pi/OpenRouter
+  boundary, no live spend — replay/fixture parity), then **mutate**, **seed**,
+  **export**, then the entrypoints (`bin/daedalus` → `clap`) and deleting Python.
