@@ -1145,6 +1145,596 @@ pub fn oracle_findings(task_dir: &Path) -> Result<String, Box<dyn std::error::Er
 }
 
 // ---------------------------------------------------------------------------
+// LIVE EXECUTION GLUE — added to run.rs after the deterministic core.
+// These functions own I/O, subprocesses, temp dirs, and wall-clock time.
+// They are NOT parity-tested individually (wall-clock, run IDs, etc. are
+// inherently non-deterministic); instead the e2e test in
+// tests/parity_run_e2e.rs runs the FULL pipeline against Python and compares
+// the deterministic fields of the output records.
+// ---------------------------------------------------------------------------
+
+/// Current UTC timestamp formatted as `%Y%m%dT%H%M%SZ`.
+///
+/// Wall-clock, not parity-tested. Mirrors Python's:
+/// ```python
+/// datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+/// ```
+pub fn utc_stamp() -> String {
+    let secs = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs() as i64)
+        .unwrap_or(0);
+    let days = secs.div_euclid(86_400);
+    let rem = secs.rem_euclid(86_400);
+    let (h, m, s) = (rem / 3600, (rem % 3600) / 60, rem % 60);
+    let (y, mo, d) = crate::pycompat::civil_from_days(days);
+    format!("{y:04}{mo:02}{d:02}T{h:02}{m:02}{s:02}Z")
+}
+
+/// Recursive `shutil.copytree(src, dst, dirs_exist_ok=True)` equivalent.
+///
+/// Mirrors Python's copytree: copies all files and dirs from `src` into `dst`,
+/// creating `dst` if needed (dirs_exist_ok — merges rather than refusing).
+pub fn copy_dir(src: &Path, dst: &Path) -> Result<(), Box<dyn std::error::Error>> {
+    std::fs::create_dir_all(dst)?;
+    for entry in std::fs::read_dir(src)?.flatten() {
+        let src_path = entry.path();
+        let dst_path = dst.join(entry.file_name());
+        if src_path.is_dir() {
+            copy_dir(&src_path, &dst_path)?;
+        } else {
+            std::fs::copy(&src_path, &dst_path)?;
+        }
+    }
+    Ok(())
+}
+
+/// Run a `pi` candidate against a task workspace.
+///
+/// Mirrors Python's `run_pi`: composes the argv via `build_pi_cmd`, appends
+/// the instruction message, runs with `env_clear()` + `candidate_env`, and
+/// captures stdout/stderr.
+///
+/// On non-zero exit: returns `Err("pi exited {code}: {stderr tail 400}")`.
+/// Merges `extract_pi_usage(stdout)` into `record` on success.
+///
+/// # Known gap — no subprocess timeout
+/// Python passes `timeout=candidate.get("timeout_sec", 600)` to
+/// `subprocess.run`. `std::process::Command` has no built-in timeout; adding
+/// one would require either a thread, tokio, or the `wait-timeout` crate —
+/// none of which can be added without touching Cargo.toml (out of scope for
+/// this change). A candidate that hangs will block this function indefinitely.
+/// Workaround: set a shell-level timeout before invoking the binary, or add
+/// the dep in a follow-up.
+pub fn run_pi(
+    candidate: &Map<String, Value>,
+    instruction: &str,
+    _task_dir: &Path,
+    workdir: &Path,
+    record: &mut Map<String, Value>,
+) -> Result<(), Box<dyn std::error::Error>> {
+    prepare_workspace(candidate, workdir)?;
+
+    let mut argv = build_pi_cmd(candidate);
+    // Append the message: instruction + workspace note (matches Python exactly).
+    argv.push(format!(
+        "{instruction}\n\nThe workspace is the current working directory."
+    ));
+
+    let env: std::collections::HashMap<String, String> = std::env::vars().collect();
+    let cenv = candidate_env(candidate, &env);
+
+    let mut cmd = std::process::Command::new(&argv[0]);
+    cmd.args(&argv[1..])
+        .current_dir(workdir)
+        .env_clear()
+        .envs(&cenv)
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::piped());
+
+    let output = cmd.output()?;
+
+    let stdout_text = String::from_utf8_lossy(&output.stdout).into_owned();
+    let stderr_text = String::from_utf8_lossy(&output.stderr).into_owned();
+
+    record.insert(
+        "agent_exit_code".to_string(),
+        Value::Number(serde_json::Number::from(output.status.code().unwrap_or(-1))),
+    );
+    record.insert(
+        "_transcript_text".to_string(),
+        Value::String(stdout_text.clone()),
+    );
+
+    // Merge usage fields into record.
+    for (k, v) in extract_pi_usage(&stdout_text) {
+        record.insert(k, v);
+    }
+
+    if !output.status.success() {
+        let code = output.status.code().unwrap_or(-1);
+        let tail: String = stderr_text
+            .chars()
+            .rev()
+            .take(400)
+            .collect::<String>()
+            .chars()
+            .rev()
+            .collect();
+        return Err(format!("pi exited {code}: {tail}").into());
+    }
+
+    Ok(())
+}
+
+/// Stub for the OpenRouter oneshot executor (not yet ported — needs HTTP client).
+///
+/// Returns `Err` immediately so the trial records an error and the arena loop
+/// continues. A follow-up change adds `reqwest` or `ureq` and ports
+/// `run_oneshot` from Python.
+pub fn run_oneshot(
+    _candidate: &Map<String, Value>,
+    _instruction: &str,
+    _task_dir: &Path,
+    _workdir: &Path,
+    _record: &mut Map<String, Value>,
+) -> Result<(), Box<dyn std::error::Error>> {
+    // ─── ONESHOT BOUNDARY ──────────────────────────────────────────────────
+    // The OpenRouter HTTP call requires an async HTTP client (reqwest/ureq).
+    // No new deps may be added in this change (boundary constraint). Port in a
+    // follow-up that also adds the dep to Cargo.toml.
+    Err("oneshot executor (OpenRouter HTTP) not yet ported — needs an HTTP client".into())
+}
+
+/// Inputs resolved before the trial loop, passed to `run_arena`.
+pub struct ArenaInputs {
+    pub candidate_path: PathBuf,
+    pub arena_dir: PathBuf,
+    pub task_filter: Option<std::collections::HashSet<String>>,
+    pub trials: u32,
+    pub exp_dir: Option<PathBuf>,
+    pub split: String,
+    pub is_final: bool,
+    pub max_errors: Option<usize>,
+    pub repo_root: PathBuf,
+    pub runs_root: PathBuf,
+}
+
+/// Faithful port of `runner/run.py`'s `main()` body as a reusable library
+/// function.  Returns the experiment directory path on success.
+///
+/// Reproduces the trial loop exactly:
+/// - per-trial record field set and insertion order (mirroring Python's dict)
+/// - tempdir workspace + `environment/` copy
+/// - executor dispatch by `candidate["kind"]` (null/oracle/pi/oneshot)
+/// - grader-tamper check via `tree_digest` before+after
+/// - score via `crate::score::score` (ScoreResult fields merged into record)
+/// - failed-trial zeroing (error → reward=0, recall=0, matched=[], etc.)
+/// - findings extraction from workdir/findings.json
+/// - artifacts dir + `artifacts.index` append
+/// - `trials.jsonl` append
+/// - `summarize` → `summary.json`
+///
+/// Non-deterministic fields (`run_id`, `ts_start`, `ts_end`, `wall_ms`,
+/// `artifacts`, `harness_version`) are always excluded from parity assertions.
+pub fn run_arena(inputs: ArenaInputs) -> Result<PathBuf, Box<dyn std::error::Error>> {
+    let candidate = load_candidate(&inputs.candidate_path, &inputs.repo_root)?;
+    let arena_dir = &inputs.arena_dir;
+    let arena = load_toml(&arena_dir.join("arena.toml"))?;
+
+    validate_arena_for_local_execution(&arena)
+        .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
+
+    let kind = candidate
+        .get("kind")
+        .and_then(Value::as_str)
+        .unwrap_or("")
+        .to_string();
+
+    let task_dirs = select_tasks(
+        arena_dir,
+        &arena,
+        &inputs.split,
+        inputs.task_filter.as_ref(),
+        inputs.is_final,
+    )
+    .map_err(|e| e.as_str().to_string())?;
+
+    if task_dirs.is_empty() {
+        return Err("no tasks matched".into());
+    }
+
+    // Pre-validate all tasks (mirrors Python's up-front loop before the trial loop).
+    let mut task_inputs: Vec<(PathBuf, String)> = Vec::new();
+    for task_dir in &task_dirs {
+        validate_task_dir(task_dir)?;
+        let instruction = task_instruction(arena_dir, &arena, task_dir)?;
+        let env_dir = task_dir.join("environment");
+        validate_no_hidden_absolute_paths(&candidate, task_dir, &instruction, &env_dir)?;
+        task_inputs.push((task_dir.clone(), instruction));
+    }
+
+    let stamp = utc_stamp();
+    let candidate_id = candidate
+        .get("id")
+        .and_then(Value::as_str)
+        .unwrap_or("unknown")
+        .to_string();
+
+    let exp_dir = match &inputs.exp_dir {
+        Some(d) => d.clone(),
+        None => inputs.runs_root.join(format!("{stamp}-{candidate_id}")),
+    };
+
+    std::fs::create_dir_all(exp_dir.join("compositions"))?;
+
+    // Write composition snapshot (mirrors Python).
+    let mut snapshot: Map<String, Value> = Map::new();
+    for (k, v) in &candidate {
+        if !k.starts_with('_') {
+            snapshot.insert(k.clone(), v.clone());
+        }
+    }
+    snapshot.insert("composition_hash".to_string(), candidate["_hash"].clone());
+    snapshot.insert(
+        "prompt_packet_text".to_string(),
+        candidate["_packet_text"].clone(),
+    );
+    snapshot.insert(
+        "skills_texts".to_string(),
+        candidate["_skills_texts"].clone(),
+    );
+    snapshot.insert(
+        "agents_md_text".to_string(),
+        candidate["_agents_md_text"].clone(),
+    );
+    // harness_version: not ported (would need subprocess call to `pi --version`).
+    snapshot.insert("harness_version".to_string(), Value::Null);
+    snapshot.insert(
+        "runner_version".to_string(),
+        Value::String("0.1.0".to_string()),
+    );
+    std::fs::write(
+        exp_dir
+            .join("compositions")
+            .join(format!("{candidate_id}.json")),
+        serde_json::to_string_pretty(&Value::Object(snapshot))?,
+    )?;
+
+    let trials_path = exp_dir.join("trials.jsonl");
+    let mut all_records: Vec<Map<String, Value>> = Vec::new();
+    let mut total_errors: usize = 0;
+
+    'outer: for (task_dir, instruction) in &task_inputs {
+        let task_id = task_dir
+            .file_name()
+            .and_then(|n| n.to_str())
+            .unwrap_or("")
+            .to_string();
+
+        let grader_digest = tree_digest(&[&task_dir.join("tests"), &task_dir.join("solution")]);
+
+        for trial in 1..=inputs.trials {
+            // Build record in Python's insertion order.
+            let mut record: Map<String, Value> = Map::new();
+            record.insert(
+                "run_id".to_string(),
+                Value::String(format!("{stamp}-{candidate_id}-{task_id}-t{trial}")),
+            );
+            record.insert(
+                "ts_start".to_string(),
+                Value::String(
+                    std::time::SystemTime::now()
+                        .duration_since(std::time::UNIX_EPOCH)
+                        .map(|d| {
+                            let secs = d.as_secs() as i64;
+                            let days = secs.div_euclid(86_400);
+                            let rem = secs.rem_euclid(86_400);
+                            let (h, m, s) = (rem / 3600, (rem % 3600) / 60, rem % 60);
+                            let (y, mo, dy) = crate::pycompat::civil_from_days(days);
+                            // Python: datetime.isoformat(timespec="seconds") → "2026-06-16T12:00:00+00:00"
+                            format!("{y:04}-{mo:02}-{dy:02}T{h:02}:{m:02}:{s:02}+00:00")
+                        })
+                        .unwrap_or_else(|_| "1970-01-01T00:00:00+00:00".to_string()),
+                ),
+            );
+            record.insert(
+                "runner_version".to_string(),
+                Value::String("0.1.0".to_string()),
+            );
+            record.insert(
+                "arena_id".to_string(),
+                arena.get("id").cloned().unwrap_or(Value::Null),
+            );
+            record.insert(
+                "arena_version".to_string(),
+                arena.get("version").cloned().unwrap_or(Value::Null),
+            );
+            record.insert(
+                "taskspec".to_string(),
+                arena.get("taskspec").cloned().unwrap_or(Value::Null),
+            );
+            record.insert("task_id".to_string(), Value::String(task_id.clone()));
+            record.insert(
+                "trial".to_string(),
+                Value::Number(serde_json::Number::from(trial)),
+            );
+            record.insert(
+                "candidate_id".to_string(),
+                Value::String(candidate_id.clone()),
+            );
+            record.insert("candidate_kind".to_string(), Value::String(kind.clone()));
+            record.insert("composition_hash".to_string(), candidate["_hash"].clone());
+            record.insert("harness_version".to_string(), Value::Null);
+            record.insert(
+                "model".to_string(),
+                candidate.get("model").cloned().unwrap_or(Value::Null),
+            );
+            record.insert("provider_served".to_string(), Value::Null);
+            record.insert("tokens_prompt".to_string(), Value::Null);
+            record.insert("tokens_completion".to_string(), Value::Null);
+            record.insert("tokens_cached".to_string(), Value::Null);
+            record.insert("cost_usd".to_string(), Value::Null);
+            record.insert("error".to_string(), Value::Null);
+
+            // Create temp workspace and copy environment/.
+            // Use stamp + candidate_id + task_id + trial to avoid collisions
+            // when multiple run_arena calls execute concurrently in tests.
+            let workdir = std::env::temp_dir().join(format!(
+                "daedalus-{}-{candidate_id}-{task_id}-t{trial}",
+                &stamp
+            ));
+            std::fs::create_dir_all(&workdir)?;
+            let t0 = std::time::Instant::now();
+
+            let exec_result = (|| -> Result<(), Box<dyn std::error::Error>> {
+                copy_dir(&task_dir.join("environment"), &workdir)?;
+                match kind.as_str() {
+                    "null" => {
+                        std::fs::write(workdir.join("findings.json"), null_findings_json())?;
+                    }
+                    "oracle" => {
+                        let findings = oracle_findings(task_dir)?;
+                        std::fs::write(workdir.join("findings.json"), findings)?;
+                    }
+                    "pi" => {
+                        run_pi(&candidate, instruction, task_dir, &workdir, &mut record)?;
+                    }
+                    "oneshot" => {
+                        run_oneshot(&candidate, instruction, task_dir, &workdir, &mut record)?;
+                    }
+                    other => {
+                        return Err(format!("unknown candidate kind: {other:?}").into());
+                    }
+                }
+                Ok(())
+            })();
+
+            if let Err(e) = exec_result {
+                record.insert("error".to_string(), Value::String(e.to_string()));
+            }
+
+            let wall_ms = t0.elapsed().as_millis() as i64;
+            record.insert(
+                "wall_ms".to_string(),
+                Value::Number(serde_json::Number::from(wall_ms)),
+            );
+
+            // ts_end
+            record.insert(
+                "ts_end".to_string(),
+                Value::String(
+                    std::time::SystemTime::now()
+                        .duration_since(std::time::UNIX_EPOCH)
+                        .map(|d| {
+                            let secs = d.as_secs() as i64;
+                            let days = secs.div_euclid(86_400);
+                            let rem = secs.rem_euclid(86_400);
+                            let (h, m, s) = (rem / 3600, (rem % 3600) / 60, rem % 60);
+                            let (y, mo, dy) = crate::pycompat::civil_from_days(days);
+                            format!("{y:04}-{mo:02}-{dy:02}T{h:02}:{m:02}:{s:02}+00:00")
+                        })
+                        .unwrap_or_else(|_| "1970-01-01T00:00:00+00:00".to_string()),
+                ),
+            );
+
+            // Grader tamper check.
+            if tree_digest(&[&task_dir.join("tests"), &task_dir.join("solution")]) != grader_digest
+            {
+                record.insert(
+                    "error".to_string(),
+                    Value::String("grader files modified during run; trial voided".to_string()),
+                );
+            }
+
+            let has_error = matches!(record.get("error"), Some(v) if !v.is_null() && v != &Value::String(String::new()));
+
+            if has_error {
+                // Failed trials never earn reward.
+                record.insert(
+                    "reward".to_string(),
+                    Value::Number(serde_json::Number::from_f64(0.0).unwrap()),
+                );
+                record.insert(
+                    "recall".to_string(),
+                    Value::Number(serde_json::Number::from_f64(0.0).unwrap()),
+                );
+                record.insert("matched".to_string(), Value::Array(vec![]));
+                record.insert(
+                    "false_positives".to_string(),
+                    Value::Number(serde_json::Number::from(0i64)),
+                );
+                record.insert("expected_defects".to_string(), Value::Null);
+                record.insert("scorer_error".to_string(), Value::Null);
+            } else {
+                match crate::score::score(
+                    &workdir.join("findings.json"),
+                    &task_dir.join("tests").join("expected.json"),
+                ) {
+                    Ok(verdict) => {
+                        record.insert(
+                            "reward".to_string(),
+                            Value::Number(serde_json::Number::from_f64(verdict.reward).unwrap()),
+                        );
+                        record.insert(
+                            "recall".to_string(),
+                            Value::Number(serde_json::Number::from_f64(verdict.recall).unwrap()),
+                        );
+                        record.insert(
+                            "matched".to_string(),
+                            Value::Array(
+                                verdict
+                                    .matched
+                                    .iter()
+                                    .map(|s| Value::String(s.clone()))
+                                    .collect(),
+                            ),
+                        );
+                        record.insert(
+                            "false_positives".to_string(),
+                            Value::Number(serde_json::Number::from(verdict.false_positives)),
+                        );
+                        record.insert(
+                            "expected_defects".to_string(),
+                            Value::Number(serde_json::Number::from(
+                                verdict.expected_defects as u64,
+                            )),
+                        );
+                        record.insert(
+                            "scorer_error".to_string(),
+                            match verdict.error {
+                                Some(e) => Value::String(e),
+                                None => Value::Null,
+                            },
+                        );
+                    }
+                    Err(e) => {
+                        // Answer key load failure: record error, zero reward.
+                        record.insert("error".to_string(), Value::String(format!("scorer: {e}")));
+                        record.insert(
+                            "reward".to_string(),
+                            Value::Number(serde_json::Number::from_f64(0.0).unwrap()),
+                        );
+                        record.insert(
+                            "recall".to_string(),
+                            Value::Number(serde_json::Number::from_f64(0.0).unwrap()),
+                        );
+                        record.insert("matched".to_string(), Value::Array(vec![]));
+                        record.insert(
+                            "false_positives".to_string(),
+                            Value::Number(serde_json::Number::from(0i64)),
+                        );
+                        record.insert("expected_defects".to_string(), Value::Null);
+                        record.insert("scorer_error".to_string(), Value::Null);
+                    }
+                }
+            }
+
+            // findings from workdir/findings.json
+            let findings_file = workdir.join("findings.json");
+            if findings_file.exists() {
+                match std::fs::read_to_string(&findings_file)
+                    .ok()
+                    .and_then(|t| serde_json::from_str::<Value>(&t).ok())
+                {
+                    Some(v) => {
+                        record.insert(
+                            "findings".to_string(),
+                            v.get("findings").cloned().unwrap_or(Value::Null),
+                        );
+                    }
+                    None => {
+                        record.insert("findings".to_string(), Value::Null);
+                    }
+                }
+            }
+
+            // Artifacts dir.
+            let art_dir = exp_dir
+                .join("artifacts")
+                .join(&candidate_id)
+                .join(format!("{task_id}-t{trial}-{stamp}"));
+            std::fs::create_dir_all(&art_dir)?;
+
+            // Pop _transcript_text and _response_text before recording.
+            let transcript = record.remove("_transcript_text");
+            let response = record.remove("_response_text");
+            if let Some(Value::String(t)) = transcript {
+                if !t.is_empty() {
+                    std::fs::write(art_dir.join("transcript.txt"), t)?;
+                }
+            }
+            if let Some(Value::String(r)) = response {
+                if !r.is_empty() {
+                    std::fs::write(art_dir.join("response.txt"), r)?;
+                }
+            }
+            if findings_file.exists() {
+                let _ = std::fs::copy(&findings_file, art_dir.join("findings.json"));
+            }
+
+            // artifacts field: relative path from exp_dir.
+            let art_rel = art_dir
+                .strip_prefix(&exp_dir)
+                .unwrap_or(&art_dir)
+                .to_string_lossy()
+                .into_owned();
+            record.insert("artifacts".to_string(), Value::String(art_rel.clone()));
+
+            // artifacts.index append.
+            let run_id = record
+                .get("run_id")
+                .and_then(Value::as_str)
+                .unwrap_or("")
+                .to_string();
+            let mut idx = std::fs::OpenOptions::new()
+                .create(true)
+                .append(true)
+                .open(exp_dir.join("artifacts.index"))?;
+            use std::io::Write as IoWrite;
+            writeln!(idx, "{run_id}\t{art_rel}")?;
+
+            // Clean up workspace.
+            let _ = std::fs::remove_dir_all(&workdir);
+
+            // Append to trials.jsonl.
+            let mut f = std::fs::OpenOptions::new()
+                .create(true)
+                .append(true)
+                .open(&trials_path)?;
+            writeln!(
+                f,
+                "{}",
+                serde_json::to_string(&Value::Object(record.clone()))?
+            )?;
+
+            all_records.push(record.clone());
+
+            // Error tracking for max_errors early stop.
+            let this_error = matches!(record.get("error"), Some(v) if !v.is_null() && v != &Value::String(String::new()));
+            if this_error {
+                total_errors += 1;
+            }
+
+            if let Some(max_e) = inputs.max_errors {
+                if total_errors >= max_e {
+                    break 'outer;
+                }
+            }
+        }
+    }
+
+    // summarize → summary.json
+    let summary = summarize(&trials_path)?;
+    std::fs::write(
+        exp_dir.join("summary.json"),
+        serde_json::to_string_pretty(&Value::Object(summary))?,
+    )?;
+
+    Ok(exp_dir)
+}
+
+// ---------------------------------------------------------------------------
 // Unit tests (porting tests/test_run.py inline assertions)
 // ---------------------------------------------------------------------------
 
