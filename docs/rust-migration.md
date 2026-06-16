@@ -161,9 +161,20 @@ can no longer run, so retirement is a coordinated, irreversible step:
 5. **Spend-gated**: a full `daedalus run` is unproven e2e without OpenRouter
    budget; only the no-spend rig-validation (null/oracle) is verified.
 
-**Current resting state (committed):** Rust is the primary implementation and is
-gated first in `bin/gate` (cargo test + clippy), with Python retained as the
-parity reference + Harbor in-container scorer. Both gates green.
+**Done (committed `7a5df21`):** the Python implementation is retired — 15
+`runner/` modules, the whole `tests/` pytest suite, `bin/daedalus`, and 16
+parity oracles deleted (51 files, ~18.3k lines). Daedalus is now `daedalus-core`
++ `daedalus-cli`. `bin/gate` = `cargo test` + `clippy` + `py_compile` of the two
+shims. **The only Python left is the Harbor sandbox toolchain**
+(`runner/score.py`, `runner/port_harbor.py`), a named platform boundary held
+bit-faithful by `parity_score.rs` / `parity_port_harbor.rs`.
+
+**Residuals (documented, externally gated):**
+1. Migrating the two Harbor shims off Python needs a Rust binary baked into the
+   `python:3.12-slim` Harbor image — a Docker change verifiable only with Docker.
+2. A full `daedalus run` search is unproven end-to-end without OpenRouter spend.
+3. Prose docs (operator-sop/DESIGN/ROADMAP) still cite legacy `runner/run.py` /
+   `bin/daedalus` names; subcommands map 1:1 to `daedalus`.
 
 ## Log
 
