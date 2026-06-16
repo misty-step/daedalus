@@ -18,6 +18,7 @@ pub mod prompt_packet;
 pub mod pycompat;
 pub mod pyrandom;
 pub mod report;
+pub mod run;
 pub mod score;
 pub mod search_loop; // ports runner/loop.py (`loop` is a Rust keyword)
 pub mod swarm;
