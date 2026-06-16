@@ -28,12 +28,10 @@ const TEST_SH: &str = "\
 # Daedalus verifier: score findings.json against the answer key and emit the
 # Harbor reward file.
 set -u
-python3 /tests/score.py /app/findings.json /tests/expected.json \\
+/tests/daedalus-score /app/findings.json /tests/expected.json \\
     > /logs/verifier/score.json
-python3 - <<'EOF' > /logs/verifier/reward.txt
-import json
-print(json.load(open(\"/logs/verifier/score.json\"))[\"reward\"])
-EOF
+python3 -c 'import json,sys; print(json.load(sys.stdin)[\"reward\"])' \\
+    < /logs/verifier/score.json > /logs/verifier/reward.txt
 ";
 
 const SOLVE_SH: &str = "\
@@ -53,12 +51,9 @@ timeout_sec = {verifier_timeout}
 ";
 
 // ---------------------------------------------------------------------------
-// REPO root: the directory two levels above this crate's src dir at runtime
-// is not directly available; the port_task caller supplies arena_dir. For
-// locating `runner/score.py` we need the repo root, which we derive from the
-// arena_dir argument (arena dirs live in `<repo>/arenas/<name>`) — but that
-// coupling is fragile. Instead we accept a `repo_root` parameter in
-// `port_task` that the caller provides, matching the Python `REPO` constant.
+// Scorer binary: port_task accepts the prebuilt `daedalus-score` musl binary
+// path from the caller and copies it into tests/. The caller (daedalus CLI
+// port-harbor subcommand or bin/harbor-run) must build it first.
 // ---------------------------------------------------------------------------
 
 /// Render the arena instruction for a task by substituting `{intent}` in the
@@ -149,9 +144,9 @@ fn make_executable(path: &Path) -> Result<(), String> {
 ///
 /// Mirrors Python `port_task(arena_dir, arena, task_dir, out_dir)`.
 ///
-/// `repo_root` must be the repository root (parent of `runner/`), used to
-/// locate `runner/score.py`. In the Python original this is the module-level
-/// `REPO` constant.
+/// `scorer_bin` must be the path to the prebuilt `daedalus-score` musl binary.
+/// It is copied into `tests/daedalus-score` and the generated `test.sh` runs
+/// `/tests/daedalus-score` inside the Harbor container.
 ///
 /// # Errors
 ///
@@ -161,7 +156,7 @@ pub fn port_task(
     arena: &TomlValue,
     task_dir: &Path,
     out_dir: &Path,
-    repo_root: &Path,
+    scorer_bin: &Path,
 ) -> Result<(), String> {
     // Read the source task.toml
     let src_toml_text = fs::read_to_string(task_dir.join("task.toml"))
@@ -217,11 +212,9 @@ pub fn port_task(
         tests_out.join("expected.json"),
     )
     .map_err(|e| format!("copy expected.json: {e}"))?;
-    fs::copy(
-        repo_root.join("runner").join("score.py"),
-        tests_out.join("score.py"),
-    )
-    .map_err(|e| format!("copy score.py: {e}"))?;
+    let scorer_dst = tests_out.join("daedalus-score");
+    fs::copy(scorer_bin, &scorer_dst).map_err(|e| format!("copy daedalus-score binary: {e}"))?;
+    make_executable(&scorer_dst)?;
     let test_sh_path = tests_out.join("test.sh");
     fs::write(&test_sh_path, TEST_SH).map_err(|e| format!("write test.sh: {e}"))?;
     make_executable(&test_sh_path)?;
@@ -286,7 +279,7 @@ mod tests {
     #[test]
     fn test_sh_is_bash_and_executable_content() {
         assert!(TEST_SH.starts_with("#!/bin/bash\n"));
-        assert!(TEST_SH.contains("score.py"));
+        assert!(TEST_SH.contains("daedalus-score"));
         assert!(TEST_SH.contains("reward.txt"));
     }
 

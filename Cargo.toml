@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["crates/daedalus-core", "crates/daedalus-cli"]
+members = ["crates/daedalus-core", "crates/daedalus-cli", "crates/daedalus-score"]
 
 # The Rust port of Daedalus. The Python `runner/` package and `bin/daedalus`
 # are migrated one parity-verified module at a time; see docs/rust-migration.md

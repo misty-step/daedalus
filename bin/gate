@@ -3,14 +3,11 @@
 # claiming any change is done; CI runs the same command.
 #
 # Daedalus is implemented in Rust: daedalus-core (kernel) + daedalus-cli (the
-# `daedalus` binary). See docs/rust-migration.md. The only remaining Python is
-# the Harbor sandbox toolchain — runner/score.py (in-container verifier, called
-# by arenas/*/tests/test.sh) and runner/port_harbor.py (arena -> Harbor porter,
-# called by bin/harbor-run) — kept because the Harbor image is python:3.12-slim.
-# Both are held to the Rust behavior by parity_score.rs / parity_port_harbor.rs.
+# `daedalus` binary) + daedalus-score (static musl scorer for the Harbor
+# container). All Python has been eliminated; the harbor-run script uses the
+# Rust CLI exclusively.
 set -eu
 cd "$(dirname "$0")/.."
 
 cargo test --workspace --quiet
 cargo clippy --workspace --all-targets --quiet -- -D warnings
-python3 -m py_compile runner/score.py runner/port_harbor.py

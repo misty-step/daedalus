@@ -32,7 +32,7 @@ const VERIFY_SH: &str = "#!/usr/bin/env sh
 set -eu
 HERE=$(cd \"$(dirname \"$0\")\" && pwd)
 WORKDIR=${1:-$PWD}
-python3 \"$HERE/../../../../../runner/score.py\" \"$WORKDIR/findings.json\" \"$HERE/expected.json\"
+daedalus score \"$WORKDIR/findings.json\" \"$HERE/expected.json\"
 ";
 
 const DEFAULT_TEMPLATE: &str = "{intent}
@@ -1248,7 +1248,7 @@ mod tests {
         .unwrap();
         assert_eq!(findings, serde_json::json!({"findings": []}));
         let test_sh = fs::read_to_string(task.join("tests").join("test.sh")).unwrap();
-        assert!(test_sh.contains("runner/score.py"));
+        assert!(test_sh.contains("daedalus score"));
         let _ = fs::remove_dir_all(&tmp);
     }
 

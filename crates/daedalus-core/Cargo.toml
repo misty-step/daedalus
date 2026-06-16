@@ -4,10 +4,14 @@ version.workspace = true
 edition.workspace = true
 description = "Deterministic kernel of the Daedalus agent foundry (Rust port of runner/)."
 
+[features]
+default = ["http"]
+http = ["dep:ureq"]
+
 [dependencies]
 serde = { workspace = true }
 serde_json = { workspace = true }
 toml = { workspace = true }
 sha2 = { workspace = true }
 regex = { workspace = true }
-ureq = { workspace = true }
+ureq = { workspace = true, optional = true }

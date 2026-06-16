@@ -1273,6 +1273,7 @@ pub fn run_pi(
 /// extracts findings, writes `workdir/findings.json`, and merges provider/
 /// token/cost fields into `record`.  Requires `OPENROUTER_API_KEY` in the
 /// environment.  This is a live-I/O boundary; it is NOT parity-tested.
+#[cfg(feature = "http")]
 pub fn run_oneshot(
     candidate: &Map<String, Value>,
     instruction: &str,
@@ -1634,7 +1635,14 @@ pub fn run_arena(inputs: ArenaInputs) -> Result<PathBuf, Box<dyn std::error::Err
                         run_pi(&candidate, instruction, task_dir, &workdir, &mut record)?;
                     }
                     "oneshot" => {
-                        run_oneshot(&candidate, instruction, task_dir, &workdir, &mut record)?;
+                        #[cfg(feature = "http")]
+                        {
+                            run_oneshot(&candidate, instruction, task_dir, &workdir, &mut record)?;
+                        }
+                        #[cfg(not(feature = "http"))]
+                        {
+                            return Err("oneshot kind requires the 'http' feature".into());
+                        }
                     }
                     other => {
                         return Err(format!("unknown candidate kind: {other:?}").into());

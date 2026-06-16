@@ -129,6 +129,15 @@ enum Cmd {
         #[arg(long)]
         today: Option<String>,
     },
+    /// Port an arena into Harbor format (Rust replacement for runner/port_harbor.py).
+    PortHarbor {
+        arena: PathBuf,
+        #[arg(long, default_value = "harbor-build")]
+        out: String,
+        /// Path to the prebuilt daedalus-score musl binary.
+        #[arg(long)]
+        scorer_bin: PathBuf,
+    },
     /// Search compositions for a task spec.
     Run {
         taskspec: PathBuf,
@@ -221,6 +230,11 @@ fn main() -> ExitCode {
         }
         Cmd::TaxonomyValidate { taxonomy, suite } => cmd_taxonomy_validate(&taxonomy, &suite),
         Cmd::Doctor { stale_days, today } => cmd_doctor(stale_days, today.as_deref()),
+        Cmd::PortHarbor {
+            arena,
+            out,
+            scorer_bin,
+        } => cmd_port_harbor(&arena, &out, &scorer_bin),
         Cmd::Run {
             taskspec,
             arena,
@@ -652,6 +666,88 @@ fn parse_date(s: &str) -> Option<(i64, u32, u32)> {
     let m: u32 = parts[1].parse().ok()?;
     let d: u32 = parts[2].parse().ok()?;
     Some((y, m, d))
+}
+
+// ---------------------------------------------------------------------------
+// port-harbor
+// ---------------------------------------------------------------------------
+
+fn cmd_port_harbor(
+    arena_path: &std::path::Path,
+    out: &str,
+    scorer_bin: &std::path::Path,
+) -> ExitCode {
+    use daedalus_core::port_harbor::port_task;
+
+    // Locate repo root as the cwd (harbor-run cds into repo root before exec).
+    let repo = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
+
+    let arena_dir = if arena_path.is_absolute() {
+        arena_path.to_path_buf()
+    } else {
+        repo.join(arena_path)
+    };
+
+    let scorer_bin_abs = if scorer_bin.is_absolute() {
+        scorer_bin.to_path_buf()
+    } else {
+        repo.join(scorer_bin)
+    };
+
+    // Read arena.toml
+    let arena_toml_text = match std::fs::read_to_string(arena_dir.join("arena.toml")) {
+        Ok(t) => t,
+        Err(e) => {
+            eprintln!("read arena.toml: {e}");
+            return ExitCode::FAILURE;
+        }
+    };
+    let arena: toml::Value = match arena_toml_text.parse() {
+        Ok(v) => v,
+        Err(e) => {
+            eprintln!("parse arena.toml: {e}");
+            return ExitCode::FAILURE;
+        }
+    };
+
+    let arena_id = arena
+        .get("id")
+        .and_then(|v| v.as_str())
+        .unwrap_or("unknown");
+
+    let build_root = repo.join(out).join(arena_id);
+
+    // Iterate tasks (sorted)
+    let tasks_dir = arena_dir.join("tasks");
+    let mut task_dirs: Vec<std::path::PathBuf> = match std::fs::read_dir(&tasks_dir) {
+        Ok(rd) => rd
+            .flatten()
+            .map(|e| e.path())
+            .filter(|p| p.is_dir())
+            .collect(),
+        Err(e) => {
+            eprintln!("read tasks dir: {e}");
+            return ExitCode::FAILURE;
+        }
+    };
+    task_dirs.sort();
+
+    if task_dirs.is_empty() {
+        eprintln!("no tasks found");
+        return ExitCode::FAILURE;
+    }
+
+    for task_dir in &task_dirs {
+        let task_name = task_dir.file_name().and_then(|n| n.to_str()).unwrap_or("?");
+        let out_dir = build_root.join(task_name);
+        if let Err(e) = port_task(&arena_dir, &arena, task_dir, &out_dir, &scorer_bin_abs) {
+            eprintln!("port_task {task_name}: {e}");
+            return ExitCode::FAILURE;
+        }
+        println!("ported {task_name}");
+    }
+    println!("harbor dataset: {}", build_root.display());
+    ExitCode::SUCCESS
 }
 
 // ---------------------------------------------------------------------------
