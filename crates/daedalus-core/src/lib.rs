@@ -10,6 +10,7 @@
 
 pub mod doctor;
 pub mod judge;
+pub mod launch;
 pub mod lineage;
 pub mod mutate;
 pub mod port_harbor;
@@ -17,6 +18,7 @@ pub mod prompt_packet;
 pub mod pycompat;
 pub mod report;
 pub mod score;
+pub mod search_loop; // ports runner/loop.py (`loop` is a Rust keyword)
 pub mod swarm;
 pub mod taxonomy;
 pub mod trace;
