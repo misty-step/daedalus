@@ -4,11 +4,20 @@
 
 use serde_json::Value;
 
-/// Replicate Python's `round(x, ndigits)`: round-half-to-even ("banker's
-/// rounding") at `ndigits` decimal places.
+/// Replicate Python's `round(x, ndigits)`: correctly-rounded, half-to-even on
+/// the *exact* binary value of `x`.
+///
+/// We format to `ndigits` decimals and parse back: Rust's float formatter
+/// rounds half-to-even on the exact value, exactly like CPython's `round()`.
+/// The naive `(x * 10^n).round() / 10^n` perturbs `x` before rounding and
+/// diverges from Python at decimal half-points, so it is not used.
 pub fn round_half_even(x: f64, ndigits: u32) -> f64 {
-    let factor = 10f64.powi(ndigits as i32);
-    (x * factor).round_ties_even() / factor
+    if !x.is_finite() {
+        return x;
+    }
+    format!("{x:.*}", ndigits as usize)
+        .parse()
+        .expect("formatted finite float parses")
 }
 
 /// Replicate Python truthiness (`bool(value)`) for a JSON value: `None`,
