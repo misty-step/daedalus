@@ -64,11 +64,13 @@ Run the Rust gate: `cargo test`. Run the Python gate: `bin/gate`.
 
 Source LOC from the `migrate-daedalus-rust` branch. Layering is by *runner*
 dependency (file formats are the seams; orchestration uses dependency
-injection). **13 of 17 runner modules ported + parity-verified.** Done: score,
-prompt_packet, trace, report, lineage, judge, taxonomy, port_harbor, swarm,
-doctor, workbench, loop, launch (+ shared `pycompat`, `pyrandom`). Remaining:
-**run** (pi/OpenRouter I/O boundary — lead-owned), **mutate** (calls pi),
-**seed** (→mutate), **export** (→run), then the entrypoints.
+injection). **All 17 runner modules ported + parity-verified** (deterministic
+cores), behind **19 parity oracles** + shared `pycompat`/`pyrandom`. Remaining:
+the **live execution glue** (run's `run_pi`/`run_oneshot`/`main`, mutate's
+`call_optimizer` — subprocess + OpenRouter HTTP, not parity-testable offline),
+the **`bin/daedalus` composition root** → `daedalus-cli` (clap), `bin/gate` →
+`cargo test`, then **deleting the Python** once the Rust CLI is verified
+end-to-end on the no-spend (null/oracle) paths.
 
 ### Ported + parity-verified ✅
 | Module | LOC | Rust | Parity oracle |
@@ -147,3 +149,11 @@ disjoint) and run the unified gate. Validated on 5 modules across 2 batches.
   trajectory. **13/17 done.** Next: lead-owned **run** (the pi/OpenRouter
   boundary, no live spend — replay/fixture parity), then **mutate**, **seed**,
   **export**, then the entrypoints (`bin/daedalus` → `clap`) and deleting Python.
+- **2026-06-16 (cont.)** — Added `py_json_dumps` (Python-faithful `json.dumps`:
+  ensure_ascii, `', '`/`': '`, sort_keys) for composition-hash parity. Lanes
+  ported the deterministic cores of **run** (composition hash matches Python on
+  all 4 real candidates; `summarize` matches real `trials.jsonl`), **mutate**,
+  **seed** (sampled compositions match Python under shared seeds via PyRandom),
+  and **export** (byte-exact contract/persona on real deliveries, reusing
+  `run::load_candidate`). **All 17 module cores done; 19 parity oracles green.**
+  Next: run's live execution glue + the `bin/daedalus` CLI, then retire Python.
