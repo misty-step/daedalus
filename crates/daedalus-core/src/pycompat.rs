@@ -48,6 +48,84 @@ pub fn py_str(value: &Value) -> String {
     }
 }
 
+/// Reproduce Python's `json.dumps(value, sort_keys=…)` with default options:
+/// `ensure_ascii=True` (non-ASCII escaped as `\uXXXX`, astral as surrogate
+/// pairs) and the no-indent separators `", "` / `": "`. Needed wherever Python
+/// hashes or compares `json.dumps` output (e.g. composition hashes) — serde's
+/// compact form omits the separator spaces and does not escape non-ASCII, so it
+/// would diverge.
+pub fn py_json_dumps(value: &Value, sort_keys: bool) -> String {
+    let mut out = String::new();
+    py_json_write(value, sort_keys, &mut out);
+    out
+}
+
+fn py_json_write(value: &Value, sort_keys: bool, out: &mut String) {
+    match value {
+        Value::Null => out.push_str("null"),
+        Value::Bool(b) => out.push_str(if *b { "true" } else { "false" }),
+        Value::Number(n) => out.push_str(&n.to_string()),
+        Value::String(s) => py_json_str(s, out),
+        Value::Array(a) => {
+            out.push('[');
+            for (i, e) in a.iter().enumerate() {
+                if i > 0 {
+                    out.push_str(", ");
+                }
+                py_json_write(e, sort_keys, out);
+            }
+            out.push(']');
+        }
+        Value::Object(m) => {
+            out.push('{');
+            let mut keys: Vec<&String> = m.keys().collect();
+            if sort_keys {
+                keys.sort();
+            }
+            for (i, k) in keys.iter().enumerate() {
+                if i > 0 {
+                    out.push_str(", ");
+                }
+                py_json_str(k, out);
+                out.push_str(": ");
+                py_json_write(&m[*k], sort_keys, out);
+            }
+            out.push('}');
+        }
+    }
+}
+
+fn py_json_str(s: &str, out: &mut String) {
+    out.push('"');
+    for c in s.chars() {
+        match c {
+            '"' => out.push_str("\\\""),
+            '\\' => out.push_str("\\\\"),
+            '\n' => out.push_str("\\n"),
+            '\r' => out.push_str("\\r"),
+            '\t' => out.push_str("\\t"),
+            '\u{08}' => out.push_str("\\b"),
+            '\u{0c}' => out.push_str("\\f"),
+            c if (c as u32) < 0x20 => out.push_str(&format!("\\u{:04x}", c as u32)),
+            c if (c as u32) < 0x80 => out.push(c),
+            c => {
+                let cp = c as u32;
+                if cp <= 0xFFFF {
+                    out.push_str(&format!("\\u{cp:04x}"));
+                } else {
+                    let v = cp - 0x10000;
+                    out.push_str(&format!(
+                        "\\u{:04x}\\u{:04x}",
+                        0xD800 + (v >> 10),
+                        0xDC00 + (v & 0x3FF)
+                    ));
+                }
+            }
+        }
+    }
+    out.push('"');
+}
+
 /// Arithmetic mean of a non-empty slice. Mirrors `statistics.mean` for typical
 /// small float sequences. (CPython's `statistics.mean` sums exactly via
 /// `Fraction`, so results can differ by 1 ULP on adversarial inputs; ports that

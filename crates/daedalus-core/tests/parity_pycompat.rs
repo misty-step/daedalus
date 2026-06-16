@@ -5,7 +5,8 @@
 
 use std::process::Command;
 
-use daedalus_core::pycompat::round_half_even;
+use daedalus_core::pycompat::{py_json_dumps, round_half_even};
+use serde_json::{json, Value};
 
 fn python_available() -> bool {
     Command::new("python3")
@@ -105,4 +106,44 @@ fn round_half_even_matches_python_round() {
         mismatches.len(),
         mismatches.join("\n")
     );
+}
+
+#[test]
+fn py_json_dumps_matches_python() {
+    if !python_available() {
+        eprintln!("skipping py_json_dumps parity: python3 not available");
+        return;
+    }
+    let cases: Vec<Value> = vec![
+        json!({"b": 1, "a": 2, "c": 3}),
+        json!({"z": {"y": 1, "x": 2}, "a": [3, 2, 1]}),
+        json!([1, 2.0, 0.2, true, false, null, "x"]),
+        json!({"text": "café ☕ 𝕏 — sí", "n": 8192, "t": 0.2}),
+        json!({"esc": "quote\" back\\ slash\n tab\t ctrl\u{01}", "empty_o": {}, "empty_a": []}),
+        json!("just a string with é"),
+        json!(42),
+        json!(1.0),
+    ];
+    for (i, case) in cases.iter().enumerate() {
+        // Send the value to Python as compact UTF-8 JSON; Python re-dumps it with
+        // the target options. Insertion order is preserved through the round-trip.
+        let compact = serde_json::to_string(case).unwrap();
+        for &sort in &[false, true] {
+            let out = Command::new("python3")
+                .arg("-c")
+                .arg(format!(
+                    "import sys, json; print(json.dumps(json.loads(sys.argv[1]), sort_keys={}))",
+                    if sort { "True" } else { "False" }
+                ))
+                .arg(&compact)
+                .output()
+                .expect("run python json.dumps");
+            assert!(out.status.success(), "python json.dumps failed");
+            // python print adds a trailing newline
+            let py = String::from_utf8(out.stdout).unwrap();
+            let py = py.strip_suffix('\n').unwrap_or(&py);
+            let rust = py_json_dumps(case, sort);
+            assert_eq!(py, rust, "case {i} sort_keys={sort}");
+        }
+    }
 }
