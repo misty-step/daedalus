@@ -50,67 +50,88 @@ crates/
 
 Run the Rust gate: `cargo test`. Run the Python gate: `bin/gate`.
 
+## Shared foundation (`daedalus-core`)
+
+- `pycompat` — Python-semantics helpers every port reuses: `round_half_even`
+  (bit-exact with CPython `round()`, format-parse based + battery oracle),
+  `is_truthy` (Python `bool()`), `py_str` (Python `str()`), `mean`
+  (`statistics.mean`, 1-ULP caveat noted).
+- `serde_json` is built with `preserve_order` so JSON object keys keep Python
+  dict insertion order — artifacts are byte-reproducible.
+- Crate deps available to ports: `serde`, `serde_json`, `toml`, `sha2`, `regex`.
+
 ## Module DAG & status
 
-Source LOC from the `migrate-daedalus-rust` branch (includes branch-only
-`swarm.py`, `taxonomy.py`). Order roughly = migration order.
+Source LOC from the `migrate-daedalus-rust` branch. Layering is by *runner*
+dependency (file formats are the seams; orchestration uses dependency
+injection). **8 of 17 runner modules ported + parity-verified.**
 
-### Tier 0 — done
-| Module | LOC | Status | Notes |
+### Ported + parity-verified ✅
+| Module | LOC | Rust | Parity oracle |
 |---|---|---|---|
-| `runner/score.py` | 93 | **ported + parity-verified** | `score::score`; CLI `daedalus score`; 17 unit tests + `parity_score.rs`. The grader is gospel — done first. |
+| `score.py` | 93 | `score` (+ `daedalus score` CLI) | `parity_score.rs` (24 cases) |
+| `prompt_packet.py` | 43 | `prompt_packet` | `parity_prompt_packet.rs` (14-case corpus) |
+| `trace.py` | 95 | `trace` (+ `daedalus trace` CLI) | `parity_trace.rs` (semantic + BYTE + real capstone) |
+| `report.py` | 230 | `report` | `parity_report.rs` (17 cases incl. real capstone) |
+| `lineage.py` | 251 | `lineage` | `parity_lineage.rs` (13 cases) |
+| `judge.py` | 170 | `judge` | `parity_judge.rs` (7 deterministic fns; `judge_score` unit-tested w/ fake `call`) |
+| `taxonomy.py` | 351 | `taxonomy` | `parity_taxonomy.rs` (6 fixtures incl. real taxonomy) |
+| `port_harbor.py` | 128 | `port_harbor` | `parity_port_harbor.rs` (byte-identical output trees, real tasks) |
+| — | — | `pycompat` | `parity_pycompat.rs` (~600 round() values) |
 
-### Tier 1 — deterministic leaves (pure data transforms; strong existing tests)
+### Layer 0 — remaining (no runner deps)
 | Module | LOC | Notes |
 |---|---|---|
-| `runner/taxonomy.py` | 351 | lens/category validation; `taxonomy-validate`. Branch-only. |
-| `runner/prompt_packet.py` | 43 | packet assembly. |
-| `runner/lineage.py` | 251 | lineage.md / NOTEBOOK rendering. |
-| `runner/trace.py` | 95 | export-time OTel view (ADR-002). |
-| `runner/report.py` | 230 | experiment comparison report. |
-| `runner/doctor.py` | 168 | cold-start checks (shells `pi --version` — thin). |
-| `runner/export.py` | 397 | control-plane export → contract.toml + persona.md. |
+| `loop.py` | 258 | search loop (budget/plateau/keep/certification). Pure DI logic. Parity is cross-language-hard (injected callables) → port + port `test_loop.py`, plus a parity harness driving equivalent deterministic injected fns. **Lead-owned / careful lane.** |
+| `swarm.py` | 341 | review-swarm specialist+master. `toml`+`json`; `generated` timestamp = `value or now()` → needs `pycompat::utc_now_iso` (parity passes explicit ts). |
+| `doctor.py` | 168 | cold-start checks: `toml`, `pi --version` subprocess (thin boundary), `strptime("%Y-%m-%d")`; watch for `date.today()` expiry (inject/parity-exclude). |
 
-### Tier 2 — orchestration logic (deterministic given recorded trial data)
+### Layer 1 — deps now satisfied (prompt_packet/score/swarm)
 | Module | LOC | Notes |
 |---|---|---|
-| `runner/loop.py` | 258 | search loop: budget/plateau/keep/certification. Parity over recorded `trials.jsonl`. |
-| `runner/mutate.py` | 472 | reflective mutation/proposer plumbing. |
-| `runner/judge.py` | 170 | calibrated judge family. |
-| `runner/seed.py` | 180 | landscape seed sampling. |
-| `runner/launch.py` | 304 | launch-pack rendering + dry-run. |
-| `runner/swarm.py` | 341 | review-swarm specialist+master. Branch-only. |
-| `runner/workbench.py` | 441 | arena authoring/freeze/calibration. |
+| `mutate.py` | 472 | reflective mutation/proposer; → `prompt_packet` ✅. Has injected proposer LLM `call` → parity deterministic parts, unit-test the call path. |
+| `workbench.py` | 441 | arena authoring/freeze/calibration; → `score` ✅. CLI + file I/O heavy. |
+| `launch.py` | 304 | launch-pack render + dry-run; → `swarm` (do after swarm). |
+| `run.py` | 685 | **Tier 3 I/O boundary**: `pi` subprocess + OpenRouter HTTP + env + usage summing; → `score` ✅. Trait-gate the model call; HTTP via `ureq`. **Lead-owned, no live spend** (replay/fixture only). |
 
-### Tier 3 — external boundary (non-deterministic I/O; port behind a trait)
+### Layer 2 — deps pending
 | Module | LOC | Notes |
 |---|---|---|
-| `runner/run.py` | 685 | **the only real I/O surface**: `pi` subprocess + OpenRouter HTTP (`urllib`) + env keys + usage summing. Trait-gate the model call; HTTP via `ureq`/`reqwest`. |
-| `runner/port_harbor.py` | 128 | Harbor task-format adapter. |
+| `seed.py` | 180 | landscape seed sampling; → `mutate`, `prompt_packet` (after mutate). |
+| `export.py` | 397 | control-plane export → contract.toml + persona.md; → `run` (after run). `generated` timestamp like swarm. |
 
-### Tier 4 — entrypoints
+### Tier 4 — entrypoints (last)
 | Module | LOC | Notes |
 |---|---|---|
-| `bin/daedalus` | 791 | argparse CLI → `daedalus-cli` (introduce `clap` here). |
-| `bin/gate` | 17 | becomes `cargo test` (+ transitional pytest until Python is gone). |
+| `bin/daedalus` | 791 | argparse CLI → `daedalus-cli` (introduce `clap`); composition root that wires every module. |
+| `bin/gate` | 17 | becomes `cargo test` (drop pytest once Python is gone). |
 | `bin/harbor-run` | 35 | thin Docker launcher; may stay shell (doctrine allows thin launchers). |
 
-## Known parity gaps to revisit (logged, not yet handled)
+## Parallel port mechanism (proven)
 
-From the scorer port — exotic `int()`/answer-key cases real fixtures don't hit,
-but which a faithful port should eventually cover or explicitly reject:
+Layer-0/1 leaves are ported by parallel isolated **worktree lanes**, one module
+each: pre-scaffold `pub mod X;` + placeholder so lanes touch only disjoint files
+(`src/X.rs` + `tests/parity_X.rs`), pre-provision shared deps, dispatch with a
+self-contained lane card (no chat context), then cherry-pick each commit (clean,
+disjoint) and run the unified gate. Validated on 5 modules across 2 batches.
 
-- Python `int()` accepts underscore digit separators (`int("1_000")==1000`) and
-  non-ASCII digits; the Rust `coerce_line` rejects both.
-- Python `int(True)==1` (bool line) — handled; `int(7.5)` truncates — handled.
-- Duplicate defect `id`s: Python dedups via a dict (`{d["id"]: d}`) while the
-  Rust port keeps a `Vec`, so recall denominators could diverge on malformed
-  answer keys with duplicate ids. Real keys have unique ids.
+## Known parity gaps (logged, accepted)
+
+- **score**: Python `int()` accepts `_` digit separators and non-ASCII digits
+  (Rust `coerce_line` rejects); duplicate defect `id`s dedup differently (real
+  keys have unique ids). Real fixtures don't hit these.
+- **taxonomy**: malformed-TOML-fence error *text* differs (Python `tomllib` vs
+  Rust `toml` crate); parity asserts `ok=false` + non-empty messages only.
+- **judge**: `statistics.mean` exact-Fraction vs f64 — agrees on all tested rank
+  vectors; revisit only if a future divergence appears.
 
 ## Log
 
-- **2026-06-16** — Branch `migrate-daedalus-rust` off `deliver-034-review-swarm`
-  (captures branch-only `swarm.py`/`taxonomy.py`). Stood up the workspace,
-  ported `score.py` → `daedalus-core::score` with 17 unit tests + a
-  Python-vs-Rust parity oracle, and `daedalus score` CLI. Next: Tier 1 leaves,
-  starting with `taxonomy` and `prompt_packet`.
+- **2026-06-16** — Branch off `deliver-034-review-swarm`. Stood up the workspace;
+  ported **score, prompt_packet, trace, report, lineage, judge, taxonomy,
+  port_harbor** + `pycompat`, each behind a Python-vs-Rust parity oracle.
+  Hardened `round_half_even` to be bit-exact with CPython `round()` (battery
+  oracle). Enabled `serde_json` `preserve_order` (byte-reproducible JSON).
+  Established + validated the parallel worktree-lane mechanism (2 batches, 5
+  modules). Gates green throughout: `cargo test`/`clippy`/`fmt` + `bin/gate` 174.
+  Next: Layer-0 `swarm`/`doctor` (parallel) and lead-owned `loop`; then Layer 1.
