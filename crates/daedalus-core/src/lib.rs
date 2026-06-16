@@ -11,3 +11,4 @@
 pub mod prompt_packet;
 pub mod pycompat;
 pub mod score;
+pub mod trace;
