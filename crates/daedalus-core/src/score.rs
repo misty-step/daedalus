@@ -17,6 +17,8 @@ use std::path::Path;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
+use crate::pycompat::round_half_even;
+
 const FP_PENALTY: f64 = 0.2;
 
 /// Rank of a severity label; lower is stricter. `None` for unknown labels,
@@ -73,11 +75,6 @@ impl fmt::Display for ScoreError {
 }
 
 impl std::error::Error for ScoreError {}
-
-/// Replicate Python's `round(x, 4)`: round-half-to-even at 4 decimal places.
-fn round4(x: f64) -> f64 {
-    (x * 10_000.0).round_ties_even() / 10_000.0
-}
 
 /// Replicate Python's `int(value)` applied to a finding's `line`. Returns
 /// `None` exactly where Python would raise `TypeError`/`ValueError` — which the
@@ -203,12 +200,12 @@ pub fn score(findings_path: &Path, expected_path: &Path) -> Result<ScoreResult, 
     } else {
         result.matched.len() as f64 / expected.len() as f64
     };
-    result.recall = round4(recall);
+    result.recall = round_half_even(recall, 4);
     result.false_positives = false_positives;
     result.reward = if expected.is_empty() && false_positives > 0 {
         0.0
     } else {
-        round4((recall - FP_PENALTY * false_positives as f64).max(0.0))
+        round_half_even((recall - FP_PENALTY * false_positives as f64).max(0.0), 4)
     };
 
     Ok(result)

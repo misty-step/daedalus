@@ -8,4 +8,6 @@
 //!
 //! Migration status, module DAG, and strategy: `docs/rust-migration.md`.
 
+pub mod prompt_packet;
+pub mod pycompat;
 pub mod score;
