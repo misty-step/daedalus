@@ -2,27 +2,15 @@
 # The repo gate. Offline, no API keys required. Agents run this before
 # claiming any change is done; CI runs the same command.
 #
-# Daedalus is migrating to Rust (see docs/rust-migration.md): daedalus-core is
-# the implementation, gated here as primary. The Python runner is retained as
-# the parity reference (the parity_*.rs oracles run it) and as the Harbor
-# in-container scorer until the Docker verifier path is migrated; it is gated
-# below until then.
+# Daedalus is implemented in Rust: daedalus-core (kernel) + daedalus-cli (the
+# `daedalus` binary). See docs/rust-migration.md. The only remaining Python is
+# the Harbor sandbox toolchain — runner/score.py (in-container verifier, called
+# by arenas/*/tests/test.sh) and runner/port_harbor.py (arena -> Harbor porter,
+# called by bin/harbor-run) — kept because the Harbor image is python:3.12-slim.
+# Both are held to the Rust behavior by parity_score.rs / parity_port_harbor.rs.
 set -eu
 cd "$(dirname "$0")/.."
 
-# Rust gate (primary implementation + the Python-vs-Rust parity oracles).
 cargo test --workspace --quiet
 cargo clippy --workspace --all-targets --quiet -- -D warnings
-
-# Python gate (reference implementation, retained for parity + Harbor).
-python3 -m py_compile runner/*.py
-
-# Prefer a working pytest however this machine provides one.
-if python3 -m pytest --version >/dev/null 2>&1; then
-    python3 -m pytest tests/ -q
-elif command -v pytest >/dev/null 2>&1; then
-    pytest tests/ -q
-else
-    echo "gate: no pytest available (install: pip install pytest)" >&2
-    exit 1
-fi
+python3 -m py_compile runner/score.py runner/port_harbor.py

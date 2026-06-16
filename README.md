@@ -533,19 +533,23 @@ build carefully, or the system becomes a maze.
   repo doctrine, or runtime agent?
 - Where is the line between agent generation and agent governance?
 
-## Implementation Biases if This Becomes Code
+## Implementation
 
-This repository does not yet contain code. If it becomes durable software, the
-default implementation language should be Rust unless a specific platform
-boundary requires otherwise. Likely exceptions:
+Daedalus is implemented in **Rust**: `crates/daedalus-core` (the deterministic
+kernel) and `crates/daedalus-cli` (the `daedalus` binary). It was migrated from
+the initial Python prototype one parity-verified module at a time — every port
+was cross-checked against the Python reference by a parity oracle before the
+Python was retired; see `docs/rust-migration.md`.
 
-- Python if a chosen eval framework requires it.
-- TypeScript if a browser, Vercel, or app integration makes it the narrowest
-  viable boundary.
-- Shell only as a thin launcher, never as the semantic workflow engine.
+The only remaining Python is the Harbor sandbox toolchain — `runner/score.py`
+(the in-container verifier called by `arenas/*/tests/test.sh`) and
+`runner/port_harbor.py` (the arena → Harbor porter called by `bin/harbor-run`) —
+kept because the Harbor isolation image is `python:3.12-slim`; both are held to
+the Rust behavior by `parity_score.rs` / `parity_port_harbor.rs`. Shell stays a
+thin launcher (`bin/gate`, `bin/harbor-run`), never the workflow engine.
 
-The core runner should stay small: task specs in, experiments out, receipts
-persisted. The master agent can be clever. The harness should be boring.
+The core stays small: task specs in, experiments out, receipts persisted. The
+master agent can be clever. The harness should be boring.
 
 ## Current Status
 
@@ -563,7 +567,9 @@ day, unlocking the Phase 0 prototype:
   launch-contract validation, and residual risks.
 - `specs/pr-review/` — first task specification (gate G1 approved).
 - `arenas/pr-review-v0/` — six PR fixtures in Harbor task format.
-- `runner/` — thin Phase 0 runner and deterministic scorer.
+- `crates/` — the Rust implementation: `daedalus-core` (kernel) +
+  `daedalus-cli` (the `daedalus` binary). `runner/` now holds only the Python
+  Harbor sandbox scorer/porter.
 - `candidates/` — reference candidates (null floor, oracle ceiling, one-shot
   saturation probe) plus agent compositions (pi over OpenRouter).
 - `runs/` — JSONL run records with reward, tokens, cost, and latency.
@@ -576,8 +582,13 @@ file as the source of truth for spec, validation, run, export, approval, trace,
 and closeout commands.
 
 ```sh
-bin/gate                                   # offline tests (grader + runner)
-bin/daedalus doctor                        # readiness summary, no model spend
+bin/gate                                   # offline gate (cargo test + clippy)
+cargo build -p daedalus-cli                # build the `daedalus` binary
+cargo run -p daedalus-cli -- doctor        # readiness summary, no model spend
+cargo run -p daedalus-cli -- --help        # all subcommands (score, trace,
+                                           # export, arena-validate, run, …)
 ```
 
-`runner/report.py runs/<exp-id>` renders a comparison report from any run.
+`docs/operator-sop.md` still documents the legacy `runner/run.py` / `bin/daedalus`
+command names — those map 1:1 to `daedalus` subcommands; a doc refresh is the
+remaining follow-up.
