@@ -1,0 +1,9 @@
+[package]
+name = "daedalus-core"
+version.workspace = true
+edition.workspace = true
+description = "Deterministic kernel of the Daedalus agent foundry (Rust port of runner/)."
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }

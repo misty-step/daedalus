@@ -3,3 +3,6 @@ __pycache__/
 runs/*/artifacts/
 harbor-build/
 jobs/
+
+# Rust build artifacts (Cargo.lock is committed — daedalus ships as a binary)
+/target

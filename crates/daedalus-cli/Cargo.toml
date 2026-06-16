@@ -1,0 +1,13 @@
+[package]
+name = "daedalus-cli"
+version.workspace = true
+edition.workspace = true
+description = "The `daedalus` command-line tool (Rust port of bin/daedalus)."
+
+[[bin]]
+name = "daedalus"
+path = "src/main.rs"
+
+[dependencies]
+daedalus-core = { workspace = true }
+serde_json = { workspace = true }

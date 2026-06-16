@@ -1,0 +1,18 @@
+[workspace]
+resolver = "2"
+members = ["crates/daedalus-core", "crates/daedalus-cli"]
+
+# The Rust port of Daedalus. The Python `runner/` package and `bin/daedalus`
+# are migrated one parity-verified module at a time; see docs/rust-migration.md
+# for the module DAG, status, and the Python-vs-Rust parity oracle each port
+# ships behind. Both gates (cargo test + bin/gate) stay green during the
+# transition.
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+
+[workspace.dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+daedalus-core = { path = "crates/daedalus-core" }
