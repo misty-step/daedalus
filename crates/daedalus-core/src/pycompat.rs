@@ -78,7 +78,7 @@ fn format_unix_utc(secs: i64) -> String {
 }
 
 /// Howard Hinnant's days-from-civil inverse: days since 1970-01-01 → (y, m, d).
-fn civil_from_days(z: i64) -> (i64, u32, u32) {
+pub fn civil_from_days(z: i64) -> (i64, u32, u32) {
     let z = z + 719_468;
     let era = if z >= 0 { z } else { z - 146_096 } / 146_097;
     let doe = z - era * 146_097;
@@ -87,8 +87,21 @@ fn civil_from_days(z: i64) -> (i64, u32, u32) {
     let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
     let mp = (5 * doy + 2) / 153;
     let d = (doy - (153 * mp + 2) / 5 + 1) as u32;
-    let m = if mp < 10 { mp + 3 } else { mp - 9 } as i64;
+    let m = if mp < 10 { mp + 3 } else { mp - 9 };
     (y + i64::from(m <= 2), m as u32, d)
+}
+
+/// Howard Hinnant's days-from-civil: (y, m, d) → days since 1970-01-01.
+/// Use for date arithmetic, e.g. `days_from_civil(today) - days_from_civil(d)`
+/// reproduces Python's `(today - d).days`.
+pub fn days_from_civil(y: i64, m: u32, d: u32) -> i64 {
+    let y = if m <= 2 { y - 1 } else { y };
+    let era = if y >= 0 { y } else { y - 399 } / 400;
+    let yoe = y - era * 400;
+    let mp = if m > 2 { m as i64 - 3 } else { m as i64 + 9 };
+    let doy = (153 * mp + 2) / 5 + d as i64 - 1;
+    let doe = yoe * 365 + yoe / 4 - yoe / 100 + doy;
+    era * 146_097 + doe - 719_468
 }
 
 #[cfg(test)]
@@ -131,5 +144,21 @@ mod tests {
         assert_eq!(format_unix_utc(0), "1970-01-01T00:00:00Z");
         assert_eq!(format_unix_utc(946_684_800), "2000-01-01T00:00:00Z");
         assert_eq!(format_unix_utc(1_000_000_000), "2001-09-09T01:46:40Z");
+    }
+
+    #[test]
+    fn days_from_civil_known_and_roundtrip() {
+        assert_eq!(days_from_civil(1970, 1, 1), 0);
+        assert_eq!(days_from_civil(2000, 1, 1), 10_957);
+        assert_eq!(days_from_civil(2001, 9, 9), 11_574);
+        // day diff in days, like Python (today - verified).days
+        assert_eq!(
+            days_from_civil(2026, 6, 16) - days_from_civil(2026, 6, 1),
+            15
+        );
+        for z in [-1000_i64, 0, 1, 10_957, 20_000, 100_000] {
+            let (y, m, d) = civil_from_days(z);
+            assert_eq!(days_from_civil(y, m, d), z);
+        }
     }
 }
