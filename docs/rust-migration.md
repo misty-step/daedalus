@@ -144,14 +144,26 @@ can no longer run, so retirement is a coordinated, irreversible step:
 2. **Spend-gated**: a full `daedalus run` (optimizer + pi + oneshot probe) can
    only be verified with OpenRouter budget. Until then `cmd_run` is wired +
    unit-tested with fakes, not e2e-proven.
-3. Delete `runner/*.py`, `tests/test_*.py`, `bin/daedalus`; remove the
-   `tests/parity_*.rs` (their Python reference is gone — the ported Rust
-   `#[cfg(test)]` unit tests remain the gate). Point `bin/gate` at
-   `cargo test` (drop `py_compile`/pytest). `bin/harbor-run` may stay (thin
-   Docker launcher).
-4. This deletion is irreversible and removes the user's test suite + reference
-   impl — **confirm with the user before executing**, and note the search is
-   not yet e2e-verified without spend.
+3. **BLOCKER — the Harbor/Docker verifier path embeds Python.** 33 arena
+   `tests/test.sh` verifier scripts run `python3 …/runner/score.py` *inside a
+   `python:3.12-slim` container* (ADR-001 isolation), and `bin/harbor-run`
+   shells `python3 runner/port_harbor.py`. Deleting `runner/` breaks
+   Docker-isolated runs. Retiring it requires baking the Rust `daedalus score`
+   binary into the Harbor image (cross-compiled/musl, COPYed in), rewriting the
+   33 verifier scripts, and **verifying with Docker** (unavailable in the dev
+   environment). Until then, `runner/score.py` (+ `port_harbor.py`) stay as the
+   in-container scorer; a minimal Python shim may be the long-term resting state.
+4. Then delete `runner/*.py` (orchestration), `tests/test_*.py`, `bin/daedalus`,
+   and `tests/parity_*.rs` (their Python reference is gone — the ported Rust
+   `#[cfg(test)]` unit tests, 204 of them, remain the gate). This is irreversible
+   (git-recoverable) and removes the parity oracles + the user's suite —
+   **confirm before executing**.
+5. **Spend-gated**: a full `daedalus run` is unproven e2e without OpenRouter
+   budget; only the no-spend rig-validation (null/oracle) is verified.
+
+**Current resting state (committed):** Rust is the primary implementation and is
+gated first in `bin/gate` (cargo test + clippy), with Python retained as the
+parity reference + Harbor in-container scorer. Both gates green.
 
 ## Log
 
