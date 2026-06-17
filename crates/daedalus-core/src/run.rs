@@ -1171,6 +1171,23 @@ pub fn utc_stamp() -> String {
     format!("{y:04}{mo:02}{d:02}T{h:02}{m:02}{s:02}Z")
 }
 
+/// `datetime.now(timezone.utc).isoformat(timespec="seconds")` →
+/// `"2026-06-16T12:00:00+00:00"`. The compact run-id form is [`utc_stamp`];
+/// this `+00:00` ISO form is what the `ts_start`/`ts_end` trial-record fields use.
+fn iso_stamp() -> String {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| {
+            let secs = d.as_secs() as i64;
+            let days = secs.div_euclid(86_400);
+            let rem = secs.rem_euclid(86_400);
+            let (h, m, s) = (rem / 3600, (rem % 3600) / 60, rem % 60);
+            let (y, mo, dy) = crate::pycompat::civil_from_days(days);
+            format!("{y:04}-{mo:02}-{dy:02}T{h:02}:{m:02}:{s:02}+00:00")
+        })
+        .unwrap_or_else(|_| "1970-01-01T00:00:00+00:00".to_string())
+}
+
 /// Recursive `shutil.copytree(src, dst, dirs_exist_ok=True)` equivalent.
 ///
 /// Mirrors Python's copytree: copies all files and dirs from `src` into `dst`,
@@ -1683,23 +1700,7 @@ pub fn run_arena(inputs: ArenaInputs) -> Result<PathBuf, Box<dyn std::error::Err
                 "run_id".to_string(),
                 Value::String(format!("{stamp}-{candidate_id}-{task_id}-t{trial}")),
             );
-            record.insert(
-                "ts_start".to_string(),
-                Value::String(
-                    std::time::SystemTime::now()
-                        .duration_since(std::time::UNIX_EPOCH)
-                        .map(|d| {
-                            let secs = d.as_secs() as i64;
-                            let days = secs.div_euclid(86_400);
-                            let rem = secs.rem_euclid(86_400);
-                            let (h, m, s) = (rem / 3600, (rem % 3600) / 60, rem % 60);
-                            let (y, mo, dy) = crate::pycompat::civil_from_days(days);
-                            // Python: datetime.isoformat(timespec="seconds") → "2026-06-16T12:00:00+00:00"
-                            format!("{y:04}-{mo:02}-{dy:02}T{h:02}:{m:02}:{s:02}+00:00")
-                        })
-                        .unwrap_or_else(|_| "1970-01-01T00:00:00+00:00".to_string()),
-                ),
-            );
+            record.insert("ts_start".to_string(), Value::String(iso_stamp()));
             record.insert(
                 "runner_version".to_string(),
                 Value::String("0.1.0".to_string()),
@@ -1790,22 +1791,7 @@ pub fn run_arena(inputs: ArenaInputs) -> Result<PathBuf, Box<dyn std::error::Err
             );
 
             // ts_end
-            record.insert(
-                "ts_end".to_string(),
-                Value::String(
-                    std::time::SystemTime::now()
-                        .duration_since(std::time::UNIX_EPOCH)
-                        .map(|d| {
-                            let secs = d.as_secs() as i64;
-                            let days = secs.div_euclid(86_400);
-                            let rem = secs.rem_euclid(86_400);
-                            let (h, m, s) = (rem / 3600, (rem % 3600) / 60, rem % 60);
-                            let (y, mo, dy) = crate::pycompat::civil_from_days(days);
-                            format!("{y:04}-{mo:02}-{dy:02}T{h:02}:{m:02}:{s:02}+00:00")
-                        })
-                        .unwrap_or_else(|_| "1970-01-01T00:00:00+00:00".to_string()),
-                ),
-            );
+            record.insert("ts_end".to_string(), Value::String(iso_stamp()));
 
             // Grader tamper check.
             if tree_digest(&[&task_dir.join("tests"), &task_dir.join("solution")]) != grader_digest
