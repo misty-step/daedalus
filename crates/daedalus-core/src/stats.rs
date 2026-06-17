@@ -161,11 +161,15 @@ pub fn reward_delta_ci(
     let variance = (gf / (gf - 1.0)) * (1.0 / (tf * tf)) * sum_sq;
     let se_raw = variance.max(0.0).sqrt();
 
+    let lo_raw = point_raw - Z_95 * se_raw;
+    let hi_raw = point_raw + Z_95 * se_raw;
     let point = round_half_even(point_raw, 4);
     let se = round_half_even(se_raw, 6);
-    let lo = round_half_even(point_raw - Z_95 * se_raw, 4);
-    let hi = round_half_even(point_raw + Z_95 * se_raw, 4);
-    let excludes_zero = lo > 0.0 || hi < 0.0;
+    let lo = round_half_even(lo_raw, 4);
+    let hi = round_half_even(hi_raw, 4);
+    // Significance reads the unrounded bounds: a true +3.7e-5 lower bound that
+    // displays as 0.0000 is still a win, not a tie.
+    let excludes_zero = lo_raw > 0.0 || hi_raw < 0.0;
 
     Some(DeltaCi {
         point,
@@ -305,6 +309,21 @@ mod tests {
         // Pooling the correlated repo widened the SE and the CI now spans 0.
         assert!(clustered.se > per_task.se);
         assert!(!clustered.excludes_zero);
+    }
+
+    #[test]
+    fn significance_uses_unrounded_bounds_not_the_displayed_4dp() {
+        // Raw lower bound is +3.70e-5 — strictly above 0, a genuine win — but it
+        // rounds to 0.0000 for display. excludes_zero must reflect the true CI,
+        // not the rounded bound, or a real result is silently called a tie.
+        let c = cand(&[
+            ("a", &[0.139_230_483_852_484_93]),
+            ("b", &[0.045_180_835_146_119_59]),
+        ]);
+        let b = cand(&[("a", &[0.0]), ("b", &[0.0])]);
+        let ci = reward_delta_ci(&c, &b, &singleton).expect("defined");
+        assert_eq!(ci.lo, 0.0); // displays as +0.0000
+        assert!(ci.excludes_zero); // …yet the unrounded CI is strictly above 0
     }
 
     #[test]
