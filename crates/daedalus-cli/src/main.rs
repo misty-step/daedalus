@@ -98,6 +98,14 @@ enum Cmd {
         #[arg(long)]
         report: Option<PathBuf>,
     },
+    /// Red-team an arena's answer keys: flag wide line-spans a candidate could
+    /// game by guessing file+category without locating the defect (040).
+    ArenaRedteam {
+        arena: PathBuf,
+        /// Spans wider than this (lines) are flagged as gameable.
+        #[arg(long, default_value_t = 8)]
+        wide_threshold: i64,
+    },
     /// Append an ACCEPT or OUT-OF-SCOPE adjudication.
     ArenaAdjudicate {
         arena: PathBuf,
@@ -225,6 +233,10 @@ fn main() -> ExitCode {
             holdout_burn,
             report.as_deref(),
         ),
+        Cmd::ArenaRedteam {
+            arena,
+            wide_threshold,
+        } => cmd_arena_redteam(&arena, wide_threshold),
         Cmd::ArenaAdjudicate {
             arena,
             task,
@@ -692,6 +704,77 @@ fn cmd_arena_validate(
             ExitCode::FAILURE
         }
     }
+}
+
+// ---------------------------------------------------------------------------
+// arena-redteam (040): flag gameable answer keys
+// ---------------------------------------------------------------------------
+
+fn cmd_arena_redteam(arena: &std::path::Path, wide_threshold: i64) -> ExitCode {
+    let tasks_dir = arena.join("tasks");
+    let entries = match std::fs::read_dir(&tasks_dir) {
+        Ok(e) => e,
+        Err(e) => {
+            eprintln!("read {}: {e}", tasks_dir.display());
+            return ExitCode::FAILURE;
+        }
+    };
+    let mut task_dirs: Vec<PathBuf> = entries
+        .flatten()
+        .map(|e| e.path())
+        .filter(|p| p.join("tests").join("expected.json").is_file())
+        .collect();
+    task_dirs.sort();
+
+    println!(
+        "Red-team audit of {} (spans > {wide_threshold} lines are flagged gameable):\n",
+        arena.display()
+    );
+    println!("| task | defects | max span | mean span | gaming reward | wide |");
+    println!("|---|---|---|---|---|---|");
+    let mut total_wide = 0usize;
+    let mut arena_max_span = 0i64;
+    let mut any_gaming = false;
+    for td in &task_dirs {
+        let tid = td.file_name().and_then(|n| n.to_str()).unwrap_or("?");
+        let expected = td.join("tests").join("expected.json");
+        match daedalus_core::score::redteam_audit(&expected, wide_threshold) {
+            Ok(a) => {
+                total_wide += a.wide_defects.len();
+                arena_max_span = arena_max_span.max(a.max_span);
+                if a.n_defects > 0 && a.gaming_reward >= 1.0 {
+                    any_gaming = true;
+                }
+                let wide = if a.wide_defects.is_empty() {
+                    "—".to_string()
+                } else {
+                    a.wide_defects
+                        .iter()
+                        .map(|(id, s)| format!("{id}:{s}"))
+                        .collect::<Vec<_>>()
+                        .join(", ")
+                };
+                println!(
+                    "| {tid} | {} | {} | {:.1} | {:.4} | {wide} |",
+                    a.n_defects, a.max_span, a.mean_span, a.gaming_reward
+                );
+            }
+            Err(e) => println!("| {tid} | (key error: {e}) |"),
+        }
+    }
+    println!(
+        "\nSummary: {} task(s), {total_wide} wide-span defect(s), max span {arena_max_span} lines.",
+        task_dirs.len()
+    );
+    if total_wide > 0 || any_gaming {
+        println!(
+            "⚠ Gameable surface: a candidate can score a defective task by emitting the right \
+             file+category at any in-span line — wide spans and gaming reward 1.0 mean the line \
+             constraint is weak. Tighten spans (re-baseline) or add description matching before \
+             trusting close rankings on this arena."
+        );
+    }
+    ExitCode::SUCCESS
 }
 
 // ---------------------------------------------------------------------------
