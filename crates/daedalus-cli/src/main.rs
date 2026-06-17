@@ -772,12 +772,21 @@ fn cmd_arena_redteam(arena: &std::path::Path, wide_threshold: i64) -> ExitCode {
         "\nSummary: {} task(s), {total_wide} wide-span defect(s), max span {arena_max_span} lines.",
         task_dirs.len()
     );
-    if total_wide > 0 || any_gaming {
+    // The lever is span width, not gaming_reward — which is 1.0 by construction
+    // (a structure-aware adversary that knows file+category always scores). The
+    // actionable risk is *wide* spans, where "any in-span line" demands no real
+    // localization.
+    if total_wide > 0 {
         println!(
-            "⚠ Gameable surface: a candidate can score a defective task by emitting the right \
-             file+category at any in-span line — wide spans and gaming reward 1.0 mean the line \
-             constraint is weak. Tighten spans (re-baseline) or add description matching before \
-             trusting close rankings on this arena."
+            "⚠ {total_wide} wide-span defect(s) (up to {arena_max_span} lines): a candidate can \
+             score by emitting the right file+category at any in-span line, without locating the \
+             defect. Tighten these keys (re-baseline) or add description matching before trusting \
+             close rankings."
+        );
+    } else if any_gaming {
+        println!(
+            "✓ No wide spans (max {arena_max_span} lines): the line constraint demands real \
+             localization. (gaming reward is 1.0 by construction — the lever is span width.)"
         );
     }
     ExitCode::SUCCESS

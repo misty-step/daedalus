@@ -1,4 +1,5 @@
 id = "py-auth-sqli"
+source_repo = "auth-service"
 
 [agent]
 timeout_sec = 600

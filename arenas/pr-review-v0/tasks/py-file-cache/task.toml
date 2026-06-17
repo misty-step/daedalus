@@ -1,4 +1,5 @@
 id = "py-file-cache"
+source_repo = "file-cache"
 
 [agent]
 timeout_sec = 600

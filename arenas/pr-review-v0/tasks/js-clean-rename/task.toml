@@ -1,4 +1,5 @@
 id = "js-clean-rename"
+source_repo = "rename"
 
 [agent]
 timeout_sec = 600
