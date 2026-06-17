@@ -41,6 +41,12 @@ enum Cmd {
         #[arg(long = "run-dir")]
         run_dir: PathBuf,
     },
+    /// Basin-trap detector: compare the certified tops of >=2 seed runs and flag
+    /// when different seeds crown different compositions beyond the pooled noise.
+    Basin {
+        /// Run directories (each with a pareto.json), one per seed trajectory.
+        run_dirs: Vec<PathBuf>,
+    },
     /// Export a delivery as control-plane artifacts.
     Export {
         delivery: PathBuf,
@@ -187,6 +193,7 @@ fn main() -> ExitCode {
     match cli.command {
         Cmd::Score { findings, expected } => cmd_score(&findings, &expected),
         Cmd::Trace { run_dir } => cmd_trace(&run_dir),
+        Cmd::Basin { run_dirs } => cmd_basin(&run_dirs),
         Cmd::Export { delivery, spec } => cmd_export(&delivery, &spec),
         Cmd::ExportSuite { delivery, suite } => cmd_export_suite(&delivery, &suite),
         Cmd::LaunchPack {
@@ -311,6 +318,122 @@ fn cmd_trace(run_dir: &std::path::Path) -> ExitCode {
         Err(err) => {
             eprintln!("{err}");
             ExitCode::FAILURE
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// basin (039 child-4): trajectory-divergence detector over >=2 seed runs
+// ---------------------------------------------------------------------------
+
+/// Read one seed run's certified top from its `pareto.json` (the recommended
+/// candidate). `None` when the file is absent/unparseable or nothing certified.
+fn read_run_top(dir: &std::path::Path) -> Option<daedalus_core::stats::RunTop> {
+    let text = std::fs::read_to_string(dir.join("pareto.json")).ok()?;
+    let arr: Value = serde_json::from_str(&text).ok()?;
+    let rec = arr
+        .as_array()?
+        .iter()
+        .find(|c| c.get("recommended").and_then(Value::as_bool) == Some(true))?;
+    Some(daedalus_core::stats::RunTop {
+        label: dir
+            .file_name()
+            .and_then(|n| n.to_str())
+            .unwrap_or("?")
+            .to_string(),
+        top_id: rec
+            .get("candidate_id")
+            .and_then(Value::as_str)
+            .unwrap_or("?")
+            .to_string(),
+        top_hash: rec
+            .get("composition_hash")
+            .and_then(Value::as_str)
+            .unwrap_or("")
+            .to_string(),
+        reward: rec
+            .get("reward_mean")
+            .and_then(Value::as_f64)
+            .unwrap_or(0.0),
+        // `None` when the run carries no CI data (pre-039-child-1 runs) — the
+        // detector then reports the gap as untestable rather than trivially
+        // significant.
+        se: rec
+            .get("reward_delta_ci")
+            .and_then(|c| c.get("se"))
+            .and_then(Value::as_f64),
+    })
+}
+
+fn cmd_basin(run_dirs: &[PathBuf]) -> ExitCode {
+    let mut tops = Vec::new();
+    for dir in run_dirs {
+        match read_run_top(dir) {
+            Some(t) => tops.push(t),
+            None => eprintln!(
+                "note: {} has no certified recommendation — skipped",
+                dir.display()
+            ),
+        }
+    }
+    match daedalus_core::stats::basin_divergence(&tops) {
+        None => {
+            eprintln!(
+                "error: need >= 2 seed runs with a certified top (have {})",
+                tops.len()
+            );
+            ExitCode::FAILURE
+        }
+        Some(v) => {
+            println!("Basin-trap check over {} seed runs:", v.n_runs);
+            for t in &tops {
+                let short: String = t.top_hash.chars().take(12).collect();
+                let se =
+                    t.se.map(|s| format!("± se {s:.6}"))
+                        .unwrap_or_else(|| "(no CI)".to_string());
+                println!(
+                    "  {} → {} (hash {}…, reward {:.4} {se})",
+                    t.label, t.top_id, short, t.reward
+                );
+            }
+            let pooled = v
+                .pooled_se
+                .map(|s| format!("{s:.6}"))
+                .unwrap_or_else(|| "n/a".to_string());
+            let gap_test = match v.gap_significant {
+                Some(true) => "yes",
+                Some(false) => "no",
+                None => "untestable",
+            };
+            println!(
+                "distinct winners: {}  reward gap: {:.4}  pooled SE: {pooled}  gap>noise: {gap_test}",
+                v.distinct_winners, v.reward_gap
+            );
+            if v.missing_identity {
+                println!(
+                    "INDETERMINATE — at least one run has no composition hash; convergence cannot \
+                     be asserted. Re-run the affected seeds."
+                );
+            } else if v.flag {
+                println!(
+                    "BASIN TRAP — seeds crown different compositions whose reward differs beyond \
+                     pooled noise; the search is seed-dependent, not robust. Widen seeds/budget."
+                );
+            } else if !v.converged && v.gap_significant.is_none() {
+                println!(
+                    "DIVERGENT (untestable) — seeds crown different compositions, but the runs \
+                     carry no CI data to test the gap against noise. Re-run with the post-039 CI \
+                     emission for a verdict."
+                );
+            } else if !v.converged {
+                println!(
+                    "DIVERGENT (equivalent) — different winners, but within pooled noise: multiple \
+                     equally-good optima, not a quality trap."
+                );
+            } else {
+                println!("ROBUST — every seed converged to the same composition.");
+            }
+            ExitCode::SUCCESS
         }
     }
 }
