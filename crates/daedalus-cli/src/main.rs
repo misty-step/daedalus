@@ -754,12 +754,18 @@ fn cmd_arena_redteam(arena: &std::path::Path, wide_threshold: i64) -> ExitCode {
                         .collect::<Vec<_>>()
                         .join(", ")
                 };
+                // A clean (0-defect) key has nothing to game; show n/a, not 1.0.
+                let gaming = if a.n_defects == 0 {
+                    "n/a".to_string()
+                } else {
+                    format!("{:.4}", a.gaming_reward)
+                };
                 println!(
-                    "| {tid} | {} | {} | {:.1} | {:.4} | {wide} |",
-                    a.n_defects, a.max_span, a.mean_span, a.gaming_reward
+                    "| {tid} | {} | {} | {:.1} | {gaming} | {wide} |",
+                    a.n_defects, a.max_span, a.mean_span
                 );
             }
-            Err(e) => println!("| {tid} | (key error: {e}) |"),
+            Err(e) => println!("| {tid} | key error | — | — | — | {e} |"),
         }
     }
     println!(
