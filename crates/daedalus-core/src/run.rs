@@ -1198,14 +1198,13 @@ pub fn copy_dir(src: &Path, dst: &Path) -> Result<(), Box<dyn std::error::Error>
 /// On non-zero exit: returns `Err("pi exited {code}: {stderr tail 400}")`.
 /// Merges `extract_pi_usage(stdout)` into `record` on success.
 ///
-/// # Known gap — no subprocess timeout
-/// Python passes `timeout=candidate.get("timeout_sec", 600)` to
-/// `subprocess.run`. `std::process::Command` has no built-in timeout; adding
-/// one would require either a thread, tokio, or the `wait-timeout` crate —
-/// none of which can be added without touching Cargo.toml (out of scope for
-/// this change). A candidate that hangs will block this function indefinitely.
-/// Workaround: set a shell-level timeout before invoking the binary, or add
-/// the dep in a follow-up.
+/// # Per-trial timeout
+/// Python passed `timeout=candidate.get("timeout_sec", 600)` to
+/// `subprocess.run`. `std::process::Command` has no built-in timeout, so
+/// [`run_with_timeout`] reproduces it dependency-free: the child is killed if
+/// it outlives `candidate["timeout_sec"]` (default 600s) and the trial is
+/// recorded as `Err("pi timed out after {n}s (killed)")`. Without this a hung
+/// agent blocks the whole search indefinitely.
 pub fn run_pi(
     candidate: &Map<String, Value>,
     instruction: &str,
@@ -1232,38 +1231,148 @@ pub fn run_pi(
         .stdout(std::process::Stdio::piped())
         .stderr(std::process::Stdio::piped());
 
-    let output = cmd.output()?;
+    // `timeout_sec` comes from candidate JSON; treat 0 (or absent) as the
+    // 600s default so a misconfigured `0` can't kill the child before it runs.
+    let timeout_sec = candidate
+        .get("timeout_sec")
+        .and_then(Value::as_u64)
+        .filter(|&s| s > 0)
+        .unwrap_or(600);
 
-    let stdout_text = String::from_utf8_lossy(&output.stdout).into_owned();
-    let stderr_text = String::from_utf8_lossy(&output.stderr).into_owned();
+    let (status_opt, stdout, stderr) =
+        run_with_timeout(cmd, std::time::Duration::from_secs(timeout_sec))?;
 
+    let stdout_text = String::from_utf8_lossy(&stdout).into_owned();
+    let stderr_text = String::from_utf8_lossy(&stderr).into_owned();
+
+    // Record exit code, transcript, and usage on every path so a timed-out or
+    // failed trial still surfaces whatever the agent emitted. Insertion order
+    // matches the original to keep run records byte-stable.
+    let exit_code = status_opt.as_ref().and_then(|s| s.code()).unwrap_or(-1);
     record.insert(
         "agent_exit_code".to_string(),
-        Value::Number(serde_json::Number::from(output.status.code().unwrap_or(-1))),
+        Value::Number(serde_json::Number::from(exit_code)),
     );
     record.insert(
         "_transcript_text".to_string(),
         Value::String(stdout_text.clone()),
     );
-
-    // Merge usage fields into record.
     for (k, v) in extract_pi_usage(&stdout_text) {
         record.insert(k, v);
     }
 
-    if !output.status.success() {
-        let code = output.status.code().unwrap_or(-1);
-        let tail: String = stderr_text
-            .chars()
-            .rev()
-            .take(400)
-            .collect::<String>()
-            .chars()
-            .rev()
-            .collect();
-        return Err(format!("pi exited {code}: {tail}").into());
+    match status_opt {
+        None => Err(format!("pi timed out after {timeout_sec}s (killed)").into()),
+        Some(status) if !status.success() => {
+            let code = status.code().unwrap_or(-1);
+            let tail: String = stderr_text
+                .chars()
+                .rev()
+                .take(400)
+                .collect::<String>()
+                .chars()
+                .rev()
+                .collect();
+            Err(format!("pi exited {code}: {tail}").into())
+        }
+        Some(_) => Ok(()),
     }
+}
 
+/// Run a prepared `Command` to completion, or kill it after `timeout`.
+///
+/// `std::process::Command` has no built-in timeout; this is the dependency-free
+/// equivalent of Python's `subprocess.run(timeout=...)`. stdout/stderr are
+/// drained on background threads so a child that fills a pipe buffer cannot
+/// deadlock the wait, and the bytes are collected through channels with a short
+/// grace period (applied to BOTH the clean-exit and kill paths) so a surviving
+/// grandchild that holds a pipe open can never hang the caller. Returns
+/// `Ok((None, ..))` if the child was killed for exceeding `timeout`,
+/// `Ok((Some(status), ..))` otherwise.
+///
+/// Limitation: a killed child's descendants are not reaped (no process-group
+/// kill), so a long-lived orphan that keeps a pipe open leaves its reader thread
+/// blocked on `read_to_end` until it exits — a bounded, usually-transient leak
+/// of one thread + two FDs per occurrence, never a hang. Process-group reaping
+/// is a follow-up.
+fn run_with_timeout(
+    mut cmd: std::process::Command,
+    timeout: std::time::Duration,
+) -> std::io::Result<(Option<std::process::ExitStatus>, Vec<u8>, Vec<u8>)> {
+    use std::io::Read;
+    use std::sync::mpsc;
+
+    let mut child = cmd.spawn()?;
+    let mut stdout_pipe = child.stdout.take().expect("stdout is piped");
+    let mut stderr_pipe = child.stderr.take().expect("stderr is piped");
+
+    let (otx, orx) = mpsc::channel();
+    std::thread::spawn(move || {
+        let mut buf = Vec::new();
+        let _ = stdout_pipe.read_to_end(&mut buf);
+        let _ = otx.send(buf);
+    });
+    let (etx, erx) = mpsc::channel();
+    std::thread::spawn(move || {
+        let mut buf = Vec::new();
+        let _ = stderr_pipe.read_to_end(&mut buf);
+        let _ = etx.send(buf);
+    });
+
+    let deadline = std::time::Instant::now() + timeout;
+    let status = loop {
+        match child.try_wait()? {
+            Some(s) => break Some(s),
+            None => {
+                if std::time::Instant::now() >= deadline {
+                    let _ = child.kill();
+                    let _ = child.wait();
+                    break None;
+                }
+                std::thread::sleep(std::time::Duration::from_millis(100));
+            }
+        }
+    };
+
+    // Collect the drained bytes, bounding BOTH the clean-exit and kill paths.
+    // A child that has exited (cleanly or via our kill) closed its own write
+    // ends, so the readers reach EOF within microseconds — at most one ~64KB
+    // pipe buffer remains — and the grace is never hit on a healthy run (the
+    // large-output test confirms a 200KB drain returns instantly). The bound
+    // exists solely to defeat an abnormal descendant that inherited a pipe and
+    // outlives its parent: without it, `read_to_end` would wait on an EOF that
+    // never comes and hang the whole search forever. A bounded, possibly-partial
+    // trial is strictly better than an unbounded hang.
+    let grace = std::time::Duration::from_secs(3);
+    let stdout = orx.recv_timeout(grace).unwrap_or_default();
+    let stderr = erx.recv_timeout(grace).unwrap_or_default();
+    Ok((status, stdout, stderr))
+}
+
+/// Coarse, tokenizer-free pre-flight for the one-shot probe: does a prompt of
+/// `prompt_chars` characters plus `max_tokens` of completion fit inside
+/// `context_window` tokens (≈4 chars/token)? Real-repo arenas dump the entire
+/// workspace into the prompt — hundreds of thousands of tokens — which the
+/// model rejects with an opaque HTTP 400. Returning `Err` lets [`run_oneshot`]
+/// skip the doomed request with a legible reason and zero spend.
+#[cfg(feature = "http")]
+fn oneshot_context_fits(
+    prompt_chars: usize,
+    max_tokens: i64,
+    context_window: u64,
+) -> Result<(), String> {
+    const CHARS_PER_TOKEN: usize = 4;
+    // Round up: a prompt one char past a token boundary still costs that whole
+    // token, so flooring would admit a request one token over the estimate.
+    let est_prompt_tokens = prompt_chars.div_ceil(CHARS_PER_TOKEN) as u64;
+    let need = est_prompt_tokens.saturating_add(max_tokens.max(0) as u64);
+    if need > context_window {
+        return Err(format!(
+            "estimated {est_prompt_tokens} prompt + {max_tokens} completion tokens \
+             exceed model context {context_window}; the one-shot probe cannot ingest \
+             this workspace (a tool-using agent is required for real-repo arenas)"
+        ));
+    }
     Ok(())
 }
 
@@ -1295,16 +1404,35 @@ pub fn run_oneshot(
         .and_then(Value::as_str)
         .unwrap_or("You are a precise code-review agent. Output only valid JSON.");
 
-    // messages built inline in the body below (not used separately)
-
     let temperature = candidate
         .get("temperature")
         .and_then(Value::as_f64)
         .unwrap_or(0.2);
+    // A non-positive max_tokens is meaningless and would be sent verbatim into
+    // the request body; treat 0/negative/absent as the 8192 default so the
+    // pre-flight estimate and the actual request agree.
     let max_tokens = candidate
         .get("max_tokens")
         .and_then(Value::as_i64)
+        .filter(|&t| t > 0)
         .unwrap_or(8192);
+
+    // Pre-flight: a real-repo workspace can exceed the model context window,
+    // which OpenRouter rejects as a bare HTTP 400. Skip the doomed call instead
+    // of burning one failed round-trip per task.
+    const DEFAULT_CONTEXT_WINDOW: u64 = 256_000;
+    let context_window = candidate
+        .get("context_window")
+        .and_then(Value::as_u64)
+        .unwrap_or(DEFAULT_CONTEXT_WINDOW);
+    if let Err(reason) = oneshot_context_fits(
+        system.chars().count() + prompt.chars().count(),
+        max_tokens,
+        context_window,
+    ) {
+        record.insert("cost_usd".to_string(), Value::from(0.0));
+        return Err(format!("one-shot skipped: {reason}").into());
+    }
 
     let mut body = serde_json::json!({
         "model": candidate.get("model").cloned().unwrap_or(Value::Null),
@@ -2361,5 +2489,115 @@ skills = [\"{skill}\"]\nagents_md = \"{agents}\"\n",
         assert_eq!(t1["max"].as_f64().unwrap(), 1.0);
         assert_eq!(t1["mean"].as_f64().unwrap(), 0.5);
         let _ = std::fs::remove_dir_all(&tmp);
+    }
+
+    // -----------------------------------------------------------------------
+    // run_with_timeout (Fix A: per-trial subprocess timeout)
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn run_with_timeout_kills_a_hanging_child() {
+        let mut cmd = std::process::Command::new("sh");
+        cmd.args(["-c", "sleep 30"])
+            .stdout(std::process::Stdio::piped())
+            .stderr(std::process::Stdio::piped());
+        let t0 = std::time::Instant::now();
+        let (status, _out, _err) =
+            run_with_timeout(cmd, std::time::Duration::from_millis(500)).unwrap();
+        assert!(status.is_none(), "a hanging child must be killed (None status)");
+        assert!(
+            t0.elapsed() < std::time::Duration::from_secs(5),
+            "should return promptly after the kill, took {:?}",
+            t0.elapsed()
+        );
+    }
+
+    #[test]
+    fn run_with_timeout_captures_a_fast_child() {
+        let mut cmd = std::process::Command::new("sh");
+        cmd.args(["-c", "printf hello; printf oops 1>&2; exit 3"])
+            .stdout(std::process::Stdio::piped())
+            .stderr(std::process::Stdio::piped());
+        let (status, out, err) =
+            run_with_timeout(cmd, std::time::Duration::from_secs(10)).unwrap();
+        let status = status.expect("a fast child should exit before the deadline");
+        let out = String::from_utf8_lossy(&out).into_owned();
+        let err = String::from_utf8_lossy(&err).into_owned();
+        assert_eq!(status.code(), Some(3));
+        assert_eq!(out, "hello");
+        assert_eq!(err, "oops");
+    }
+
+    #[test]
+    fn run_with_timeout_drains_output_larger_than_a_pipe_buffer() {
+        // 200KB > the ~64KB OS pipe buffer: without background draining the
+        // child would deadlock, and a clean exit must never truncate output.
+        let mut cmd = std::process::Command::new("sh");
+        cmd.args(["-c", "head -c 200000 /dev/zero"])
+            .stdout(std::process::Stdio::piped())
+            .stderr(std::process::Stdio::piped());
+        let (status, out, _err) =
+            run_with_timeout(cmd, std::time::Duration::from_secs(30)).unwrap();
+        assert_eq!(status.expect("should exit cleanly").code(), Some(0));
+        assert_eq!(out.len(), 200_000, "all output must be captured, not truncated");
+    }
+
+    #[test]
+    fn run_with_timeout_does_not_hang_on_a_pipe_holding_grandchild() {
+        // The parent exits 0 immediately but backgrounds a grandchild that
+        // inherits and holds stdout for 20s. Collection must return within the
+        // drain grace (~3s), not block on the grandchild's EOF for 20s. With a
+        // blocking recv() on the clean-exit path this would hang past 20s.
+        let mut cmd = std::process::Command::new("sh");
+        cmd.args(["-c", "(sleep 20 &) ; exit 0"])
+            .stdout(std::process::Stdio::piped())
+            .stderr(std::process::Stdio::piped());
+        let t0 = std::time::Instant::now();
+        let (status, _out, _err) =
+            run_with_timeout(cmd, std::time::Duration::from_secs(60)).unwrap();
+        assert_eq!(status.expect("parent exits cleanly").code(), Some(0));
+        assert!(
+            t0.elapsed() < std::time::Duration::from_secs(10),
+            "must not hang on the grandchild's pipe, took {:?}",
+            t0.elapsed()
+        );
+    }
+
+    // -----------------------------------------------------------------------
+    // oneshot_context_fits (Fix B: skip one-shot probe on context overflow)
+    // -----------------------------------------------------------------------
+
+    #[cfg(feature = "http")]
+    #[test]
+    fn oneshot_context_fits_rejects_real_repo_workspace() {
+        // pr-review-v2's py-export-clear dumps ~1.4M chars (~350k tokens),
+        // which overflows a 256k window — the exact bug this guards against.
+        assert!(oneshot_context_fits(1_400_000, 8192, 256_000).is_err());
+    }
+
+    #[cfg(feature = "http")]
+    #[test]
+    fn oneshot_context_fits_allows_small_fixture() {
+        // v0/v1 synthetic fixtures are a few KB and must still be probed.
+        assert!(oneshot_context_fits(8_000, 8192, 256_000).is_ok());
+    }
+
+    #[cfg(feature = "http")]
+    #[test]
+    fn oneshot_context_fits_counts_the_completion_budget() {
+        // Prompt alone fits; prompt + max_tokens tips it over the window.
+        let prompt_chars = 99_000 * 4; // ~99k prompt tokens
+        assert!(oneshot_context_fits(prompt_chars, 500, 100_000).is_ok());
+        assert!(oneshot_context_fits(prompt_chars, 5_000, 100_000).is_err());
+    }
+
+    #[cfg(feature = "http")]
+    #[test]
+    fn oneshot_context_fits_rounds_partial_tokens_up() {
+        // One char past an exact token boundary counts as a full token: a
+        // prompt of context_window*4 + 1 chars (no completion) must be rejected,
+        // not admitted by floor division.
+        assert!(oneshot_context_fits(256_000 * 4 + 1, 0, 256_000).is_err());
+        assert!(oneshot_context_fits(256_000 * 4, 0, 256_000).is_ok());
     }
 }
