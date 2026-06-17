@@ -138,7 +138,25 @@ fn load_findings(path: &Path) -> Result<Vec<Value>, String> {
 /// Score `findings_path` against the answer key at `expected_path`.
 pub fn score(findings_path: &Path, expected_path: &Path) -> Result<ScoreResult, ScoreError> {
     let expected = load_expected(expected_path)?;
+    let findings = match load_findings(findings_path) {
+        Ok(items) => items,
+        Err(msg) => {
+            return Ok(ScoreResult {
+                reward: 0.0,
+                recall: 0.0,
+                matched: Vec::new(),
+                false_positives: 0,
+                expected_defects: expected.len(),
+                error: Some(format!("invalid findings: {msg}")),
+            });
+        }
+    };
+    Ok(score_defects(&expected, &findings))
+}
 
+/// The matching + reward core, over already-loaded defects and findings. Shared
+/// by [`score`] and [`redteam_audit`].
+fn score_defects(expected: &[Defect], findings: &[Value]) -> ScoreResult {
     let mut result = ScoreResult {
         reward: 0.0,
         recall: 0.0,
@@ -148,18 +166,10 @@ pub fn score(findings_path: &Path, expected_path: &Path) -> Result<ScoreResult, 
         error: None,
     };
 
-    let findings = match load_findings(findings_path) {
-        Ok(items) => items,
-        Err(msg) => {
-            result.error = Some(format!("invalid findings: {msg}"));
-            return Ok(result);
-        }
-    };
-
     let mut matched_flags = vec![false; expected.len()];
     let mut false_positives: u64 = 0;
 
-    for finding in &findings {
+    for finding in findings {
         // file and category must be present (Python KeyError → FP); line must
         // be int-coercible (Python int() → ValueError/TypeError → FP).
         let (file, category) = match (finding.get("file"), finding.get("category")) {
@@ -208,7 +218,78 @@ pub fn score(findings_path: &Path, expected_path: &Path) -> Result<ScoreResult, 
         round_half_even((recall - FP_PENALTY * false_positives as f64).max(0.0), 4)
     };
 
-    Ok(result)
+    result
+}
+
+/// A red-team audit of an answer key (backlog 040 item 3). The scorer matches a
+/// finding to a defect on `file == file && category == category && line ∈
+/// [line_start, line_end]`, so a *wide* span lets a candidate score a hit by
+/// guessing only the file+category and emitting at any in-span line — without
+/// locating the defect. This measures that spatial slack.
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct RedteamAudit {
+    pub n_defects: usize,
+    /// Widest span (`line_end − line_start + 1`).
+    pub max_span: i64,
+    pub mean_span: f64,
+    /// `(defect id, span)` for spans wider than the threshold — the gameable
+    /// keys where the line constraint is weak.
+    pub wide_defects: Vec<(String, i64)>,
+    /// Reward earned by a structure-aware, **zero-localization** candidate that
+    /// emits file+category at each defect's span edge. 1.0 means the line
+    /// constraint adds no discrimination once the key structure is known — the
+    /// arena then measures file+category identification, not defect location.
+    pub gaming_reward: f64,
+}
+
+/// Audit an `expected.json` answer key for scorer-gaming exposure.
+pub fn redteam_audit(
+    expected_path: &Path,
+    wide_threshold: i64,
+) -> Result<RedteamAudit, ScoreError> {
+    let expected = load_expected(expected_path)?;
+    let spans: Vec<i64> = expected
+        .iter()
+        .map(|d| (d.line_end - d.line_start + 1).max(0))
+        .collect();
+    let max_span = spans.iter().copied().max().unwrap_or(0);
+    let mean_span = if spans.is_empty() {
+        0.0
+    } else {
+        round_half_even(spans.iter().sum::<i64>() as f64 / spans.len() as f64, 2)
+    };
+    let wide_defects: Vec<(String, i64)> = expected
+        .iter()
+        .zip(&spans)
+        .filter(|(_, &s)| s > wide_threshold)
+        .map(|(d, &s)| (d.id.clone(), s))
+        .collect();
+
+    // Structure-aware, zero-precision gaming candidate: file+category at the
+    // span edge for every defect. If this scores high, the line constraint is
+    // not discriminating.
+    let gaming: Vec<Value> = expected
+        .iter()
+        .map(|d| {
+            let mut m = serde_json::Map::new();
+            m.insert("file".into(), Value::String(d.file.clone()));
+            m.insert("category".into(), Value::String(d.category.clone()));
+            m.insert("line".into(), Value::from(d.line_start));
+            if let Some(sev) = &d.severity {
+                m.insert("severity".into(), Value::String(sev.clone()));
+            }
+            Value::Object(m)
+        })
+        .collect();
+    let gaming_reward = score_defects(&expected, &gaming).reward;
+
+    Ok(RedteamAudit {
+        n_defects: expected.len(),
+        max_span,
+        mean_span,
+        wide_defects,
+        gaming_reward,
+    })
 }
 
 #[cfg(test)]
@@ -266,6 +347,45 @@ mod tests {
 
     fn run(f: &Path, e: &Path) -> ScoreResult {
         score(f, e).unwrap()
+    }
+
+    #[test]
+    fn redteam_gaming_candidate_scores_full_without_localization() {
+        // A candidate that knows only file+category and emits at each span edge
+        // (no real localization) earns full reward — proof the line constraint
+        // adds no discrimination once the key structure is known.
+        let c = Case::new();
+        let exp = c.expected_two();
+        let audit = redteam_audit(&exp, 8).unwrap();
+        assert_eq!(audit.gaming_reward, 1.0);
+        assert_eq!(audit.n_defects, 2);
+    }
+
+    #[test]
+    fn redteam_audit_flags_wide_spans() {
+        let c = Case::new();
+        // d1 span 25 lines (gameable), d2 span 2 lines (tight).
+        let exp = c.write(
+            "expected.json",
+            r#"{"defects":[
+              {"id":"d1","file":"a.py","line_start":1,"line_end":25,"category":"correctness"},
+              {"id":"d2","file":"a.py","line_start":40,"line_end":41,"category":"security"}
+            ]}"#,
+        );
+        let audit = redteam_audit(&exp, 8).unwrap();
+        assert_eq!(audit.max_span, 25);
+        assert_eq!(audit.mean_span, 13.5); // (25 + 2) / 2
+        assert_eq!(audit.wide_defects, vec![("d1".to_string(), 25)]);
+    }
+
+    #[test]
+    fn redteam_audit_on_a_clean_key_is_empty() {
+        let c = Case::new();
+        let exp = c.expected_clean();
+        let audit = redteam_audit(&exp, 8).unwrap();
+        assert_eq!(audit.n_defects, 0);
+        assert_eq!(audit.max_span, 0);
+        assert!(audit.wide_defects.is_empty());
     }
 
     #[test]
