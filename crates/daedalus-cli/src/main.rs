@@ -168,6 +168,11 @@ enum Cmd {
         /// exceeds this. 0.0 = "provably better than the floor."
         #[arg(long, default_value_t = 0.0)]
         min_effect: f64,
+        /// Reward a trial must reach to count as a "pass" for the reliability
+        /// (pass-rate / pass^k) metric. 1.0 = perfect trials only; lower it to
+        /// discriminate mid-tier candidates.
+        #[arg(long, default_value_t = 1.0)]
+        consistency_floor: f64,
         #[arg(long)]
         max_errors_per_candidate: Option<usize>,
     },
@@ -254,6 +259,7 @@ fn main() -> ExitCode {
             certify_top,
             certify_trials,
             min_effect,
+            consistency_floor,
             max_errors_per_candidate,
         } => cmd_run(
             &taskspec,
@@ -269,6 +275,7 @@ fn main() -> ExitCode {
             certify_top,
             certify_trials,
             min_effect,
+            consistency_floor,
             max_errors_per_candidate,
         ),
     }
@@ -776,6 +783,7 @@ fn cmd_run(
     certify_top: usize,
     certify_trials: u32,
     min_effect: f64,
+    consistency_floor: f64,
     max_errors_per_candidate: Option<usize>,
 ) -> ExitCode {
     let repo = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
@@ -1702,6 +1710,29 @@ fn cmd_run(
         ci_values.insert(cid.clone(), ci.to_value(&baseline_id_str));
     }
 
+    // Backlog 039 child-3: per-candidate reliability — pass rate at the
+    // consistency floor and pass^certify_trials — for every trial-complete
+    // candidate (independent of whether its CI is defined), reported separately
+    // from mean reward.
+    let mut consistency_ids: Vec<String> = trial_certified.iter().cloned().collect();
+    consistency_ids.sort();
+    let consistency_rows: Vec<(String, daedalus_core::stats::Consistency)> = consistency_ids
+        .iter()
+        .filter_map(|cid| {
+            cands2.get(cid).map(|c| {
+                (
+                    cid.clone(),
+                    daedalus_core::stats::candidate_consistency(c, consistency_floor),
+                )
+            })
+        })
+        .collect();
+    let pass_k = certify_trials as usize;
+    let mut consistency_values: Map<String, Value> = Map::new();
+    for (cid, con) in &consistency_rows {
+        consistency_values.insert(cid.clone(), con.to_value(pass_k));
+    }
+
     // Meta-eval alarms (post-run)
     let mut alarms: Vec<Value> = outcome
         .get("alarms")
@@ -1774,6 +1805,10 @@ fn cmd_run(
     report_text.push_str(&daedalus_core::stats::delta_ci_markdown(
         &baseline_id_str,
         &delta_cis,
+    ));
+    report_text.push_str(&daedalus_core::stats::consistency_markdown(
+        &consistency_rows,
+        pass_k,
     ));
     if !alarms.is_empty() {
         report_text.push_str("\n## Meta-eval alarms\n\n");
@@ -1893,6 +1928,11 @@ fn cmd_run(
             .unwrap_or(Value::Null),
     );
     outcome_obj.insert("reward_delta_cis".to_string(), Value::Object(ci_values));
+    outcome_obj.insert("consistency".to_string(), Value::Object(consistency_values));
+    outcome_obj.insert(
+        "consistency_floor".to_string(),
+        Value::from(consistency_floor),
+    );
     outcome_obj.insert("min_effect".to_string(), Value::from(min_effect));
     outcome_obj.insert(
         "trial_complete".to_string(),

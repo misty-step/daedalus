@@ -305,6 +305,134 @@ pub fn delta_ci_markdown(baseline_id: &str, cis: &[(String, DeltaCi)]) -> String
     s
 }
 
+// ---------------------------------------------------------------------------
+// Backlog 039 child-3: per-candidate consistency (reliability), reported
+// separately from mean reward. Mean hides reliability — a reviewer right 60% of
+// the time is not shippable at any mean (τ-bench / Sierra; "Consistency as a
+// Testable Property", arXiv 2605.10516). We report the pass rate at a reward
+// floor and pass^k, the chance that all k independent trials clear the floor.
+// ---------------------------------------------------------------------------
+
+/// A candidate's reliability at a reward floor, over all its trials.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Consistency {
+    /// Total trials counted (across every task).
+    pub n_trials: usize,
+    /// Trials whose reward reached the floor.
+    pub passes: usize,
+    /// The reward floor a trial must reach to count as a pass.
+    pub floor: f64,
+    /// Pass rate `passes / n_trials` (pass^1), rounded to 4 dp. 0 when no trials.
+    pub rate: f64,
+}
+
+impl Consistency {
+    /// pass^k: the probability that all `k` independent trials clear the floor,
+    /// estimated unbiasedly from the observed trials as `C(passes,k)/C(n,k)`.
+    /// `None` when `k > n_trials` (not enough trials to estimate). `Some(1.0)`
+    /// for `k == 0`; `Some(0.0)` once `passes < k`.
+    pub fn pass_hat_k(&self, k: usize) -> Option<f64> {
+        pass_hat_k(self.n_trials, self.passes, k)
+    }
+
+    /// Serialize for `loop.json`, including pass^k at the given `k`.
+    pub fn to_value(&self, k: usize) -> Value {
+        let mut m = Map::new();
+        m.insert("n_trials".into(), Value::from(self.n_trials as u64));
+        m.insert("passes".into(), Value::from(self.passes as u64));
+        m.insert("floor".into(), Value::from(self.floor));
+        m.insert("rate".into(), Value::from(self.rate));
+        m.insert("pass_k_k".into(), Value::from(k as u64));
+        m.insert(
+            "pass_k".into(),
+            self.pass_hat_k(k)
+                .map(|p| Value::from(round_half_even(p, 4)))
+                .unwrap_or(Value::Null),
+        );
+        Value::Object(m)
+    }
+}
+
+/// `pass^k = C(c,k)/C(n,k)`, computed as the product `Π_{i<k} (c−i)/(n−i)` to
+/// avoid binomial overflow. The unbiased estimator (τ-bench) of "all k
+/// independent draws succeed" given `c` successes in `n` trials.
+pub fn pass_hat_k(n: usize, c: usize, k: usize) -> Option<f64> {
+    if c > n {
+        return None; // more successes than trials is undefined input
+    }
+    if k == 0 {
+        return Some(1.0);
+    }
+    if k > n {
+        return None;
+    }
+    if c < k {
+        return Some(0.0);
+    }
+    let mut p = 1.0_f64;
+    for i in 0..k {
+        p *= (c - i) as f64 / (n - i) as f64;
+    }
+    Some(p)
+}
+
+/// A candidate's consistency at `floor`: count every trial across its tasks and
+/// the fraction that reached the floor. Consumes the `report::aggregate` shape
+/// (`{"tasks": {task_id: [reward, ...]}}`).
+pub fn candidate_consistency(candidate: &Value, floor: f64) -> Consistency {
+    let mut n_trials = 0usize;
+    let mut passes = 0usize;
+    if let Some(tasks) = candidate.get("tasks").and_then(Value::as_object) {
+        for v in tasks.values() {
+            if let Some(arr) = v.as_array() {
+                for r in arr.iter().filter_map(Value::as_f64) {
+                    n_trials += 1;
+                    if r >= floor {
+                        passes += 1;
+                    }
+                }
+            }
+        }
+    }
+    let rate = if n_trials == 0 {
+        0.0
+    } else {
+        round_half_even(passes as f64 / n_trials as f64, 4)
+    };
+    Consistency {
+        n_trials,
+        passes,
+        floor,
+        rate,
+    }
+}
+
+/// Render the per-candidate reliability section for `report.md`. Empty string
+/// when there are no rows.
+pub fn consistency_markdown(rows: &[(String, Consistency)], k: usize) -> String {
+    if rows.is_empty() {
+        return String::new();
+    }
+    let floor = rows[0].1.floor;
+    let mut s = String::new();
+    s.push_str(&format!(
+        "\n## Reliability (pass rate at reward ≥ {floor:.2})\n\nFraction of trials that reach the floor, and pass^{k} — the chance all {k} independent trials reach it. Reliability, reported separately from mean reward: a high mean with low pass^{k} is not deployable (τ-bench; arXiv 2605.10516). Lower `--consistency-floor` to discriminate mid-tier candidates.\n\n"
+    ));
+    s.push_str(&format!("| candidate | n | pass≥{floor:.2} | pass^{k} |\n"));
+    s.push_str("|---|---|---|---|\n");
+    for (cid, c) in rows {
+        let pk = c
+            .pass_hat_k(k)
+            .map(|p| format!("{p:.4}"))
+            .unwrap_or_else(|| "n/a".to_string());
+        s.push_str(&format!(
+            "| {cid} | {} | {:.4} | {pk} |\n",
+            c.n_trials, c.rate
+        ));
+    }
+    s
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -620,6 +748,56 @@ mod tests {
         let (base, cis) = certified_delta_cis(&cands, &certified, "null", &singleton);
         assert!(base.is_none());
         assert!(cis.is_empty());
+    }
+
+    #[test]
+    fn pass_hat_k_is_the_combinatorial_all_k_succeed_rate() {
+        assert_eq!(pass_hat_k(5, 3, 2), Some(0.3)); // C(3,2)/C(5,2) = 3/10
+        assert_eq!(pass_hat_k(5, 5, 3), Some(1.0)); // all trials pass
+        assert_eq!(pass_hat_k(5, 2, 3), Some(0.0)); // fewer passes than k
+        assert_eq!(pass_hat_k(3, 3, 0), Some(1.0)); // k=0 is vacuously certain
+        assert_eq!(pass_hat_k(2, 2, 3), None); // k > n: not enough trials
+        assert_eq!(pass_hat_k(5, 7, 2), None); // c > n: undefined input, never > 1
+    }
+
+    #[test]
+    fn candidate_consistency_counts_trials_reaching_the_floor() {
+        // 4 trials, 3 reach 1.0 → rate 0.75; pass^2 = (3/4)(2/3) = 0.5.
+        let c = cand(&[("a", &[1.0, 0.5]), ("b", &[1.0, 1.0])]);
+        let con = candidate_consistency(&c, 1.0);
+        assert_eq!(con.n_trials, 4);
+        assert_eq!(con.passes, 3);
+        assert_eq!(con.rate, 0.75);
+        assert_eq!(con.pass_hat_k(2), Some(0.5));
+    }
+
+    #[test]
+    fn candidate_consistency_floor_changes_the_pass_count() {
+        let c = cand(&[("a", &[0.8, 0.6]), ("b", &[0.4, 0.9])]);
+        assert_eq!(candidate_consistency(&c, 1.0).passes, 0); // none perfect
+        assert_eq!(candidate_consistency(&c, 0.7).passes, 2); // 0.8, 0.9
+        assert_eq!(candidate_consistency(&c, 0.0).passes, 4); // all
+    }
+
+    #[test]
+    fn consistency_markdown_renders_a_reliability_row() {
+        let c = cand(&[("a", &[1.0, 0.5]), ("b", &[1.0, 1.0])]);
+        let rows = vec![("cand-x".to_string(), candidate_consistency(&c, 1.0))];
+        let md = consistency_markdown(&rows, 2);
+        assert!(md.contains("## Reliability (pass rate at reward ≥ 1.00)"));
+        assert!(md.contains("| cand-x | 4 | 0.7500 | 0.5000 |"));
+        assert_eq!(consistency_markdown(&[], 2), "");
+    }
+
+    #[test]
+    fn consistency_serializes_with_pass_k() {
+        let c = cand(&[("a", &[1.0, 0.5]), ("b", &[1.0, 1.0])]);
+        let v = candidate_consistency(&c, 1.0).to_value(2);
+        assert_eq!(v["n_trials"], json!(4));
+        assert_eq!(v["passes"], json!(3));
+        assert_eq!(v["rate"], json!(0.75));
+        assert_eq!(v["pass_k"], json!(0.5));
+        assert_eq!(v["pass_k_k"], json!(2));
     }
 
     #[test]
