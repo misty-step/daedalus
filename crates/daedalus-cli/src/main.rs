@@ -1152,33 +1152,75 @@ fn cmd_run(
             return ExitCode::FAILURE;
         }
     };
-    let probe_mean = rig2
-        .get("probe-oneshot")
+    let probe = rig2.get("probe-oneshot");
+    let probe_mean = probe
         .and_then(|s| s.get("reward_mean"))
         .and_then(Value::as_f64)
         .unwrap_or(0.0);
-    let saturated = probe_mean >= oracle_mean - 0.1;
+    let probe_errors = probe
+        .and_then(|s| s.get("errors"))
+        .and_then(Value::as_i64)
+        .unwrap_or(0);
+    let probe_trials = probe
+        .and_then(|s| s.get("trials"))
+        .and_then(Value::as_i64)
+        .unwrap_or(0);
+    // Backlog 040: an errored probe (e.g. context overflow → reward 0.0) must not
+    // pass as "unsaturated" — its low mean is an artifact, not evidence.
+    use daedalus_core::workbench::ProbeVerdict;
+    let verdict = daedalus_core::workbench::probe_saturation_verdict(
+        probe_mean,
+        oracle_mean,
+        probe_errors,
+        probe_trials,
+    );
+    let saturated = verdict == ProbeVerdict::Saturated;
+    let verdict_str = match verdict {
+        ProbeVerdict::Saturated => "saturated",
+        ProbeVerdict::Unsaturated => "unsaturated",
+        ProbeVerdict::Inconclusive => "inconclusive",
+    };
 
     let rig_json = serde_json::json!({
         "oracle_mean": oracle_mean,
         "null_mean": null_mean,
         "probe_mean": probe_mean,
         "saturated": saturated,
+        "probe_verdict": verdict_str,
+        "probe_errors": probe_errors,
+        "probe_trials": probe_trials,
     });
     let _ = std::fs::write(
         exp_dir.join("rig.json"),
         serde_json::to_string_pretty(&rig_json).unwrap(),
     );
 
-    if saturated {
-        println!(
-            "!! ARENA SATURATED: probe scored {probe_mean} vs oracle {oracle_mean}. \
-             This arena cannot rank agent configurations."
-        );
-        if !allow_saturated {
-            eprintln!("aborting search on a saturated arena (--allow-saturated to override)");
-            return ExitCode::FAILURE;
+    match verdict {
+        ProbeVerdict::Saturated => {
+            println!(
+                "!! ARENA SATURATED: probe scored {probe_mean} vs oracle {oracle_mean}. \
+                 This arena cannot rank agent configurations."
+            );
+            if !allow_saturated {
+                eprintln!("aborting search on a saturated arena (--allow-saturated to override)");
+                return ExitCode::FAILURE;
+            }
         }
+        ProbeVerdict::Inconclusive => {
+            println!(
+                "!! PROBE INCONCLUSIVE: {probe_errors}/{probe_trials} one-shot probe trials \
+                 errored (e.g. context overflow); the {probe_mean} mean is NOT evidence the \
+                 arena is unsaturated. Fix the probe before trusting this arena."
+            );
+            if !allow_saturated {
+                eprintln!(
+                    "aborting search on an inconclusive saturation probe \
+                     (--allow-saturated to override)"
+                );
+                return ExitCode::FAILURE;
+            }
+        }
+        ProbeVerdict::Unsaturated => {}
     }
 
     // ── Stage 2: seed population ────────────────────────────────────────────

@@ -7,7 +7,7 @@ Establish that each arena measures real task skill — not memorized public code
 
 ## Oracle
 - [ ] A contamination record per arena: each real-repo snapshot logs source repo + commit + whether the file/defect is plausibly in model training data; planted defects are confirmed novel (not the upstream historical bug).
-- [ ] The saturation probe distinguishes "probe errored" from "probe genuinely scored low" — an errored probe does NOT count as evidence the arena is unsaturated. (pr-review-v2's probe errored to 0.0 on context overflow and was read as a pass; G2-pr-review-v2.md.)
+- [x] The saturation probe distinguishes "probe errored" from "probe genuinely scored low" — an errored probe does NOT count as evidence the arena is unsaturated. (pr-review-v2's probe errored to 0.0 on context overflow and was read as a pass; G2-pr-review-v2.md.) _(slice B: `workbench::probe_saturation_verdict` → Saturated/Unsaturated/Inconclusive; an errored probe is Inconclusive and aborts both the run decision and the `arena-validate` freeze gate.)_
 - [ ] An adversarial/red-team pass: a candidate engineered to game the scorer (wide expected line-ranges, greedy-match exploits, plausible-but-wrong findings) earns no undue reward; scorer/keys fixed where it does.
 - [ ] At least one contamination-resistant / private-holdout arena exists (defects + surrounding context not publicly indexable).
 
