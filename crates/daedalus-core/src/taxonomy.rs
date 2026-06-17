@@ -203,7 +203,11 @@ fn validate_member_artifact(
     }
 }
 
-/// `_repo_root_for_paths` — walk parents looking for AGENTS.md + runner/
+/// `_repo_root_for_paths` — walk parents for the repo root, marked by
+/// `AGENTS.md` + the workspace `Cargo.toml`. (The old `runner/` marker was
+/// deleted with the Python, which silently broke this post-migration: it fell
+/// back to `current_dir()`, passing locally only because of a leftover
+/// `runner/` dir and failing in a clean CI checkout.)
 fn repo_root_for_paths(suite_path: &Path) -> PathBuf {
     let suite_path = suite_path
         .canonicalize()
@@ -211,7 +215,7 @@ fn repo_root_for_paths(suite_path: &Path) -> PathBuf {
     let start = suite_path.parent().unwrap_or(&suite_path).to_path_buf();
     let mut current = start.clone();
     loop {
-        if current.join("AGENTS.md").exists() && current.join("runner").is_dir() {
+        if current.join("AGENTS.md").exists() && current.join("Cargo.toml").exists() {
             return current;
         }
         match current.parent() {
