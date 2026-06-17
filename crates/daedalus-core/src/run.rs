@@ -2490,7 +2490,10 @@ skills = [\"{skill}\"]\nagents_md = \"{agents}\"\n",
         let t0 = std::time::Instant::now();
         let (status, _out, _err) =
             run_with_timeout(cmd, std::time::Duration::from_millis(500)).unwrap();
-        assert!(status.is_none(), "a hanging child must be killed (None status)");
+        assert!(
+            status.is_none(),
+            "a hanging child must be killed (None status)"
+        );
         assert!(
             t0.elapsed() < std::time::Duration::from_secs(5),
             "should return promptly after the kill, took {:?}",
@@ -2504,8 +2507,7 @@ skills = [\"{skill}\"]\nagents_md = \"{agents}\"\n",
         cmd.args(["-c", "printf hello; printf oops 1>&2; exit 3"])
             .stdout(std::process::Stdio::piped())
             .stderr(std::process::Stdio::piped());
-        let (status, out, err) =
-            run_with_timeout(cmd, std::time::Duration::from_secs(10)).unwrap();
+        let (status, out, err) = run_with_timeout(cmd, std::time::Duration::from_secs(10)).unwrap();
         let status = status.expect("a fast child should exit before the deadline");
         let out = String::from_utf8_lossy(&out).into_owned();
         let err = String::from_utf8_lossy(&err).into_owned();
@@ -2525,7 +2527,11 @@ skills = [\"{skill}\"]\nagents_md = \"{agents}\"\n",
         let (status, out, _err) =
             run_with_timeout(cmd, std::time::Duration::from_secs(30)).unwrap();
         assert_eq!(status.expect("should exit cleanly").code(), Some(0));
-        assert_eq!(out.len(), 200_000, "all output must be captured, not truncated");
+        assert_eq!(
+            out.len(),
+            200_000,
+            "all output must be captured, not truncated"
+        );
     }
 
     #[test]
