@@ -46,9 +46,21 @@ pub struct DeltaCi {
     pub n_clusters: usize,
     /// Whether the CI excludes 0 — i.e. the delta is significant at 95%.
     pub excludes_zero: bool,
+    /// Unrounded lower bound (`point − 1.96·se`), kept for threshold tests like
+    /// the certification gate so they don't inherit display rounding. Not
+    /// serialized — `to_value` emits the 4-dp `lo`.
+    lo_raw: f64,
 }
 
 impl DeltaCi {
+    /// Whether the delta is significantly greater than `min_effect` — the lower
+    /// bound of the 95% CI clears the threshold. `beats(0.0)` is "significantly
+    /// better than the baseline." Uses the unrounded lower bound so a true
+    /// `+3.7e-5` win that displays as `0.0000` still counts.
+    pub fn beats(&self, min_effect: f64) -> bool {
+        self.lo_raw > min_effect
+    }
+
     /// Serialize for `loop.json` / `pareto.json`, tagged with the baseline id
     /// it was computed against.
     pub fn to_value(&self, baseline_id: &str) -> Value {
@@ -179,7 +191,57 @@ pub fn reward_delta_ci(
         n_tasks: t,
         n_clusters: g,
         excludes_zero,
+        lo_raw,
     })
+}
+
+/// Whether `candidate` is *significantly* better than `baseline` by more than
+/// `min_effect`: the `(candidate − baseline)` reward-delta CI is defined and its
+/// lower bound clears `min_effect`. An undefined CI (too few tasks/clusters to
+/// bound) is not significant — the foundry cannot prove a win it cannot bound.
+/// This is backlog 039 child-2's certification gate.
+pub fn passes_significance(
+    candidate: &Value,
+    baseline: &Value,
+    cluster_of: &dyn Fn(&str) -> String,
+    min_effect: f64,
+) -> bool {
+    reward_delta_ci(candidate, baseline, cluster_of).is_some_and(|ci| ci.beats(min_effect))
+}
+
+/// Split trial-complete candidates into `(certified, underpowered)` by the
+/// significance gate (backlog 039 child-2): a candidate is **certified** when
+/// its `(candidate − baseline)` reward-delta CI lower bound clears `min_effect`,
+/// and **underpowered** otherwise — including when the CI is undefined or no
+/// baseline of `baseline_kind` exists, since an unprovable win is not a win.
+/// Both lists are returned sorted.
+pub fn partition_certified(
+    cands: &Map<String, Value>,
+    trial_certified: &std::collections::HashSet<String>,
+    baseline_kind: &str,
+    cluster_of: &dyn Fn(&str) -> String,
+    min_effect: f64,
+) -> (Vec<String>, Vec<String>) {
+    let baseline = cands
+        .iter()
+        .find(|(_, c)| c.get("kind").and_then(Value::as_str) == Some(baseline_kind))
+        .map(|(_, v)| v);
+    let mut ids: Vec<&String> = trial_certified.iter().collect();
+    ids.sort();
+    let mut certified = Vec::new();
+    let mut underpowered = Vec::new();
+    for cid in ids {
+        let significant = match (cands.get(cid), baseline) {
+            (Some(c), Some(nb)) => passes_significance(c, nb, cluster_of, min_effect),
+            _ => false,
+        };
+        if significant {
+            certified.push(cid.clone());
+        } else {
+            underpowered.push(cid.clone());
+        }
+    }
+    (certified, underpowered)
 }
 
 /// Compute the reward-delta CI for every certified candidate against the
@@ -324,6 +386,105 @@ mod tests {
         let ci = reward_delta_ci(&c, &b, &singleton).expect("defined");
         assert_eq!(ci.lo, 0.0); // displays as +0.0000
         assert!(ci.excludes_zero); // …yet the unrounded CI is strictly above 0
+    }
+
+    #[test]
+    fn passes_significance_requires_the_ci_to_clear_the_mde() {
+        // deltas 0.2,0.4,0.6 vs 0 → point 0.4, raw lower bound ≈ 0.1737.
+        let c = cand(&[("a", &[0.2]), ("b", &[0.4]), ("c", &[0.6])]);
+        let b = cand(&[("a", &[0.0]), ("b", &[0.0]), ("c", &[0.0])]);
+        assert!(passes_significance(&c, &b, &singleton, 0.0)); // beats the floor
+        assert!(passes_significance(&c, &b, &singleton, 0.1)); // lower bound > 0.1
+        assert!(!passes_significance(&c, &b, &singleton, 0.2)); // lower bound < 0.2
+    }
+
+    #[test]
+    fn passes_significance_false_when_ci_spans_the_mde() {
+        // Correlated repo widens the CI to span 0 (from the clustering test).
+        let c = cand(&[("a", &[0.6]), ("b", &[0.6]), ("c", &[0.0])]);
+        let b = cand(&[("a", &[0.0]), ("b", &[0.0]), ("c", &[0.0])]);
+        let by_repo = |t: &str| match t {
+            "a" | "b" => "R1".to_string(),
+            _ => "R2".to_string(),
+        };
+        assert!(!passes_significance(&c, &b, &by_repo, 0.0));
+    }
+
+    #[test]
+    fn passes_significance_uses_the_raw_lower_bound_at_the_display_boundary() {
+        // Raw lower bound +3.7e-5 displays as 0.0000 but is a genuine win.
+        let c = cand(&[
+            ("a", &[0.139_230_483_852_484_93]),
+            ("b", &[0.045_180_835_146_119_59]),
+        ]);
+        let b = cand(&[("a", &[0.0]), ("b", &[0.0])]);
+        assert!(passes_significance(&c, &b, &singleton, 0.0));
+    }
+
+    #[test]
+    fn passes_significance_false_for_an_undefined_ci() {
+        // One common task → CI undefined → cannot prove a win.
+        let c = cand(&[("a", &[0.9]), ("x", &[0.9])]);
+        let b = cand(&[("a", &[0.0])]);
+        assert!(!passes_significance(&c, &b, &singleton, 0.0));
+    }
+
+    #[test]
+    fn partition_certified_splits_by_the_significance_gate() {
+        let cands = cands_map(&[
+            (
+                "null",
+                "null",
+                &[("a", &[0.0]), ("b", &[0.0]), ("c", &[0.0])],
+            ),
+            // sig: deltas 0.2,0.4,0.6 → lower bound ≈ 0.1737 > 0.
+            ("sig", "pi", &[("a", &[0.2]), ("b", &[0.4]), ("c", &[0.6])]),
+            // not sig: deltas spread across 0 → CI spans 0.
+            (
+                "weak",
+                "pi",
+                &[("a", &[0.6]), ("b", &[0.0]), ("c", &[-0.2])],
+            ),
+        ]);
+        let trial: HashSet<String> = ["sig".to_string(), "weak".to_string()]
+            .into_iter()
+            .collect();
+        let (certified, underpowered) =
+            partition_certified(&cands, &trial, "null", &singleton, 0.0);
+        assert_eq!(certified, vec!["sig".to_string()]);
+        assert_eq!(underpowered, vec!["weak".to_string()]);
+    }
+
+    #[test]
+    fn partition_certified_raising_the_mde_demotes_a_candidate() {
+        let cands = cands_map(&[
+            (
+                "null",
+                "null",
+                &[("a", &[0.0]), ("b", &[0.0]), ("c", &[0.0])],
+            ),
+            ("sig", "pi", &[("a", &[0.2]), ("b", &[0.4]), ("c", &[0.6])]),
+        ]);
+        let trial: HashSet<String> = ["sig".to_string()].into_iter().collect();
+        // lower bound ≈ 0.1737: certifies at MDE 0.1, demoted at MDE 0.2.
+        assert_eq!(
+            partition_certified(&cands, &trial, "null", &singleton, 0.1).0,
+            vec!["sig".to_string()]
+        );
+        assert_eq!(
+            partition_certified(&cands, &trial, "null", &singleton, 0.2).1,
+            vec!["sig".to_string()]
+        );
+    }
+
+    #[test]
+    fn partition_certified_without_a_baseline_is_all_underpowered() {
+        let cands = cands_map(&[("sig", "pi", &[("a", &[0.5]), ("b", &[0.5])])]);
+        let trial: HashSet<String> = ["sig".to_string()].into_iter().collect();
+        let (certified, underpowered) =
+            partition_certified(&cands, &trial, "null", &singleton, 0.0);
+        assert!(certified.is_empty());
+        assert_eq!(underpowered, vec!["sig".to_string()]);
     }
 
     #[test]
