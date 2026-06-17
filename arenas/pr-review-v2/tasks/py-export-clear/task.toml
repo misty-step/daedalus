@@ -1,4 +1,5 @@
 id = "py-export-clear"
+source_repo = "rich"
 
 [agent]
 timeout_sec = 900

@@ -1806,8 +1806,21 @@ fn cmd_run(
     // null floor), and certification gated on it. A candidate certifies only if
     // it clears the trial count AND its CI lower bound exceeds the minimum
     // detectable effect — the foundry can *prove* it beats the floor, not merely
-    // rank it. Tasks cluster per-task until 040 lands `source_repo` labels.
-    let cluster_of = |t: &str| t.to_string();
+    // rank it.
+    //
+    // Backlog 040: cluster tasks by their declared `source_repo` (tasks from the
+    // same upstream repo share variance, so the clustered SE must pool them);
+    // unlabeled tasks fall back to per-task clustering. With labels, n_clusters
+    // collapses to the repo count and the CI widens to the honest width.
+    let tasks_dir = arena_dir.join("tasks");
+    let repo_of: std::collections::HashMap<String, String> = search_tasks
+        .iter()
+        .chain(holdout_ids.iter())
+        .filter_map(|tid| {
+            daedalus_core::run::source_repo(&tasks_dir.join(tid)).map(|r| (tid.clone(), r))
+        })
+        .collect();
+    let cluster_of = |t: &str| repo_of.get(t).cloned().unwrap_or_else(|| t.to_string());
     let (certified_vec, underpowered) = daedalus_core::stats::partition_certified(
         &cands2,
         &trial_certified,

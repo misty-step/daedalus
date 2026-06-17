@@ -427,6 +427,18 @@ pub fn load_toml(path: &Path) -> Result<Value, Box<dyn std::error::Error>> {
     Ok(toml_to_json(tv))
 }
 
+/// Backlog 040: a task's declared `source_repo` from its `task.toml` — the
+/// cluster key that activates 039's repo-clustered statistics (tasks from the
+/// same upstream repo share variance). `None` when the task is unlabeled or has
+/// no `task.toml`, so callers fall back to per-task clustering.
+pub fn source_repo(task_dir: &Path) -> Option<String> {
+    let v = load_toml(&task_dir.join("task.toml")).ok()?;
+    v.get("source_repo")
+        .and_then(Value::as_str)
+        .filter(|s| !s.is_empty())
+        .map(str::to_string)
+}
+
 /// Recursively convert a `toml::Value` to a `serde_json::Value`.
 /// Integer → Number(i64); Float → Number(f64); Boolean → Bool; String →
 /// String; Array → Array; Table → Object; Datetime → String.
@@ -2102,6 +2114,29 @@ mod tests {
     // -----------------------------------------------------------------------
     // tree_digest
     // -----------------------------------------------------------------------
+
+    #[test]
+    fn source_repo_reads_the_task_toml_label() {
+        let tmp = std::env::temp_dir().join(format!("daedalus-srcrepo-{}", std::process::id()));
+        std::fs::create_dir_all(&tmp).unwrap();
+        // Labeled task → Some(repo).
+        std::fs::write(
+            tmp.join("task.toml"),
+            "id = \"t\"\nsource_repo = \"rich\"\n",
+        )
+        .unwrap();
+        assert_eq!(source_repo(&tmp).as_deref(), Some("rich"));
+        // Unlabeled task → None (caller falls back to per-task clustering).
+        std::fs::write(tmp.join("task.toml"), "id = \"t\"\n").unwrap();
+        assert_eq!(source_repo(&tmp), None);
+        // Empty label → None.
+        std::fs::write(tmp.join("task.toml"), "id = \"t\"\nsource_repo = \"\"\n").unwrap();
+        assert_eq!(source_repo(&tmp), None);
+        // No task.toml at all → None.
+        let _ = std::fs::remove_file(tmp.join("task.toml"));
+        assert_eq!(source_repo(&tmp), None);
+        let _ = std::fs::remove_dir_all(&tmp);
+    }
 
     #[test]
     fn tree_digest_detects_tampering() {

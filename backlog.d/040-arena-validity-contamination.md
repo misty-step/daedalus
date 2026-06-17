@@ -19,5 +19,8 @@ Establish that each arena measures real task skill — not memorized public code
 - Evidence packet: a per-arena validity record committed beside arena.toml.
 - Cadence: at arena freeze (G2) and on any arena version bump.
 
+## Progress
+- ✅ **Slice A — source_repo labels + t-correction (activates 039's repo-clustering).** Added `source_repo` to the rich/pygments `task.toml`s (pr-review-correctness-v0, pr-review-v2); `run::source_repo` + a `repo_of` map in the run report cluster tasks by repo. Activating this exposed that 039's normal-1.96 CI is badly anticonservative at few clusters, so the CI now uses Student-t `t_{G−1}` critical values (`stats::t_975`) and the power note iterates G with the matching t. **Finding:** a 2-repo arena has G=2 → df=1 → t=12.7, so it honestly certifies *nothing* — repo-clustering + t makes "you need more independent repos" mechanical, directly motivating oracle item 4 (a private holdout with more clusters). Live-verified on the real pr-review-correctness run; critic-cleared (0 blocking).
+
 ## Notes
 Daedalus's planted-defect design + grader tamper-hashing + holdout ledger is a strong base; this closes the leakage / saturation-void / adversarial-key holes. External grounding: "On Leakage of Code Generation Evaluation Datasets" (arXiv 2407.07565) — the real-repo arenas use **public** code (Textualize/rich, pygments in arenas/pr-review-v2), which is training data; "Benchmark Inflation / Retro-Holdouts" (arXiv 2410.09247) and "Benchmark Data Contamination: A Survey" (arXiv 2406.04244) — private/gated holdouts + contamination-resistant formats; "Measuring what Matters: Construct Validity" (arXiv 2511.04703). Pairs with [[039]] (statistics).
