@@ -469,6 +469,127 @@ pub fn consistency_markdown(rows: &[(String, Consistency)], k: usize) -> String 
     s
 }
 
+// ---------------------------------------------------------------------------
+// Backlog 039 child-4: basin-trap / trajectory-divergence detector. The search
+// is single-population reflective hill-climbing with no basin escape — so its
+// answer can depend on the RNG seed. Run it from ≥2 seeds and compare the
+// certified tops: if different seeds crown different compositions whose rewards
+// differ by more than the pooled noise, the search is seed-trapped, not robust.
+// ---------------------------------------------------------------------------
+
+/// The certified top of one seed trajectory.
+#[derive(Debug, Clone, PartialEq)]
+pub struct RunTop {
+    /// Run label (dir name or seed) for reporting.
+    pub label: String,
+    /// Recommended candidate id.
+    pub top_id: String,
+    /// Its composition hash — the identity we compare across seeds. Empty when
+    /// the run did not record one (then convergence cannot be asserted).
+    pub top_hash: String,
+    /// Its reward estimate.
+    pub reward: f64,
+    /// Standard error of that reward. `None` when the run carries no CI data
+    /// (e.g. a run produced before 039 child-1) — distinct from a genuine 0,
+    /// and it makes the significance test indeterminate rather than trivially
+    /// "significant".
+    pub se: Option<f64>,
+}
+
+/// Verdict of comparing certified tops across seed trajectories.
+#[derive(Debug, Clone, PartialEq)]
+pub struct BasinVerdict {
+    pub n_runs: usize,
+    /// Distinct winning composition hashes (non-empty) across the runs.
+    pub distinct_winners: usize,
+    /// All seeds crowned the same composition (and all identities are present).
+    pub converged: bool,
+    /// Any run is missing a composition hash — convergence cannot be asserted.
+    pub missing_identity: bool,
+    /// Reward gap between the best- and worst-scoring *distinct compositions*
+    /// (each reduced to its best-scoring run), not the global best/worst run.
+    pub reward_gap: f64,
+    /// Pooled SE of that pair. `None` when either side lacks CI data — then the
+    /// gap cannot be tested against noise.
+    pub pooled_se: Option<f64>,
+    /// Whether the gap exceeds the 95% pooled-noise band. `None` when untestable
+    /// (missing SE) — never silently treated as significant.
+    pub gap_significant: Option<bool>,
+    /// Basin trap: seeds crown different compositions AND the gap is testably
+    /// beyond pooled noise (`gap_significant == Some(true)`).
+    pub flag: bool,
+}
+
+/// Compare the certified tops of ≥2 seed trajectories. `None` with fewer than 2
+/// runs (a robustness check needs at least two).
+///
+/// Each distinct winning composition is reduced to its best-scoring run, so the
+/// reward gap measures *between-composition* divergence, not within-composition
+/// trial noise. Flags a basin trap only when the seeds crown different
+/// compositions whose gap testably exceeds the pooled 95% noise band. Different
+/// winners within noise → non-converged "equivalent optima" (no flag); missing
+/// CI data → untestable (no flag, surfaced via `gap_significant = None`); a
+/// missing composition hash → `missing_identity` (never reported as converged).
+pub fn basin_divergence(tops: &[RunTop]) -> Option<BasinVerdict> {
+    if tops.len() < 2 {
+        return None;
+    }
+    let missing_identity = tops.iter().any(|t| t.top_hash.is_empty());
+
+    // Reduce each distinct composition to its best-scoring run.
+    let mut best_by_hash: std::collections::BTreeMap<&str, &RunTop> =
+        std::collections::BTreeMap::new();
+    for t in tops {
+        if t.top_hash.is_empty() {
+            continue;
+        }
+        best_by_hash
+            .entry(t.top_hash.as_str())
+            .and_modify(|cur| {
+                if t.reward > cur.reward {
+                    *cur = t;
+                }
+            })
+            .or_insert(t);
+    }
+    let distinct_winners = best_by_hash.len();
+    let converged = !missing_identity && distinct_winners == 1;
+
+    let reps: Vec<&RunTop> = best_by_hash.values().copied().collect();
+    let (reward_gap, pooled_se, gap_significant) = if reps.len() < 2 {
+        (0.0, None, None)
+    } else {
+        let best = reps
+            .iter()
+            .max_by(|a, b| a.reward.total_cmp(&b.reward))
+            .expect("reps >= 2");
+        let worst = reps
+            .iter()
+            .min_by(|a, b| a.reward.total_cmp(&b.reward))
+            .expect("reps >= 2");
+        let gap = best.reward - worst.reward;
+        match (best.se, worst.se) {
+            (Some(sb), Some(sw)) => {
+                let ps = (sb * sb + sw * sw).sqrt();
+                (gap, Some(ps), Some(gap > Z_95 * ps))
+            }
+            _ => (gap, None, None), // missing CI data → cannot test against noise
+        }
+    };
+    let flag = !converged && gap_significant == Some(true);
+
+    Some(BasinVerdict {
+        n_runs: tops.len(),
+        distinct_winners,
+        converged,
+        missing_identity,
+        reward_gap: round_half_even(reward_gap, 4),
+        pooled_se: pooled_se.map(|s| round_half_even(s, 6)),
+        gap_significant,
+        flag,
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -872,6 +993,116 @@ mod tests {
         assert_eq!(v["rate"], json!(0.75));
         assert_eq!(v["pass_k"], json!(0.5));
         assert_eq!(v["pass_k_k"], json!(2));
+    }
+
+    fn top(label: &str, hash: &str, reward: f64, se: f64) -> RunTop {
+        RunTop {
+            label: label.to_string(),
+            top_id: format!("cand-{hash}"),
+            top_hash: hash.to_string(),
+            reward,
+            se: Some(se),
+        }
+    }
+
+    fn top_no_ci(label: &str, hash: &str, reward: f64) -> RunTop {
+        RunTop {
+            label: label.to_string(),
+            top_id: format!("cand-{hash}"),
+            top_hash: hash.to_string(),
+            reward,
+            se: None,
+        }
+    }
+
+    #[test]
+    fn basin_converged_when_all_seeds_crown_the_same_composition() {
+        let tops = vec![top("s1", "H", 0.80, 0.05), top("s2", "H", 0.78, 0.05)];
+        let v = basin_divergence(&tops).unwrap();
+        assert!(v.converged);
+        assert_eq!(v.distinct_winners, 1);
+        assert!(!v.flag);
+    }
+
+    #[test]
+    fn basin_flags_different_winners_with_a_significant_reward_gap() {
+        // gap 0.40, pooled_se √(0.05²+0.05²)=0.0707, 1.96·=0.139 < 0.40 → trap.
+        let tops = vec![top("s1", "HX", 0.90, 0.05), top("s2", "HY", 0.50, 0.05)];
+        let v = basin_divergence(&tops).unwrap();
+        assert!(!v.converged);
+        assert_eq!(v.distinct_winners, 2);
+        assert_eq!(v.gap_significant, Some(true));
+        assert!(v.flag);
+    }
+
+    #[test]
+    fn basin_different_winners_within_noise_is_not_a_hard_trap() {
+        // gap 0.02, pooled_se √(0.2²+0.2²)=0.283, 1.96·=0.554 > 0.02 → equivalent.
+        let tops = vec![top("s1", "HX", 0.80, 0.20), top("s2", "HY", 0.78, 0.20)];
+        let v = basin_divergence(&tops).unwrap();
+        assert!(!v.converged); // seeds disagree on the winner
+        assert_eq!(v.gap_significant, Some(false)); // but not beyond pooled noise
+        assert!(!v.flag); // equivalent optima, not a trap
+    }
+
+    #[test]
+    fn basin_detects_a_divergent_third_seed() {
+        let tops = vec![
+            top("s1", "H", 0.85, 0.04),
+            top("s2", "H", 0.83, 0.04),
+            top("s3", "OTHER", 0.50, 0.04),
+        ];
+        let v = basin_divergence(&tops).unwrap();
+        assert_eq!(v.n_runs, 3);
+        assert_eq!(v.distinct_winners, 2);
+        assert!(v.flag);
+    }
+
+    #[test]
+    fn basin_compares_distinct_compositions_not_the_global_best_worst() {
+        // HX best is 0.82, HY is 0.80 (gap 0.02, within noise → equivalent). A
+        // same-composition outlier HX@0.50 must NOT widen the between-winner gap
+        // (global best/worst would be 0.82 vs 0.50 = 0.32 and falsely flag).
+        let tops = vec![
+            top("s1", "HX", 0.82, 0.01),
+            top("s2", "HY", 0.80, 0.01),
+            top("s3", "HX", 0.50, 0.01),
+        ];
+        let v = basin_divergence(&tops).unwrap();
+        assert_eq!(v.distinct_winners, 2);
+        assert_eq!(v.reward_gap, 0.02); // HX-best vs HY, not vs HX@0.50
+        assert_eq!(v.gap_significant, Some(false));
+        assert!(!v.flag);
+    }
+
+    #[test]
+    fn basin_without_ci_data_is_untestable_not_a_trap() {
+        // Different winners but no SE (pre-039 runs): cannot test the gap against
+        // noise, so it must NOT silently flag a trap.
+        let tops = vec![top_no_ci("s1", "HX", 0.90), top_no_ci("s2", "HY", 0.50)];
+        let v = basin_divergence(&tops).unwrap();
+        assert!(!v.converged);
+        assert_eq!(v.distinct_winners, 2);
+        assert_eq!(v.pooled_se, None);
+        assert_eq!(v.gap_significant, None);
+        assert!(!v.flag); // untestable, not a hard trap
+    }
+
+    #[test]
+    fn basin_missing_composition_hash_is_never_reported_robust() {
+        // Blank hashes (missing identity) must not collapse to "converged".
+        let tops = vec![top("s1", "", 0.90, 0.05), top("s2", "", 0.20, 0.05)];
+        let v = basin_divergence(&tops).unwrap();
+        assert!(v.missing_identity);
+        assert!(!v.converged); // no false robustness from missing data
+        assert_eq!(v.distinct_winners, 0);
+        assert!(!v.flag);
+    }
+
+    #[test]
+    fn basin_needs_at_least_two_runs() {
+        assert!(basin_divergence(&[top("s1", "H", 0.8, 0.05)]).is_none());
+        assert!(basin_divergence(&[]).is_none());
     }
 
     #[test]
