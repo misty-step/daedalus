@@ -1,0 +1,23 @@
+# Machine-readable contamination record (backlog 040 item 1).
+# See arenas/pr-review-v2/contamination.toml for the field contract.
+
+# Planted defects authored for this arena, before any candidate ran.
+defects_novel = true
+
+notes = """
+Correctness-lens tasks drawn from public rich/pygments code (plausibly in model
+training data). Defects are novel; surrounding context is not. Per-task source
+repo is declared in each task.toml `source_repo`.
+"""
+
+[[source]]
+repo = "Textualize/rich"
+ref = "v14.0.0"
+license = "MIT"
+public = true
+
+[[source]]
+repo = "pygments/pygments"
+ref = "2.19.1"
+license = "BSD-2-Clause"
+public = true

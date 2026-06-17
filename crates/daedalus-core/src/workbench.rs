@@ -18,6 +18,7 @@ use std::io::Write as IoWrite;
 use std::path::{Path, PathBuf};
 
 use regex::Regex;
+use serde::Deserialize;
 use serde_json::Value;
 use toml::Value as TomlValue;
 
@@ -68,6 +69,8 @@ pub struct ValidationReport {
     pub arena_version: String,
     pub ok: bool,
     pub messages: Vec<String>,
+    /// Non-failing advisories (e.g. contamination: a source is public).
+    pub warnings: Vec<String>,
     pub oracle_mean: Option<f64>,
     pub null_mean: Option<f64>,
     pub probe_mean: Option<f64>,
@@ -81,6 +84,7 @@ impl ValidationReport {
             arena_version: arena_version.to_string(),
             ok: true,
             messages: Vec::new(),
+            warnings: Vec::new(),
             oracle_mean: None,
             null_mean: None,
             probe_mean: None,
@@ -91,6 +95,92 @@ impl ValidationReport {
     pub fn fail(&mut self, message: impl Into<String>) {
         self.ok = false;
         self.messages.push(message.into());
+    }
+
+    /// A non-failing advisory.
+    pub fn warn(&mut self, message: impl Into<String>) {
+        self.warnings.push(message.into());
+    }
+}
+
+// ---------------------------------------------------------------------------
+// contamination record (backlog 040 item 1)
+// ---------------------------------------------------------------------------
+
+/// One upstream source an arena's fixtures are drawn from.
+#[derive(Debug, Clone, Deserialize)]
+pub struct ContaminationSource {
+    pub repo: String,
+    #[serde(default)]
+    pub r#ref: Option<String>,
+    #[serde(default)]
+    pub license: Option<String>,
+    /// Publicly indexable → plausibly in model training data.
+    #[serde(default)]
+    pub public: bool,
+}
+
+/// `contamination.toml` beside `arena.toml`: which upstream code the fixtures
+/// come from, and whether the planted defects are novel.
+#[derive(Debug, Clone, Deserialize)]
+pub struct Contamination {
+    /// All planted defects are authored for this arena (not upstream bugs).
+    #[serde(default)]
+    pub defects_novel: bool,
+    #[serde(default)]
+    pub source: Vec<ContaminationSource>,
+    #[serde(default)]
+    pub notes: Option<String>,
+}
+
+/// Load `<arena>/contamination.toml`. `Ok(None)` when absent.
+pub fn load_contamination(arena_dir: &Path) -> Result<Option<Contamination>, WorkbenchError> {
+    let path = arena_dir.join("contamination.toml");
+    if !path.exists() {
+        return Ok(None);
+    }
+    let text = fs::read_to_string(&path)
+        .map_err(|e| WorkbenchError(format!("contamination.toml: {e}")))?;
+    toml::from_str(&text)
+        .map(Some)
+        .map_err(|e| WorkbenchError(format!("contamination.toml: {e}")))
+}
+
+/// Validate the contamination record for an arena whose tasks declare a
+/// `source_repo` (a real-repo arena, per 040 item 1): the record must exist,
+/// list its sources, and assert the defects are novel. Public sources are
+/// surfaced as advisories (contamination risk), not failures.
+pub fn validate_contamination(arena_dir: &Path, report: &mut ValidationReport) {
+    let labeled = task_dirs(arena_dir)
+        .iter()
+        .any(|td| crate::run::source_repo(td).is_some());
+    if !labeled {
+        return; // synthetic arena (no upstream code) — nothing to record
+    }
+    match load_contamination(arena_dir) {
+        Ok(None) => report.fail(
+            "real-repo arena (tasks declare source_repo) is missing contamination.toml (040 item 1)",
+        ),
+        Ok(Some(c)) => {
+            if c.source.is_empty() {
+                report.fail("contamination.toml lists no [[source]] entries");
+            }
+            if !c.defects_novel {
+                report.fail(
+                    "contamination.toml must assert defects_novel = true (planted defects are authored, not upstream bugs)",
+                );
+            }
+            for s in &c.source {
+                if s.public {
+                    report.warn(format!(
+                        "contamination: source {} is public — plausibly in model training data; \
+                         pair with a contamination-resistant holdout before trusting rankings",
+                        s.repo
+                    ));
+                }
+            }
+        }
+        Err(e) => report.fail(e.0),
     }
 }
 
@@ -802,6 +892,9 @@ pub fn validate_arena(
         }
     }
 
+    // Backlog 040 item 1: real-repo arenas must carry a contamination record.
+    validate_contamination(arena_dir, &mut report);
+
     Ok(report)
 }
 
@@ -848,6 +941,14 @@ pub fn render_validation_report(report: &ValidationReport) -> String {
         lines.push(String::new());
         for m in &report.messages {
             lines.push(format!("- {m}"));
+        }
+        lines.push(String::new());
+    }
+    if !report.warnings.is_empty() {
+        lines.push("## Advisories".to_string());
+        lines.push(String::new());
+        for w in &report.warnings {
+            lines.push(format!("- {w}"));
         }
         lines.push(String::new());
     }
@@ -1215,6 +1316,69 @@ mod tests {
             probe_saturation_verdict(0.2, 1.0, 0, 3),
             ProbeVerdict::Unsaturated
         );
+    }
+
+    fn write_labeled_task(arena: &Path, source_repo: Option<&str>) {
+        let task = arena.join("tasks").join("t1");
+        std::fs::create_dir_all(&task).unwrap();
+        let toml = match source_repo {
+            Some(r) => format!("id = \"t1\"\nsource_repo = \"{r}\"\n"),
+            None => "id = \"t1\"\n".to_string(),
+        };
+        std::fs::write(task.join("task.toml"), toml).unwrap();
+    }
+
+    #[test]
+    fn validate_contamination_requires_a_record_for_real_repo_arenas() {
+        let arena = tmpdir("contam-labeled");
+        std::fs::create_dir_all(&arena).unwrap();
+        write_labeled_task(&arena, Some("rich"));
+
+        // Labeled arena, no record → fail.
+        let mut r1 = ValidationReport::new("a", "0");
+        validate_contamination(&arena, &mut r1);
+        assert!(!r1.ok);
+        assert!(r1.messages.iter().any(|m| m.contains("contamination.toml")));
+
+        // Add a valid record with a public source → passes with an advisory.
+        std::fs::write(
+            arena.join("contamination.toml"),
+            "defects_novel = true\n[[source]]\nrepo = \"rich\"\npublic = true\n",
+        )
+        .unwrap();
+        let mut r2 = ValidationReport::new("a", "0");
+        validate_contamination(&arena, &mut r2);
+        assert!(r2.ok);
+        assert!(r2.warnings.iter().any(|w| w.contains("public")));
+        let _ = std::fs::remove_dir_all(&arena);
+    }
+
+    #[test]
+    fn validate_contamination_requires_defects_novel() {
+        let arena = tmpdir("contam-novel");
+        std::fs::create_dir_all(&arena).unwrap();
+        write_labeled_task(&arena, Some("rich"));
+        std::fs::write(
+            arena.join("contamination.toml"),
+            "defects_novel = false\n[[source]]\nrepo = \"rich\"\n",
+        )
+        .unwrap();
+        let mut report = ValidationReport::new("a", "0");
+        validate_contamination(&arena, &mut report);
+        assert!(!report.ok);
+        assert!(report.messages.iter().any(|m| m.contains("defects_novel")));
+        let _ = std::fs::remove_dir_all(&arena);
+    }
+
+    #[test]
+    fn validate_contamination_skips_synthetic_arenas() {
+        let arena = tmpdir("contam-synth");
+        std::fs::create_dir_all(&arena).unwrap();
+        write_labeled_task(&arena, None); // no source_repo → synthetic
+        let mut report = ValidationReport::new("a", "0");
+        validate_contamination(&arena, &mut report);
+        assert!(report.ok); // no contamination record required
+        let _ = std::fs::remove_dir_all(&arena);
     }
 
     #[test]
