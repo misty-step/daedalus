@@ -780,6 +780,17 @@ fn cmd_run(
 ) -> ExitCode {
     let repo = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
 
+    // A minimum detectable effect is a non-negative reward delta; the is_nan
+    // arm also rejects garbage. A negative MDE would certify candidates provably
+    // *worse* than the floor — the opposite of what certification means.
+    if min_effect < 0.0 || min_effect.is_nan() {
+        eprintln!(
+            "error: --min-effect must be >= 0 (got {min_effect}); it is the minimum reward \
+             delta a candidate must provably beat the null floor by to certify."
+        );
+        return ExitCode::FAILURE;
+    }
+
     let spec_text = match std::fs::read_to_string(taskspec_path) {
         Ok(t) => t,
         Err(e) => {
