@@ -400,6 +400,53 @@ pub fn validate_splits(
 }
 
 // ---------------------------------------------------------------------------
+// saturation probe verdict (backlog 040)
+// ---------------------------------------------------------------------------
+
+/// Outcome of the one-shot saturation probe.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ProbeVerdict {
+    /// The probe scored near the oracle — the arena cannot rank agents.
+    Saturated,
+    /// The probe cleanly scored low — the arena discriminates skill.
+    Unsaturated,
+    /// The probe errored (context overflow, HTTP failure). Its low score is an
+    /// artifact, not evidence — it says nothing about saturation either way.
+    Inconclusive,
+}
+
+/// Classify the saturation probe, distinguishing "probe errored" from "probe
+/// genuinely scored low" (backlog 040).
+///
+/// An errored probe records reward 0.0, which deflates `probe_mean` toward the
+/// "unsaturated" side and would silently pass a meaningless arena (pr-review-v2
+/// errored to 0.0 on context overflow and was read as a pass). So an errored
+/// probe must NOT count as evidence of non-saturation:
+/// - every probe trial errored, or no trials → `Inconclusive`;
+/// - scored near the oracle (≥ oracle − 0.1) → `Saturated` (high despite any
+///   errors is still saturated);
+/// - scored low with *some* errors → `Inconclusive` (the low may be the errors,
+///   not genuine skill-floor);
+/// - scored low with no errors → `Unsaturated` (a clean signal).
+pub fn probe_saturation_verdict(
+    probe_mean: f64,
+    oracle_mean: f64,
+    probe_errors: i64,
+    probe_trials: i64,
+) -> ProbeVerdict {
+    if probe_trials <= 0 || probe_errors >= probe_trials {
+        return ProbeVerdict::Inconclusive;
+    }
+    if probe_mean >= oracle_mean - 0.1 {
+        ProbeVerdict::Saturated
+    } else if probe_errors > 0 {
+        ProbeVerdict::Inconclusive
+    } else {
+        ProbeVerdict::Unsaturated
+    }
+}
+
+// ---------------------------------------------------------------------------
 // validate_probe_run
 // ---------------------------------------------------------------------------
 
@@ -482,11 +529,17 @@ pub fn validate_probe_run(probe_run: Option<&Path>, report: &mut ValidationRepor
     };
 
     report.probe_mean = Some(probe_mean);
-    if probe_mean >= oracle_mean - 0.1 {
-        report.fail(format!(
-            "one-shot probe saturates the arena: {:.4} >= oracle {:.4} - 0.1",
-            probe_mean, oracle_mean
-        ));
+    let probe_errors = probe.get("errors").and_then(|v| v.as_i64()).unwrap_or(0);
+    let probe_trials = probe.get("trials").and_then(|v| v.as_i64()).unwrap_or(0);
+    match probe_saturation_verdict(probe_mean, oracle_mean, probe_errors, probe_trials) {
+        ProbeVerdict::Saturated => report.fail(format!(
+            "one-shot probe saturates the arena: {probe_mean:.4} >= oracle {oracle_mean:.4} - 0.1"
+        )),
+        ProbeVerdict::Inconclusive => report.fail(format!(
+            "one-shot probe inconclusive: {probe_errors}/{probe_trials} trials errored, so its \
+             {probe_mean:.4} mean is not evidence the arena is unsaturated"
+        )),
+        ProbeVerdict::Unsaturated => {}
     }
 }
 
@@ -1119,6 +1172,65 @@ mod tests {
     use super::*;
     use std::sync::atomic::{AtomicU64, Ordering};
 
+    #[test]
+    fn errored_probe_is_inconclusive_not_unsaturated() {
+        // The pr-review-v2 bug: the probe errored to reward 0.0 on every trial
+        // (context overflow). That must NOT read as "unsaturated".
+        assert_eq!(
+            probe_saturation_verdict(0.0, 1.0, 3, 3),
+            ProbeVerdict::Inconclusive
+        );
+        // No probe trials at all → also inconclusive.
+        assert_eq!(
+            probe_saturation_verdict(0.0, 1.0, 0, 0),
+            ProbeVerdict::Inconclusive
+        );
+    }
+
+    #[test]
+    fn high_probe_is_saturated_even_with_some_errors() {
+        // 0.95 ≥ oracle 1.0 − 0.1: scoring high despite errors is still saturated.
+        assert_eq!(
+            probe_saturation_verdict(0.95, 1.0, 1, 3),
+            ProbeVerdict::Saturated
+        );
+    }
+
+    #[test]
+    fn low_probe_with_errors_is_inconclusive_but_clean_low_is_unsaturated() {
+        // Low score with some errors: the low may be the errors, not skill-floor.
+        assert_eq!(
+            probe_saturation_verdict(0.2, 1.0, 1, 3),
+            ProbeVerdict::Inconclusive
+        );
+        // Low score, no errors: a clean signal that the arena discriminates.
+        assert_eq!(
+            probe_saturation_verdict(0.2, 1.0, 0, 3),
+            ProbeVerdict::Unsaturated
+        );
+    }
+
+    #[test]
+    fn validate_probe_run_fails_the_freeze_gate_on_an_errored_probe() {
+        let dir = tmpdir("errored-probe");
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(
+            dir.join("summary.json"),
+            serde_json::to_string(&serde_json::json!({
+                "oracle": {"kind": "oracle", "reward_mean": 1.0, "trials": 3, "errors": 0},
+                // probe errored to 0.0 on every trial (the pr-review-v2 bug).
+                "probe-oneshot": {"kind": "oneshot", "reward_mean": 0.0, "trials": 3, "errors": 3},
+            }))
+            .unwrap(),
+        )
+        .unwrap();
+        let mut report = ValidationReport::new("a", "0.0.0");
+        validate_probe_run(Some(&dir), &mut report);
+        assert!(!report.ok, "errored probe must not pass the freeze gate");
+        assert!(report.messages.iter().any(|m| m.contains("inconclusive")));
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
     static COUNTER: AtomicU64 = AtomicU64::new(0);
 
     fn tmpdir(label: &str) -> PathBuf {
@@ -1220,7 +1332,7 @@ mod tests {
             serde_json::to_string(&serde_json::json!({
                 "oracle": {"kind": "oracle", "reward_mean": 1.0},
                 "null": {"kind": "null", "reward_mean": 0.5},
-                "probe-oneshot": {"kind": "oneshot", "reward_mean": 0.0},
+                "probe-oneshot": {"kind": "oneshot", "reward_mean": 0.0, "trials": 1, "errors": 0},
             }))
             .unwrap(),
         )
