@@ -163,6 +163,11 @@ enum Cmd {
         certify_top: usize,
         #[arg(long, default_value_t = 5)]
         certify_trials: u32,
+        /// Minimum detectable effect for certification: a candidate certifies
+        /// only when its (candidate − null) reward-delta 95% CI lower bound
+        /// exceeds this. 0.0 = "provably better than the floor."
+        #[arg(long, default_value_t = 0.0)]
+        min_effect: f64,
         #[arg(long)]
         max_errors_per_candidate: Option<usize>,
     },
@@ -248,6 +253,7 @@ fn main() -> ExitCode {
             children_per_gen,
             certify_top,
             certify_trials,
+            min_effect,
             max_errors_per_candidate,
         } => cmd_run(
             &taskspec,
@@ -262,6 +268,7 @@ fn main() -> ExitCode {
             children_per_gen,
             certify_top,
             certify_trials,
+            min_effect,
             max_errors_per_candidate,
         ),
     }
@@ -768,9 +775,21 @@ fn cmd_run(
     children_per_gen: usize,
     certify_top: usize,
     certify_trials: u32,
+    min_effect: f64,
     max_errors_per_candidate: Option<usize>,
 ) -> ExitCode {
     let repo = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
+
+    // A minimum detectable effect is a non-negative reward delta; the is_nan
+    // arm also rejects garbage. A negative MDE would certify candidates provably
+    // *worse* than the floor — the opposite of what certification means.
+    if min_effect < 0.0 || min_effect.is_nan() {
+        eprintln!(
+            "error: --min-effect must be >= 0 (got {min_effect}); it is the minimum reward \
+             delta a candidate must provably beat the null floor by to certify."
+        );
+        return ExitCode::FAILURE;
+    }
 
     let spec_text = match std::fs::read_to_string(taskspec_path) {
         Ok(t) => t,
@@ -1631,8 +1650,8 @@ fn cmd_run(
     let cands2 = daedalus_core::report::aggregate(&final_records_raw);
     let front2 = daedalus_core::report::pareto_front(&cands2);
 
-    // Certified candidates
-    let certified: std::collections::HashSet<String> = cands2
+    // Trial-count gate: ≥ certify_trials per search task — the mechanical floor.
+    let trial_certified: std::collections::HashSet<String> = cands2
         .iter()
         .filter(|(cid, c)| {
             let kind = c.get("kind").and_then(Value::as_str).unwrap_or("");
@@ -1652,20 +1671,31 @@ fn cmd_run(
         .map(|(cid, _)| cid.clone())
         .collect();
 
+    // Backlog 039 child-1 + child-2: a cluster-robust 95% CI on (candidate −
+    // null floor), and certification gated on it. A candidate certifies only if
+    // it clears the trial count AND its CI lower bound exceeds the minimum
+    // detectable effect — the foundry can *prove* it beats the floor, not merely
+    // rank it. Tasks cluster per-task until 040 lands `source_repo` labels.
+    let cluster_of = |t: &str| t.to_string();
+    let (certified_vec, underpowered) = daedalus_core::stats::partition_certified(
+        &cands2,
+        &trial_certified,
+        "null",
+        &cluster_of,
+        min_effect,
+    );
+    let certified: std::collections::HashSet<String> = certified_vec.into_iter().collect();
+
     let pick = if !certified.is_empty() {
         daedalus_core::report::recommend(&cands2, &front2, Some(&certified))
     } else {
         None
     };
 
-    // Backlog 039 child-1: a cluster-robust 95% CI on (candidate − baseline)
-    // reward for every certified candidate. Baseline is the `null` reference
-    // (the floor). Tasks cluster per-task by default; once arenas carry
-    // `source_repo` labels (backlog 040), same-repo tasks collapse into one
-    // cluster and the SE widens to reflect their correlation.
-    let cluster_of = |t: &str| t.to_string();
+    // CI table covers every trial-complete candidate; the sig column (CI
+    // excludes the MDE) is what distinguishes certified from underpowered.
     let (baseline_id, delta_cis) =
-        daedalus_core::stats::certified_delta_cis(&cands2, &certified, "null", &cluster_of);
+        daedalus_core::stats::certified_delta_cis(&cands2, &trial_certified, "null", &cluster_of);
     let baseline_id_str = baseline_id.clone().unwrap_or_else(|| "null".to_string());
     let mut ci_values: Map<String, Value> = Map::new();
     for (cid, ci) in &delta_cis {
@@ -1722,9 +1752,24 @@ fn cmd_run(
         let mut sorted_cert: Vec<String> = certified.iter().cloned().collect();
         sorted_cert.sort();
         report_text.push_str(&format!(
-            "\n_Certified (≥{certify_trials} trials per search task): {}. Recommendation restricted to certified candidates._\n",
+            "\n_Certified (≥{certify_trials} trials per search task AND 95% CI lower bound > {min_effect:+.4} vs the null floor): {}. Recommendation restricted to certified candidates._\n",
             sorted_cert.join(", ")
         ));
+    }
+    if !underpowered.is_empty() {
+        report_text.push_str(&format!(
+            "\n_Trial-complete but NOT certified ({} trials, but the reward-delta CI spans the {min_effect:+.4} minimum effect — no provable win over the floor): {}. See the CI table; raise --certify-trials or task count, or widen the arena (040)._\n",
+            certify_trials,
+            underpowered.join(", ")
+        ));
+    }
+    if certified.is_empty() && !trial_certified.is_empty() {
+        report_text.push_str(
+            "\n> **No candidate is provably better than the null floor.** Every trial-complete \
+             candidate's 95% reward-delta CI spans the minimum detectable effect — the tournament \
+             is underpowered, not necessarily the candidates. Add trials/tasks (see the power note) \
+             or accept a wider MDE before trusting a ranking.\n",
+        );
     }
     report_text.push_str(&daedalus_core::stats::delta_ci_markdown(
         &baseline_id_str,
@@ -1848,6 +1893,15 @@ fn cmd_run(
             .unwrap_or(Value::Null),
     );
     outcome_obj.insert("reward_delta_cis".to_string(), Value::Object(ci_values));
+    outcome_obj.insert("min_effect".to_string(), Value::from(min_effect));
+    outcome_obj.insert(
+        "trial_complete".to_string(),
+        Value::Array({
+            let mut tc: Vec<String> = trial_certified.iter().cloned().collect();
+            tc.sort();
+            tc.into_iter().map(Value::from).collect()
+        }),
+    );
     let _ = std::fs::write(
         exp_dir.join("loop.json"),
         serde_json::to_string_pretty(&Value::Object(outcome_obj.clone())).unwrap(),
