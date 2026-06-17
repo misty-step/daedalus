@@ -61,6 +61,32 @@ impl DeltaCi {
         self.lo_raw > min_effect
     }
 
+    /// Backlog 039 child-5 — the power note: the minimum number of independent
+    /// **clusters** (the unit the cluster-robust SE is computed over — tasks
+    /// today, source repos once 040 lands labels) needed to make the *observed*
+    /// effect marginally significant at 95% (the expected CI just reaches 0).
+    ///
+    /// The CR1 SE shrinks with the cluster count as `1/√G`, not with tasks added
+    /// inside existing clusters, so to pull the current half-width `1.96·se` down
+    /// to the observed `point` we need `G ≥ n_clusters · (1.96·se / point)²`.
+    /// `None` when `point ≤ 0` (no positive effect). Floored at 2 (the minimum
+    /// for a defined CI); a candidate already significant returns `≤ n_clusters`.
+    ///
+    /// This is the marginal threshold (≈50% chance of actually clearing 0 at
+    /// exactly this G); budget more clusters for reliable detection. It assumes
+    /// added clusters carry similar between-cluster variance.
+    pub fn min_clusters_to_significance(&self) -> Option<usize> {
+        if self.point <= 0.0 {
+            return None;
+        }
+        if self.se <= 0.0 {
+            return Some(2); // already perfectly precise; 2 clusters suffice
+        }
+        let ratio = Z_95 * self.se / self.point;
+        let need = (self.n_clusters as f64 * ratio * ratio).ceil() as usize;
+        Some(need.max(2))
+    }
+
     /// Serialize for `loop.json` / `pareto.json`, tagged with the baseline id
     /// it was computed against.
     pub fn to_value(&self, baseline_id: &str) -> Value {
@@ -74,6 +100,12 @@ impl DeltaCi {
         m.insert("n_tasks".into(), Value::from(self.n_tasks as u64));
         m.insert("n_clusters".into(), Value::from(self.n_clusters as u64));
         m.insert("excludes_zero".into(), Value::Bool(self.excludes_zero));
+        m.insert(
+            "min_clusters_95".into(),
+            self.min_clusters_to_significance()
+                .map(|n| Value::from(n as u64))
+                .unwrap_or(Value::Null),
+        );
         Value::Object(m)
     }
 }
@@ -287,13 +319,17 @@ pub fn delta_ci_markdown(baseline_id: &str, cis: &[(String, DeltaCi)]) -> String
     }
     let mut s = String::new();
     s.push_str(&format!(
-        "\n## Reward delta vs baseline (95% CI)\n\nCluster-robust 95% CI on (candidate − `{baseline_id}`) mean reward, tasks clustered by source repo. A CI that excludes 0 is an improvement over the floor at 95% confidence. _Normal approximation; with few clusters (see n_clusters) it is anticonservative — backlog 039 child-5._\n\n"
+        "\n## Reward delta vs baseline (95% CI)\n\nCluster-robust 95% CI on (candidate − `{baseline_id}`) mean reward, tasks clustered by source repo. A CI that excludes 0 is an improvement over the floor at 95% confidence. `clstr→95%` is the power note (039 child-5): the number of independent clusters (tasks today, source repos once 040 lands labels) at which the *observed* effect's CI is expected to just reach 0 — compare it to n_clusters. Adding tasks within existing clusters does not shrink the SE; clusters do. _Normal approximation; with few clusters it is anticonservative._\n\n"
     ));
-    s.push_str("| candidate | Δ reward | 95% CI | n_tasks | n_clusters | sig |\n");
-    s.push_str("|---|---|---|---|---|---|\n");
+    s.push_str("| candidate | Δ reward | 95% CI | n_tasks | n_clusters | clstr→95% | sig |\n");
+    s.push_str("|---|---|---|---|---|---|---|\n");
     for (cid, ci) in cis {
+        let need = ci
+            .min_clusters_to_significance()
+            .map(|n| n.to_string())
+            .unwrap_or_else(|| "—".to_string());
         s.push_str(&format!(
-            "| {cid} | {:+.4} | [{:+.4}, {:+.4}] | {} | {} | {} |\n",
+            "| {cid} | {:+.4} | [{:+.4}, {:+.4}] | {} | {} | {need} | {} |\n",
             ci.point,
             ci.lo,
             ci.hi,
@@ -616,6 +652,44 @@ mod tests {
     }
 
     #[test]
+    fn min_clusters_to_significance_is_small_when_already_significant() {
+        // point 0.4, se 0.11547, 3 singleton clusters — CI already excludes 0,
+        // so the observed effect needs no more than the current set (floor 2).
+        let c = cand(&[("a", &[0.2]), ("b", &[0.4]), ("c", &[0.6])]);
+        let b = cand(&[("a", &[0.0]), ("b", &[0.0]), ("c", &[0.0])]);
+        let ci = reward_delta_ci(&c, &b, &singleton).unwrap();
+        assert!(ci.excludes_zero);
+        assert_eq!(ci.min_clusters_to_significance(), Some(2));
+    }
+
+    #[test]
+    fn min_clusters_to_significance_scales_the_cluster_count_not_tasks() {
+        // +0.4 effect, se 0.266667 over G=2 clusters (3 tasks). The SE shrinks
+        // with clusters, so need ceil(2·(1.96·0.266667/0.4)²) = 4 clusters — NOT
+        // a function of the 3 tasks. Adding tasks to these 2 repos would not help.
+        let c = cand(&[("a", &[0.6]), ("b", &[0.6]), ("c", &[0.0])]);
+        let b = cand(&[("a", &[0.0]), ("b", &[0.0]), ("c", &[0.0])]);
+        let by_repo = |t: &str| match t {
+            "a" | "b" => "R1".to_string(),
+            _ => "R2".to_string(),
+        };
+        let ci = reward_delta_ci(&c, &b, &by_repo).unwrap();
+        assert!(!ci.excludes_zero);
+        assert_eq!(ci.n_clusters, 2);
+        assert_eq!(ci.min_clusters_to_significance(), Some(4));
+    }
+
+    #[test]
+    fn min_clusters_to_significance_is_none_for_a_non_positive_effect() {
+        // Candidate is worse than baseline → no positive effect to certify.
+        let c = cand(&[("a", &[0.0]), ("b", &[0.0]), ("c", &[0.0])]);
+        let b = cand(&[("a", &[0.2]), ("b", &[0.4]), ("c", &[0.6])]);
+        let ci = reward_delta_ci(&c, &b, &singleton).unwrap();
+        assert!(ci.point < 0.0);
+        assert_eq!(ci.min_clusters_to_significance(), None);
+    }
+
+    #[test]
     fn averages_trials_within_a_task_before_differencing() {
         // Candidate task a: trials [0.4, 0.6] → mean 0.5; baseline 0.1.
         // task b: [0.2, 0.4] → 0.3; baseline 0.1. deltas: 0.4, 0.2 → point 0.3.
@@ -818,7 +892,8 @@ mod tests {
         let (base, cis) = certified_delta_cis(&cands, &certified, "null", &singleton);
         let md = delta_ci_markdown(base.as_deref().unwrap(), &cis);
         assert!(md.contains("## Reward delta vs baseline (95% CI)"));
-        assert!(md.contains("| cand-x | +0.4000 | [+0.1737, +0.6263] | 3 | 3 | ✓ |"));
+        // Row carries the power column (n→95% = 2 here, already significant).
+        assert!(md.contains("| cand-x | +0.4000 | [+0.1737, +0.6263] | 3 | 3 | 2 | ✓ |"));
         // Nothing to render → empty string, safe to append unconditionally.
         assert_eq!(delta_ci_markdown("null", &[]), "");
     }
