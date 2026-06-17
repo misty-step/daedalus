@@ -1,4 +1,5 @@
 id = "py-formatter-clean"
+source_repo = "pygments"
 
 [agent]
 timeout_sec = 900

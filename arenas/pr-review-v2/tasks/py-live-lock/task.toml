@@ -1,4 +1,5 @@
 id = "py-live-lock"
+source_repo = "rich"
 
 [agent]
 timeout_sec = 900

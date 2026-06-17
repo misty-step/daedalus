@@ -1,4 +1,5 @@
 id = "py-measure-normalize"
+source_repo = "rich"
 
 [agent]
 timeout_sec = 900

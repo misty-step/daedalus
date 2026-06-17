@@ -1,4 +1,5 @@
 id = "py-markup-escape"
+source_repo = "rich"
 
 [agent]
 timeout_sec = 900
