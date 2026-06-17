@@ -49,7 +49,13 @@ fn t_975(df: usize) -> f64 {
     match df {
         0 => TABLE[0], // unreachable in practice (CI requires G ≥ 2 → df ≥ 1)
         d if d <= 30 => TABLE[d - 1],
-        _ => Z_95,
+        d => {
+            // df > 30: Cornish–Fisher refinement of the normal quantile,
+            // z + (z³ + z)/(4·df) — within ~0.2% of the true t (e.g. df=31 →
+            // 2.0365 vs 2.0395), not the flat 1.96 (which would be ~4% narrow).
+            let z = Z_95;
+            z + (z * z * z + z) / (4.0 * d as f64)
+        }
     }
 }
 
@@ -656,8 +662,10 @@ mod tests {
         assert_eq!(t_975(2), 4.303);
         assert_eq!(t_975(6), 2.447); // df=6 (7 clusters)
         assert_eq!(t_975(30), 2.042);
-        assert_eq!(t_975(31), Z_95); // beyond the table → normal limit
-        assert_eq!(t_975(1000), Z_95);
+        // df > 30: Cornish–Fisher refinement, close to the true t, above 1.96.
+        assert!((t_975(31) - 2.0365).abs() < 0.001); // true ≈ 2.0395
+        assert!(t_975(31) > Z_95);
+        assert!((t_975(100_000) - Z_95).abs() < 0.001); // → normal limit
     }
 
     #[test]
