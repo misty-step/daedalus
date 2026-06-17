@@ -1,0 +1,13 @@
+{
+  "defects": [
+    {
+      "id": "py-plugin-cache",
+      "file": "pygments/lexers/__init__.py",
+      "line_start": 111,
+      "line_end": 138,
+      "category": "logic-invariant",
+      "severity": "serious",
+      "note": "The cache stores the constructed INSTANCE with the first caller's **options, so every later caller receives a lexer configured by someone else (options semantics: Lexer docstring in pygments/lexer.py \u2014 stripnl, encoding, filters); lexer instances also accumulate filters statefully, so sharing one across callers is wrong even with identical options. Cache the class, construct per call."
+    }
+  ]
+}

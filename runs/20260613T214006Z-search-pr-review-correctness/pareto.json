@@ -1,0 +1,35 @@
+[
+  {
+    "candidate_id": "seed3-qwen3-7-plus-skeptic",
+    "composition_hash": "0364f14e074e130d",
+    "reward_mean": 0.8,
+    "cost_usd_total": 0.2695,
+    "cost_usd_per_trial": 0.02695,
+    "wall_mean_s": 71.0,
+    "trials": 10,
+    "certified": false,
+    "recommended": false
+  },
+  {
+    "candidate_id": "seed4-gpt-5-mini-checklist",
+    "composition_hash": "4671c3e06a946bd8",
+    "reward_mean": 0.68,
+    "cost_usd_total": 0.1113,
+    "cost_usd_per_trial": 0.01113,
+    "wall_mean_s": 48.8,
+    "trials": 10,
+    "certified": false,
+    "recommended": false
+  },
+  {
+    "candidate_id": "seed1-deepseek-v4-flash-checklist",
+    "composition_hash": "05e59e2e8e9ddaaa",
+    "reward_mean": 0.6,
+    "cost_usd_total": 0.0517,
+    "cost_usd_per_trial": 0.00517,
+    "wall_mean_s": 60.7,
+    "trials": 10,
+    "certified": false,
+    "recommended": false
+  }
+]

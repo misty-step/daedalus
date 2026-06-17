@@ -1,0 +1,20 @@
+diff -ruN a/rich/measure.py b/rich/measure.py
+--- a/rich/measure.py
++++ b/rich/measure.py
+@@ -105,14 +105,10 @@
+                 Callable[["Console", "ConsoleOptions"], "Measurement"]
+             ] = getattr(renderable, "__rich_measure__", None)
+             if get_console_width is not None:
+-                render_width = (
+-                    get_console_width(console, options)
+-                    .normalize()
+-                    .with_maximum(_max_width)
+-                )
++                render_width = get_console_width(console, options)
+                 if render_width.maximum < 1:
+                     return Measurement(0, 0)
+-                return render_width.normalize()
++                return render_width
+             else:
+                 return Measurement(0, _max_width)
+         else:

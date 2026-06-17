@@ -1,0 +1,22 @@
+{
+  "defects": [
+    {
+      "id": "publish-authz-bypass",
+      "file": "src/reviews/permissions.ts",
+      "line_start": 117,
+      "line_end": 119,
+      "category": "authz-bypass",
+      "severity": "blocking",
+      "note": "Security owns the permission defect."
+    },
+    {
+      "id": "publish-state-invariant",
+      "file": "src/reviews/publish.ts",
+      "line_start": 204,
+      "line_end": 206,
+      "category": "logic-invariant",
+      "severity": "serious",
+      "note": "Correctness owns the state invariant; it is not a duplicate of the authz bypass."
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "stop_reason": "max-candidates",
+  "mode": "threshold-then-cheap",
+  "history": [],
+  "alarms": [],
+  "generations": 0,
+  "best_id": "seed5-kimi-k2-6-checklist",
+  "spend_known_usd": 0.3527,
+  "recommended": "seed5-kimi-k2-6-checklist",
+  "pareto_front": [
+    "seed5-kimi-k2-6-checklist",
+    "seed4-gpt-5-mini-skeptic"
+  ],
+  "certified": [
+    "seed5-kimi-k2-6-checklist"
+  ]
+}

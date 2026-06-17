@@ -1,0 +1,53 @@
+# Daedalus task specification: PR-review verification specialist.
+# Gate G1 approval required before paid search: approvals/G1-pr-review-suite.md
+
+id = "pr-review-verification"
+goal = "Given a pull request fixture, produce structured findings only for verification-owned defects: disabled gates, weakened tests, falsely green CI, missing required evidence, and review claims contradicted by executable checks."
+domain = "code-review-specialist"
+mode = "threshold-then-cheap"
+
+[inputs]
+description = "Future verification-break PR fixtures; this scaffold is not runnable until fixtures are authored"
+fixtures = "scaffold-only:verification-fixtures-not-authored"
+
+[output]
+contract = "review-swarm member artifact with lens = verification and findings in the shared member schema"
+
+[oracle]
+type = "deterministic"
+description = "Future seeded verification-break fixtures; judge scoring remains diagnostic until calibrated"
+
+[risk]
+class = "low"
+notes = "Offline synthetic fixtures only; no live repos, secrets, comments, or write actions."
+
+[budget]
+max_cost_per_trial_usd = 0.50
+max_wall_per_trial_sec = 600
+
+[trigger]
+intent = "Optional review-swarm member after G3; manual sandbox runs until then"
+
+[boundaries]
+data = "Synthetic fixtures in arenas/ only. Candidates never read tests/ or solution/."
+
+[checkpoints]
+gates = ["G1-spec", "G2-eval-quality", "G3-launch-contract"]
+
+[lens]
+id = "verification"
+taxonomy = "docs/review-swarm-taxonomy.md"
+owned_categories = ["verification-break"]
+blocked_on = "authoring at least two unambiguous verification-break fixtures and proving one-shot headroom"
+
+[negative_examples]
+bad = [
+  "generic requests for more tests without a broken acceptance gate",
+  "style comments",
+  "criticizing a missing command that the repo does not require",
+  "claiming CI failure without executable evidence",
+]
+
+[scaffold]
+runnable = false
+blocked_on = "No verification-break arena exists yet; do not run search or spend model budget for this member until fixtures and one-shot headroom are approved."

@@ -1,0 +1,18 @@
+diff -ruN a/rich/live.py b/rich/live.py
+--- a/rich/live.py
++++ b/rich/live.py
+@@ -212,10 +212,10 @@
+         """
+         if isinstance(renderable, str):
+             renderable = self.console.render_str(renderable)
+-        with self._lock:
+-            self._renderable = renderable
+-            if refresh:
+-                self.refresh()
++        # A single attribute assignment is atomic; no lock needed here.
++        self._renderable = renderable
++        if refresh:
++            self.refresh()
+ 
+     def refresh(self) -> None:
+         """Update the display of the Live Render."""

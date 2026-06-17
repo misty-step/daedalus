@@ -1,0 +1,22 @@
+{
+  "composition": 1,
+  "kind": "pi",
+  "provider_name": "openrouter",
+  "model": "z-ai/glm-4.7-flash",
+  "prompt_packet": "/Users/phaedrus/Development/daedalus/runs/20260613T214006Z-search-pr-review-correctness/packets/seed-skeptic.md",
+  "thinking": "off",
+  "tools": [
+    "read",
+    "bash",
+    "edit",
+    "write"
+  ],
+  "timeout_sec": 600,
+  "id": "g1a-seed3-qwen3-7-plus-skeptic",
+  "composition_hash": "196352774b5cab55",
+  "prompt_packet_text": "Analyze the provided pull request fixture solely for provable correctness defects. Identify only logic invariant breaks, reachable runtime crashes, data loss, concurrency errors, and unhandled failure paths. Do not report style issues, performance concerns, missing tests, or speculative bugs. If you cannot prove a defect directly from the code, remain silent. Ground every finding with exact file paths and line numbers. State the broken invariant, the triggering condition, and the resulting failure mode. If the change introduces no provable correctness defects, output nothing. Do not explain reasoning. Do not include summaries, greetings, or markdown formatting. Emit only structured findings or an empty response.\n",
+  "skills_texts": [],
+  "agents_md_text": null,
+  "harness_version": "0.78.1",
+  "runner_version": "0.1.0"
+}

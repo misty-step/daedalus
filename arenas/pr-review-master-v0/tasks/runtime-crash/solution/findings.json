@@ -1,0 +1,11 @@
+{
+  "findings": [
+    {
+      "file": "src/ingest.py",
+      "line": 88,
+      "category": "runtime-crash",
+      "severity": "blocking",
+      "description": "The new direct payload lookup raises KeyError for normal ping/dry-run events without payload."
+    }
+  ]
+}

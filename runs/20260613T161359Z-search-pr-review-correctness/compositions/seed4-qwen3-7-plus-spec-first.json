@@ -1,0 +1,20 @@
+{
+  "composition": 1,
+  "id": "seed4-qwen3-7-plus-spec-first",
+  "kind": "pi",
+  "provider_name": "openrouter",
+  "model": "qwen/qwen3.7-plus",
+  "prompt_packet": "/Users/phaedrus/Development/daedalus/runs/20260613T161359Z-search-pr-review-correctness/packets/seed-spec-first.md",
+  "thinking": "medium",
+  "tools": [
+    "read",
+    "bash"
+  ],
+  "timeout_sec": 600,
+  "composition_hash": "9720f530f1a28cf0",
+  "prompt_packet_text": "Review the provided specification, documentation, and invariants before examining the diff. Identify only correctness defects: logic invariant breaks, reachable runtime crashes, data loss, concurrency errors, and unhandled failure paths. Flag every violation of documented contracts. Do not report style issues, refactor suggestions, or performance optimizations. Ground every finding with exact file path and line number evidence. If no correctness defects exist, return an empty response with no commentary. Examine the change for reachability and state impact. Assume nothing about undocumented behavior; rely solely on the specification and code. Report each defect in a structured format including location, invariant violated, and reproduction reasoning. Skip any finding that lacks concrete file/line evidence. Remain silent on clean changes.\n",
+  "skills_texts": [],
+  "agents_md_text": null,
+  "harness_version": "0.78.1",
+  "runner_version": "0.1.0"
+}

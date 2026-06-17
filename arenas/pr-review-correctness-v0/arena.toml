@@ -1,0 +1,21 @@
+id = "pr-review-correctness-v0"
+version = "0.2.0"
+taskspec = "specs/pr-review-correctness/taskspec.toml"
+description = """
+Correctness-specialist review arena adapted from pr-review-v2 real-repo-scale
+fixtures. Candidate-visible workspaces are copied from the frozen parent arena;
+answer keys are remapped to the review-swarm taxonomy. Candidates never read
+tests/ or solution/.
+"""
+
+[risk]
+class = "low"
+notes = "Offline open-source repository snapshots only; no live repos, secrets, comments, or write actions."
+
+[template]
+file = "template.md"
+
+[split]
+train = ["py-progress-speed", "py-padding-clean", "py-live-lock"]
+validation = ["py-measure-normalize", "py-formatter-clean", "py-formatter-missing-crash"]
+holdout = ["py-plugin-cache", "py-export-clear"]

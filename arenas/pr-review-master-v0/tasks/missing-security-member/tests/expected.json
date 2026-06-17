@@ -1,0 +1,13 @@
+{
+  "defects": [
+    {
+      "id": "retention-boundary",
+      "file": "src/retention.py",
+      "line_start": 31,
+      "line_end": 31,
+      "category": "logic-invariant",
+      "severity": "serious",
+      "note": "The master should keep the correctness finding and not treat the timed-out security member as full coverage."
+    }
+  ]
+}

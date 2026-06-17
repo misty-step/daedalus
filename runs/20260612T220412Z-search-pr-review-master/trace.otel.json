@@ -1,0 +1,740 @@
+{
+  "schema": "otel-genai/1.30.0-draft",
+  "trace_id": "20260612T220412Z-search-pr-review-master",
+  "name": "daedalus experiment 20260612T220412Z-search-pr-review-master",
+  "attributes": {
+    "daedalus.experiment": "20260612T220412Z-search-pr-review-master",
+    "daedalus.candidate_count": 5,
+    "daedalus.trial_count": 35,
+    "daedalus.cost_usd_total": 0.506968
+  },
+  "spans": [
+    {
+      "name": "oracle/clean-noise/t1",
+      "span_id": "20260612T220412Z-oracle-clean-noise-t1",
+      "start_time": "2026-06-12T22:04:12+00:00",
+      "end_time": "2026-06-12T22:04:12+00:00",
+      "status": "OK",
+      "status_message": null,
+      "attributes": {
+        "gen_ai.system": "openrouter",
+        "daedalus.candidate_id": "oracle",
+        "daedalus.candidate_kind": "oracle",
+        "daedalus.composition_hash": "07d8650e238cd916",
+        "daedalus.task_id": "clean-noise",
+        "daedalus.trial": 1,
+        "daedalus.reward": 1.0,
+        "daedalus.false_positives": 0
+      }
+    },
+    {
+      "name": "oracle/credential-duplicate/t1",
+      "span_id": "20260612T220412Z-oracle-credential-duplicate-t1",
+      "start_time": "2026-06-12T22:04:12+00:00",
+      "end_time": "2026-06-12T22:04:12+00:00",
+      "status": "OK",
+      "status_message": null,
+      "attributes": {
+        "gen_ai.system": "openrouter",
+        "daedalus.candidate_id": "oracle",
+        "daedalus.candidate_kind": "oracle",
+        "daedalus.composition_hash": "07d8650e238cd916",
+        "daedalus.task_id": "credential-duplicate",
+        "daedalus.trial": 1,
+        "daedalus.reward": 1.0,
+        "daedalus.false_positives": 0
+      }
+    },
+    {
+      "name": "oracle/dual-defect-conflict/t1",
+      "span_id": "20260612T220412Z-oracle-dual-defect-conflict-t1",
+      "start_time": "2026-06-12T22:04:12+00:00",
+      "end_time": "2026-06-12T22:04:12+00:00",
+      "status": "OK",
+      "status_message": null,
+      "attributes": {
+        "gen_ai.system": "openrouter",
+        "daedalus.candidate_id": "oracle",
+        "daedalus.candidate_kind": "oracle",
+        "daedalus.composition_hash": "07d8650e238cd916",
+        "daedalus.task_id": "dual-defect-conflict",
+        "daedalus.trial": 1,
+        "daedalus.reward": 1.0,
+        "daedalus.false_positives": 0
+      }
+    },
+    {
+      "name": "oracle/gate-regression/t1",
+      "span_id": "20260612T220412Z-oracle-gate-regression-t1",
+      "start_time": "2026-06-12T22:04:12+00:00",
+      "end_time": "2026-06-12T22:04:12+00:00",
+      "status": "OK",
+      "status_message": null,
+      "attributes": {
+        "gen_ai.system": "openrouter",
+        "daedalus.candidate_id": "oracle",
+        "daedalus.candidate_kind": "oracle",
+        "daedalus.composition_hash": "07d8650e238cd916",
+        "daedalus.task_id": "gate-regression",
+        "daedalus.trial": 1,
+        "daedalus.reward": 1.0,
+        "daedalus.false_positives": 0
+      }
+    },
+    {
+      "name": "oracle/missing-security-member/t1",
+      "span_id": "20260612T220412Z-oracle-missing-security-member-t1",
+      "start_time": "2026-06-12T22:04:12+00:00",
+      "end_time": "2026-06-12T22:04:12+00:00",
+      "status": "OK",
+      "status_message": null,
+      "attributes": {
+        "gen_ai.system": "openrouter",
+        "daedalus.candidate_id": "oracle",
+        "daedalus.candidate_kind": "oracle",
+        "daedalus.composition_hash": "07d8650e238cd916",
+        "daedalus.task_id": "missing-security-member",
+        "daedalus.trial": 1,
+        "daedalus.reward": 1.0,
+        "daedalus.false_positives": 0
+      }
+    },
+    {
+      "name": "oracle/runtime-crash/t1",
+      "span_id": "20260612T220412Z-oracle-runtime-crash-t1",
+      "start_time": "2026-06-12T22:04:12+00:00",
+      "end_time": "2026-06-12T22:04:12+00:00",
+      "status": "OK",
+      "status_message": null,
+      "attributes": {
+        "gen_ai.system": "openrouter",
+        "daedalus.candidate_id": "oracle",
+        "daedalus.candidate_kind": "oracle",
+        "daedalus.composition_hash": "07d8650e238cd916",
+        "daedalus.task_id": "runtime-crash",
+        "daedalus.trial": 1,
+        "daedalus.reward": 1.0,
+        "daedalus.false_positives": 0
+      }
+    },
+    {
+      "name": "null/clean-noise/t1",
+      "span_id": "20260612T220413Z-null-clean-noise-t1",
+      "start_time": "2026-06-12T22:04:14+00:00",
+      "end_time": "2026-06-12T22:04:14+00:00",
+      "status": "OK",
+      "status_message": null,
+      "attributes": {
+        "gen_ai.system": "openrouter",
+        "daedalus.candidate_id": "null",
+        "daedalus.candidate_kind": "null",
+        "daedalus.composition_hash": "40f2f6e05112c409",
+        "daedalus.task_id": "clean-noise",
+        "daedalus.trial": 1,
+        "daedalus.reward": 1.0,
+        "daedalus.false_positives": 0
+      }
+    },
+    {
+      "name": "null/credential-duplicate/t1",
+      "span_id": "20260612T220413Z-null-credential-duplicate-t1",
+      "start_time": "2026-06-12T22:04:14+00:00",
+      "end_time": "2026-06-12T22:04:14+00:00",
+      "status": "OK",
+      "status_message": null,
+      "attributes": {
+        "gen_ai.system": "openrouter",
+        "daedalus.candidate_id": "null",
+        "daedalus.candidate_kind": "null",
+        "daedalus.composition_hash": "40f2f6e05112c409",
+        "daedalus.task_id": "credential-duplicate",
+        "daedalus.trial": 1,
+        "daedalus.reward": 0.0,
+        "daedalus.false_positives": 0
+      }
+    },
+    {
+      "name": "null/dual-defect-conflict/t1",
+      "span_id": "20260612T220413Z-null-dual-defect-conflict-t1",
+      "start_time": "2026-06-12T22:04:14+00:00",
+      "end_time": "2026-06-12T22:04:14+00:00",
+      "status": "OK",
+      "status_message": null,
+      "attributes": {
+        "gen_ai.system": "openrouter",
+        "daedalus.candidate_id": "null",
+        "daedalus.candidate_kind": "null",
+        "daedalus.composition_hash": "40f2f6e05112c409",
+        "daedalus.task_id": "dual-defect-conflict",
+        "daedalus.trial": 1,
+        "daedalus.reward": 0.0,
+        "daedalus.false_positives": 0
+      }
+    },
+    {
+      "name": "null/gate-regression/t1",
+      "span_id": "20260612T220413Z-null-gate-regression-t1",
+      "start_time": "2026-06-12T22:04:14+00:00",
+      "end_time": "2026-06-12T22:04:14+00:00",
+      "status": "OK",
+      "status_message": null,
+      "attributes": {
+        "gen_ai.system": "openrouter",
+        "daedalus.candidate_id": "null",
+        "daedalus.candidate_kind": "null",
+        "daedalus.composition_hash": "40f2f6e05112c409",
+        "daedalus.task_id": "gate-regression",
+        "daedalus.trial": 1,
+        "daedalus.reward": 0.0,
+        "daedalus.false_positives": 0
+      }
+    },
+    {
+      "name": "null/missing-security-member/t1",
+      "span_id": "20260612T220413Z-null-missing-security-member-t1",
+      "start_time": "2026-06-12T22:04:14+00:00",
+      "end_time": "2026-06-12T22:04:14+00:00",
+      "status": "OK",
+      "status_message": null,
+      "attributes": {
+        "gen_ai.system": "openrouter",
+        "daedalus.candidate_id": "null",
+        "daedalus.candidate_kind": "null",
+        "daedalus.composition_hash": "40f2f6e05112c409",
+        "daedalus.task_id": "missing-security-member",
+        "daedalus.trial": 1,
+        "daedalus.reward": 0.0,
+        "daedalus.false_positives": 0
+      }
+    },
+    {
+      "name": "null/runtime-crash/t1",
+      "span_id": "20260612T220413Z-null-runtime-crash-t1",
+      "start_time": "2026-06-12T22:04:14+00:00",
+      "end_time": "2026-06-12T22:04:14+00:00",
+      "status": "OK",
+      "status_message": null,
+      "attributes": {
+        "gen_ai.system": "openrouter",
+        "daedalus.candidate_id": "null",
+        "daedalus.candidate_kind": "null",
+        "daedalus.composition_hash": "40f2f6e05112c409",
+        "daedalus.task_id": "runtime-crash",
+        "daedalus.trial": 1,
+        "daedalus.reward": 0.0,
+        "daedalus.false_positives": 0
+      }
+    },
+    {
+      "name": "probe-oneshot/clean-noise/t1",
+      "span_id": "20260612T220415Z-probe-oneshot-clean-noise-t1",
+      "start_time": "2026-06-12T22:04:15+00:00",
+      "end_time": "2026-06-12T22:04:17+00:00",
+      "status": "ERROR",
+      "status_message": "HTTP Error 400: Bad Request",
+      "attributes": {
+        "gen_ai.system": "openrouter",
+        "gen_ai.request.model": "moonshotai/kimi-k2.6",
+        "gen_ai.usage.cost_usd": 0.0,
+        "daedalus.candidate_id": "probe-oneshot",
+        "daedalus.candidate_kind": "oneshot",
+        "daedalus.composition_hash": "9f21bdb5c010ab18",
+        "daedalus.task_id": "clean-noise",
+        "daedalus.trial": 1,
+        "daedalus.reward": 0.0,
+        "daedalus.false_positives": 0
+      }
+    },
+    {
+      "name": "probe-oneshot/credential-duplicate/t1",
+      "span_id": "20260612T220415Z-probe-oneshot-credential-duplicate-t1",
+      "start_time": "2026-06-12T22:04:17+00:00",
+      "end_time": "2026-06-12T22:04:19+00:00",
+      "status": "ERROR",
+      "status_message": "HTTP Error 400: Bad Request",
+      "attributes": {
+        "gen_ai.system": "openrouter",
+        "gen_ai.request.model": "moonshotai/kimi-k2.6",
+        "gen_ai.usage.cost_usd": 0.0,
+        "daedalus.candidate_id": "probe-oneshot",
+        "daedalus.candidate_kind": "oneshot",
+        "daedalus.composition_hash": "9f21bdb5c010ab18",
+        "daedalus.task_id": "credential-duplicate",
+        "daedalus.trial": 1,
+        "daedalus.reward": 0.0,
+        "daedalus.false_positives": 0
+      }
+    },
+    {
+      "name": "probe-oneshot/dual-defect-conflict/t1",
+      "span_id": "20260612T220415Z-probe-oneshot-dual-defect-conflict-t1",
+      "start_time": "2026-06-12T22:04:19+00:00",
+      "end_time": "2026-06-12T22:04:21+00:00",
+      "status": "ERROR",
+      "status_message": "HTTP Error 400: Bad Request",
+      "attributes": {
+        "gen_ai.system": "openrouter",
+        "gen_ai.request.model": "moonshotai/kimi-k2.6",
+        "gen_ai.usage.cost_usd": 0.0,
+        "daedalus.candidate_id": "probe-oneshot",
+        "daedalus.candidate_kind": "oneshot",
+        "daedalus.composition_hash": "9f21bdb5c010ab18",
+        "daedalus.task_id": "dual-defect-conflict",
+        "daedalus.trial": 1,
+        "daedalus.reward": 0.0,
+        "daedalus.false_positives": 0
+      }
+    },
+    {
+      "name": "probe-oneshot/gate-regression/t1",
+      "span_id": "20260612T220415Z-probe-oneshot-gate-regression-t1",
+      "start_time": "2026-06-12T22:04:21+00:00",
+      "end_time": "2026-06-12T22:04:23+00:00",
+      "status": "ERROR",
+      "status_message": "HTTP Error 400: Bad Request",
+      "attributes": {
+        "gen_ai.system": "openrouter",
+        "gen_ai.request.model": "moonshotai/kimi-k2.6",
+        "gen_ai.usage.cost_usd": 0.0,
+        "daedalus.candidate_id": "probe-oneshot",
+        "daedalus.candidate_kind": "oneshot",
+        "daedalus.composition_hash": "9f21bdb5c010ab18",
+        "daedalus.task_id": "gate-regression",
+        "daedalus.trial": 1,
+        "daedalus.reward": 0.0,
+        "daedalus.false_positives": 0
+      }
+    },
+    {
+      "name": "probe-oneshot/missing-security-member/t1",
+      "span_id": "20260612T220415Z-probe-oneshot-missing-security-member-t1",
+      "start_time": "2026-06-12T22:04:23+00:00",
+      "end_time": "2026-06-12T22:04:24+00:00",
+      "status": "ERROR",
+      "status_message": "HTTP Error 400: Bad Request",
+      "attributes": {
+        "gen_ai.system": "openrouter",
+        "gen_ai.request.model": "moonshotai/kimi-k2.6",
+        "gen_ai.usage.cost_usd": 0.0,
+        "daedalus.candidate_id": "probe-oneshot",
+        "daedalus.candidate_kind": "oneshot",
+        "daedalus.composition_hash": "9f21bdb5c010ab18",
+        "daedalus.task_id": "missing-security-member",
+        "daedalus.trial": 1,
+        "daedalus.reward": 0.0,
+        "daedalus.false_positives": 0
+      }
+    },
+    {
+      "name": "probe-oneshot/runtime-crash/t1",
+      "span_id": "20260612T220415Z-probe-oneshot-runtime-crash-t1",
+      "start_time": "2026-06-12T22:04:24+00:00",
+      "end_time": "2026-06-12T22:04:26+00:00",
+      "status": "ERROR",
+      "status_message": "HTTP Error 400: Bad Request",
+      "attributes": {
+        "gen_ai.system": "openrouter",
+        "gen_ai.request.model": "moonshotai/kimi-k2.6",
+        "gen_ai.usage.cost_usd": 0.0,
+        "daedalus.candidate_id": "probe-oneshot",
+        "daedalus.candidate_kind": "oneshot",
+        "daedalus.composition_hash": "9f21bdb5c010ab18",
+        "daedalus.task_id": "runtime-crash",
+        "daedalus.trial": 1,
+        "daedalus.reward": 0.0,
+        "daedalus.false_positives": 0
+      }
+    },
+    {
+      "name": "seed1-kimi-k2-6-checklist/clean-noise/t1",
+      "span_id": "20260612T220542Z-seed1-kimi-k2-6-checklist-clean-noise-t1",
+      "start_time": "2026-06-12T22:05:49+00:00",
+      "end_time": "2026-06-12T22:07:56+00:00",
+      "status": "OK",
+      "status_message": null,
+      "attributes": {
+        "gen_ai.system": "openrouter",
+        "gen_ai.request.model": "moonshotai/kimi-k2.6",
+        "gen_ai.usage.input_tokens": 72450,
+        "gen_ai.usage.output_tokens": 2157,
+        "gen_ai.usage.cost_usd": 0.057016,
+        "daedalus.candidate_id": "seed1-kimi-k2-6-checklist",
+        "daedalus.candidate_kind": "pi",
+        "daedalus.composition_hash": "2bfc1ec9870046c9",
+        "daedalus.task_id": "clean-noise",
+        "daedalus.trial": 1,
+        "daedalus.reward": 1.0,
+        "daedalus.false_positives": 0,
+        "daedalus.harness_version": "0.78.1"
+      }
+    },
+    {
+      "name": "seed1-kimi-k2-6-checklist/credential-duplicate/t1",
+      "span_id": "20260612T220542Z-seed1-kimi-k2-6-checklist-credential-duplicate-t1",
+      "start_time": "2026-06-12T22:07:56+00:00",
+      "end_time": "2026-06-12T22:15:19+00:00",
+      "status": "OK",
+      "status_message": null,
+      "attributes": {
+        "gen_ai.system": "openrouter",
+        "gen_ai.request.model": "moonshotai/kimi-k2.6",
+        "gen_ai.usage.input_tokens": 39228,
+        "gen_ai.usage.output_tokens": 1797,
+        "gen_ai.usage.cost_usd": 0.033561,
+        "daedalus.candidate_id": "seed1-kimi-k2-6-checklist",
+        "daedalus.candidate_kind": "pi",
+        "daedalus.composition_hash": "2bfc1ec9870046c9",
+        "daedalus.task_id": "credential-duplicate",
+        "daedalus.trial": 1,
+        "daedalus.reward": 1.0,
+        "daedalus.false_positives": 0,
+        "daedalus.harness_version": "0.78.1"
+      }
+    },
+    {
+      "name": "seed1-kimi-k2-6-checklist/dual-defect-conflict/t1",
+      "span_id": "20260612T220542Z-seed1-kimi-k2-6-checklist-dual-defect-conflict-t1",
+      "start_time": "2026-06-12T22:15:20+00:00",
+      "end_time": "2026-06-12T22:22:16+00:00",
+      "status": "OK",
+      "status_message": null,
+      "attributes": {
+        "gen_ai.system": "openrouter",
+        "gen_ai.request.model": "moonshotai/kimi-k2.6",
+        "gen_ai.usage.input_tokens": 74940,
+        "gen_ai.usage.output_tokens": 2365,
+        "gen_ai.usage.cost_usd": 0.061962,
+        "daedalus.candidate_id": "seed1-kimi-k2-6-checklist",
+        "daedalus.candidate_kind": "pi",
+        "daedalus.composition_hash": "2bfc1ec9870046c9",
+        "daedalus.task_id": "dual-defect-conflict",
+        "daedalus.trial": 1,
+        "daedalus.reward": 1.0,
+        "daedalus.false_positives": 0,
+        "daedalus.harness_version": "0.78.1"
+      }
+    },
+    {
+      "name": "seed1-kimi-k2-6-checklist/gate-regression/t1",
+      "span_id": "20260612T222217Z-seed1-kimi-k2-6-checklist-gate-regression-t1",
+      "start_time": "2026-06-12T22:22:19+00:00",
+      "end_time": "2026-06-12T22:31:35+00:00",
+      "status": "OK",
+      "status_message": null,
+      "attributes": {
+        "gen_ai.system": "openrouter",
+        "gen_ai.request.model": "moonshotai/kimi-k2.6",
+        "gen_ai.usage.input_tokens": 19594,
+        "gen_ai.usage.output_tokens": 3014,
+        "gen_ai.usage.cost_usd": 0.023775,
+        "daedalus.candidate_id": "seed1-kimi-k2-6-checklist",
+        "daedalus.candidate_kind": "pi",
+        "daedalus.composition_hash": "2bfc1ec9870046c9",
+        "daedalus.task_id": "gate-regression",
+        "daedalus.trial": 1,
+        "daedalus.reward": 1.0,
+        "daedalus.false_positives": 0,
+        "daedalus.harness_version": "0.78.1"
+      }
+    },
+    {
+      "name": "seed1-kimi-k2-6-checklist/runtime-crash/t1",
+      "span_id": "20260612T222217Z-seed1-kimi-k2-6-checklist-runtime-crash-t1",
+      "start_time": "2026-06-12T22:31:35+00:00",
+      "end_time": "2026-06-12T22:36:28+00:00",
+      "status": "OK",
+      "status_message": null,
+      "attributes": {
+        "gen_ai.system": "openrouter",
+        "gen_ai.request.model": "moonshotai/kimi-k2.6",
+        "gen_ai.usage.input_tokens": 138817,
+        "gen_ai.usage.output_tokens": 5162,
+        "gen_ai.usage.cost_usd": 0.114872,
+        "daedalus.candidate_id": "seed1-kimi-k2-6-checklist",
+        "daedalus.candidate_kind": "pi",
+        "daedalus.composition_hash": "2bfc1ec9870046c9",
+        "daedalus.task_id": "runtime-crash",
+        "daedalus.trial": 1,
+        "daedalus.reward": 1.0,
+        "daedalus.false_positives": 0,
+        "daedalus.harness_version": "0.78.1"
+      }
+    },
+    {
+      "name": "seed2-qwen3-7-plus-spec-first/clean-noise/t1",
+      "span_id": "20260612T223628Z-seed2-qwen3-7-plus-spec-first-clean-noise-t1",
+      "start_time": "2026-06-12T22:36:35+00:00",
+      "end_time": "2026-06-12T22:37:28+00:00",
+      "status": "OK",
+      "status_message": null,
+      "attributes": {
+        "gen_ai.system": "openrouter",
+        "gen_ai.request.model": "qwen/qwen3.7-plus",
+        "gen_ai.usage.input_tokens": 22646,
+        "gen_ai.usage.output_tokens": 1920,
+        "gen_ai.usage.cost_usd": 0.014393,
+        "daedalus.candidate_id": "seed2-qwen3-7-plus-spec-first",
+        "daedalus.candidate_kind": "pi",
+        "daedalus.composition_hash": "491643a3b1de61e3",
+        "daedalus.task_id": "clean-noise",
+        "daedalus.trial": 1,
+        "daedalus.reward": 1.0,
+        "daedalus.false_positives": 0,
+        "daedalus.harness_version": "0.78.1"
+      }
+    },
+    {
+      "name": "seed2-qwen3-7-plus-spec-first/credential-duplicate/t1",
+      "span_id": "20260612T223628Z-seed2-qwen3-7-plus-spec-first-credential-duplicate-t1",
+      "start_time": "2026-06-12T22:37:28+00:00",
+      "end_time": "2026-06-12T22:37:57+00:00",
+      "status": "OK",
+      "status_message": null,
+      "attributes": {
+        "gen_ai.system": "openrouter",
+        "gen_ai.request.model": "qwen/qwen3.7-plus",
+        "gen_ai.usage.input_tokens": 10955,
+        "gen_ai.usage.output_tokens": 964,
+        "gen_ai.usage.cost_usd": 0.006447,
+        "daedalus.candidate_id": "seed2-qwen3-7-plus-spec-first",
+        "daedalus.candidate_kind": "pi",
+        "daedalus.composition_hash": "491643a3b1de61e3",
+        "daedalus.task_id": "credential-duplicate",
+        "daedalus.trial": 1,
+        "daedalus.reward": 1.0,
+        "daedalus.false_positives": 0,
+        "daedalus.harness_version": "0.78.1"
+      }
+    },
+    {
+      "name": "seed2-qwen3-7-plus-spec-first/dual-defect-conflict/t1",
+      "span_id": "20260612T223628Z-seed2-qwen3-7-plus-spec-first-dual-defect-conflict-t1",
+      "start_time": "2026-06-12T22:37:58+00:00",
+      "end_time": "2026-06-12T22:39:05+00:00",
+      "status": "OK",
+      "status_message": null,
+      "attributes": {
+        "gen_ai.system": "openrouter",
+        "gen_ai.request.model": "qwen/qwen3.7-plus",
+        "gen_ai.usage.input_tokens": 74082,
+        "gen_ai.usage.output_tokens": 2461,
+        "gen_ai.usage.cost_usd": 0.047374,
+        "daedalus.candidate_id": "seed2-qwen3-7-plus-spec-first",
+        "daedalus.candidate_kind": "pi",
+        "daedalus.composition_hash": "491643a3b1de61e3",
+        "daedalus.task_id": "dual-defect-conflict",
+        "daedalus.trial": 1,
+        "daedalus.reward": 1.0,
+        "daedalus.false_positives": 0,
+        "daedalus.harness_version": "0.78.1"
+      }
+    },
+    {
+      "name": "seed2-qwen3-7-plus-spec-first/gate-regression/t1",
+      "span_id": "20260612T223905Z-seed2-qwen3-7-plus-spec-first-gate-regression-t1",
+      "start_time": "2026-06-12T22:39:07+00:00",
+      "end_time": "2026-06-12T22:39:51+00:00",
+      "status": "OK",
+      "status_message": null,
+      "attributes": {
+        "gen_ai.system": "openrouter",
+        "gen_ai.request.model": "qwen/qwen3.7-plus",
+        "gen_ai.usage.input_tokens": 29344,
+        "gen_ai.usage.output_tokens": 1706,
+        "gen_ai.usage.cost_usd": 0.017437,
+        "daedalus.candidate_id": "seed2-qwen3-7-plus-spec-first",
+        "daedalus.candidate_kind": "pi",
+        "daedalus.composition_hash": "491643a3b1de61e3",
+        "daedalus.task_id": "gate-regression",
+        "daedalus.trial": 1,
+        "daedalus.reward": 1.0,
+        "daedalus.false_positives": 0,
+        "daedalus.harness_version": "0.78.1"
+      }
+    },
+    {
+      "name": "seed2-qwen3-7-plus-spec-first/runtime-crash/t1",
+      "span_id": "20260612T223905Z-seed2-qwen3-7-plus-spec-first-runtime-crash-t1",
+      "start_time": "2026-06-12T22:39:51+00:00",
+      "end_time": "2026-06-12T22:40:54+00:00",
+      "status": "OK",
+      "status_message": null,
+      "attributes": {
+        "gen_ai.system": "openrouter",
+        "gen_ai.request.model": "qwen/qwen3.7-plus",
+        "gen_ai.usage.input_tokens": 19155,
+        "gen_ai.usage.output_tokens": 2576,
+        "gen_ai.usage.cost_usd": 0.013698,
+        "daedalus.candidate_id": "seed2-qwen3-7-plus-spec-first",
+        "daedalus.candidate_kind": "pi",
+        "daedalus.composition_hash": "491643a3b1de61e3",
+        "daedalus.task_id": "runtime-crash",
+        "daedalus.trial": 1,
+        "daedalus.reward": 1.0,
+        "daedalus.false_positives": 0,
+        "daedalus.harness_version": "0.78.1"
+      }
+    },
+    {
+      "name": "seed2-qwen3-7-plus-spec-first/clean-noise/t1",
+      "span_id": "20260612T224054Z-seed2-qwen3-7-plus-spec-first-clean-noise-t1",
+      "start_time": "2026-06-12T22:40:57+00:00",
+      "end_time": "2026-06-12T22:41:33+00:00",
+      "status": "OK",
+      "status_message": null,
+      "attributes": {
+        "gen_ai.system": "openrouter",
+        "gen_ai.request.model": "qwen/qwen3.7-plus",
+        "gen_ai.usage.input_tokens": 28222,
+        "gen_ai.usage.output_tokens": 1254,
+        "gen_ai.usage.cost_usd": 0.018169,
+        "daedalus.candidate_id": "seed2-qwen3-7-plus-spec-first",
+        "daedalus.candidate_kind": "pi",
+        "daedalus.composition_hash": "491643a3b1de61e3",
+        "daedalus.task_id": "clean-noise",
+        "daedalus.trial": 1,
+        "daedalus.reward": 1.0,
+        "daedalus.false_positives": 0,
+        "daedalus.harness_version": "0.78.1"
+      }
+    },
+    {
+      "name": "seed2-qwen3-7-plus-spec-first/credential-duplicate/t1",
+      "span_id": "20260612T224054Z-seed2-qwen3-7-plus-spec-first-credential-duplicate-t1",
+      "start_time": "2026-06-12T22:41:33+00:00",
+      "end_time": "2026-06-12T22:42:10+00:00",
+      "status": "OK",
+      "status_message": null,
+      "attributes": {
+        "gen_ai.system": "openrouter",
+        "gen_ai.request.model": "qwen/qwen3.7-plus",
+        "gen_ai.usage.input_tokens": 24623,
+        "gen_ai.usage.output_tokens": 1394,
+        "gen_ai.usage.cost_usd": 0.015735,
+        "daedalus.candidate_id": "seed2-qwen3-7-plus-spec-first",
+        "daedalus.candidate_kind": "pi",
+        "daedalus.composition_hash": "491643a3b1de61e3",
+        "daedalus.task_id": "credential-duplicate",
+        "daedalus.trial": 1,
+        "daedalus.reward": 1.0,
+        "daedalus.false_positives": 0,
+        "daedalus.harness_version": "0.78.1"
+      }
+    },
+    {
+      "name": "seed2-qwen3-7-plus-spec-first/dual-defect-conflict/t1",
+      "span_id": "20260612T224054Z-seed2-qwen3-7-plus-spec-first-dual-defect-conflict-t1",
+      "start_time": "2026-06-12T22:42:10+00:00",
+      "end_time": "2026-06-12T22:43:04+00:00",
+      "status": "OK",
+      "status_message": null,
+      "attributes": {
+        "gen_ai.system": "openrouter",
+        "gen_ai.request.model": "qwen/qwen3.7-plus",
+        "gen_ai.usage.input_tokens": 29175,
+        "gen_ai.usage.output_tokens": 1959,
+        "gen_ai.usage.cost_usd": 0.021082,
+        "daedalus.candidate_id": "seed2-qwen3-7-plus-spec-first",
+        "daedalus.candidate_kind": "pi",
+        "daedalus.composition_hash": "491643a3b1de61e3",
+        "daedalus.task_id": "dual-defect-conflict",
+        "daedalus.trial": 1,
+        "daedalus.reward": 1.0,
+        "daedalus.false_positives": 0,
+        "daedalus.harness_version": "0.78.1"
+      }
+    },
+    {
+      "name": "seed2-qwen3-7-plus-spec-first/gate-regression/t1",
+      "span_id": "20260612T224304Z-seed2-qwen3-7-plus-spec-first-gate-regression-t1",
+      "start_time": "2026-06-12T22:43:07+00:00",
+      "end_time": "2026-06-12T22:51:14+00:00",
+      "status": "OK",
+      "status_message": null,
+      "attributes": {
+        "gen_ai.system": "openrouter",
+        "gen_ai.request.model": "qwen/qwen3.7-plus",
+        "gen_ai.usage.input_tokens": 26481,
+        "gen_ai.usage.output_tokens": 1636,
+        "gen_ai.usage.cost_usd": 0.019487,
+        "daedalus.candidate_id": "seed2-qwen3-7-plus-spec-first",
+        "daedalus.candidate_kind": "pi",
+        "daedalus.composition_hash": "491643a3b1de61e3",
+        "daedalus.task_id": "gate-regression",
+        "daedalus.trial": 1,
+        "daedalus.reward": 1.0,
+        "daedalus.false_positives": 0,
+        "daedalus.harness_version": "0.78.1"
+      }
+    },
+    {
+      "name": "seed2-qwen3-7-plus-spec-first/runtime-crash/t1",
+      "span_id": "20260612T224304Z-seed2-qwen3-7-plus-spec-first-runtime-crash-t1",
+      "start_time": "2026-06-12T22:51:14+00:00",
+      "end_time": "2026-06-12T22:52:05+00:00",
+      "status": "OK",
+      "status_message": null,
+      "attributes": {
+        "gen_ai.system": "openrouter",
+        "gen_ai.request.model": "qwen/qwen3.7-plus",
+        "gen_ai.usage.input_tokens": 14400,
+        "gen_ai.usage.output_tokens": 2035,
+        "gen_ai.usage.cost_usd": 0.010409,
+        "daedalus.candidate_id": "seed2-qwen3-7-plus-spec-first",
+        "daedalus.candidate_kind": "pi",
+        "daedalus.composition_hash": "491643a3b1de61e3",
+        "daedalus.task_id": "runtime-crash",
+        "daedalus.trial": 1,
+        "daedalus.reward": 1.0,
+        "daedalus.false_positives": 0,
+        "daedalus.harness_version": "0.78.1"
+      }
+    },
+    {
+      "name": "seed2-qwen3-7-plus-spec-first/missing-security-member/t1",
+      "span_id": "20260612T225205Z-seed2-qwen3-7-plus-spec-first-missing-security-member-t1",
+      "start_time": "2026-06-12T22:52:06+00:00",
+      "end_time": "2026-06-12T22:54:40+00:00",
+      "status": "OK",
+      "status_message": null,
+      "attributes": {
+        "gen_ai.system": "openrouter",
+        "gen_ai.request.model": "qwen/qwen3.7-plus",
+        "gen_ai.usage.input_tokens": 25041,
+        "gen_ai.usage.output_tokens": 2151,
+        "gen_ai.usage.cost_usd": 0.015895,
+        "daedalus.candidate_id": "seed2-qwen3-7-plus-spec-first",
+        "daedalus.candidate_kind": "pi",
+        "daedalus.composition_hash": "491643a3b1de61e3",
+        "daedalus.task_id": "missing-security-member",
+        "daedalus.trial": 1,
+        "daedalus.reward": 1.0,
+        "daedalus.false_positives": 0,
+        "daedalus.harness_version": "0.78.1"
+      }
+    },
+    {
+      "name": "seed2-qwen3-7-plus-spec-first/missing-security-member/t2",
+      "span_id": "20260612T225205Z-seed2-qwen3-7-plus-spec-first-missing-security-member-t2",
+      "start_time": "2026-06-12T22:54:40+00:00",
+      "end_time": "2026-06-12T22:55:28+00:00",
+      "status": "OK",
+      "status_message": null,
+      "attributes": {
+        "gen_ai.system": "openrouter",
+        "gen_ai.request.model": "qwen/qwen3.7-plus",
+        "gen_ai.usage.input_tokens": 26219,
+        "gen_ai.usage.output_tokens": 1707,
+        "gen_ai.usage.cost_usd": 0.015656,
+        "daedalus.candidate_id": "seed2-qwen3-7-plus-spec-first",
+        "daedalus.candidate_kind": "pi",
+        "daedalus.composition_hash": "491643a3b1de61e3",
+        "daedalus.task_id": "missing-security-member",
+        "daedalus.trial": 2,
+        "daedalus.reward": 1.0,
+        "daedalus.false_positives": 0,
+        "daedalus.harness_version": "0.78.1"
+      }
+    }
+  ]
+}

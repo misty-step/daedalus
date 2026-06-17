@@ -1,0 +1,11 @@
+{
+  "findings": [
+    {
+      "file": "rich/progress.py",
+      "line": 1442,
+      "category": "logic-invariant",
+      "severity": "serious",
+      "description": "update_completed is computed from the advance argument alone; when a caller updates progress via completed= (as _Reader and download flows do) the delta is 0.0, no ProgressSample is appended, and Task.speed/ETA silently stop working for that path."
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+diff -ruN a/pygments/formatters/__init__.py b/pygments/formatters/__init__.py
+--- a/pygments/formatters/__init__.py
++++ b/pygments/formatters/__init__.py
+@@ -75,8 +75,7 @@
+     Will raise :exc:`pygments.util.ClassNotFound` if no formatter with that
+     alias is found.
+     """
+-    cls = find_formatter_class(_alias)
+-    if cls is None:
++    if (cls := find_formatter_class(_alias)) is None:
+         raise ClassNotFound(f"no formatter found for name {alias!r}")
+     return cls(**options)

@@ -5,7 +5,7 @@ candidate compositions. The taskspec's `[search]` section and the master
 agent's seed/mutation proposals must draw from here — never from memory.
 
 Verified live against the OpenRouter `/api/v1/models` endpoint on
-**2026-06-10**. Refresh with:
+**2026-06-13**. Refresh with:
 
 ```sh
 curl -s https://openrouter.ai/api/v1/models | python3 -m json.tool | less
@@ -79,7 +79,7 @@ then let cost/quality mode decide who survives.
 
 | model | in / out | ctx | notes |
 |---|---|---|---|
-| `deepseek/deepseek-v4-flash` | $0.098 / $0.197 | 1M | strongest cheap all-rounder |
+| `deepseek/deepseek-v4-flash` | $0.098 / $0.196 | 1M | strongest cheap all-rounder |
 | `z-ai/glm-4.7-flash` | $0.06 / $0.40 | 200K | |
 | `openai/gpt-5-mini` | $0.25 / $2.00 | 400K | |
 | `openai/gpt-oss-120b` | $0.039 / $0.18 | 131K | cheapest plausible agent |
@@ -94,7 +94,7 @@ then let cost/quality mode decide who survives.
 | `z-ai/glm-5` | $0.60 / $1.92 | 200K | |
 | `deepseek/deepseek-v4-pro` | $0.435 / $0.87 | 1M | |
 | `minimax/minimax-m3` | $0.30 / $1.20 | 1M | |
-| `qwen/qwen3.7-plus` | $0.40 / $1.60 | 1M | |
+| `qwen/qwen3.7-plus` | $0.32 / $1.28 | 1M | 2026-06-13 refresh found price drift down from $0.40 / $1.60 |
 | `mistralai/mistral-large-2512` | $0.50 / $1.50 | 262K | |
 
 ### Frontier tier (quality ceiling probes)

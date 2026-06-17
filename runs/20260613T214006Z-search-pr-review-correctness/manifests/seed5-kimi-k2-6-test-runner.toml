@@ -1,0 +1,9 @@
+composition = 1
+id = "seed5-kimi-k2-6-test-runner"
+kind = "pi"
+provider_name = "openrouter"
+model = "moonshotai/kimi-k2.6"
+prompt_packet = "/Users/phaedrus/Development/daedalus/runs/20260613T214006Z-search-pr-review-correctness/packets/seed-test-runner.md"
+thinking = "low"
+tools = ["read", "bash", "edit", "write"]
+timeout_sec = 600

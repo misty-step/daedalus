@@ -1,0 +1,24 @@
+[
+  {
+    "candidate_id": "seed5-kimi-k2-6-checklist",
+    "composition_hash": "d112f8dd00b0f84b",
+    "reward_mean": 0.8333,
+    "cost_usd_total": 0.2502,
+    "cost_usd_per_trial": 0.0417,
+    "wall_mean_s": 122.3,
+    "trials": 6,
+    "certified": true,
+    "recommended": true
+  },
+  {
+    "candidate_id": "seed4-gpt-5-mini-skeptic",
+    "composition_hash": "724026968317addc",
+    "reward_mean": 0.5,
+    "cost_usd_total": 0.016,
+    "cost_usd_per_trial": 0.004,
+    "wall_mean_s": 15.2,
+    "trials": 4,
+    "certified": false,
+    "recommended": false
+  }
+]

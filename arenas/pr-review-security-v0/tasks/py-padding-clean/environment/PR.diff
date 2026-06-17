@@ -1,0 +1,21 @@
+diff -ruN a/rich/padding.py b/rich/padding.py
+--- a/rich/padding.py
++++ b/rich/padding.py
+@@ -63,14 +63,11 @@
+         if isinstance(pad, int):
+             return (pad, pad, pad, pad)
+         if len(pad) == 1:
+-            _pad = pad[0]
+-            return (_pad, _pad, _pad, _pad)
++            return (pad[0], pad[0], pad[0], pad[0])
+         if len(pad) == 2:
+-            pad_top, pad_right = pad
+-            return (pad_top, pad_right, pad_top, pad_right)
++            return (pad[0], pad[1], pad[0], pad[1])
+         if len(pad) == 4:
+-            top, right, bottom, left = pad
+-            return (top, right, bottom, left)
++            return (pad[0], pad[1], pad[2], pad[3])
+         raise ValueError(f"1, 2 or 4 integers required for padding; {len(pad)} given")
+ 
+     def __repr__(self) -> str:

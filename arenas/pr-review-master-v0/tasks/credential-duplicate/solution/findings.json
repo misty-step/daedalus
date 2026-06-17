@@ -1,0 +1,11 @@
+{
+  "findings": [
+    {
+      "file": "src/auth.py",
+      "line": 42,
+      "category": "credential-exposure",
+      "severity": "blocking",
+      "description": "The new command passes GH_TOKEN through a CLI field, making the credential reachable through process argv and command tracing."
+    }
+  ]
+}

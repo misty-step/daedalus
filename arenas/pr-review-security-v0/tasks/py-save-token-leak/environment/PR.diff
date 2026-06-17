@@ -1,0 +1,13 @@
+diff -ruN a/rich/console.py b/rich/console.py
+--- a/rich/console.py
++++ b/rich/console.py
+@@ -2207,6 +2207,9 @@
+                 Defaults to ``False``.
+ 
+         """
++        token = os.environ.get("RICH_SAVE_TOKEN")
++        if token:
++            self.log(f"save_text token={token}")
+         text = self.export_text(clear=clear, styles=styles)
+         with open(path, "w", encoding="utf-8") as write_file:
+             write_file.write(text)

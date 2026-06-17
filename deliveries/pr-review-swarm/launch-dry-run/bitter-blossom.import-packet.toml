@@ -1,0 +1,26 @@
+packet = 1
+generated = "2026-06-13T17:37:17Z"
+plane = "bitter-blossom"
+mode = "dry-run"
+source_contract = "swarm-contract.toml"
+suite = "pr-review-suite"
+handoff_mode = "member-only"
+deployable = false
+sandbox_required = true
+primary_reviewer_allowed = false
+refusal_reason = "G3 approval is unsigned"
+
+[members]
+required = ["general", "correctness", "security"]
+optional = ["verification", "simplification", "product"]
+
+[gates]
+g3_signed = false
+g3_approval = "approvals/G3-pr-review-swarm.md"
+g4_required_for_write_authority = true
+g5_required_for_prod_data_reingestion = true
+
+[constraints]
+member_posting = "none"
+review_posting = "control-plane dry run only before G3"
+write_authority = "none"

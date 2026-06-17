@@ -1,0 +1,21 @@
+id = "pr-review-security-v0"
+version = "0.1.0"
+taskspec = "specs/pr-review-security/taskspec.toml"
+description = """
+Security-specialist review arena for the review-swarm suite. It combines one
+real-repo-scale security fixture adapted from pr-review-v2, one additional
+real-repo-scale credential-exposure fixture, and one clean trap. Candidates
+never read tests/ or solution/.
+"""
+
+[risk]
+class = "low"
+notes = "Offline open-source repository snapshots plus synthetic PR diffs only; no live repos, secrets, comments, or write actions."
+
+[template]
+file = "template.md"
+
+[split]
+train = ["py-markup-escape"]
+validation = ["py-padding-clean"]
+holdout = ["py-save-token-leak"]

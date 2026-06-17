@@ -1,0 +1,12 @@
+{
+  "passed": false,
+  "mode": "not-run",
+  "reason": "Full real-member replay was deliberately not claimed in this slice. The correctness member baseline is weak, and the master arena is still synthetic.",
+  "required_next_step": "Replay pr-review-master-v0 with artifacts emitted by the measured general, correctness, and security members before any full-swarm handoff.",
+  "source_runs": [
+    "runs/20260611T173632Z-search-pr-review-v0",
+    "runs/20260613T161359Z-search-pr-review-correctness",
+    "runs/20260613T153751Z-search-pr-review-security",
+    "runs/20260612T220412Z-search-pr-review-master"
+  ]
+}

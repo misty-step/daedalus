@@ -1,0 +1,18 @@
+{
+  "findings": [
+    {
+      "file": "ci/gate.py",
+      "line": 67,
+      "category": "verification-break",
+      "severity": "blocking",
+      "description": "The wrapper maps skipped pytest collection to success, making the required gate falsely green."
+    },
+    {
+      "file": "ci/gate.py",
+      "line": 112,
+      "category": "runtime-crash",
+      "severity": "blocking",
+      "description": "Projects without coverage settings crash when the wrapper indexes coverage.required directly."
+    }
+  ]
+}

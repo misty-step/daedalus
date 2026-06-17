@@ -1,0 +1,20 @@
+diff -ruN a/rich/markup.py b/rich/markup.py
+--- a/rich/markup.py
++++ b/rich/markup.py
+@@ -58,15 +58,7 @@
+         str: Markup with square brackets escaped.
+     """
+ 
+-    def escape_backslashes(match: Match[str]) -> str:
+-        """Called by re.sub replace matches."""
+-        backslashes, text = match.groups()
+-        return f"{backslashes}{backslashes}\\{text}"
+-
+-    markup = _escape(escape_backslashes, markup)
+-    if markup.endswith("\\") and not markup.endswith("\\\\"):
+-        return markup + "\\"
+-
++    markup = _escape(lambda match: "\\" + match.group(0), markup)
+     return markup
+ 
+ 

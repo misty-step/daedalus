@@ -1,0 +1,20 @@
+{
+  "composition": 1,
+  "id": "seed1-kimi-k2-6-checklist",
+  "kind": "pi",
+  "provider_name": "openrouter",
+  "model": "moonshotai/kimi-k2.6",
+  "prompt_packet": "/Users/phaedrus/Development/daedalus/runs/20260612T220412Z-search-pr-review-master/packets/seed-checklist.md",
+  "thinking": "low",
+  "tools": [
+    "read",
+    "bash"
+  ],
+  "timeout_sec": 600,
+  "composition_hash": "2bfc1ec9870046c9",
+  "prompt_packet_text": "Merge specialist PR-review member artifacts into one consolidated review. Enumerate the defect taxonomy. Check the change against every category in order. Preserve only true blocking defects. Suppress duplicates and false positives. Disclose missing coverage where no specialist reviewed relevant code. Ground every finding in explicit file and line evidence. Report nothing if the change is clean. Omit commentary beyond structured findings and missing-coverage disclosures.\n",
+  "skills_texts": [],
+  "agents_md_text": null,
+  "harness_version": "0.78.1",
+  "runner_version": "0.1.0"
+}

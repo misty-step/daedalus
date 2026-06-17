@@ -1,17 +1,14 @@
 #!/usr/bin/env sh
 # The repo gate. Offline, no API keys required. Agents run this before
 # claiming any change is done; CI runs the same command.
+#
+# Daedalus is implemented in Rust: daedalus-core (kernel) + daedalus-cli (the
+# `daedalus` binary) + daedalus-score (static musl scorer for the Harbor
+# container). All Python has been eliminated; the harbor-run script uses the
+# Rust CLI exclusively.
 set -eu
 cd "$(dirname "$0")/.."
 
-python3 -m py_compile runner/*.py
-
-# Prefer a working pytest however this machine provides one.
-if python3 -m pytest --version >/dev/null 2>&1; then
-    python3 -m pytest tests/ -q
-elif command -v pytest >/dev/null 2>&1; then
-    pytest tests/ -q
-else
-    echo "gate: no pytest available (install: pip install pytest)" >&2
-    exit 1
-fi
+cargo fmt --check
+cargo test --workspace --quiet
+cargo clippy --workspace --all-targets --quiet -- -D warnings

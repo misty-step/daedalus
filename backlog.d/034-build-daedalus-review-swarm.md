@@ -1,7 +1,7 @@
 # Build a Daedalus-optimized PR review swarm
 
 Priority: P0
-Status: ready
+Status: in progress - member-only slice verified (offline oracle green); full-swarm replay/export remain
 Estimate: XL
 
 ## PRD Summary
@@ -105,6 +105,8 @@ strong enough for sandbox-only Olympus and Bitter Blossom trials.
   incumbent comparison, and pre-G3 sandbox boundary.
 - `docs/operator-sop.md` - maintained G1/G2/search/export/launch-pack
   command sequence.
+- `docs/review-autoresearch-loop.md` - one-lens-at-a-time research protocol,
+  primitive inventory discipline, stop conditions, and correctness v0.2 plan.
 - `runner/export.py` - current single-agent contract/persona/handoff export
   boundary that a suite export must extend rather than bypass.
 - `docs/premises/review-swarm-2026-06-12.md` - durable operator-premise
@@ -380,24 +382,24 @@ Observable acceptance:
 
 ## Children
 
-1. [ ] Write `docs/review-swarm-taxonomy.md` and
+1. [x] Write `docs/review-swarm-taxonomy.md` and
    `bin/daedalus taxonomy-validate`: defect IDs, allowed lens ownership,
    overlap rules, severity rules, and ambiguity/adjudication workflow.
-2. [ ] Write `docs/adr-004-review-swarm-contract.md` selecting
+2. [x] Write `docs/adr-004-review-swarm-contract.md` selecting
    `swarm-contract.v1` and `bin/daedalus export-suite`.
-3. [ ] Define the member artifact JSON schema, required/optional member
+3. [x] Define the member artifact JSON schema, required/optional member
    failure policy, and general-reviewer precedence rules.
-4. [ ] Define `pr-review-suite` and `pr-review-master` task specs, including
+4. [x] Define `pr-review-suite` and `pr-review-master` task specs, including
    strict member-artifact and master-reviewer output contracts and the
    `threshold-then-cheap` suite objective.
-5. [ ] Build the first master-synthesis arena from bootstrapped specialist artifact
+5. [x] Build the first master-synthesis arena from bootstrapped specialist artifact
    fixtures: true findings, duplicate findings, noisy false positives,
    conflicting severities, and clean/no-finding cases, with labels hidden from
    candidate inputs.
-6. [ ] Build or adapt specialist arenas for correctness and security using
+6. [x] Build or adapt specialist arenas for correctness and security using
    real-repo-scale fixtures with one-shot headroom; keep general review as the
    baseline from `pr-review-v2`.
-7. [ ] Add the suite run/export verification harness: member contracts,
+7. [x] Add the suite run/export verification harness: member contracts,
    master contract, composition hashes, evidence pointers, and dry-run
    import packets.
 8. [ ] Run the first certified suite search on the vertical slice
@@ -405,11 +407,130 @@ Observable acceptance:
 9. [ ] Replay the master-synthesis benchmark with artifacts emitted by the
    certified member candidates; block export if synthetic-artifact performance
    does not transfer, except for explicitly member-only inspection handoff.
-10. [ ] Refresh Olympus and Bitter Blossom incumbent reads from live files and
+10. [x] Refresh Olympus and Bitter Blossom incumbent reads from live files and
    generate sandbox-only handoffs that preserve each plane's posting and
    validation boundary.
-11. [ ] Decide whether harness becomes a Daedalus search slot now or remains a
-   follow-up until comparable non-`pi` runner evidence exists.
+11. [x] Decide whether harness becomes a Daedalus search slot now or remains a
+    follow-up until comparable non-`pi` runner evidence exists.
+12. [x] Codify the review autoresearch loop: one focused reviewer at a time,
+    live primitive refresh before search-space changes, controlled hypotheses,
+    plateau postmortems, and the correctness v0.2 execution plan.
+
+## Delivery Progress
+
+Packet committed on branch `deliver-034-review-swarm`:
+
+- `docs/review-swarm-taxonomy.md`, `runner/taxonomy.py`, and
+  `bin/daedalus taxonomy-validate`.
+- `docs/adr-004-review-swarm-contract.md`, `runner/swarm.py`,
+  `bin/daedalus export-suite`, and swarm-aware `launch-pack`.
+- `specs/pr-review-suite/taskspec.toml`, required member specs, optional
+  non-runnable scaffold specs, and `specs/pr-review-master/taskspec.toml`.
+- `arenas/pr-review-master-v0` reducer arena with candidate-visible member
+  artifacts and hidden answer keys. v0.1.0 saturated under the one-shot probe;
+  v0.2.0 expands each member-artifact fixture to create context-overflow
+  headroom for one-shot probes.
+- `runs/20260612T205852Z-freeze-pr-review-master-v0` v0.1.0 oracle/null/probe
+  packet showing saturation.
+- `runs/20260612T215810Z-freeze-pr-review-master-v020` v0.2.0 freeze packet
+  showing oracle 1.0, null 0.1667, and one-shot probe 0.0.
+- `runs/20260612T220412Z-search-pr-review-master` bounded v0.2.0 search:
+  certified `seed2-qwen3-7-plus-spec-first` / `qwen/qwen3.7-plus` /
+  `491643a3b1de61e3` at reward 1.0, `$0.0180` per trial, and 93.6s mean
+  wall/task. Total known experiment spend including optimizer calls,
+  certification, and holdout: `$0.5290`.
+- `approvals/G2-pr-review-master-v0.md` pending human review packet.
+- `arenas/pr-review-security-v0` v0.1.0 and
+  `arenas/pr-review-correctness-v0` v0.1.0, explicit specialist fixture roots
+  instead of full-arena lens pointers.
+- `runs/20260613T151035Z-freeze-pr-review-security-v0` and
+  `runs/20260613T151035Z-freeze-pr-review-correctness-v0` freeze packets:
+  oracle `1.0`, null floors `0.3333` / `0.2857`, and one-shot probe `0.0`.
+- `runs/20260613T153751Z-search-pr-review-security` bounded security search:
+  certified `seed5-kimi-k2-6-checklist` / `moonshotai/kimi-k2.6` /
+  `d112f8dd00b0f84b` at reward `0.8333`, `$0.0417` per trial, and 122.3s
+  mean wall/task. Total known spend: `$0.3527`.
+- `runs/20260613T161359Z-search-pr-review-correctness` bounded correctness
+  search: certified `seed1-gpt-5-mini-spec-first` / `openai/gpt-5-mini` /
+  `f090f8060cf36637` at reward `0.5714`, `$0.0103` per trial, and 49.6s
+  mean wall/task. Total known spend: `$0.6253`.
+- `arenas/pr-review-correctness-v0` v0.2.0 adds
+  `py-formatter-missing-crash` for the owned `runtime-crash` category.
+  `runs/20260613T213700Z-freeze-pr-review-correctness-v020` froze the arena
+  with oracle `1.0`, null `0.25`, and one-shot probe `0.0`.
+- `runs/20260613T214006Z-search-pr-review-correctness` bounded v0.2 search:
+  runner-certified `g1a-seed3-qwen3-7-plus-skeptic` /
+  `z-ai/glm-4.7-flash` / `196352774b5cab55` at reward `0.5625`, `$0.0173`
+  per trial, and 96.9s mean wall/task. Total known spend: `$1.3002`. This is
+  not sandbox-ready; it records a failed quality iteration and useful
+  postmortem evidence.
+- `approvals/G2-pr-review-specialists-v0.md` pending human review packet.
+- `docs/review-swarm-vertical-slice.md` with refreshed 2026-06-13 Olympus and
+  Bitter Blossom incumbent boundaries.
+- `docs/review-autoresearch-loop.md` with the durable Karpathy-style
+  autoresearch protocol and first correctness v0.2 loop plan.
+- `deliveries/pr-review-swarm/` member-only delivery. It includes measured
+  member/master contracts, `summary.json`, `swarm-contract.toml`, and
+  sandbox-only dry-run import packets for Bitter Blossom and Olympus. The
+  handoff mode is deliberately `member-only` because real-member replay has
+  not passed.
+
+Current findings:
+
+- G1 is approved for low-risk offline synthetic spend only.
+- The synthetic master arena now has one-shot headroom, but v0.2.0 includes
+  candidate-visible synthetic triage metadata and should not be treated as a
+  public benchmark or deployment-quality proof.
+- The bounded master search had no reflective children (`--max-candidates 0`);
+  it certifies a cheap baseline, not global optimality.
+- The clean trap never fired: every agent passed `clean-noise`.
+- Latency is material: Qwen averaged 93.6s/task and one certified validation
+  task took 487s.
+- Specialist search found spread but not enterprise-ready member quality:
+  security is promising on credential exposure but unstable on injection;
+  correctness repeatedly missed seeded defects and failed clean traps.
+- Correctness v0.2 repaired the missing `runtime-crash` coverage but still did
+  not produce an enterprise-credible or sandbox-ready member. Qwen found the
+  new crash task and swept holdout but was not certified across all search
+  tasks; the certified GLM child was weaker and unstable. The v0.2 holdout is
+  now burned above the default threshold and must rotate before another
+  certified holdout search.
+- A diagnostic interrupted run,
+  `runs/20260613T151153Z-search-pr-review-security`, exposed degenerate
+  optimizer-authored packet text. The branch now adds prompt-packet sanity
+  guards for seed packets and mutation proposals.
+
+Remaining children:
+
+- Continue correctness autoresearch with targeted train/validation
+  certification on frozen v0.2.0 or rotate holdouts into v0.3.0 before another
+  certified holdout search. Focus on Qwen/GPT candidates, live-lock,
+  clean-trap stability, and runtime-crash repeatability. Only then complete
+  child 8 with the first certified full suite search.
+- Complete child 9 with real-member replay through the master benchmark.
+- Promote `deliveries/pr-review-swarm/` from member-only inspection to
+  full-swarm only after real-member replay passes and the G2 specialist
+  caveats are accepted or resolved.
+
+Verification (2026-06-15):
+
+- The member-only slice's full offline oracle is green: `bin/gate` (174
+  passed), `bin/daedalus doctor` (only the named-acceptable unsigned-G3 and
+  local-run-artifact warnings), `taxonomy-validate`,
+  `arena-validate arenas/pr-review-master-v0`, `export-suite`, and both
+  `launch-pack --dry-run` packets all exit 0; the `summary.json` cost
+  (`$0.087 <= 2.0`), wall (`336.2s <= 1200`), and member-only/replay jq checks
+  pass. `export-suite` reproduces byte-for-byte modulo its `generated`
+  timestamp.
+- The two open children are the full-swarm stretch the oracle makes
+  conditional on the member-only escape, and both need fresh model-budget
+  search runs: child 8 (first certified full-suite search) is blocked on a
+  sandbox-ready certified correctness member — the autoresearch loop has not
+  cleared the plateau and the v0.2.0 holdout is burned, so it must rotate to
+  v0.3.0 before another certified holdout search; child 9 (real-member replay)
+  needs the certified members run through the master benchmark, which on the
+  current weak correctness member is expected to confirm member-only rather
+  than unlock full-swarm.
 
 ## Lead Repo Read
 

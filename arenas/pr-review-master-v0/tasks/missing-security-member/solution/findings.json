@@ -1,0 +1,11 @@
+{
+  "findings": [
+    {
+      "file": "src/retention.py",
+      "line": 31,
+      "category": "logic-invariant",
+      "severity": "serious",
+      "description": "The new comparison deletes records exactly at the retention boundary, violating the retention invariant."
+    }
+  ]
+}
