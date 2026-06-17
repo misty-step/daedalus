@@ -1360,9 +1360,17 @@ fn run_with_timeout(
     // outlives its parent: without it, `read_to_end` would wait on an EOF that
     // never comes and hang the whole search forever. A bounded, possibly-partial
     // trial is strictly better than an unbounded hang.
+    // Share ONE deadline across both pipes so total drain time is bounded by
+    // `grace`, not 2×grace: a killed child whose grandchild holds both pipes
+    // would otherwise block `grace` on stdout and then `grace` again on stderr.
     let grace = std::time::Duration::from_secs(3);
-    let stdout = orx.recv_timeout(grace).unwrap_or_default();
-    let stderr = erx.recv_timeout(grace).unwrap_or_default();
+    let deadline = std::time::Instant::now() + grace;
+    let stdout = orx
+        .recv_timeout(deadline.saturating_duration_since(std::time::Instant::now()))
+        .unwrap_or_default();
+    let stderr = erx
+        .recv_timeout(deadline.saturating_duration_since(std::time::Instant::now()))
+        .unwrap_or_default();
     Ok((status, stdout, stderr))
 }
 
@@ -2483,8 +2491,13 @@ skills = [\"{skill}\"]\nagents_md = \"{agents}\"\n",
 
     #[test]
     fn run_with_timeout_kills_a_hanging_child() {
+        // `exec` so sh REPLACES itself with sleep — no forked grandchild holds
+        // the pipe, so killing the child closes it immediately and this exercises
+        // the clean kill+drain path deterministically (the grandchild path is
+        // covered by the test below). Plain `sleep 30` makes dash fork a
+        // grandchild that keeps the pipe open → multi-second drain, flaky on Linux CI.
         let mut cmd = std::process::Command::new("sh");
-        cmd.args(["-c", "sleep 30"])
+        cmd.args(["-c", "exec sleep 30"])
             .stdout(std::process::Stdio::piped())
             .stderr(std::process::Stdio::piped());
         let t0 = std::time::Instant::now();
