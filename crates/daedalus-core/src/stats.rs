@@ -21,13 +21,37 @@
 use crate::pycompat::{mean, round_half_even};
 use serde_json::{Map, Value};
 
-/// The standard-normal two-sided 95% multiplier. Miller's headline form is
-/// `point ± 1.96·SE`. This is a normal approximation; with very few clusters it
-/// is anticonservative (the cluster-count degrees of freedom would call for a
-/// Student-t multiplier). The small-sample correction and the matching power
-/// note are backlog 039 child-5; `n_clusters` is emitted so the caveat is
-/// legible at the point of use.
+/// The standard-normal two-sided 95% multiplier — the large-sample limit of the
+/// Student-t critical value. Used where the degrees of freedom are not a fixed
+/// small number: the power projection (`min_clusters_to_significance`, an
+/// asymptotic planning figure) and the basin pooled-noise band (a coarse
+/// between-seed heuristic). The reward-delta CI itself uses [`t_975`] instead.
 const Z_95: f64 = 1.96;
+
+/// Two-sided 95% Student-t critical value for `df` degrees of freedom.
+///
+/// Backlog 040: once tasks cluster by source repo, the cluster count `G` can be
+/// tiny (pr-review-v2 has 2 repos → `df = 1`). The cluster-robust SE is then
+/// estimated from very few clusters, and the normal `1.96` is badly
+/// anticonservative — the correct critical value is `t_{G−1}` (Cameron & Miller,
+/// "A Practitioner's Guide to Cluster-Robust Inference"). At `df = 1` that is
+/// 12.706, so a 2-repo arena honestly certifies almost nothing; precision comes
+/// from *more clusters*, not more tasks in the same repos.
+///
+/// Table for `df` 1–30; the normal limit `1.96` for `df ≥ 31` (the residual
+/// understatement there is < 5% and arenas rarely have that many clusters).
+fn t_975(df: usize) -> f64 {
+    const TABLE: [f64; 30] = [
+        12.706, 4.303, 3.182, 2.776, 2.571, 2.447, 2.365, 2.306, 2.262, 2.228, 2.201, 2.179, 2.160,
+        2.145, 2.131, 2.120, 2.110, 2.101, 2.093, 2.086, 2.080, 2.074, 2.069, 2.064, 2.060, 2.056,
+        2.052, 2.048, 2.045, 2.042,
+    ];
+    match df {
+        0 => TABLE[0], // unreachable in practice (CI requires G ≥ 2 → df ≥ 1)
+        d if d <= 30 => TABLE[d - 1],
+        _ => Z_95,
+    }
+}
 
 /// A confidence-bounded reward delta `(candidate − baseline)`.
 #[derive(Debug, Clone, PartialEq)]
@@ -36,9 +60,9 @@ pub struct DeltaCi {
     pub point: f64,
     /// Cluster-robust (CR1) standard error of `point`.
     pub se: f64,
-    /// Lower bound of the 95% CI (`point − 1.96·se`).
+    /// Lower bound of the 95% CI (`point − t_{G−1}·se`).
     pub lo: f64,
-    /// Upper bound of the 95% CI (`point + 1.96·se`).
+    /// Upper bound of the 95% CI (`point + t_{G−1}·se`).
     pub hi: f64,
     /// Number of common tasks (the items differenced).
     pub n_tasks: usize,
@@ -46,8 +70,8 @@ pub struct DeltaCi {
     pub n_clusters: usize,
     /// Whether the CI excludes 0 — i.e. the delta is significant at 95%.
     pub excludes_zero: bool,
-    /// Unrounded lower bound (`point − 1.96·se`), kept for threshold tests like
-    /// the certification gate so they don't inherit display rounding. Not
+    /// Unrounded lower bound (`point − t_{G−1}·se`), kept for threshold tests
+    /// like the certification gate so they don't inherit display rounding. Not
     /// serialized — `to_value` emits the 4-dp `lo`.
     lo_raw: f64,
 }
@@ -67,10 +91,14 @@ impl DeltaCi {
     /// effect marginally significant at 95% (the expected CI just reaches 0).
     ///
     /// The CR1 SE shrinks with the cluster count as `1/√G`, not with tasks added
-    /// inside existing clusters, so to pull the current half-width `1.96·se` down
-    /// to the observed `point` we need `G ≥ n_clusters · (1.96·se / point)²`.
-    /// `None` when `point ≤ 0` (no positive effect). Floored at 2 (the minimum
-    /// for a defined CI); a candidate already significant returns `≤ n_clusters`.
+    /// inside existing clusters. Projecting the SE to a candidate cluster count
+    /// `G` gives `se·√(n_clusters/G)`, and significance there uses the **same
+    /// t_{G−1} critical value as the CI** — so this is consistent with
+    /// [`reward_delta_ci`]: it returns the smallest `G ≥ 2` at which
+    /// `point > t_{G−1}·se·√(n_clusters/G)`. Because `t` is large at few clusters,
+    /// the answer is honestly bigger than a normal-approximation estimate. `None`
+    /// when `point ≤ 0` (no positive effect). A candidate already significant
+    /// returns `≤ n_clusters`.
     ///
     /// This is the marginal threshold (≈50% chance of actually clearing 0 at
     /// exactly this G); budget more clusters for reliable detection. It assumes
@@ -82,9 +110,15 @@ impl DeltaCi {
         if self.se <= 0.0 {
             return Some(2); // already perfectly precise; 2 clusters suffice
         }
-        let ratio = Z_95 * self.se / self.point;
-        let need = (self.n_clusters as f64 * ratio * ratio).ceil() as usize;
-        Some(need.max(2))
+        // t_{G−1} shrinks and the projected SE shrinks as G grows, so for any
+        // positive effect this crosses; 4096 is a safety cap, not a real bound.
+        for g in 2..=4096 {
+            let se_at = self.se * (self.n_clusters as f64 / g as f64).sqrt();
+            if self.point > t_975(g - 1) * se_at {
+                return Some(g);
+            }
+        }
+        None
     }
 
     /// Serialize for `loop.json` / `pareto.json`, tagged with the baseline id
@@ -148,7 +182,7 @@ fn rewards_mean(v: &Value) -> Option<f64> {
 ///
 /// ```text
 /// V = (G / (G − 1)) · (1 / T²) · Σ_g ( Σ_{t∈g} (d_t − point) )²
-/// SE = sqrt(V),  CI = point ± 1.96·SE
+/// SE = sqrt(V),  CI = point ± t_{G−1}·SE
 /// ```
 ///
 /// with `T` common tasks across `G` clusters. When every task is its own
@@ -205,8 +239,11 @@ pub fn reward_delta_ci(
     let variance = (gf / (gf - 1.0)) * (1.0 / (tf * tf)) * sum_sq;
     let se_raw = variance.max(0.0).sqrt();
 
-    let lo_raw = point_raw - Z_95 * se_raw;
-    let hi_raw = point_raw + Z_95 * se_raw;
+    // t_{G−1} critical value: with few clusters the normal 1.96 is
+    // anticonservative; the cluster-robust SE has G−1 degrees of freedom.
+    let crit = t_975(g - 1);
+    let lo_raw = point_raw - crit * se_raw;
+    let hi_raw = point_raw + crit * se_raw;
     let point = round_half_even(point_raw, 4);
     let se = round_half_even(se_raw, 6);
     let lo = round_half_even(lo_raw, 4);
@@ -319,7 +356,7 @@ pub fn delta_ci_markdown(baseline_id: &str, cis: &[(String, DeltaCi)]) -> String
     }
     let mut s = String::new();
     s.push_str(&format!(
-        "\n## Reward delta vs baseline (95% CI)\n\nCluster-robust 95% CI on (candidate − `{baseline_id}`) mean reward, tasks clustered by source repo. A CI that excludes 0 is an improvement over the floor at 95% confidence. `clstr→95%` is the power note (039 child-5): the number of independent clusters (tasks today, source repos once 040 lands labels) at which the *observed* effect's CI is expected to just reach 0 — compare it to n_clusters. Adding tasks within existing clusters does not shrink the SE; clusters do. _Normal approximation; with few clusters it is anticonservative._\n\n"
+        "\n## Reward delta vs baseline (95% CI)\n\nCluster-robust 95% CI on (candidate − `{baseline_id}`) mean reward, tasks clustered by source repo, using t_(G−1) critical values — honest with few clusters (a 2-repo arena gives df=1, t=12.7, so it certifies almost nothing). A CI that excludes 0 is an improvement over the floor at 95% confidence. `clstr→95%` is the power note (039 child-5): the number of independent clusters (tasks today, source repos once 040 lands labels) at which the *observed* effect's CI is expected to just reach 0 — compare it to n_clusters. Adding tasks within existing clusters does not shrink the SE; clusters do.\n\n"
     ));
     s.push_str("| candidate | Δ reward | 95% CI | n_tasks | n_clusters | clstr→95% | sig |\n");
     s.push_str("|---|---|---|---|---|---|---|\n");
@@ -614,19 +651,31 @@ mod tests {
     }
 
     #[test]
+    fn t_975_matches_the_standard_critical_values() {
+        assert_eq!(t_975(1), 12.706); // df=1 (a 2-cluster arena) — huge
+        assert_eq!(t_975(2), 4.303);
+        assert_eq!(t_975(6), 2.447); // df=6 (7 clusters)
+        assert_eq!(t_975(30), 2.042);
+        assert_eq!(t_975(31), Z_95); // beyond the table → normal limit
+        assert_eq!(t_975(1000), Z_95);
+    }
+
+    #[test]
     fn singleton_clusters_reduce_to_standard_se_of_the_mean() {
         // Per-task deltas 0.2, 0.4, 0.6 (baseline all 0.0).
-        // point = 0.4; standard SE = stdev/√3 = 0.2/√3 = 0.115470.
+        // point = 0.4; standard SE = stdev/√3 = 0.2/√3 = 0.115470 (the headline
+        // property — unchanged). The CI uses t_{G−1}=t_2=4.303, so with only 3
+        // clusters it honestly spans 0: 0.4 ± 4.303·0.11547 = [−0.0969, 0.8969].
         let c = cand(&[("a", &[0.2]), ("b", &[0.4]), ("c", &[0.6])]);
         let b = cand(&[("a", &[0.0]), ("b", &[0.0]), ("c", &[0.0])]);
         let ci = reward_delta_ci(&c, &b, &singleton).expect("defined");
         assert_eq!(ci.point, 0.4);
         assert_eq!(ci.se, 0.11547);
-        assert_eq!(ci.lo, 0.1737);
-        assert_eq!(ci.hi, 0.6263);
+        assert_eq!(ci.lo, -0.0969);
+        assert_eq!(ci.hi, 0.8969);
         assert_eq!(ci.n_tasks, 3);
         assert_eq!(ci.n_clusters, 3);
-        assert!(ci.excludes_zero);
+        assert!(!ci.excludes_zero); // 3 clusters is too few to clear 0
     }
 
     #[test]
@@ -648,25 +697,24 @@ mod tests {
         };
         let clustered = reward_delta_ci(&c, &b, &by_repo).expect("defined");
         // CR1 with G=2: V = 2·(1/9)·((+0.4)² + (−0.4)²) = 0.071111; SE = 0.266667.
+        // With G=2 the CI uses t_1=12.706, so it spans a very wide range.
         assert_eq!(clustered.point, 0.4);
         assert_eq!(clustered.se, 0.266667);
-        assert_eq!(clustered.lo, -0.1227);
-        assert_eq!(clustered.hi, 0.9227);
+        assert_eq!(clustered.lo, -2.9883);
+        assert_eq!(clustered.hi, 3.7883);
         assert_eq!(clustered.n_clusters, 2);
-        // Pooling the correlated repo widened the SE and the CI now spans 0.
+        // Pooling the correlated repo widened the SE and the CI spans 0.
         assert!(clustered.se > per_task.se);
         assert!(!clustered.excludes_zero);
     }
 
     #[test]
     fn significance_uses_unrounded_bounds_not_the_displayed_4dp() {
-        // Raw lower bound is +3.70e-5 — strictly above 0, a genuine win — but it
-        // rounds to 0.0000 for display. excludes_zero must reflect the true CI,
-        // not the rounded bound, or a real result is silently called a tie.
-        let c = cand(&[
-            ("a", &[0.139_230_483_852_484_93]),
-            ("b", &[0.045_180_835_146_119_59]),
-        ]);
+        // Two singleton clusters → t_1=12.706, and SE = |d1−d2|/2 = 0.01, so the
+        // raw lower bound is 0.127065 − 12.706·0.01 = +5e-6 — strictly above 0, a
+        // genuine win — but it rounds to 0.0000 for display. excludes_zero must
+        // reflect the true CI, not the rounded bound.
+        let c = cand(&[("a", &[0.137065]), ("b", &[0.117065])]);
         let b = cand(&[("a", &[0.0]), ("b", &[0.0])]);
         let ci = reward_delta_ci(&c, &b, &singleton).expect("defined");
         assert_eq!(ci.lo, 0.0); // displays as +0.0000
@@ -675,12 +723,13 @@ mod tests {
 
     #[test]
     fn passes_significance_requires_the_ci_to_clear_the_mde() {
-        // deltas 0.2,0.4,0.6 vs 0 → point 0.4, raw lower bound ≈ 0.1737.
-        let c = cand(&[("a", &[0.2]), ("b", &[0.4]), ("c", &[0.6])]);
+        // Perfectly consistent +0.5 (zero variance → significant at any cluster
+        // count): lower bound is exactly 0.5, independent of the t multiplier.
+        let c = cand(&[("a", &[0.5]), ("b", &[0.5]), ("c", &[0.5])]);
         let b = cand(&[("a", &[0.0]), ("b", &[0.0]), ("c", &[0.0])]);
         assert!(passes_significance(&c, &b, &singleton, 0.0)); // beats the floor
-        assert!(passes_significance(&c, &b, &singleton, 0.1)); // lower bound > 0.1
-        assert!(!passes_significance(&c, &b, &singleton, 0.2)); // lower bound < 0.2
+        assert!(passes_significance(&c, &b, &singleton, 0.4)); // lower bound > 0.4
+        assert!(!passes_significance(&c, &b, &singleton, 0.5)); // not > 0.5
     }
 
     #[test]
@@ -697,11 +746,8 @@ mod tests {
 
     #[test]
     fn passes_significance_uses_the_raw_lower_bound_at_the_display_boundary() {
-        // Raw lower bound +3.7e-5 displays as 0.0000 but is a genuine win.
-        let c = cand(&[
-            ("a", &[0.139_230_483_852_484_93]),
-            ("b", &[0.045_180_835_146_119_59]),
-        ]);
+        // Raw lower bound +5e-6 displays as 0.0000 but is a genuine win.
+        let c = cand(&[("a", &[0.137065]), ("b", &[0.117065])]);
         let b = cand(&[("a", &[0.0]), ("b", &[0.0])]);
         assert!(passes_significance(&c, &b, &singleton, 0.0));
     }
@@ -722,8 +768,8 @@ mod tests {
                 "null",
                 &[("a", &[0.0]), ("b", &[0.0]), ("c", &[0.0])],
             ),
-            // sig: deltas 0.2,0.4,0.6 → lower bound ≈ 0.1737 > 0.
-            ("sig", "pi", &[("a", &[0.2]), ("b", &[0.4]), ("c", &[0.6])]),
+            // sig: perfectly consistent +0.5 (zero variance → CI excludes 0).
+            ("sig", "pi", &[("a", &[0.5]), ("b", &[0.5]), ("c", &[0.5])]),
             // not sig: deltas spread across 0 → CI spans 0.
             (
                 "weak",
@@ -748,16 +794,16 @@ mod tests {
                 "null",
                 &[("a", &[0.0]), ("b", &[0.0]), ("c", &[0.0])],
             ),
-            ("sig", "pi", &[("a", &[0.2]), ("b", &[0.4]), ("c", &[0.6])]),
+            ("sig", "pi", &[("a", &[0.5]), ("b", &[0.5]), ("c", &[0.5])]),
         ]);
         let trial: HashSet<String> = ["sig".to_string()].into_iter().collect();
-        // lower bound ≈ 0.1737: certifies at MDE 0.1, demoted at MDE 0.2.
+        // Consistent +0.5 → lower bound 0.5: certifies at MDE 0.4, demoted at 0.6.
         assert_eq!(
-            partition_certified(&cands, &trial, "null", &singleton, 0.1).0,
+            partition_certified(&cands, &trial, "null", &singleton, 0.4).0,
             vec!["sig".to_string()]
         );
         assert_eq!(
-            partition_certified(&cands, &trial, "null", &singleton, 0.2).1,
+            partition_certified(&cands, &trial, "null", &singleton, 0.6).1,
             vec!["sig".to_string()]
         );
     }
@@ -774,9 +820,9 @@ mod tests {
 
     #[test]
     fn min_clusters_to_significance_is_small_when_already_significant() {
-        // point 0.4, se 0.11547, 3 singleton clusters — CI already excludes 0,
-        // so the observed effect needs no more than the current set (floor 2).
-        let c = cand(&[("a", &[0.2]), ("b", &[0.4]), ("c", &[0.6])]);
+        // Perfectly consistent +0.5 (se 0) is significant at the floor of 2
+        // clusters, so the power note returns 2 (≤ current).
+        let c = cand(&[("a", &[0.5]), ("b", &[0.5]), ("c", &[0.5])]);
         let b = cand(&[("a", &[0.0]), ("b", &[0.0]), ("c", &[0.0])]);
         let ci = reward_delta_ci(&c, &b, &singleton).unwrap();
         assert!(ci.excludes_zero);
@@ -785,9 +831,10 @@ mod tests {
 
     #[test]
     fn min_clusters_to_significance_scales_the_cluster_count_not_tasks() {
-        // +0.4 effect, se 0.266667 over G=2 clusters (3 tasks). The SE shrinks
-        // with clusters, so need ceil(2·(1.96·0.266667/0.4)²) = 4 clusters — NOT
-        // a function of the 3 tasks. Adding tasks to these 2 repos would not help.
+        // +0.4 effect, se 0.266667 over G=2 clusters (3 tasks). The power note
+        // iterates G with the matching t_{G−1} critical value — at G=6 the
+        // projected t-CI just clears 0 — so it needs 6 clusters, NOT a function of
+        // the 3 tasks. Adding tasks to these 2 repos would not help.
         let c = cand(&[("a", &[0.6]), ("b", &[0.6]), ("c", &[0.0])]);
         let b = cand(&[("a", &[0.0]), ("b", &[0.0]), ("c", &[0.0])]);
         let by_repo = |t: &str| match t {
@@ -797,7 +844,7 @@ mod tests {
         let ci = reward_delta_ci(&c, &b, &by_repo).unwrap();
         assert!(!ci.excludes_zero);
         assert_eq!(ci.n_clusters, 2);
-        assert_eq!(ci.min_clusters_to_significance(), Some(4));
+        assert_eq!(ci.min_clusters_to_significance(), Some(6));
     }
 
     #[test]
@@ -836,11 +883,12 @@ mod tests {
 
     #[test]
     fn negative_delta_interval_is_reported() {
-        // Candidate is worse: deltas -0.2, -0.4, -0.6 → point -0.4, CI below 0.
-        let c = cand(&[("a", &[0.0]), ("b", &[0.0]), ("c", &[0.0])]);
-        let b = cand(&[("a", &[0.2]), ("b", &[0.4]), ("c", &[0.6])]);
+        // Consistently worse by 0.5 (zero variance) → point −0.5, CI entirely
+        // below 0 regardless of the t multiplier.
+        let c = cand(&[("a", &[0.2]), ("b", &[0.2]), ("c", &[0.2])]);
+        let b = cand(&[("a", &[0.7]), ("b", &[0.7]), ("c", &[0.7])]);
         let ci = reward_delta_ci(&c, &b, &singleton).expect("defined");
-        assert_eq!(ci.point, -0.4);
+        assert_eq!(ci.point, -0.5);
         assert!(ci.hi < 0.0);
         assert!(ci.excludes_zero);
     }
@@ -871,12 +919,13 @@ mod tests {
 
     #[test]
     fn serializes_with_baseline_tag() {
-        let c = cand(&[("a", &[0.2]), ("b", &[0.4]), ("c", &[0.6])]);
+        // Consistent +0.5 → significant, for a clean excludes_zero=true.
+        let c = cand(&[("a", &[0.5]), ("b", &[0.5]), ("c", &[0.5])]);
         let b = cand(&[("a", &[0.0]), ("b", &[0.0]), ("c", &[0.0])]);
         let ci = reward_delta_ci(&c, &b, &singleton).unwrap();
         let v = ci.to_value("null");
         assert_eq!(v["baseline"], json!("null"));
-        assert_eq!(v["point"], json!(0.4));
+        assert_eq!(v["point"], json!(0.5));
         assert_eq!(v["n_clusters"], json!(3));
         assert_eq!(v["excludes_zero"], json!(true));
         assert_eq!(v["ci"], json!(0.95));
@@ -921,7 +970,7 @@ mod tests {
             (
                 "cand-x",
                 "pi",
-                &[("a", &[0.2]), ("b", &[0.4]), ("c", &[0.6])],
+                &[("a", &[0.5]), ("b", &[0.5]), ("c", &[0.5])],
             ),
         ]);
         let certified: HashSet<String> = ["cand-x".to_string(), "null".to_string()]
@@ -932,8 +981,8 @@ mod tests {
         // Baseline skips itself; only cand-x carries a CI.
         assert_eq!(cis.len(), 1);
         assert_eq!(cis[0].0, "cand-x");
-        assert_eq!(cis[0].1.point, 0.4);
-        assert!(cis[0].1.excludes_zero);
+        assert_eq!(cis[0].1.point, 0.5);
+        assert!(cis[0].1.excludes_zero); // consistent +0.5 clears 0
     }
 
     #[test]
@@ -1116,15 +1165,15 @@ mod tests {
             (
                 "cand-x",
                 "pi",
-                &[("a", &[0.2]), ("b", &[0.4]), ("c", &[0.6])],
+                &[("a", &[0.5]), ("b", &[0.5]), ("c", &[0.5])],
             ),
         ]);
         let certified: HashSet<String> = ["cand-x".to_string()].into_iter().collect();
         let (base, cis) = certified_delta_cis(&cands, &certified, "null", &singleton);
         let md = delta_ci_markdown(base.as_deref().unwrap(), &cis);
         assert!(md.contains("## Reward delta vs baseline (95% CI)"));
-        // Row carries the power column (n→95% = 2 here, already significant).
-        assert!(md.contains("| cand-x | +0.4000 | [+0.1737, +0.6263] | 3 | 3 | 2 | ✓ |"));
+        // Consistent +0.5 → zero-width CI, significant, power note 2 clusters.
+        assert!(md.contains("| cand-x | +0.5000 | [+0.5000, +0.5000] | 3 | 3 | 2 | ✓ |"));
         // Nothing to render → empty string, safe to append unconditionally.
         assert_eq!(delta_ci_markdown("null", &[]), "");
     }
