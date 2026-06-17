@@ -1,0 +1,20 @@
+name: gate
+
+# Runs the repo's canonical gate (bin/gate) on every push and PR, so the same
+# offline check agents run locally is enforced in CI. Keep CI == bin/gate; add
+# or change checks in bin/gate, not here.
+on: [push, pull_request]
+
+permissions:
+  contents: read
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Add Rust components (clippy + rustfmt)
+        run: rustup component add clippy rustfmt
+      - uses: Swatinem/rust-cache@v2
+      - name: Run the canonical gate
+        run: ./bin/gate

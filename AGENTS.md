@@ -1,9 +1,11 @@
 # Daedalus repo contracts
 
-- **Gate:** `bin/gate` (offline pytest + compile check). Run it before
-  claiming done. Never weaken a test to get green.
-- **The grader is gospel.** Changes to `runner/score.py`, answer keys, or
-  scorer constants require an arena version bump (`arenas/<id>/arena.toml`)
+- **Gate:** `bin/gate` (offline `cargo fmt --check` + `cargo test --workspace`
+  + `cargo clippy -D warnings`). Run it before claiming done. Never weaken a
+  test to get green.
+- **The grader is gospel.** Changes to the scorer
+  (`crates/daedalus-core/src/score.rs`), answer keys, or scorer constants
+  require an arena version bump (`arenas/<id>/arena.toml`)
   and re-running oracle/null baselines. Never average rewards across arena
   versions.
 - **Candidates never read `tests/` or `solution/`** in any arena task, and
