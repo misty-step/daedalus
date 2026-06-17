@@ -1658,6 +1658,20 @@ fn cmd_run(
         None
     };
 
+    // Backlog 039 child-1: a cluster-robust 95% CI on (candidate − baseline)
+    // reward for every certified candidate. Baseline is the `null` reference
+    // (the floor). Tasks cluster per-task by default; once arenas carry
+    // `source_repo` labels (backlog 040), same-repo tasks collapse into one
+    // cluster and the SE widens to reflect their correlation.
+    let cluster_of = |t: &str| t.to_string();
+    let (baseline_id, delta_cis) =
+        daedalus_core::stats::certified_delta_cis(&cands2, &certified, "null", &cluster_of);
+    let baseline_id_str = baseline_id.clone().unwrap_or_else(|| "null".to_string());
+    let mut ci_values: Map<String, Value> = Map::new();
+    for (cid, ci) in &delta_cis {
+        ci_values.insert(cid.clone(), ci.to_value(&baseline_id_str));
+    }
+
     // Meta-eval alarms (post-run)
     let mut alarms: Vec<Value> = outcome
         .get("alarms")
@@ -1712,6 +1726,10 @@ fn cmd_run(
             sorted_cert.join(", ")
         ));
     }
+    report_text.push_str(&daedalus_core::stats::delta_ci_markdown(
+        &baseline_id_str,
+        &delta_cis,
+    ));
     if !alarms.is_empty() {
         report_text.push_str("\n## Meta-eval alarms\n\n");
         for a in &alarms {
@@ -1786,6 +1804,7 @@ fn cmd_run(
                 "trials": c.get("trials").cloned().unwrap_or(Value::Null),
                 "certified": certified.contains(cid),
                 "recommended": pick.as_deref() == Some(cid),
+                "reward_delta_ci": ci_values.get(cid).cloned().unwrap_or(Value::Null),
             })
         })
         .collect();
@@ -1821,6 +1840,14 @@ fn cmd_run(
         "spend_known_usd".to_string(),
         Value::from(total_known_spend),
     );
+    outcome_obj.insert(
+        "reward_delta_baseline".to_string(),
+        baseline_id
+            .as_deref()
+            .map(Value::from)
+            .unwrap_or(Value::Null),
+    );
+    outcome_obj.insert("reward_delta_cis".to_string(), Value::Object(ci_values));
     let _ = std::fs::write(
         exp_dir.join("loop.json"),
         serde_json::to_string_pretty(&Value::Object(outcome_obj.clone())).unwrap(),

@@ -23,6 +23,7 @@ pub mod run;
 pub mod score;
 pub mod search_loop; // ports runner/loop.py (`loop` is a Rust keyword)
 pub mod seed;
+pub mod stats; // backlog 039: confidence-bounded reward deltas (cluster-robust SE)
 pub mod swarm;
 pub mod taxonomy;
 pub mod trace;
