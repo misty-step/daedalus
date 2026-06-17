@@ -1,0 +1,22 @@
+# Machine-readable contamination record (backlog 040 items 1 & 4).
+# See arenas/pr-review-v2/contamination.toml for the field contract.
+#
+# This is the foundry's contamination-RESISTANT arena: the tasks are
+# author-written launch-contract scenarios with no public upstream code, so the
+# defects and surrounding context are not publicly indexable — a model cannot
+# have seen them in training data. Its six independent tasks also give per-task
+# clustering enough clusters to certify, unlike the 2-repo public arenas
+# (df=1) — see backlog 039 / the t_{G-1} finding.
+
+defects_novel = true
+
+notes = """
+Contamination-resistant holdout (040 item 4): synthetic launch-contract
+fixtures, not derived from any public repo. NOTE: this validates launch-contract
+configs, not pr-review configs — a contamination-resistant holdout matching the
+pr-review task type is still needed (see the 040 residual).
+"""
+
+[[source]]
+repo = "synthetic (author-written launch-contract scenarios)"
+public = false

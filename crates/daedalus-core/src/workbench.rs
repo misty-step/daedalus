@@ -146,21 +146,25 @@ pub fn load_contamination(arena_dir: &Path) -> Result<Option<Contamination>, Wor
         .map_err(|e| WorkbenchError(format!("contamination.toml: {e}")))
 }
 
-/// Validate the contamination record for an arena whose tasks declare a
-/// `source_repo` (a real-repo arena, per 040 item 1): the record must exist,
-/// list its sources, and assert the defects are novel. Public sources are
-/// surfaced as advisories (contamination risk), not failures.
+/// Validate the contamination record (040 items 1 & 4). A real-repo arena —
+/// any task declaring a `source_repo` — MUST carry a record; a synthetic arena
+/// need not, but if it has one it is validated too. The record must list its
+/// sources and assert the defects are novel. Public sources are surfaced as
+/// contamination advisories; an all-private record is blessed as a
+/// contamination-resistant holdout.
 pub fn validate_contamination(arena_dir: &Path, report: &mut ValidationReport) {
     let labeled = task_dirs(arena_dir)
         .iter()
         .any(|td| crate::run::source_repo(td).is_some());
-    if !labeled {
-        return; // synthetic arena (no upstream code) — nothing to record
-    }
     match load_contamination(arena_dir) {
-        Ok(None) => report.fail(
-            "real-repo arena (tasks declare source_repo) is missing contamination.toml (040 item 1)",
-        ),
+        Ok(None) => {
+            if labeled {
+                report.fail(
+                    "real-repo arena (tasks declare source_repo) is missing contamination.toml (040 item 1)",
+                );
+            }
+            // Unlabeled and no record → synthetic arena, nothing to validate.
+        }
         Ok(Some(c)) => {
             if c.source.is_empty() {
                 report.fail("contamination.toml lists no [[source]] entries");
@@ -170,13 +174,20 @@ pub fn validate_contamination(arena_dir: &Path, report: &mut ValidationReport) {
                     "contamination.toml must assert defects_novel = true (planted defects are authored, not upstream bugs)",
                 );
             }
-            for s in &c.source {
-                if s.public {
-                    report.warn(format!(
-                        "contamination: source {} is public — plausibly in model training data; \
-                         pair with a contamination-resistant holdout before trusting rankings",
-                        s.repo
-                    ));
+            let all_private = !c.source.is_empty() && c.source.iter().all(|s| !s.public);
+            if all_private {
+                report.warn(
+                    "contamination-resistant: all sources are private/synthetic — suitable as a holdout (040 item 4)",
+                );
+            } else {
+                for s in &c.source {
+                    if s.public {
+                        report.warn(format!(
+                            "contamination: source {} is public — plausibly in model training data; \
+                             pair with a contamination-resistant holdout before trusting rankings",
+                            s.repo
+                        ));
+                    }
                 }
             }
         }
@@ -1378,6 +1389,26 @@ mod tests {
         let mut report = ValidationReport::new("a", "0");
         validate_contamination(&arena, &mut report);
         assert!(report.ok); // no contamination record required
+        let _ = std::fs::remove_dir_all(&arena);
+    }
+
+    #[test]
+    fn validate_contamination_blesses_an_all_private_holdout() {
+        let arena = tmpdir("contam-private");
+        std::fs::create_dir_all(&arena).unwrap();
+        write_labeled_task(&arena, None); // synthetic
+        std::fs::write(
+            arena.join("contamination.toml"),
+            "defects_novel = true\n[[source]]\nrepo = \"synthetic\"\npublic = false\n",
+        )
+        .unwrap();
+        let mut report = ValidationReport::new("a", "0");
+        validate_contamination(&arena, &mut report);
+        assert!(report.ok); // a valid all-private record passes
+        assert!(report
+            .warnings
+            .iter()
+            .any(|w| w.contains("contamination-resistant")));
         let _ = std::fs::remove_dir_all(&arena);
     }
 
