@@ -698,15 +698,22 @@ pub fn validate_arena(
     let mut oracle_rewards: Vec<f64> = Vec::new();
     let mut null_rewards: Vec<f64> = Vec::new();
 
-    // Create a temporary null findings file
-    let tmp_dir =
-        std::env::temp_dir().join(format!("daedalus-workbench-{}-{}", std::process::id(), {
+    // Create a temporary null findings file. The name carries a process-wide
+    // atomic sequence so concurrent validations (e.g. parallel tests) cannot
+    // collide on the same timestamp and delete each other's scratch dir.
+    static SCRATCH_SEQ: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+    let tmp_dir = std::env::temp_dir().join(format!(
+        "daedalus-workbench-{}-{}-{}",
+        std::process::id(),
+        {
             use std::time::{SystemTime, UNIX_EPOCH};
             SystemTime::now()
                 .duration_since(UNIX_EPOCH)
                 .map(|d| d.as_nanos())
                 .unwrap_or(0)
-        }));
+        },
+        SCRATCH_SEQ.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
+    ));
     fs::create_dir_all(&tmp_dir).map_err(|e| WorkbenchError(format!("create tmpdir: {e}")))?;
     let null_findings = tmp_dir.join("findings.json");
     fs::write(&null_findings, "{\"findings\": []}\n")
