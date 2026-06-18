@@ -1,0 +1,25 @@
+# Machine-readable contamination record (backlog 040 items 1 & 4, ticket 043).
+# See arenas/pr-review-v2/contamination.toml for the field contract.
+#
+# This is the contamination-RESISTANT pr-review holdout: author-written
+# synthetic scenarios (auth, cart, file-cache, pagination, retry, rename) across
+# Python/JS/Rust — no public upstream code, so the defects and surrounding
+# context are not publicly indexable. Unlike pr-review-v2/-correctness (public
+# rich/pygments), a config validated here cannot have its score inflated by
+# training-data familiarity.
+#
+# Six independent sources (one per task) give per-source clustering enough
+# degrees of freedom to certify (df>=4), unlike the 2-repo public arenas which
+# collapse to df=1 under the t_{G-1} correction (see backlog 039 / 040 slice A).
+
+defects_novel = true
+
+notes = """
+Synthetic, author-written; not derived from any public repo. Per-task
+`source_repo` records the (distinct) synthetic source of each scenario. Serves
+ticket 043 — the contamination-resistant pr-review holdout.
+"""
+
+[[source]]
+repo = "synthetic (author-written pr-review scenarios)"
+public = false

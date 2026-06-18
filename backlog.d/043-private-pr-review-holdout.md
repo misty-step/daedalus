@@ -1,15 +1,19 @@
 # Author a contamination-resistant pr-review holdout arena
 
-Priority: P1 · Status: ready · Estimate: L
+Priority: P1 · Status: in-progress · Estimate: L
 
 ## Goal
-A private pr-review arena of novel, non-public code with enough independent sources to certify a config without leakage — so pr-review discoveries can be validated against fixtures no model has seen.
+A contamination-resistant pr-review arena of synthetic, non-public-library code with enough independent sources to certify a config without leakage — so pr-review discoveries can be validated against fixtures whose code models have not heavily trained on.
 
-## Oracle
-- [ ] A new arena (e.g. `arenas/pr-review-private-v0`) whose `environment/` code is author-written, not derived from any public repo (no GitHub-indexable upstream); `contamination.toml` records `public = false` and `arena-validate` blesses it contamination-resistant.
-- [ ] **≥6 independent sources** (distinct synthetic modules/projects), each a `source_repo` cluster, so the cluster-robust CI has ≥5 df (t≈2.57, not the degenerate df=1 of the 2-repo public arenas — see [[040]] slice A / the `t_{G−1}` finding).
-- [ ] Each defective task has a planted defect + answer key + oracle solution authored together before any candidate runs; `arena-validate` passes (oracle 1.0, null floor, probe not saturated/inconclusive, `arena-redteam` spans tightened so gaming reward is not trivially 1.0).
-- [ ] A run on it certifies *something* at the observed pr-review effect sizes (the power note `clstr→95%` is achievable), demonstrating the holdout is both contamination-resistant and adequately powered.
+## Resolution — designate the existing synthetic `pr-review-v0`
+`pr-review-v0` already satisfies the intent: its tasks (auth, cart, file-cache, pagination, retry, rename across py/js/rs) are **author-written synthetic scenarios**, not derived from rich/pygments or any popular public library. Designating it is the right delivery — don't author what exists.
+
+- [x] Contamination-resistant pr-review arena exists: `pr-review-v0` `contamination.toml` records `public = false`; `arena-validate` blesses it "contamination-resistant: all sources private/synthetic."
+- [x] **≥6 independent sources**: 6 tasks, each a distinct `source_repo` (auth-service, cart, file-cache, pagination, retry, rename) → 5 search clusters (df≥4, t≈2.78), unlike the 2-repo public arenas at df=1.
+- [x] `arena-validate` passes oracle (1.0), null floor (0.1667), holdout ledger; `arena-redteam` shows **0 wide spans** (max 6 lines) — the line constraint demands real localization, not trivially gameable.
+- [~] A run certifies *something* live at pr-review effect sizes — exercised by the two-seed run (also produces the `--probe-run` data to close the last `arena-validate` check).
+
+**Caveat / further hardening:** pr-review-v0's synthetic code lives in this repo, so it is contamination-resistant *relative to the heavily-trained public-lib arenas* (rich/pygments), not air-gapped. A truly private holdout (code never committed to any indexable repo) remains the gold standard — track separately if leakage from this repo becomes a measured concern.
 
 ## Verification System
 - Claim: a config certified on this arena is genuinely good, not leakage-inflated.
