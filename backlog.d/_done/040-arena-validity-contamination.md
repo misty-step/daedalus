@@ -1,6 +1,6 @@
 # Validate arena trustworthiness — contamination, saturation, adversarial keys
 
-Priority: P0 · Status: ready · Estimate: L
+Priority: P0 · Status: done · Estimate: L
 
 ## Goal
 Establish that each arena measures real task skill — not memorized public code, not a saturated probe, not a gameable scorer — so a config tuned on it transfers to the real task.

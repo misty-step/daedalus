@@ -1,6 +1,6 @@
 # Make the foundry prove "better," not just rank it
 
-Priority: P0 · Status: ready · Estimate: XL
+Priority: P0 · Status: done · Estimate: XL
 
 ## Goal
 A Daedalus "win" is a statistically defensible claim that a candidate beats the baseline (and its rivals) on the task — confidence-bounded, consistency-aware, and robust to the search trajectory — not the top point-estimate of a small, noisy tournament.
