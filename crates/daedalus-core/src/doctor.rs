@@ -144,8 +144,81 @@ pub fn check_primitives(repo: &Path, today: (i64, u32, u32), stale_days: i64) ->
     )
 }
 
-/// Check delivery contract approvals.
-/// Mirrors `_check_approvals(repo)` in Python.
+/// Does `s` look like an OpenRouter `provider/model` id? (one slash, lowercase
+/// / digit / `.` / `-`). Used to harvest model ids from the primitives pool.
+fn looks_like_model_id(s: &str) -> bool {
+    let mut parts = s.split('/');
+    matches!((parts.next(), parts.next(), parts.next()), (Some(p), Some(m), None) if !p.is_empty() && !m.is_empty())
+        && s.chars().all(|c| {
+            c.is_ascii_lowercase() || c.is_ascii_digit() || c == '/' || c == '.' || c == '-'
+        })
+}
+
+/// Every `specs/*/taskspec.toml` `[search].models` entry must exist in the
+/// verified `docs/primitives.md` pool. This is the mechanical half of the
+/// latest-models-only policy: pair it with `check_primitives` (which gates the
+/// pool's freshness *date*) so that a search can never run a model that was not
+/// live-verified — and a slug superseded out of the pool fails here the moment
+/// a taskspec still references it.
+pub fn check_roster_in_pool(repo: &Path) -> Check {
+    let pool_text = match std::fs::read_to_string(repo.join("docs").join("primitives.md")) {
+        Ok(t) => t,
+        Err(_) => return Check::new("roster-in-pool", "fail", "docs/primitives.md missing"),
+    };
+    // Pool model ids appear as `provider/model` inside backticks.
+    let pool: std::collections::HashSet<&str> = pool_text
+        .split('`')
+        .enumerate()
+        .filter(|(i, seg)| i % 2 == 1 && looks_like_model_id(seg))
+        .map(|(_, seg)| seg)
+        .collect();
+
+    let mut offenders: Vec<String> = Vec::new();
+    if let Ok(entries) = std::fs::read_dir(repo.join("specs")) {
+        for e in entries.flatten() {
+            let ts = e.path().join("taskspec.toml");
+            if !ts.is_file() {
+                continue;
+            }
+            let Ok(v) = crate::run::load_toml(&ts) else {
+                continue;
+            };
+            let Some(models) = v
+                .get("search")
+                .and_then(|s| s.get("models"))
+                .and_then(|m| m.as_array())
+            else {
+                continue;
+            };
+            let name = e.file_name().to_string_lossy().to_string();
+            for m in models.iter().filter_map(|x| x.as_str()) {
+                if !pool.contains(m) {
+                    offenders.push(format!("{name}:{m}"));
+                }
+            }
+        }
+    }
+
+    if offenders.is_empty() {
+        Check::new(
+            "roster-in-pool",
+            "ok",
+            "all taskspec [search] models are in the verified primitives pool",
+        )
+    } else {
+        offenders.sort();
+        Check::new(
+            "roster-in-pool",
+            "fail",
+            &format!(
+                "taskspec models absent from docs/primitives.md pool (superseded or unverified — re-verify the pool): {}",
+                offenders.join(", ")
+            ),
+        )
+    }
+}
+
+/// Check delivery contract approvals. Mirrors `_check_approvals(repo)` in Python.
 pub fn check_approvals(repo: &Path) -> Check {
     let mut missing: Vec<String> = Vec::new();
     let mut unsigned: Vec<String> = Vec::new();
@@ -389,6 +462,7 @@ pub fn run_checks(
     });
     vec![
         check_primitives(repo, today, stale_days),
+        check_roster_in_pool(repo),
         check_approvals(repo),
         check_harness_versions(repo),
         check_parallel_pi(repo),
@@ -478,6 +552,36 @@ g3_approval = "approvals/G3-demo.md"
             .iter()
             .map(|c| (c.name.clone(), c.status.clone()))
             .collect()
+    }
+
+    #[test]
+    fn roster_in_pool_flags_models_absent_from_the_verified_pool() {
+        let tmp = tempdir();
+        fs::create_dir_all(tmp.join("docs")).unwrap();
+        fs::create_dir_all(tmp.join("specs").join("x")).unwrap();
+        fs::write(
+            tmp.join("docs").join("primitives.md"),
+            "Pool: `deepseek/deepseek-v4-pro` and `z-ai/glm-5.2`.\n",
+        )
+        .unwrap();
+        // A superseded slug (glm-5) absent from the pool → fail.
+        let spec = tmp.join("specs").join("x").join("taskspec.toml");
+        fs::write(
+            &spec,
+            "[search]\nmodels = [\"deepseek/deepseek-v4-pro\", \"z-ai/glm-5\"]\n",
+        )
+        .unwrap();
+        let c = check_roster_in_pool(&tmp);
+        assert_eq!(c.status, "fail");
+        assert!(c.message.contains("z-ai/glm-5"));
+        // All models in the pool → ok.
+        fs::write(
+            &spec,
+            "[search]\nmodels = [\"deepseek/deepseek-v4-pro\", \"z-ai/glm-5.2\"]\n",
+        )
+        .unwrap();
+        assert_eq!(check_roster_in_pool(&tmp).status, "ok");
+        let _ = fs::remove_dir_all(&tmp);
     }
 
     #[test]

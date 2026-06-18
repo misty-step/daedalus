@@ -163,7 +163,12 @@ enum Cmd {
         max_candidates: usize,
         #[arg(long, default_value_t = 3)]
         trials: u32,
-        #[arg(long, default_value = "moonshotai/kimi-k2.6")]
+        /// Model that generates and mutates candidate configs. Needs strong
+        /// reasoning + reliable structured output; cost-tolerant (low volume).
+        /// Default = DeepSeek V4 Pro (SOTA reasoning + structured output at
+        /// ~1/10 frontier price). Escalate to `openai/gpt-5.5` or
+        /// `anthropic/claude-opus-4.8` for a high-stakes final search.
+        #[arg(long, default_value = "deepseek/deepseek-v4-pro")]
         optimizer_model: String,
         #[arg(long, default_value_t = 2)]
         plateau: usize,

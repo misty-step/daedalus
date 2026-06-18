@@ -8,6 +8,15 @@
   require an arena version bump (`arenas/<id>/arena.toml`)
   and re-running oracle/null baselines. Never average rewards across arena
   versions.
+- **Latest models only.** `docs/primitives.md` is the verified model pool —
+  only each provider's *latest* model per tier; a superseded version is
+  removed, not kept alongside (e.g. glm-5 → glm-5.2, gpt-5-mini → gpt-5.4-mini).
+  Every `specs/*/taskspec.toml [search].models` entry must exist in the pool.
+  `daedalus doctor` enforces both halves: `model-primitives` (pool re-verified
+  within `--stale-days`) and `roster-in-pool` (no taskspec model outside the
+  pool). Re-verify against OpenRouter `/api/v1/models` before adding a model.
+  Optimizer default: `deepseek/deepseek-v4-pro` (escalate to `openai/gpt-5.5`
+  or `anthropic/claude-opus-4.8` for a high-stakes final search).
 - **Candidates never read `tests/` or `solution/`** in any arena task, and
   experiment code must never grant them that access.
 - **Run records are evidence.** `runs/*.jsonl` is append-only history; never
