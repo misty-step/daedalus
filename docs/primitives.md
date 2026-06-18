@@ -5,7 +5,10 @@ candidate compositions. The taskspec's `[search]` section and the master
 agent's seed/mutation proposals must draw from here — never from memory.
 
 Verified live against the OpenRouter `/api/v1/models` endpoint on
-**2026-06-13**. Refresh with:
+**2026-06-18** (model pages + `/api/v1/models`; superseded entries swapped to
+their current successors — see git log). Policy: this pool lists only each
+provider's **latest** model per tier; a model superseded by a newer version of
+the same family must be removed, not kept alongside. Refresh with:
 
 ```sh
 curl -s https://openrouter.ai/api/v1/models | python3 -m json.tool | less
@@ -81,18 +84,18 @@ then let cost/quality mode decide who survives.
 |---|---|---|---|
 | `deepseek/deepseek-v4-flash` | $0.098 / $0.196 | 1M | strongest cheap all-rounder |
 | `z-ai/glm-4.7-flash` | $0.06 / $0.40 | 200K | |
-| `openai/gpt-5-mini` | $0.25 / $2.00 | 400K | |
 | `openai/gpt-oss-120b` | $0.039 / $0.18 | 131K | cheapest plausible agent |
-| `qwen/qwen3.5-flash-02-23` | $0.065 / $0.26 | 1M | |
-| `google/gemini-2.5-flash-lite` | $0.10 / $0.40 | 1M | |
+| `qwen/qwen3.6-flash` | $0.19 / $1.13 | 1M | supersedes qwen3.5-flash |
+| `google/gemini-3-flash-preview` | $0.50 / $3.00 | 1M | supersedes gemini-2.5-flash-lite; cheapest current Gemini on OR |
 
 ### Mid tier (workhorses)
 
 | model | in / out | ctx | notes |
 |---|---|---|---|
-| `moonshotai/kimi-k2.6` | $0.68 / $3.41 | 262K | incumbent; reasoning eats token budget — give headroom |
-| `z-ai/glm-5` | $0.60 / $1.92 | 200K | |
-| `deepseek/deepseek-v4-pro` | $0.435 / $0.87 | 1M | |
+| `moonshotai/kimi-k2.6` | $0.68 / $3.41 | 262K | current Kimi general flagship; reasoning eats token budget — give headroom |
+| `z-ai/glm-5.2` | $1.20 / $4.20 | 1M | supersedes glm-5/glm-5.1 (Jun 2026); 1M ctx, MIT weights |
+| `openai/gpt-5.4-mini` | $0.75 / $4.50 | 400K | supersedes gpt-5-mini; current OpenAI mini on OR (gpt-5.5-mini is API-only, not on OR) |
+| `deepseek/deepseek-v4-pro` | $0.435 / $0.87 | 1M | SOTA reasoning + structured output at ~1/10 frontier price; default optimizer + a strong candidate |
 | `minimax/minimax-m3` | $0.30 / $1.20 | 1M | |
 | `qwen/qwen3.7-plus` | $0.32 / $1.28 | 1M | 2026-06-13 refresh found price drift down from $0.40 / $1.60 |
 | `mistralai/mistral-large-2512` | $0.50 / $1.50 | 262K | |
@@ -103,7 +106,7 @@ then let cost/quality mode decide who survives.
 |---|---|---|---|
 | `anthropic/claude-sonnet-4.6` | $3.00 / $15.00 | 1M | |
 | `anthropic/claude-opus-4.8` | $5.00 / $25.00 | 1M | |
-| `openai/gpt-5.2` | $1.75 / $14.00 | 400K | |
+| `openai/gpt-5.5` | $5.00 / $30.00 | 1M | supersedes gpt-5.2/5.4; strongest strict structured-output discipline (alt optimizer) |
 | `google/gemini-3.1-pro-preview` | $2.00 / $12.00 | 1M | |
 | `x-ai/grok-4.3` | $1.25 / $2.50 | 1M | cheap output for a frontier model |
 | `qwen/qwen3.7-max` | $1.25 / $3.75 | 1M | |
