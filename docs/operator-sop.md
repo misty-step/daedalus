@@ -90,6 +90,7 @@ Export only evidence-backed candidates:
 
 ```sh
 cargo run --quiet --bin daedalus -- export deliveries/<id> --spec specs/<id>/taskspec.toml
+cargo run --quiet --bin daedalus -- export-cerberus deliveries/<id> --spec specs/<id>/taskspec.toml --out deliveries/<id>/cerberus-reviewer-config.json
 cargo run --quiet --bin daedalus -- trace --run-dir runs/<exp-id>
 cargo run --quiet --bin daedalus -- regression deliveries/<id> --spec specs/<id>/taskspec.toml --dry-run
 ```
@@ -101,7 +102,21 @@ cargo run --quiet --bin daedalus -- launch-pack deliveries/<id> --plane bitter-b
 cargo run --quiet --bin daedalus -- launch-pack deliveries/<id> --plane olympus --dry-run
 ```
 
-Dry-run packets are sandbox-only and non-deployable.
+Dry-run packets are sandbox-only and non-deployable. Cerberus handoffs are
+validated by Cerberus itself from the Cerberus checkout:
+
+```sh
+cd /path/to/cerberus
+cargo run --locked -q -p cerberus-cli -- validate-reviewer-config \
+  /path/to/daedalus/deliveries/<id>/cerberus-reviewer-config.json
+cargo run --locked -q -p cerberus-cli -- import-reviewer-config \
+  /path/to/daedalus/deliveries/<id>/cerberus-reviewer-config.json \
+  --dry-run \
+  --out tmp/daedalus-cerberus-export/import-report.json
+```
+
+The import report must keep production import rejected while any required
+promotion gate remains unsigned or sandbox-only.
 
 ## 5. Launch Gates
 

@@ -8,6 +8,7 @@
 //!
 //! Migration status, module DAG, and strategy: `docs/rust-migration.md`.
 
+pub mod cerberus;
 pub mod doctor;
 pub mod export;
 pub mod judge;

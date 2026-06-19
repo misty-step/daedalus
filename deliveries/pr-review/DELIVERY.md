@@ -71,6 +71,11 @@ Generated artifacts:
   plus import-shape sketches.
 - `plane-incumbents.toml`: read-only baseline facts for BB
   `review-coordinator` and Olympus `charon`.
+- `cerberus-reviewer-config.json`: sandbox-only
+  `ReviewerConfigPacket.v1` handoff for Cerberus. It embeds one measured
+  `pr_review` reviewer over the `pi` / OpenRouter `qwen/qwen3.7-plus`
+  composition, includes composition hash `4a73f1fd213aa1a5`, and preserves
+  G2 as waived plus G3/G4/G5 as pending.
 
 Control-plane imports remain advisory until ticket 029 and G3/G4/G5 human
 approval. G2 acceptance covers internal Daedalus contract discovery only. Any
@@ -78,6 +83,18 @@ Bitter Blossom use before stronger calibration must be sandboxed and
 experimental, not the primary reviewer, and must preserve no-approve/no-merge/
 no-code-edit red lines. Olympus should preserve orchestrator-side JSON
 validation and posting.
+
+Cerberus validation receipt, 2026-06-19:
+
+- `cargo run --quiet --bin daedalus -- export-cerberus deliveries/pr-review --spec specs/pr-review/taskspec.toml --out deliveries/pr-review/cerberus-reviewer-config.json`
+- From `/Users/phaedrus/Development/cerberus`:
+  `cargo run --locked -q -p cerberus-cli -- validate-reviewer-config /Users/phaedrus/Development/daedalus/deliveries/pr-review/cerberus-reviewer-config.json`
+- From `/Users/phaedrus/Development/cerberus`:
+  `cargo run --locked -q -p cerberus-cli -- import-reviewer-config /Users/phaedrus/Development/daedalus/deliveries/pr-review/cerberus-reviewer-config.json --dry-run --out tmp/daedalus-cerberus-export-2026-06-19/import-report.json`
+
+The Cerberus dry-run accepts the packet for comparison, rejects production
+import because the packet is sandbox-only and not approved, and leaves Cerberus
+defaults unchanged.
 
 ## Residual Risks
 

@@ -53,6 +53,14 @@ enum Cmd {
         #[arg(long)]
         spec: PathBuf,
     },
+    /// Export a Cerberus ReviewerConfigPacket.v1 JSON handoff.
+    ExportCerberus {
+        delivery: PathBuf,
+        #[arg(long)]
+        spec: PathBuf,
+        #[arg(long)]
+        out: PathBuf,
+    },
     /// Export a review-swarm suite contract.
     ExportSuite {
         delivery: PathBuf,
@@ -208,6 +216,11 @@ fn main() -> ExitCode {
         Cmd::Trace { run_dir } => cmd_trace(&run_dir),
         Cmd::Basin { run_dirs } => cmd_basin(&run_dirs),
         Cmd::Export { delivery, spec } => cmd_export(&delivery, &spec),
+        Cmd::ExportCerberus {
+            delivery,
+            spec,
+            out,
+        } => cmd_export_cerberus(&delivery, &spec, &out),
         Cmd::ExportSuite { delivery, suite } => cmd_export_suite(&delivery, &suite),
         Cmd::LaunchPack {
             delivery,
@@ -488,6 +501,45 @@ fn cmd_export(delivery: &std::path::Path, spec_path: &std::path::Path) -> ExitCo
         }
         Err(e) => {
             eprintln!("{e}");
+            ExitCode::FAILURE
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// export-cerberus
+// ---------------------------------------------------------------------------
+
+fn cmd_export_cerberus(
+    delivery: &std::path::Path,
+    spec_path: &std::path::Path,
+    out: &std::path::Path,
+) -> ExitCode {
+    let spec_text = match std::fs::read_to_string(spec_path) {
+        Ok(t) => t,
+        Err(e) => {
+            eprintln!("{e}");
+            return ExitCode::FAILURE;
+        }
+    };
+    let spec_toml: toml::Value = match toml::from_str(&spec_text) {
+        Ok(v) => v,
+        Err(e) => {
+            eprintln!("parse spec: {e}");
+            return ExitCode::FAILURE;
+        }
+    };
+    let spec_json = toml_to_json(spec_toml);
+    let repo = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
+    match daedalus_core::cerberus::export_reviewer_config_packet(
+        delivery, &spec_json, out, None, &repo,
+    ) {
+        Ok(path) => {
+            println!("packet: {}", path.display());
+            ExitCode::SUCCESS
+        }
+        Err(e) => {
+            eprintln!("export-cerberus failed: {e}");
             ExitCode::FAILURE
         }
     }
