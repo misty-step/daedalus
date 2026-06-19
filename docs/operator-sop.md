@@ -9,7 +9,7 @@ gate.
 ```sh
 git status --short --branch --untracked-files=all
 bin/gate
-bin/daedalus doctor
+cargo run --quiet --bin daedalus -- doctor
 ```
 
 Resolve any `doctor` failures before spending model budget. Warnings can be
@@ -34,10 +34,10 @@ No paid search runs before G1 is signed.
 Use the workbench for task scaffolds and freeze checks:
 
 ```sh
-bin/daedalus arena-scaffold arenas/<arena-id> <task-id> \
+cargo run --quiet --bin daedalus -- arena-scaffold arenas/<arena-id> <task-id> \
   --taskspec specs/<id>/taskspec.toml
 
-bin/daedalus arena-validate arenas/<arena-id> \
+cargo run --quiet --bin daedalus -- arena-validate arenas/<arena-id> \
   --probe-run runs/<rig-or-search-run> \
   --report runs/<rig-or-search-run>/freeze-report.md
 ```
@@ -47,7 +47,7 @@ null floor, one-shot probe behavior, split membership, and holdout exposure
 counts. Human adjudications go through:
 
 ```sh
-bin/daedalus arena-adjudicate arenas/<arena-id> \
+cargo run --quiet --bin daedalus -- arena-adjudicate arenas/<arena-id> \
   --task <task-id> \
   --finding "<summary>" \
   --ruling ACCEPT \
@@ -67,7 +67,7 @@ Do not trust comparative scores before G2 signs the arena and scorer quality.
 Use the task's declared mode and budget. A typical certified run shape is:
 
 ```sh
-bin/daedalus run specs/<id>/taskspec.toml \
+cargo run --quiet --bin daedalus -- run specs/<id>/taskspec.toml \
   --rng-seed <seed> \
   --budget-usd <budget> \
   --max-candidates <n> \
@@ -89,16 +89,16 @@ gitignored.
 Export only evidence-backed candidates:
 
 ```sh
-bin/daedalus export deliveries/<id> --spec specs/<id>/taskspec.toml
-bin/daedalus trace runs/<exp-id>
-bin/daedalus regression deliveries/<id> --spec specs/<id>/taskspec.toml --dry-run
+cargo run --quiet --bin daedalus -- export deliveries/<id> --spec specs/<id>/taskspec.toml
+cargo run --quiet --bin daedalus -- trace --run-dir runs/<exp-id>
+cargo run --quiet --bin daedalus -- regression deliveries/<id> --spec specs/<id>/taskspec.toml --dry-run
 ```
 
 Launch contracts are validated before import packets render:
 
 ```sh
-bin/daedalus launch-pack deliveries/<id> --plane bitter-blossom --dry-run
-bin/daedalus launch-pack deliveries/<id> --plane olympus --dry-run
+cargo run --quiet --bin daedalus -- launch-pack deliveries/<id> --plane bitter-blossom --dry-run
+cargo run --quiet --bin daedalus -- launch-pack deliveries/<id> --plane olympus --dry-run
 ```
 
 Dry-run packets are sandbox-only and non-deployable.

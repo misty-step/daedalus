@@ -1,10 +1,11 @@
 # Holdout exposure ledger — pr-review-v2
 
-Every `--final` scoring of holdout tasks is recorded here (bin/daedalus
-appends automatically at stage 4; manual `runner/run.py --final` holdout
-runs must be logged by hand). When a holdout task accumulates **5 exposure
-entries**, it is burned: rotate it into train/validation and author a
-replacement (version bump).
+Every final scoring of holdout tasks is recorded here. `cargo run --quiet --bin
+daedalus -- run ...` appends automatically at stage 4; manual holdout replays
+through `cargo run --quiet --bin daedalus -- regression ...` must be logged by
+hand if they expose holdout tasks outside that stage. When a holdout task
+accumulates **5 exposure entries**, it is burned: rotate it into
+train/validation and author a replacement (version bump).
 
 | date | run | candidates exposed | tasks |
 |---|---|---|---|

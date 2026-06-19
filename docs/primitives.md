@@ -11,7 +11,7 @@ provider's **latest** model per tier; a model superseded by a newer version of
 the same family must be removed, not kept alongside. Refresh with:
 
 ```sh
-curl -s https://openrouter.ai/api/v1/models | python3 -m json.tool | less
+curl -s https://openrouter.ai/api/v1/models | jq . | less
 ```
 
 Prices move and models are delisted; re-verify before authoring a new
@@ -33,9 +33,8 @@ behavior changes ride on that field.
 concurrent `pi -p` agent processes deadlock at startup (zero stdout until
 timeout) — isolated HOMEs and `--offline` do not help; `pi --version` and
 plain network calls are fine concurrently. Run pi trials **sequentially**
-per machine. `runner/run.py` and `bin/daedalus` are naturally sequential;
-do not parallelize runner invocations until pi fixes this. Re-test on pi
-upgrades.
+per machine. The Rust `daedalus run` path is naturally sequential; do not
+parallelize runner invocations until pi fixes this. Re-test on pi upgrades.
 
 ## Slots a pi composition actually has
 

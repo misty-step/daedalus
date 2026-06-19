@@ -18,7 +18,7 @@ post-MVP unless evidence promotes them.
 Status (2026-06-09): **MVP reached.** Core machinery 001–009 built, gate-green
 (60 tests), and live-validated end-to-end:
 
-- `bin/daedalus run` completes the full pipeline unattended (rig → baselines →
+- Historical pre-migration command evidence: `bin/daedalus run` completed the full pipeline unattended (rig → baselines →
   reflective single-slot search → holdout/skip → report.md + pareto.json +
   loop.json), demonstrated proposing two prompt-packet mutations with
   hypotheses, running them as hashed child candidates, and plateau-stopping.
@@ -105,8 +105,9 @@ Operator adversarial review → full backlog burn-down. All open tickets shipped
 - **010 judge family** — calibrated 0–5 rubric judge; the calibration gate
   *failed live* (two judges Spearman 0.0 on empty-findings) and correctly
   refused to certify — the gate works.
-- **014 Langfuse → ADR-002** — trace as an export-time view (runner/trace.py,
-  validated on the capstone); live stand-up deferred by design.
+- **014 Langfuse → ADR-002** — trace as an export-time view (historical
+  pre-migration artifact: `runner/trace.py`, validated on the capstone); live
+  stand-up deferred by design.
 - **012 visual-QA → ADR-003** — GO with deterministic-oracle scope, proven by
   a real Playwright DOM-assertion probe (defective app 0, fixed app 1).
 
@@ -137,8 +138,10 @@ control-plane import packets. Rust validation remains deferred until two
 accepted task families or an external control-plane runtime dependency.
 
 Update (2026-06-12): ticket 032 made cold-start operation explicit in
-`docs/operator-sop.md` and `bin/daedalus doctor`. Future phase work should link
-to that SOP instead of duplicating run/export/approval command sequences.
+`docs/operator-sop.md` and the historical then-current `bin/daedalus doctor`; current
+checkout commands use `cargo run --quiet --bin daedalus -- ...`. Future phase
+work should link to that SOP instead of duplicating run/export/approval command
+sequences.
 
 Update (2026-06-12): ticket 030 produced the second task family
 `launch-contract-v0` and a corrected certified run at
@@ -155,9 +158,10 @@ The loop run by hand, every interface a file, zero framework dependencies.
 - [x] Task spec schema + first spec (`specs/pr-review/taskspec.toml`, gate G1)
 - [x] Arena `pr-review-v0`: 6 PR fixtures in Harbor task format (8 seeded
       defects + 1 clean PR), hidden answer keys, oracle solutions
-- [x] Deterministic scorer (`runner/score.py`) and thin runner
-      (`runner/run.py`): null/oracle/openrouter/pi candidate kinds, JSONL run
-      records with tokens/cost/latency
+- [x] Historical pre-migration Phase 0 implementation: deterministic scorer
+      historical pre-migration (`runner/score.py`) and thin runner (`runner/run.py`) produced
+      null/oracle/openrouter/pi candidate kinds and JSONL run records with
+      tokens/cost/latency. Current implementation is Rust.
 - [x] Reference candidates validate the rig: oracle = 1.0, null = clean-task
       fraction
 - [x] First real comparison recorded: baseline-oneshot vs pi-kimi (same

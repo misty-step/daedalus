@@ -98,7 +98,8 @@ coverage, three-task holdout, two clean traps, exposure ledger
         out-of-diff cue (blanket-except semantics) is too subtle to spot
         without running the analysers.
       A task no reasonable agent passes discriminates as poorly as one
-      everyone passes. The next full `bin/daedalus run` (diverse seed
+      everyone passes. The next full `cargo run --quiet --bin daedalus -- run`
+      (diverse seed
       population, ≥5-trial certification) is the real spread oracle; until
       it reports, treat the six new tasks as **provisional** and do not
       publish cross-agent claims that depend on them. The version bump,

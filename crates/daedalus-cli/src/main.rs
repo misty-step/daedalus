@@ -1,4 +1,4 @@
-//! The `daedalus` CLI — Rust port of `bin/daedalus`.
+//! The `daedalus` CLI.
 //!
 //! Every subcommand delegates to its counterpart in `daedalus_core`; this file
 //! is pure composition root (arg parsing + wiring). See `docs/rust-migration.md`
@@ -143,7 +143,7 @@ enum Cmd {
         #[arg(long)]
         today: Option<String>,
     },
-    /// Port an arena into Harbor format (Rust replacement for runner/port_harbor.py).
+    /// Port an arena into Harbor format.
     PortHarbor {
         arena: PathBuf,
         #[arg(long, default_value = "harbor-build")]
@@ -611,11 +611,11 @@ fn cmd_regression(
         }
         let plan_path = computed_exp_dir.join("regression-command.txt");
         let cmd_str = format!(
-            "python3 runner/run.py --candidate {} --arena {} --exp-dir {} --split holdout --trials {} --final\n",
-            delivery.join("agent.toml").display(),
-            fixtures_rel,
-            computed_exp_dir.display(),
-            trials
+            "cargo run --quiet --bin daedalus -- regression {} --spec {} --trials {} --exp-dir {}\n",
+            delivery.display(),
+            spec_path.display(),
+            trials,
+            computed_exp_dir.display()
         );
         if let Err(e) = std::fs::write(&plan_path, &cmd_str) {
             eprintln!("{e}");
@@ -2306,5 +2306,61 @@ impl IntoObject for Value {
             Value::Object(m) => Some(m),
             _ => None,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    #[test]
+    fn regression_dry_run_writes_rust_cli_replay_command() {
+        let root = tempdir("regression-dry-run");
+        let spec = root.join("taskspec.toml");
+        let delivery = root.join("deliveries").join("pr-review");
+        let exp_dir = root.join("runs").join("regression-test");
+
+        fs::create_dir_all(&delivery).unwrap();
+        fs::write(
+            &spec,
+            r#"
+id = "pr-review"
+
+[inputs]
+fixtures = "arenas/pr-review-v0"
+"#,
+        )
+        .unwrap();
+
+        let code = cmd_regression(&delivery, &spec, 3, Some(&exp_dir), true);
+        assert_eq!(code, ExitCode::SUCCESS);
+
+        let command = fs::read_to_string(exp_dir.join("regression-command.txt")).unwrap();
+        assert!(command.starts_with("cargo run --quiet --bin daedalus -- regression "));
+        assert!(command.contains("--spec "));
+        assert!(command.contains("--trials 3"));
+        assert!(command.contains("--exp-dir "));
+        assert!(!command.contains("--dry-run"));
+        let retired_python = ["python", "3"].concat();
+        let retired_runner = ["runner", &["run", "py"].join(".")].join("/");
+        assert!(!command.contains(&retired_python));
+        assert!(!command.contains(&retired_runner));
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    fn tempdir(label: &str) -> PathBuf {
+        let nanos = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let dir = std::env::temp_dir().join(format!(
+            "daedalus-cli-{label}-{}-{nanos}",
+            std::process::id()
+        ));
+        fs::create_dir_all(&dir).unwrap();
+        dir
     }
 }

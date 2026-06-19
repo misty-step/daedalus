@@ -57,7 +57,7 @@ sleep." The important lesson is the shape of the loop:
 6. Repeat with a trace.
 
 Daedalus asks what the equivalent loop looks like for agents. In this project,
-the mutable surface is not `train.py`. It might be an agent manifest, prompt
+the mutable surface is not a training script. It might be an agent manifest, prompt
 packet, skill list, tool policy, model/provider choice, or harness projection.
 The fixed arena is not a small language-model training run. It might be a pull
 request review fixture, a backlog grooming corpus, a synthetic inbox, a browser
@@ -520,7 +520,7 @@ build carefully, or the system becomes a maze.
   or something else?
 - Is the task specification a file format, an interview protocol, or both?
 - What is the minimum viable arena format?
-- Which eval substrate should be used first: custom runner, Inspect AI, pytest,
+- Which eval substrate should be used first: custom runner, Inspect AI, unit tests,
   LangSmith-style trajectory checks, or something else?
 - How should model/provider pricing be normalized when provider usage reports
   are incomplete?
@@ -541,12 +541,11 @@ the initial Python prototype one parity-verified module at a time — every port
 was cross-checked against the Python reference by a parity oracle before the
 Python was retired; see `docs/rust-migration.md`.
 
-The only remaining Python is the Harbor sandbox toolchain — `runner/score.py`
-(the in-container verifier called by `arenas/*/tests/test.sh`) and
-`runner/port_harbor.py` (the arena → Harbor porter called by `bin/harbor-run`) —
-kept because the Harbor isolation image is `python:3.12-slim`; both are held to
-the Rust behavior by `parity_score.rs` / `parity_port_harbor.rs`. Shell stays a
-thin launcher (`bin/gate`, `bin/harbor-run`), never the workflow engine.
+Harbor task containers still run a Python scorer script because the Harbor
+isolation image is `python:3.12-slim`, but the repo workflow is Rust-owned:
+`bin/harbor-run` builds `daedalus-score` and calls the Rust `port-harbor`
+subcommand before invoking Harbor. Shell stays a thin launcher (`bin/gate`,
+`bin/harbor-run`), never the workflow engine.
 
 The core stays small: task specs in, experiments out, receipts persisted. The
 master agent can be clever. The harness should be boring.
@@ -568,8 +567,7 @@ day, unlocking the Phase 0 prototype:
 - `specs/pr-review/` — first task specification (gate G1 approved).
 - `arenas/pr-review-v0/` — six PR fixtures in Harbor task format.
 - `crates/` — the Rust implementation: `daedalus-core` (kernel) +
-  `daedalus-cli` (the `daedalus` binary). `runner/` now holds only the Python
-  Harbor sandbox scorer/porter.
+  `daedalus-cli` (the `daedalus` binary).
 - `candidates/` — reference candidates (null floor, oracle ceiling, one-shot
   saturation probe) plus agent compositions (pi over OpenRouter).
 - `runs/` — JSONL run records with reward, tokens, cost, and latency.
@@ -582,13 +580,8 @@ file as the source of truth for spec, validation, run, export, approval, trace,
 and closeout commands.
 
 ```sh
-bin/gate                                   # offline gate (cargo test + clippy)
-cargo build -p daedalus-cli                # build the `daedalus` binary
-cargo run -p daedalus-cli -- doctor        # readiness summary, no model spend
-cargo run -p daedalus-cli -- --help        # all subcommands (score, trace,
-                                           # export, arena-validate, run, …)
+bin/gate                                           # offline gate (cargo test + clippy)
+cargo build -p daedalus-cli                        # build the `daedalus` binary
+cargo run --quiet --bin daedalus -- doctor         # readiness summary, no model spend
+cargo run --quiet --bin daedalus -- --help         # all subcommands
 ```
-
-`docs/operator-sop.md` still documents the legacy `runner/run.py` / `bin/daedalus`
-command names — those map 1:1 to `daedalus` subcommands; a doc refresh is the
-remaining follow-up.

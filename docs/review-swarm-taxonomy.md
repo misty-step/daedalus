@@ -6,7 +6,7 @@ suite needs categories that can be scored, attributed, and adjudicated without
 turning the benchmark into taste.
 
 The machine-readable contract lives in the fenced TOML block below. Keep prose
-and TOML in sync; `bin/daedalus taxonomy-validate` treats the TOML block as the
+and TOML in sync; `cargo run --quiet --bin daedalus -- taxonomy-validate` treats the TOML block as the
 source of truth.
 
 ```toml

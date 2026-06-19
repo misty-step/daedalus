@@ -214,7 +214,7 @@ function trace() {
         </div>
       </div>
       <div class="section split">
-        <div class="panel stack"><h2>Candidate output</h2><code>{"file":"runner/export.py","category":"approval-gate"}</code><p class="fine">Actionable, correct category, line in expected range.</p></div>
+        <div class="panel stack"><h2>Candidate output</h2><code>{"file":"crates/daedalus-core/src/export.rs","category":"approval-gate"}</code><p class="fine">Actionable, correct category, line in expected range.</p></div>
         <div class="panel stack"><h2>Scorer result</h2><code>reward=0.50 recall=0.50 fp=0</code><p class="fine">The missing live-lock path is the mutation seed.</p></div>
       </div>
     </section>

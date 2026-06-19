@@ -7,7 +7,7 @@ adjudication decisions.
 ## Scaffold A Task
 
 ```sh
-bin/daedalus arena-scaffold arenas/<arena-id> <task-id> \
+cargo run --quiet --bin daedalus -- arena-scaffold arenas/<arena-id> <task-id> \
   --taskspec specs/<spec-id>/taskspec.toml
 ```
 
@@ -29,7 +29,7 @@ run.
 ## Validate A Freeze Gate
 
 ```sh
-bin/daedalus arena-validate arenas/pr-review-v2 \
+cargo run --quiet --bin daedalus -- arena-validate arenas/pr-review-v2 \
   --probe-run runs/20260611T173632Z-search-pr-review-v0 \
   --report /tmp/pr-review-v2-freeze.md
 ```
@@ -49,13 +49,13 @@ only rows for the current `arena.toml` version. Legacy ledgers without that
 column are still counted by task name for backward compatibility.
 
 The validation command does not spend model budget. Run the one-shot probe
-through `bin/daedalus run` first, then pass that run directory to
+through `cargo run --quiet --bin daedalus -- run` first, then pass that run directory to
 `--probe-run`.
 
 ## Adjudicate Disputed Findings
 
 ```sh
-bin/daedalus arena-adjudicate arenas/<arena-id> \
+cargo run --quiet --bin daedalus -- arena-adjudicate arenas/<arena-id> \
   --task <task-id> \
   --finding "candidate finding summary" \
   --ruling ACCEPT \
@@ -74,7 +74,7 @@ answer keys for you.
 ## Report Category Or Span Disagreement
 
 ```sh
-bin/daedalus arena-disagreements \
+cargo run --quiet --bin daedalus -- arena-disagreements \
   --findings path/to/findings.json \
   --expected arenas/<arena>/tasks/<task>/tests/expected.json
 ```

@@ -29,7 +29,7 @@ Freeze packet: `runs/20260613T151035Z-freeze-pr-review-correctness-v0`
 Bounded seed-only search:
 `runs/20260613T161359Z-search-pr-review-correctness`
 
-- command: `bin/daedalus run specs/pr-review-correctness/taskspec.toml --rng-seed 11 --budget-usd 0.75 --max-candidates 0 --trials 1 --certify-top 1 --certify-trials 2 --children-per-gen 1 --optimizer-model moonshotai/kimi-k2.6 --max-errors-per-candidate 2`
+- command: `cargo run --quiet --bin daedalus -- run specs/pr-review-correctness/taskspec.toml --rng-seed 11 --budget-usd 0.75 --max-candidates 0 --trials 1 --certify-top 1 --certify-trials 2 --children-per-gen 1 --optimizer-model moonshotai/kimi-k2.6 --max-errors-per-candidate 2`
 - recommended bounded baseline: `seed1-gpt-5-mini-spec-first`
 - model: `openai/gpt-5-mini`
 - composition hash: `f090f8060cf36637`
@@ -67,7 +67,7 @@ Freeze packet: `runs/20260613T213700Z-freeze-pr-review-correctness-v020`
 Bounded search with one reflective child:
 `runs/20260613T214006Z-search-pr-review-correctness`
 
-- command: `bin/daedalus run specs/pr-review-correctness/taskspec.toml --rng-seed 12 --budget-usd 1.25 --max-candidates 1 --trials 1 --certify-top 1 --certify-trials 2 --children-per-gen 1 --optimizer-model moonshotai/kimi-k2.6 --max-errors-per-candidate 2`
+- command: `cargo run --quiet --bin daedalus -- run specs/pr-review-correctness/taskspec.toml --rng-seed 12 --budget-usd 1.25 --max-candidates 1 --trials 1 --certify-top 1 --certify-trials 2 --children-per-gen 1 --optimizer-model moonshotai/kimi-k2.6 --max-errors-per-candidate 2`
 - runner-recommended certified baseline:
   `g1a-seed3-qwen3-7-plus-skeptic`
 - model: `z-ai/glm-4.7-flash`

@@ -20,11 +20,11 @@ Two architecture questions: (1) runtime instrumentation vs export-time view;
 **Tracing is an export-time view, not runtime instrumentation.** DESIGN.md
 already fixed this direction ("OTel GenAI semantic conventions are still in
 Development; map at export time later, never bet the schema on a moving
-spec"). `runner/trace.py` converts a committed experiment directory into
-OTel-GenAI-shaped trace JSON; a thin, separable adapter posts it to a sink.
-The runner stays stdlib-only with no OTel/collector dependency, and the JSONL
-records remain canonical — the trace is a derived artifact, regenerable at any
-time from records that are already committed.
+spec"). Historical pre-migration artifact `runner/trace.py` proved the mapping;
+the current implementation is the Rust `trace` module. A thin, separable adapter
+can post the derived trace to a sink. The runner stays dependency-light, and the
+JSONL records remain canonical — the trace is regenerable at any time from
+records that are already committed.
 
 **Mapping (one experiment = one trace; one trial = one span):**
 
@@ -42,7 +42,7 @@ promote to spans when per-call records exist).
 
 ## What was and was not executed
 
-- **Built and tested (durable):** `runner/trace.py` + `tests/test_trace.py`
+- **Built and tested (historical pre-migration spike):** `runner/trace.py` + `tests/test_trace.py`
   (4 tests), validated on the real capstone run — 13 candidates, 76 trials,
   $2.93 total rendered into a trace with per-span reward/cost. The mapping is
   real code, not a diagram.
@@ -57,7 +57,7 @@ promote to spans when per-call records exist).
 ## Consequences
 
 - Trace emission can be added behind a `--trace` flag or a `DAEDALUS_OTLP_ENDPOINT`
-  env var as a post-stage-5 step (`runner/trace.py` → OTLP exporter) with no
+  env var as a post-stage-5 step (Rust trace export -> OTLP exporter) with no
   change to the search loop.
 - Langfuse is the recommended sink (self-hosted, OTLP-native, GenAI-aware,
   cost rollups), but nothing binds us to it — any OTel backend ingests the
@@ -66,4 +66,4 @@ promote to spans when per-call records exist).
   at current scale, or (b) Phase 3 production observation needs the sink
   anyway — do it once, for both.
 - When OTel GenAI semconv leaves Development, bump `OTEL_GENAI_VERSION` in
-  `trace.py` and re-map; records are untouched.
+  the trace exporter and re-map; records are untouched.

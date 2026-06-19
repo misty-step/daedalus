@@ -1,1 +1,1 @@
-python3 runner/run.py --candidate deliveries/pr-review/agent.toml --arena arenas/pr-review-v2 --exp-dir runs/pr-review-regression-dry-run --split holdout --trials 5 --final
+cargo run --quiet --bin daedalus -- regression deliveries/pr-review --spec specs/pr-review/taskspec.toml --trials 5 --exp-dir runs/pr-review-regression-dry-run

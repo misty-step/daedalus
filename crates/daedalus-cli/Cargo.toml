@@ -2,7 +2,7 @@
 name = "daedalus-cli"
 version.workspace = true
 edition.workspace = true
-description = "The `daedalus` command-line tool (Rust port of bin/daedalus)."
+description = "The `daedalus` command-line tool."
 
 [[bin]]
 name = "daedalus"

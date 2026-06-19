@@ -2,8 +2,8 @@
 
 Daedalus has two execution boundaries:
 
-- The fast local runner, `runner/run.py`, is for low-risk offline synthetic
-  arenas only.
+- The fast local Rust runner (`cargo run --quiet --bin daedalus -- run ...`) is
+  for low-risk offline synthetic arenas only.
 - Harbor/Docker, via `bin/harbor-run`, is the isolation boundary for arenas
   that need network access, production or user data, secret-bearing workflows,
   adversarial fixtures, or untrusted candidate compositions.
@@ -27,7 +27,6 @@ The refusal is intentional. Do not lower risk metadata to get a run through
 the local path; port the arena and use Harbor:
 
 ```sh
-python3 runner/port_harbor.py arenas/<arena-id>
 bin/harbor-run arenas/<arena-id> all --agent pi -m openrouter/<model>
 ```
 
@@ -39,7 +38,7 @@ path leaks in low-risk arenas.
 
 ## Launch Contract Validation
 
-`bin/daedalus launch-pack <delivery> --plane <plane>` validates
+`cargo run --quiet --bin daedalus -- launch-pack <delivery> --plane <plane>` validates
 `contract.toml` before rendering any import packet. The validator checks:
 
 - contract version and required identity fields;
@@ -52,7 +51,7 @@ path leaks in low-risk arenas.
 Unsigned contracts may still render sandbox-only packets:
 
 ```sh
-bin/daedalus launch-pack deliveries/pr-review \
+cargo run --quiet --bin daedalus -- launch-pack deliveries/pr-review \
   --plane bitter-blossom --dry-run
 ```
 
@@ -68,14 +67,13 @@ malicious tool-using candidate from guessing host absolute paths. That is why
 any sensitive, adversarial, user-data, secret-bearing, or network-dependent
 arena must use Harbor/Docker isolation.
 
-The launch validator is currently Python (`runner/launch.py`). A Rust
-contract/schema validator is deferred until schemas survive two accepted task
-families or an external control plane starts consuming contracts as a hard
-runtime dependency, whichever comes first.
+Launch validation is Rust-owned today. Deeper schema/receipt hardening is
+tracked by the Rust validation-kernel work once those contracts need to become a
+stable external runtime dependency.
 
 ## Verification Commands
 
 ```sh
-python3 -m pytest -q tests/test_run.py tests/test_launch.py
+cargo run --quiet --bin daedalus -- doctor
 bin/gate
 ```

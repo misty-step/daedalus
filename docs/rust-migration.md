@@ -1,5 +1,10 @@
 # Daedalus → Rust migration
 
+This is the historical pre-migration ledger. References to retired Python files,
+`bin/daedalus`, pytest, or parity commands below describe migration history and
+are not current operator commands; maintained command examples live in
+`docs/operator-sop.md`.
+
 **Goal:** fully migrate Daedalus from Python (`runner/` + `bin/daedalus`) to Rust.
 
 **Why now (decision provenance).** The Python implementation was always an
@@ -187,8 +192,9 @@ Rust scorer ran inside `python:3.12-slim` → reward **1.000**, 0 exceptions.
    and the whole runner are verified.
 2. The Harbor image is still `FROM python:3.12-slim` — Python is present but
    **no longer used for scoring**; an Alpine base would drop it entirely.
-3. Prose docs (operator-sop/DESIGN/ROADMAP) still cite legacy `runner/run.py` /
-   `bin/daedalus` names; subcommands map 1:1 to `daedalus`.
+3. Resolved 2026-06-18: maintained prose docs no longer cite legacy
+   `runner/run.py` / `bin/daedalus` names as current commands. Historical
+   pre-migration receipts in this file remain unchanged for auditability.
 
 ## Log
 

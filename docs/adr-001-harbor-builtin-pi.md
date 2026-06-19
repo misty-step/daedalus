@@ -30,11 +30,11 @@ harbor run -p harbor-build/<arena>/<task> \
   --ae OPENROUTER_API_KEY=$OPENROUTER_API_KEY -y
 ```
 
-Daedalus owns the *arena→Harbor port* (`runner/port_harbor.py`) and the task
-format; Harbor owns container lifecycle, the agent, and reward plumbing. This
-is the deepest-module / smallest-surface option: the only Daedalus code is the
-deterministic port, and the verifier is our existing `score.py` copied into
-`tests/`.
+Daedalus owns the *arena→Harbor port* (`cargo run --quiet --bin daedalus --
+port-harbor ...`) and the task format; Harbor owns container lifecycle, the
+agent, and reward plumbing. This is the deepest-module / smallest-surface
+option: the only Daedalus code is the deterministic port, and the verifier is
+the `daedalus-score` binary copied into `tests/`.
 
 ## Consequences
 

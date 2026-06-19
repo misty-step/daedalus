@@ -107,8 +107,9 @@ strong enough for sandbox-only Olympus and Bitter Blossom trials.
   command sequence.
 - `docs/review-autoresearch-loop.md` - one-lens-at-a-time research protocol,
   primitive inventory discipline, stop conditions, and correctness v0.2 plan.
-- `runner/export.py` - current single-agent contract/persona/handoff export
-  boundary that a suite export must extend rather than bypass.
+- `crates/daedalus-core/src/export.rs` - current single-agent
+  contract/persona/handoff export boundary that a suite export must extend
+  rather than bypass.
 - `docs/premises/review-swarm-2026-06-12.md` - durable operator-premise
   artifact for this shape.
 - `/Users/phaedrus/Development/bitterblossom/plane/tasks/*/card.md` - existing
@@ -331,9 +332,10 @@ The likely sequence:
 
 ### ADR Decision
 
-ADR required: introduce `swarm-contract.v1` and `bin/daedalus export-suite` as
-explicit Daedalus primitives before export implementation. No ADR is required
-for adding task specs or arenas that follow existing file contracts.
+ADR required: introduce `swarm-contract.v1` and `cargo run --quiet --bin
+daedalus -- export-suite` as explicit Daedalus primitives before export
+implementation. No ADR is required for adding task specs or arenas that follow
+existing file contracts.
 
 Escalation trigger: if the suite exporter needs plane-specific runtime logic
 inside Daedalus instead of declarative import packets, stop and write an ADR
@@ -344,23 +346,23 @@ before implementation continues.
 Commands that must all exit 0 for the shaped epic to close:
 
 - `bin/gate` - existing Daedalus tests and compile checks stay green.
-- `bin/daedalus doctor` - cold-start readiness passes; unsigned G3 warnings are
+- `cargo run --quiet --bin daedalus -- doctor` - cold-start readiness passes; unsigned G3 warnings are
   acceptable but must be named.
-- `bin/daedalus arena-validate arenas/pr-review-master-v0 --probe-run runs/<master-rig-run> --report runs/<master-rig-run>/freeze-report.md`
+- `cargo run --quiet --bin daedalus -- arena-validate arenas/pr-review-master-v0 --probe-run runs/<master-rig-run> --report runs/<master-rig-run>/freeze-report.md`
   - master synthesis has oracle/null/probe evidence and does not saturate.
-- `bin/daedalus taxonomy-validate docs/review-swarm-taxonomy.md --suite specs/pr-review-suite/taskspec.toml`
+- `cargo run --quiet --bin daedalus -- taxonomy-validate docs/review-swarm-taxonomy.md --suite specs/pr-review-suite/taskspec.toml`
   - the taxonomy charter covers every lens, category, allowed overlap,
   severity translation, and ambiguity rule referenced by the suite specs.
-- `bin/daedalus run specs/pr-review-master/taskspec.toml --rng-seed <seed> --budget-usd <budget> --max-candidates <n> --trials 1 --certify-top 1 --certify-trials 5 --children-per-gen 2 --optimizer-model <model> --max-errors-per-candidate 1`
+- `cargo run --quiet --bin daedalus -- run specs/pr-review-master/taskspec.toml --rng-seed <seed> --budget-usd <budget> --max-candidates <n> --trials 1 --certify-top 1 --certify-trials 5 --children-per-gen 2 --optimizer-model <model> --max-errors-per-candidate 1`
   - master-reviewer search emits committed run records, report, Pareto archive,
   lineage, trace, and certified recommendation.
 - `test -f docs/adr-004-review-swarm-contract.md`
   - the suite contract/export boundary is decided before implementation lands.
-- `bin/daedalus export-suite deliveries/pr-review-swarm --suite specs/pr-review-suite/taskspec.toml`
+- `cargo run --quiet --bin daedalus -- export-suite deliveries/pr-review-swarm --suite specs/pr-review-suite/taskspec.toml`
   - emits a suite manifest plus member/master contracts pinned to run
   evidence.
-- `bin/daedalus launch-pack deliveries/pr-review-swarm --plane bitter-blossom --dry-run`
-  and `bin/daedalus launch-pack deliveries/pr-review-swarm --plane olympus --dry-run`
+- `cargo run --quiet --bin daedalus -- launch-pack deliveries/pr-review-swarm --plane bitter-blossom --dry-run`
+  and `cargo run --quiet --bin daedalus -- launch-pack deliveries/pr-review-swarm --plane olympus --dry-run`
   - dry-run packets are sandbox-only, non-primary, and blocked on G3.
 - `jq -e '.suite.total_cost_usd <= 2.0 or .waivers.cost_ceiling == true' deliveries/pr-review-swarm/summary.json`
   - the sandbox candidate has an explicit total-cost story, with waiver if it
@@ -383,10 +385,10 @@ Observable acceptance:
 ## Children
 
 1. [x] Write `docs/review-swarm-taxonomy.md` and
-   `bin/daedalus taxonomy-validate`: defect IDs, allowed lens ownership,
+   `cargo run --quiet --bin daedalus -- taxonomy-validate`: defect IDs, allowed lens ownership,
    overlap rules, severity rules, and ambiguity/adjudication workflow.
 2. [x] Write `docs/adr-004-review-swarm-contract.md` selecting
-   `swarm-contract.v1` and `bin/daedalus export-suite`.
+   `swarm-contract.v1` and `cargo run --quiet --bin daedalus -- export-suite`.
 3. [x] Define the member artifact JSON schema, required/optional member
    failure policy, and general-reviewer precedence rules.
 4. [x] Define `pr-review-suite` and `pr-review-master` task specs, including
@@ -420,10 +422,10 @@ Observable acceptance:
 
 Packet committed on branch `deliver-034-review-swarm`:
 
-- `docs/review-swarm-taxonomy.md`, `runner/taxonomy.py`, and
-  `bin/daedalus taxonomy-validate`.
-- `docs/adr-004-review-swarm-contract.md`, `runner/swarm.py`,
-  `bin/daedalus export-suite`, and swarm-aware `launch-pack`.
+- `docs/review-swarm-taxonomy.md`, `crates/daedalus-core/src/taxonomy.rs`, and
+  `cargo run --quiet --bin daedalus -- taxonomy-validate`.
+- `docs/adr-004-review-swarm-contract.md`, `crates/daedalus-core/src/swarm.rs`,
+  `cargo run --quiet --bin daedalus -- export-suite`, and swarm-aware `launch-pack`.
 - `specs/pr-review-suite/taskspec.toml`, required member specs, optional
   non-runnable scaffold specs, and `specs/pr-review-master/taskspec.toml`.
 - `arenas/pr-review-master-v0` reducer arena with candidate-visible member
@@ -515,7 +517,7 @@ Remaining children:
 Verification (2026-06-15):
 
 - The member-only slice's full offline oracle is green: `bin/gate` (174
-  passed), `bin/daedalus doctor` (only the named-acceptable unsigned-G3 and
+  passed), `cargo run --quiet --bin daedalus -- doctor` (only the named-acceptable unsigned-G3 and
   local-run-artifact warnings), `taxonomy-validate`,
   `arena-validate arenas/pr-review-master-v0`, `export-suite`, and both
   `launch-pack --dry-run` packets all exit 0; the `summary.json` cost

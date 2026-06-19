@@ -31,13 +31,13 @@ Diagnostic interrupted run:
 - status: interrupted, not certification evidence
 - finding: optimizer-authored `seed-spec-first.md` was degenerate repeated
   punctuation and drove a timeout-heavy candidate measurement
-- remediation: `runner/prompt_packet.py` now rejects visibly corrupted packet
+- remediation: the Rust prompt-packet module now rejects visibly corrupted packet
   text for seed packets and prompt-packet mutations
 
 Bounded seed-only search:
 `runs/20260613T153751Z-search-pr-review-security`
 
-- command: `bin/daedalus run specs/pr-review-security/taskspec.toml --rng-seed 9 --budget-usd 0.40 --max-candidates 0 --trials 1 --certify-top 1 --certify-trials 2 --children-per-gen 1 --optimizer-model moonshotai/kimi-k2.6 --max-errors-per-candidate 2`
+- command: `cargo run --quiet --bin daedalus -- run specs/pr-review-security/taskspec.toml --rng-seed 9 --budget-usd 0.40 --max-candidates 0 --trials 1 --certify-top 1 --certify-trials 2 --children-per-gen 1 --optimizer-model moonshotai/kimi-k2.6 --max-errors-per-candidate 2`
 - recommended bounded baseline: `seed5-kimi-k2-6-checklist`
 - model: `moonshotai/kimi-k2.6`
 - composition hash: `d112f8dd00b0f84b`
