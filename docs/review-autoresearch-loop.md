@@ -16,7 +16,7 @@ the prose below explains judgment around it.
 schema = "review-autoresearch-loop.v1"
 program = "pr-review-swarm"
 first_lane = "correctness"
-next_arena_iteration = "pr-review-correctness-v0.2"
+next_arena_iteration = "pr-review-correctness-v0.3"
 sandbox_boundary = "member-artifacts-only-before-g3"
 do_not_average_across_arena_versions = true
 full_swarm_blocked_until = ["correctness-member-quality", "real-member-replay"]
@@ -48,7 +48,7 @@ The first measured lanes remain:
 | lane | status | current next question |
 |---|---|---|
 | general | certified baseline | Does it still help master synthesis after specialist members improve? |
-| correctness | weak v0.1 baseline | Can v0.2 add missing runtime-crash coverage and raise recall without clean-trap regressions? |
+| correctness | weak v0.2 baseline; v0.3 holdout rotation prepared | Can the next run certify a Qwen/GPT correctness member on the rotated hard holdout without clean-trap regressions? |
 | security | promising v0.1 baseline | Can injection instability be reduced without losing credential-exposure recall? |
 | verification | scaffold-only | Which deterministic fixtures prove execution-aware review instead of test-prose guessing? |
 | simplification | scaffold-only | Which fixtures distinguish real gate/surface risk from subjective taste? |
@@ -119,23 +119,34 @@ answer is "bad loop strategy", change the search plan before another spend. If
 the answer is "intractable under current constraints", preserve the evidence
 and keep the member out of the swarm recommendation.
 
-## Correctness v0.2 Plan
+## Correctness v0.3 Plan
 
 Correctness is the first focused loop because it is required for the vertical
-slice and v0.1 is not sandbox-ready. The v0.1 evidence shows repeated misses
-on seeded defects, repeated false positives on `py-padding-clean`, and no
-seeded `runtime-crash` task despite `runtime-crash` being an owned category.
+slice and the existing evidence is not sandbox-ready. The v0.1 evidence showed
+repeated misses on seeded defects, repeated false positives on
+`py-padding-clean`, and no seeded `runtime-crash` task despite
+`runtime-crash` being an owned category.
 
-The v0.2 loop should:
+The v0.2 loop added `py-formatter-missing-crash` for `runtime-crash`, but the
+certified child was still weak and the v0.2 holdout became burned:
+`py-plugin-cache` and `py-export-clear` each have eight exposures, above the
+default threshold of five.
 
-- add or adapt at least one runtime-crash fixture;
+The v0.3 loop should:
+
+- keep the v0.2 fixtures, answer keys, scorer constants, and taxonomy;
+- rotate the burned holdout to `py-live-lock` and
+  `py-formatter-missing-crash`;
+- re-run the freeze gate with non-inconclusive one-shot probe evidence before
+  any paid search; `backlog.d/047-replace-real-repo-saturation-probe.md`
+  tracks the real-repo-scale probe blocker exposed by v0.3 diagnostics;
 - keep both clean traps, unless an adjudication explains a replacement;
 - preserve real-repo-scale context and candidate isolation;
-- re-run oracle/null/probe baselines after any fixture or key change;
 - run a certified search with enough candidate diversity to compare at least
   model, prompt stance, and one execution-aware tool policy;
-- report per-task deltas against v0.1 as narrative only, not averaged scores;
+- report per-task deltas against earlier versions as narrative only, not
+  averaged scores;
 - end in either a sandbox-candidate recommendation or a plateau postmortem.
 
-The next suite-level work remains blocked until correctness v0.2 and
+The next suite-level work remains blocked until correctness v0.3 and
 real-member replay give the master reviewer real member artifacts to reduce.

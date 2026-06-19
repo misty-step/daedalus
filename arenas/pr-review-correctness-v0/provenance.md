@@ -102,3 +102,58 @@ eight v0.2.0 exposures, above the default burn threshold of five. Do not run
 another certified holdout search against v0.2.0 without rotating holdouts and
 bumping the arena version, or explicitly raising the burn threshold in a
 documented diagnostic-only command.
+
+## v0.3.0 holdout rotation
+
+Backlog 034's next loop needs a valid holdout before any paid certification
+attempt. Current `arena-validate` correctly fails v0.2.0 because
+`py-export-clear` and `py-plugin-cache` each have eight holdout exposures,
+above the default burn threshold of five.
+
+v0.3.0 keeps the same fixtures, answer keys, scorer constants, and taxonomy.
+Only the arena version and split move:
+
+- train: `py-progress-speed`, `py-padding-clean`, `py-plugin-cache`
+- validation: `py-measure-normalize`, `py-formatter-clean`, `py-export-clear`
+- holdout: `py-live-lock`, `py-formatter-missing-crash`
+
+Rationale: the new holdout focuses the next certification attempt on the two
+defect shapes that blocked the prior correctness member: concurrent live
+update atomicity and reachable formatter-crash behavior. The former v0.2
+holdout tasks remain in train/validation so the next run still measures data
+loss/cache-invariant behavior without treating already-burned tasks as hidden
+final evidence.
+
+This is not a new benchmark-quality claim. The source repositories are still
+public, and v0.3.0 still requires a fresh freeze report with non-inconclusive
+one-shot probe evidence before a certified search can be trusted.
+
+Diagnostic freeze attempts on 2026-06-19:
+
+- `cargo run --quiet --bin daedalus -- arena-validate
+  arenas/pr-review-correctness-v0 --probe-run
+  runs/20260613T213700Z-freeze-pr-review-correctness-v020 --report
+  /tmp/daedalus-034-v03-validate-old-probe.md`:
+  oracle `1.0`, null `0.25`, holdout exposures
+  `{"py-formatter-missing-crash": 0, "py-live-lock": 0}`, but the old
+  one-shot probe is inconclusive (`1/1` probe trial errored).
+- `cargo run --quiet --bin daedalus -- arena-freeze
+  arenas/pr-review-correctness-v0 --out-dir
+  /tmp/daedalus-034-freeze-v03 --probe-model
+  deepseek/deepseek-v4-pro --probe-context-window 1000000`: oracle `1.0`,
+  null `0.25`, holdout exposures
+  `{"py-formatter-missing-crash": 0, "py-live-lock": 0}`, probe mean
+  `0.375`, but still inconclusive because `3/8` one-shot trials exceeded
+  the one-million-token context preflight. Known probe spend: `$2.207417`.
+- `cargo run --quiet --bin daedalus -- arena-freeze
+  arenas/pr-review-correctness-v0 --out-dir
+  /tmp/daedalus-034-freeze-v03-scout --probe-model
+  meta-llama/llama-4-scout --probe-context-window 10000000`: oracle `1.0`,
+  null `0.25`, holdout exposures
+  `{"py-formatter-missing-crash": 0, "py-live-lock": 0}`, but the probe is
+  inconclusive because `8/8` trials returned empty content.
+
+Conclusion: v0.3.0 repairs the burned-holdout state, but the current one-shot
+saturation probe is not yet a reliable freeze oracle for this real-repo-scale
+arena. Do not run paid certification until the saturation-probe design is
+updated or a fresh non-inconclusive freeze report exists.

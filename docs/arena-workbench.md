@@ -29,12 +29,17 @@ run.
 ## Validate A Freeze Gate
 
 ```sh
+cargo run --quiet --bin daedalus -- arena-freeze arenas/pr-review-v2 \
+  --out-dir runs/<freeze-run>
+
 cargo run --quiet --bin daedalus -- arena-validate arenas/pr-review-v2 \
-  --probe-run runs/20260611T173632Z-search-pr-review-v0 \
-  --report /tmp/pr-review-v2-freeze.md
+  --probe-run runs/<freeze-run> \
+  --report runs/<freeze-run>/freeze-report.md
 ```
 
-Validation is offline. It checks:
+`arena-freeze` runs the reference ceiling/floor and one-shot probe without
+falling through into candidate seeding or search. `arena-validate` is offline.
+It checks:
 
 - fixture symlinks;
 - answer-key shape;
@@ -48,9 +53,9 @@ If a holdout ledger has an `arena version` semver column, validation counts
 only rows for the current `arena.toml` version. Legacy ledgers without that
 column are still counted by task name for backward compatibility.
 
-The validation command does not spend model budget. Run the one-shot probe
-through `cargo run --quiet --bin daedalus -- run` first, then pass that run directory to
-`--probe-run`.
+The validation command does not spend model budget. `arena-freeze` may spend
+model budget for the one-shot probe; run it before any certified search so an
+inconclusive or saturated arena stops early.
 
 ## Adjudicate Disputed Findings
 

@@ -1,5 +1,5 @@
 id = "pr-review-correctness-v0"
-version = "0.2.0"
+version = "0.3.0"
 taskspec = "specs/pr-review-correctness/taskspec.toml"
 description = """
 Correctness-specialist review arena adapted from pr-review-v2 real-repo-scale
@@ -16,6 +16,6 @@ notes = "Offline open-source repository snapshots only; no live repos, secrets, 
 file = "template.md"
 
 [split]
-train = ["py-progress-speed", "py-padding-clean", "py-live-lock"]
-validation = ["py-measure-normalize", "py-formatter-clean", "py-formatter-missing-crash"]
-holdout = ["py-plugin-cache", "py-export-clear"]
+train = ["py-progress-speed", "py-padding-clean", "py-plugin-cache"]
+validation = ["py-measure-normalize", "py-formatter-clean", "py-export-clear"]
+holdout = ["py-live-lock", "py-formatter-missing-crash"]

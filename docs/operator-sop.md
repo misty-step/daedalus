@@ -37,14 +37,19 @@ Use the workbench for task scaffolds and freeze checks:
 cargo run --quiet --bin daedalus -- arena-scaffold arenas/<arena-id> <task-id> \
   --taskspec specs/<id>/taskspec.toml
 
+cargo run --quiet --bin daedalus -- arena-freeze arenas/<arena-id> \
+  --out-dir runs/<freeze-run>
+
 cargo run --quiet --bin daedalus -- arena-validate arenas/<arena-id> \
-  --probe-run runs/<rig-or-search-run> \
-  --report runs/<rig-or-search-run>/freeze-report.md
+  --probe-run runs/<freeze-run> \
+  --report runs/<freeze-run>/freeze-report.md
 ```
 
-The validation report checks fixture symlinks, answer-key shape, oracle 1.0,
-null floor, one-shot probe behavior, split membership, and holdout exposure
-counts. Human adjudications go through:
+`arena-freeze` runs only the oracle ceiling, null floor, and one-shot
+saturation probe; it does not seed candidates or run search. The validation
+report checks fixture symlinks, answer-key shape, oracle 1.0, null floor,
+one-shot probe behavior, split membership, and holdout exposure counts. Human
+adjudications go through:
 
 ```sh
 cargo run --quiet --bin daedalus -- arena-adjudicate arenas/<arena-id> \

@@ -5,7 +5,7 @@
 //! for migration status.
 
 use std::collections::HashMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
 use clap::{Parser, Subcommand};
@@ -105,6 +105,20 @@ enum Cmd {
         holdout_burn: i64,
         #[arg(long)]
         report: Option<PathBuf>,
+    },
+    /// Generate an arena freeze packet: oracle, null, one-shot probe, report.
+    ArenaFreeze {
+        arena: PathBuf,
+        #[arg(long)]
+        out_dir: Option<PathBuf>,
+        #[arg(long)]
+        report: Option<PathBuf>,
+        #[arg(long, default_value_t = 5)]
+        holdout_burn: i64,
+        #[arg(long)]
+        probe_model: Option<String>,
+        #[arg(long)]
+        probe_context_window: Option<u64>,
     },
     /// Red-team an arena's answer keys: flag wide line-spans a candidate could
     /// game by guessing file+category without locating the defect (040).
@@ -250,6 +264,21 @@ fn main() -> ExitCode {
             probe_run.as_deref(),
             holdout_burn,
             report.as_deref(),
+        ),
+        Cmd::ArenaFreeze {
+            arena,
+            out_dir,
+            report,
+            holdout_burn,
+            probe_model,
+            probe_context_window,
+        } => cmd_arena_freeze(
+            &arena,
+            out_dir.as_deref(),
+            report.as_deref(),
+            holdout_burn,
+            probe_model.as_deref(),
+            probe_context_window,
         ),
         Cmd::ArenaRedteam {
             arena,
@@ -761,6 +790,159 @@ fn cmd_arena_validate(
             ExitCode::FAILURE
         }
     }
+}
+
+// ---------------------------------------------------------------------------
+// arena-freeze
+// ---------------------------------------------------------------------------
+
+fn cmd_arena_freeze(
+    arena: &Path,
+    out_dir: Option<&Path>,
+    report_path: Option<&Path>,
+    holdout_burn: i64,
+    probe_model: Option<&str>,
+    probe_context_window: Option<u64>,
+) -> ExitCode {
+    let repo = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
+    let arena_cfg = match daedalus_core::run::load_toml(&arena.join("arena.toml")) {
+        Ok(Value::Object(m)) => m,
+        Ok(_) => {
+            eprintln!("arena.toml must be a TOML table");
+            return ExitCode::FAILURE;
+        }
+        Err(e) => {
+            eprintln!("load arena.toml: {e}");
+            return ExitCode::FAILURE;
+        }
+    };
+    let arena_id = arena_cfg
+        .get("id")
+        .and_then(Value::as_str)
+        .unwrap_or("arena");
+    let computed_out = out_dir.map(Path::to_path_buf).unwrap_or_else(|| {
+        repo.join("runs").join(format!(
+            "{}-freeze-{}",
+            daedalus_core::run::utc_stamp(),
+            sanitize_path_segment(arena_id)
+        ))
+    });
+    if let Err(e) = std::fs::create_dir_all(&computed_out) {
+        eprintln!("create out dir: {e}");
+        return ExitCode::FAILURE;
+    }
+
+    let probe_manifest =
+        match freeze_probe_manifest(&repo, &computed_out, probe_model, probe_context_window) {
+            Ok(p) => p,
+            Err(e) => {
+                eprintln!("{e}");
+                return ExitCode::FAILURE;
+            }
+        };
+
+    for manifest in [
+        repo.join("candidates/oracle.toml"),
+        repo.join("candidates/null.toml"),
+        probe_manifest,
+    ] {
+        let inputs = ArenaInputs {
+            candidate_path: manifest,
+            arena_dir: arena.to_path_buf(),
+            task_filter: None,
+            trials: 1,
+            exp_dir: Some(computed_out.clone()),
+            split: "all".to_string(),
+            is_final: true,
+            max_errors: None,
+            repo_root: repo.clone(),
+            runs_root: repo.join("runs"),
+        };
+        if let Err(e) = daedalus_core::run::run_arena(inputs) {
+            eprintln!("freeze runner failed: {e}");
+            return ExitCode::FAILURE;
+        }
+    }
+
+    if let Err(e) = summarize(&computed_out.join("trials.jsonl")) {
+        eprintln!("summarize freeze run: {e}");
+        return ExitCode::FAILURE;
+    }
+
+    let result =
+        match daedalus_core::workbench::validate_arena(arena, Some(&computed_out), holdout_burn) {
+            Ok(r) => r,
+            Err(e) => {
+                eprintln!("{e}");
+                return ExitCode::FAILURE;
+            }
+        };
+    let text = daedalus_core::workbench::render_validation_report(&result);
+    let computed_report = report_path
+        .map(Path::to_path_buf)
+        .unwrap_or_else(|| computed_out.join("freeze-report.md"));
+    if let Err(e) = std::fs::write(&computed_report, &text) {
+        eprintln!("write freeze report: {e}");
+        return ExitCode::FAILURE;
+    }
+
+    println!("freeze run: {}", computed_out.display());
+    println!("freeze report: {}", computed_report.display());
+    if result.ok {
+        ExitCode::SUCCESS
+    } else {
+        eprintln!("arena validation failed");
+        ExitCode::FAILURE
+    }
+}
+
+fn freeze_probe_manifest(
+    repo: &Path,
+    out_dir: &Path,
+    probe_model: Option<&str>,
+    probe_context_window: Option<u64>,
+) -> Result<PathBuf, Box<dyn std::error::Error>> {
+    let source = repo.join("candidates/probe-oneshot.toml");
+    if !source.is_file() {
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::NotFound,
+            format!("missing one-shot probe manifest: {}", source.display()),
+        )
+        .into());
+    }
+    if probe_model.is_none() && probe_context_window.is_none() {
+        return Ok(source);
+    }
+    let text = std::fs::read_to_string(&source)?;
+    let mut manifest: toml::Value = toml::from_str(&text)?;
+    let table = manifest
+        .as_table_mut()
+        .ok_or("probe manifest must be a TOML table")?;
+    if let Some(model) = probe_model {
+        table.insert("model".to_string(), toml::Value::String(model.to_string()));
+    }
+    if let Some(window) = probe_context_window {
+        let window =
+            i64::try_from(window).map_err(|_| "probe context window exceeds TOML integer range")?;
+        table.insert("context_window".to_string(), toml::Value::Integer(window));
+    }
+    let manifest_dir = out_dir.join("manifests");
+    std::fs::create_dir_all(&manifest_dir)?;
+    let path = manifest_dir.join("probe-oneshot.toml");
+    std::fs::write(&path, toml::to_string_pretty(&manifest)?)?;
+    Ok(path)
+}
+
+fn sanitize_path_segment(s: &str) -> String {
+    s.chars()
+        .map(|c| {
+            if c.is_ascii_alphanumeric() || c == '-' || c == '_' {
+                c
+            } else {
+                '-'
+            }
+        })
+        .collect()
 }
 
 // ---------------------------------------------------------------------------
@@ -2399,6 +2581,50 @@ fixtures = "arenas/pr-review-v0"
         let retired_runner = ["runner", &["run", "py"].join(".")].join("/");
         assert!(!command.contains(&retired_python));
         assert!(!command.contains(&retired_runner));
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn arena_freeze_probe_override_writes_temp_manifest() {
+        let root = tempdir("arena-freeze-probe");
+        let candidates = root.join("candidates");
+        let out = root.join("runs").join("freeze");
+        fs::create_dir_all(&candidates).unwrap();
+        fs::write(
+            candidates.join("probe-oneshot.toml"),
+            r#"id = "probe-oneshot"
+kind = "oneshot"
+model = "moonshotai/kimi-k2.6"
+prompt_packet = "packets/reviewer-v1.md"
+max_tokens = 8192
+"#,
+        )
+        .unwrap();
+
+        let manifest = freeze_probe_manifest(
+            &root,
+            &out,
+            Some("deepseek/deepseek-v4-pro"),
+            Some(1_000_000),
+        )
+        .unwrap();
+        let text = fs::read_to_string(manifest).unwrap();
+
+        assert!(text.contains("model = \"deepseek/deepseek-v4-pro\""));
+        assert!(text.contains("context_window = 1000000"));
+        assert!(text.contains("prompt_packet = \"packets/reviewer-v1.md\""));
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn arena_freeze_probe_manifest_requires_probe() {
+        let root = tempdir("arena-freeze-missing-probe");
+        let out = root.join("runs").join("freeze");
+        let err = freeze_probe_manifest(&root, &out, None, None).unwrap_err();
+
+        assert!(err.to_string().contains("missing one-shot probe manifest"));
 
         fs::remove_dir_all(root).unwrap();
     }

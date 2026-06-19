@@ -9,4 +9,5 @@ jobs/
 
 # Claude Code agent worktree staging (transient)
 .claude/
+.pi/
 runs/*/trace.otel.json

@@ -583,5 +583,6 @@ and closeout commands.
 bin/gate                                           # offline gate (cargo fmt --check + cargo test + cargo clippy)
 cargo build -p daedalus-cli                        # build the `daedalus` binary
 cargo run --quiet --bin daedalus -- doctor         # readiness summary, no model spend
+cargo run --quiet --bin daedalus -- arena-freeze --help  # generate freeze packets before search
 cargo run --quiet --bin daedalus -- --help         # all subcommands
 ```

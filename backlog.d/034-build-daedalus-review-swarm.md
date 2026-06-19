@@ -502,13 +502,26 @@ Current findings:
   optimizer-authored packet text. The branch now adds prompt-packet sanity
   guards for seed packets and mutation proposals.
 
+Current correctness repair:
+
+- `arenas/pr-review-correctness-v0` is now version `0.3.0` with the burned
+  v0.2 holdout rotated out of `py-plugin-cache`/`py-export-clear` and into
+  `py-live-lock`/`py-formatter-missing-crash`. The rotation keeps fixtures,
+  answer keys, scorer constants, and taxonomy unchanged; it only restores a
+  valid hard holdout surface for the next run.
+- Current `arena-validate` semantics also reject the old v0.2 freeze packet
+  because the one-shot probe trial errored. The next correctness run must
+  first produce a fresh non-inconclusive freeze report before spending on
+  certification. The real-repo-scale probe-design gap is tracked separately
+  in `backlog.d/047-replace-real-repo-saturation-probe.md`.
+
 Remaining children:
 
-- Continue correctness autoresearch with targeted train/validation
-  certification on frozen v0.2.0 or rotate holdouts into v0.3.0 before another
-  certified holdout search. Focus on Qwen/GPT candidates, live-lock,
-  clean-trap stability, and runtime-crash repeatability. Only then complete
-  child 8 with the first certified full suite search.
+- Continue correctness autoresearch on v0.3.0 after the fresh freeze report.
+  Focus on Qwen/GPT candidates, live-lock, clean-trap stability, and
+  runtime-crash repeatability. Only then complete child 8 with the first
+  certified full suite search. If `047` remains open, the correct next action
+  is to fix the freeze probe, not to bypass the gate with `--allow-saturated`.
 - Complete child 9 with real-member replay through the master benchmark.
 - Promote `deliveries/pr-review-swarm/` from member-only inspection to
   full-swarm only after real-member replay passes and the G2 specialist
@@ -527,12 +540,10 @@ Verification (2026-06-15):
 - The two open children are the full-swarm stretch the oracle makes
   conditional on the member-only escape, and both need fresh model-budget
   search runs: child 8 (first certified full-suite search) is blocked on a
-  sandbox-ready certified correctness member — the autoresearch loop has not
-  cleared the plateau and the v0.2.0 holdout is burned, so it must rotate to
-  v0.3.0 before another certified holdout search; child 9 (real-member replay)
-  needs the certified members run through the master benchmark, which on the
-  current weak correctness member is expected to confirm member-only rather
-  than unlock full-swarm.
+  sandbox-ready certified correctness member, `047`, and a fresh v0.3 freeze report;
+  child 9 (real-member replay) needs the certified members run through the
+  master benchmark, which on the current weak correctness member is expected
+  to confirm member-only rather than unlock full-swarm.
 
 ## Lead Repo Read
 
