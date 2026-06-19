@@ -214,6 +214,17 @@ without spending model budget. `cargo run --quiet --bin daedalus -- trace
 --run-dir <run-dir>` renders existing committed run records as
 `trace.otel.json`.
 
+Cerberus is a different downstream shape from the generic control-plane
+`launch-pack` planes. Cerberus imports measured reviewer configurations through
+`ReviewerConfigPacket.v1` JSON, then validates and dry-run compares the embedded
+`ReviewConfig.v1` before any production default can change. A Cerberus handoff
+must therefore emit that packet shape, preserve Daedalus run evidence and
+G2/G3/G4/G5 gate state, and prove itself with Cerberus'
+`validate-reviewer-config` and `import-reviewer-config --dry-run` commands. A
+generic `launch-pack --plane cerberus` TOML packet is not sufficient for
+Cerberus reviewer-config promotion. The shaped implementation ticket is
+`backlog.d/046-export-cerberus-reviewer-config-packet.md`.
+
 ## Human checkpoints
 
 | Gate | What a human approves | Artifact |
