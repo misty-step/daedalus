@@ -1,0 +1,8 @@
+request runs/cerberus-rd-lab-opencode/request.json
+artifact runs/cerberus-rd-lab-opencode/artifact.json
+findings runs/cerberus-rd-lab-opencode/findings.json
+score runs/cerberus-rd-lab-opencode/score.json
+summary runs/cerberus-rd-lab-opencode/summary.json
+report runs/cerberus-rd-lab-opencode/report.md
+transcript runs/cerberus-rd-lab-opencode/opencode-transcript.txt
+receipt runs/cerberus-rd-lab-opencode/opencode-execution_plan.json

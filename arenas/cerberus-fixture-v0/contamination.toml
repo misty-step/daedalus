@@ -1,0 +1,15 @@
+# Machine-readable contamination record.
+
+defects_novel = true
+
+notes = """
+Single synthetic Rust fixture mirrored from Cerberus' deterministic fixture
+review path. The surrounding code and planted defect were authored for this
+arena; no production trace or private repository data is used.
+"""
+
+[[source]]
+repo = "cerberus-fixture"
+ref = "synthetic"
+license = "internal-fixture"
+public = false

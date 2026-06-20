@@ -1,0 +1,11 @@
+{
+  "findings": [
+    {
+      "file": "src/ratio.rs",
+      "line": 3,
+      "category": "correctness",
+      "description": "Silent zero return may mask invalid denominator: The new branch returns 0.0 for every zero denominator. If callers distinguish a true zero ratio from invalid input, this will silently produce a plausible but wrong result.\nEvidence: The changed hunk adds `if denominator == 0.0 { return 0.0; }` before the existing division.",
+      "severity": "serious"
+    }
+  ]
+}

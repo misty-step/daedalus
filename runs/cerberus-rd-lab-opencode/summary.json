@@ -1,0 +1,68 @@
+{
+  "schema_version": "cerberus-lab-import.v1",
+  "run_id": "cerberus-rd-lab-opencode",
+  "candidate": {
+    "candidate_id": "opencode-fixture-review",
+    "substrate": "opencode",
+    "model": null
+  },
+  "arena": {
+    "path": "arenas/cerberus-fixture-v0",
+    "id": "cerberus-fixture-v0",
+    "version": "0.1.0",
+    "task_id": "ratio-zero"
+  },
+  "request": {
+    "path": "runs/cerberus-rd-lab-opencode/request.json",
+    "source_path": "/Users/phaedrus/Development/cerberus/fixtures/requests/diff-only.json",
+    "request_id": "fixture-diff-only-001",
+    "request_digest": "sha256:3df1572c7f25c6f0ca30ea83c1675dad9ed92090d3b7493ea2879121feb1fe17",
+    "source_kind": "fixture"
+  },
+  "artifact": {
+    "path": "runs/cerberus-rd-lab-opencode/artifact.json",
+    "source_path": "/Users/phaedrus/Development/cerberus/target/cerberus/opencode-artifact.json",
+    "artifact_id": "artifact-fake-opencode",
+    "request_id": "fixture-diff-only-001",
+    "lifecycle_state": "completed",
+    "verdict": "WARN",
+    "context_capabilities": {
+      "diff": true,
+      "repo_head": false,
+      "repo_base": false,
+      "local_runtime": false,
+      "remote_runtime": false,
+      "external_research": "forbid"
+    },
+    "valid": true
+  },
+  "run": {
+    "engine_version": "cerberus-fixture",
+    "duration_ms": 1,
+    "cost_usd": null
+  },
+  "score": {
+    "status": "scored",
+    "task_id": "ratio-zero",
+    "result": {
+      "reward": 1.0,
+      "recall": 1.0,
+      "matched": [
+        "ratio-zero"
+      ],
+      "false_positives": 0,
+      "expected_defects": 1,
+      "error": null
+    }
+  },
+  "outputs": {
+    "request": "runs/cerberus-rd-lab-opencode/request.json",
+    "artifact": "runs/cerberus-rd-lab-opencode/artifact.json",
+    "findings": "runs/cerberus-rd-lab-opencode/findings.json",
+    "score": "runs/cerberus-rd-lab-opencode/score.json",
+    "summary": "runs/cerberus-rd-lab-opencode/summary.json",
+    "report": "runs/cerberus-rd-lab-opencode/report.md",
+    "transcript": "runs/cerberus-rd-lab-opencode/opencode-transcript.txt",
+    "receipt": "runs/cerberus-rd-lab-opencode/opencode-execution_plan.json"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "harness": "omp",
+  "command": "/Users/phaedrus/Development/cerberus/fixtures/bin/fake-omp",
+  "args": [
+    "-p",
+    "--no-session",
+    "--no-pty",
+    "--no-extensions",
+    "--no-skills",
+    "--no-rules",
+    "--cwd",
+    "/var/folders/jr/0kj0xfdd4s1ggs921sr2d7f80000gn/T/cerberus-GQuhPb/packet",
+    "@<prompt-file>"
+  ],
+  "cwd": "/var/folders/jr/0kj0xfdd4s1ggs921sr2d7f80000gn/T/cerberus-GQuhPb/packet",
+  "timeout_ms": 120000,
+  "env_allowlist": [],
+  "context_capabilities": {
+    "diff": true,
+    "repo_head": false,
+    "repo_base": false,
+    "local_runtime": false,
+    "remote_runtime": false,
+    "external_research": "forbid"
+  },
+  "prompt_transport": "private prompt file",
+  "private_material_in_argv": false,
+  "workspace_mode": "diff_packet"
+}

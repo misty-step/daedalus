@@ -1,0 +1,68 @@
+{
+  "schema_version": "cerberus-lab-import.v1",
+  "run_id": "cerberus-rd-lab-fixture",
+  "candidate": {
+    "candidate_id": "fixture-self-review",
+    "substrate": "fixture",
+    "model": null
+  },
+  "arena": {
+    "path": "arenas/cerberus-fixture-v0",
+    "id": "cerberus-fixture-v0",
+    "version": "0.1.0",
+    "task_id": "ratio-zero"
+  },
+  "request": {
+    "path": "runs/cerberus-rd-lab-fixture/request.json",
+    "source_path": "/Users/phaedrus/Development/cerberus/fixtures/requests/diff-only.json",
+    "request_id": "fixture-diff-only-001",
+    "request_digest": "sha256:3df1572c7f25c6f0ca30ea83c1675dad9ed92090d3b7493ea2879121feb1fe17",
+    "source_kind": "fixture"
+  },
+  "artifact": {
+    "path": "runs/cerberus-rd-lab-fixture/artifact.json",
+    "source_path": "/Users/phaedrus/Development/cerberus/target/cerberus/artifact.json",
+    "artifact_id": "artifact-d4736e4b-fa5b-4fac-8344-231a36c948db",
+    "request_id": "fixture-diff-only-001",
+    "lifecycle_state": "completed",
+    "verdict": "WARN",
+    "context_capabilities": {
+      "diff": true,
+      "repo_head": false,
+      "repo_base": false,
+      "local_runtime": false,
+      "remote_runtime": false,
+      "external_research": "forbid"
+    },
+    "valid": true
+  },
+  "run": {
+    "engine_version": "cerberus-fixture",
+    "duration_ms": 1,
+    "cost_usd": null
+  },
+  "score": {
+    "status": "scored",
+    "task_id": "ratio-zero",
+    "result": {
+      "reward": 1.0,
+      "recall": 1.0,
+      "matched": [
+        "ratio-zero"
+      ],
+      "false_positives": 0,
+      "expected_defects": 1,
+      "error": null
+    }
+  },
+  "outputs": {
+    "request": "runs/cerberus-rd-lab-fixture/request.json",
+    "artifact": "runs/cerberus-rd-lab-fixture/artifact.json",
+    "findings": "runs/cerberus-rd-lab-fixture/findings.json",
+    "score": "runs/cerberus-rd-lab-fixture/score.json",
+    "summary": "runs/cerberus-rd-lab-fixture/summary.json",
+    "report": "runs/cerberus-rd-lab-fixture/report.md",
+    "transcript": "runs/cerberus-rd-lab-fixture/transcript.txt",
+    "receipt": "runs/cerberus-rd-lab-fixture/execution_plan.json"
+  }
+}

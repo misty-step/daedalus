@@ -61,6 +61,11 @@ enum Cmd {
         #[arg(long)]
         out: PathBuf,
     },
+    /// Import Cerberus review artifacts into Daedalus lab evidence.
+    CerberusLab {
+        #[command(subcommand)]
+        command: CerberusLabCmd,
+    },
     /// Export a review-swarm suite contract.
     ExportSuite {
         delivery: PathBuf,
@@ -219,6 +224,40 @@ enum Cmd {
     },
 }
 
+#[derive(Subcommand)]
+enum CerberusLabCmd {
+    /// Import and optionally score one Cerberus ReviewArtifact.v1.
+    Import {
+        #[arg(long)]
+        arena: PathBuf,
+        #[arg(long)]
+        request: PathBuf,
+        #[arg(long)]
+        artifact: PathBuf,
+        #[arg(long)]
+        candidate_id: String,
+        #[arg(long)]
+        substrate: String,
+        #[arg(long)]
+        model: Option<String>,
+        #[arg(long)]
+        task_id: Option<String>,
+        #[arg(long)]
+        transcript: Option<PathBuf>,
+        #[arg(long)]
+        receipt: Option<PathBuf>,
+        #[arg(long)]
+        out_dir: PathBuf,
+    },
+    /// Compare previously imported Cerberus lab run directories.
+    Compare {
+        #[arg(long = "run-dir", required = true, num_args = 1..)]
+        run_dirs: Vec<PathBuf>,
+        #[arg(long)]
+        out_dir: PathBuf,
+    },
+}
+
 // ---------------------------------------------------------------------------
 // Entry point
 // ---------------------------------------------------------------------------
@@ -235,6 +274,38 @@ fn main() -> ExitCode {
             spec,
             out,
         } => cmd_export_cerberus(&delivery, &spec, &out),
+        Cmd::CerberusLab { command } => match command {
+            CerberusLabCmd::Import {
+                arena,
+                request,
+                artifact,
+                candidate_id,
+                substrate,
+                model,
+                task_id,
+                transcript,
+                receipt,
+                out_dir,
+            } => cmd_cerberus_lab_import(daedalus_core::cerberus_lab::ImportOptions {
+                arena,
+                request,
+                artifact,
+                candidate_id,
+                substrate,
+                model,
+                task_id,
+                transcript,
+                receipt,
+                out_dir,
+                repo_root: std::env::current_dir().unwrap_or_else(|_| PathBuf::from(".")),
+            }),
+            CerberusLabCmd::Compare { run_dirs, out_dir } => {
+                cmd_cerberus_lab_compare(daedalus_core::cerberus_lab::CompareOptions {
+                    run_dirs,
+                    out_dir,
+                })
+            }
+        },
         Cmd::ExportSuite { delivery, suite } => cmd_export_suite(&delivery, &suite),
         Cmd::LaunchPack {
             delivery,
@@ -569,6 +640,42 @@ fn cmd_export_cerberus(
         }
         Err(e) => {
             eprintln!("export-cerberus failed: {e}");
+            ExitCode::FAILURE
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// cerberus-lab import
+// ---------------------------------------------------------------------------
+
+fn cmd_cerberus_lab_import(options: daedalus_core::cerberus_lab::ImportOptions) -> ExitCode {
+    match daedalus_core::cerberus_lab::import_review_artifact(&options) {
+        Ok(result) => {
+            println!("out-dir: {}", result.out_dir.display());
+            println!("summary: {}", result.summary.display());
+            println!("score: {}", result.score.display());
+            println!("findings: {}", result.findings.display());
+            println!("report: {}", result.report.display());
+            ExitCode::SUCCESS
+        }
+        Err(err) => {
+            eprintln!("cerberus-lab import failed: {err}");
+            ExitCode::FAILURE
+        }
+    }
+}
+
+fn cmd_cerberus_lab_compare(options: daedalus_core::cerberus_lab::CompareOptions) -> ExitCode {
+    match daedalus_core::cerberus_lab::compare_imports(&options) {
+        Ok(result) => {
+            println!("out-dir: {}", result.out_dir.display());
+            println!("summary: {}", result.summary.display());
+            println!("report: {}", result.report.display());
+            ExitCode::SUCCESS
+        }
+        Err(err) => {
+            eprintln!("cerberus-lab compare failed: {err}");
             ExitCode::FAILURE
         }
     }

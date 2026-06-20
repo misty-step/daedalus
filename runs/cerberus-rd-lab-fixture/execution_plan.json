@@ -1,0 +1,19 @@
+{
+  "harness": "fixture",
+  "command": "fixtures/harness/valid-review.txt",
+  "args": [],
+  "cwd": "/Users/phaedrus/Development/cerberus",
+  "timeout_ms": 120000,
+  "env_allowlist": [],
+  "context_capabilities": {
+    "diff": true,
+    "repo_head": false,
+    "repo_base": false,
+    "local_runtime": false,
+    "remote_runtime": false,
+    "external_research": "forbid"
+  },
+  "prompt_transport": "fixture template",
+  "private_material_in_argv": false,
+  "workspace_mode": "fixture"
+}
