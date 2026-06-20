@@ -511,9 +511,14 @@ fn score_if_requested(
         .into());
     }
 
+    let nanos = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|duration| duration.as_nanos())
+        .unwrap_or_default();
     let tmp = std::env::temp_dir().join(format!(
-        "daedalus-cerberus-lab-score-{}",
-        std::process::id()
+        "daedalus-cerberus-lab-score-{}-{nanos}-{}",
+        std::process::id(),
+        sanitize_temp_component(&options.candidate_id)
     ));
     std::fs::create_dir_all(&tmp)?;
     let findings = tmp.join("findings.json");
@@ -521,6 +526,19 @@ fn score_if_requested(
     let result = score::score(&findings, &expected)?;
     let _ = std::fs::remove_dir_all(&tmp);
     Ok(Some(result))
+}
+
+fn sanitize_temp_component(input: &str) -> String {
+    input
+        .chars()
+        .map(|ch| {
+            if ch.is_ascii_alphanumeric() || ch == '-' || ch == '_' {
+                ch
+            } else {
+                '-'
+            }
+        })
+        .collect()
 }
 
 #[derive(Debug, Clone)]
