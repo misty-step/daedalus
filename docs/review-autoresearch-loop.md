@@ -13,7 +13,9 @@ Direction update, 2026-06-20: Cerberus has usurped the active product path for
 autonomous/reflex code review. Treat this loop as preserved research evidence
 for lane scoring, artifact contracts, and plateau discipline. New review
 product work flows through `backlog.d/048-build-cerberus-substrate-rd-lab.md`
-unless that lab explicitly revives a swarm topology.
+unless that lab explicitly revives a swarm topology. Pi remains the native
+Daedalus V1 search harness for this archived research loop; it is not the
+default substrate for Cerberus-backed reflex review labs.
 
 The machine-readable contract is intentionally small. Tests parse this block;
 the prose below explains judgment around it.

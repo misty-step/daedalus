@@ -1,0 +1,35 @@
+{
+  "harness": "opencode",
+  "command": "/Users/phaedrus/.opencode/bin/opencode",
+  "args": [
+    "run",
+    "You are Cerberus, the master code reviewer. Read the attached ReviewRequest.v1 JSON file. Request id: fixture-diff-only-001. Request digest: sha256:6dd721b49c9ffa97c5ac7d3cf810f1c01ac115e75e030c6c81e3af39b8995e36. ContextCapabilities: {\"diff\":true,\"repo_head\":false,\"repo_base\":false,\"local_runtime\":false,\"remote_runtime\":false,\"external_research\":\"forbid\"}. Final response contract: return exactly one raw JSON ReviewArtifact.v1 object and nothing else; first character must be { and last character must be }. If repo_head is true, inspect the checkout with at most one tool-call round and at most eight targeted file reads before the final response. If repo_base is true, compare relevant base files before making regression or behavior-change claims. If local_runtime is true, use only attached local_runtime_transcript artifacts for runtime evidence; otherwise do not claim tests, builds, apps, or local QA. After the first tool results, stop tool use and produce the final artifact immediately. If evidence is incomplete, return WARN or completed_degraded and record residual risk; do not keep reading. Do not run builds, tests, apps, or network probes unless local_runtime or remote_runtime is true. Required top-level keys: schema_version, artifact_id, request_id, request_digest, context_capabilities, lifecycle_state, verdict, severity, summary, findings, comments, suggested_fixes, citations, receipts, run, errors. schema_version must be \"cerberus.review_artifact.v1\". request_id must be \"fixture-diff-only-001\". request_digest must be \"sha256:6dd721b49c9ffa97c5ac7d3cf810f1c01ac115e75e030c6c81e3af39b8995e36\". context_capabilities must exactly equal {\"diff\":true,\"repo_head\":false,\"repo_base\":false,\"local_runtime\":false,\"remote_runtime\":false,\"external_research\":\"forbid\"}. lifecycle_state is completed/completed_degraded/failed/skipped/cancelled/stale; verdict is PASS/WARN/FAIL/SKIP; severity is info/minor/major/critical. summary must be an object {\"title\",\"body\",\"analysis\",\"residual_risk\":[]}. findings must be objects {\"id\",\"severity\",\"category\",\"title\",\"description\",\"evidence\",\"confidence\":0.0,\"anchors\":[],\"citations\":[],\"suggested_fixes\":[]}. Every anchor must be an object like {\"kind\":\"inline\",\"path\":\"src/file.rs\",\"line\":1}, never a string. comments must be objects {\"id\",\"kind\":\"inline|contextual\",\"intent\":\"finding|note|question|summary\",\"body\",\"anchor\":{\"kind\":\"inline|file|change|run\",\"path\":null,\"line\":null},\"suggested_fixes\":[]}. Keep suggested_fixes as [] and findings[].suggested_fixes as [] unless you are certain of the exact schema; do not invent edit/search/replace objects. citations must be [] unless needed; citation.used_by may contain only exact finding.id values. receipts must include {\"id\":\"receipt-master\",\"role\":\"master\",\"harness\":\"opencode\",\"status\":\"completed\",\"verdict\":verdict,\"summary\":\"evidence inspected\"}. run must include {\"engine_version\":\"cerberus-opencode\",\"config_digest\":\"sha256:prompt-only\",\"started_at\":\"0\",\"finished_at\":\"0\",\"duration_ms\":0,\"cost_usd\":null,\"coverage\":{\"files_reviewed\":[],\"files_with_findings\":[]}}. errors must be []. Set run.coverage.files_reviewed to only files you actually inspected; if you skip changed files because of limits, record that reduced scope in lifecycle_state and summary.residual_risk. Prefer empty arrays over malformed objects.",
+    "--format",
+    "json",
+    "--dir",
+    "/var/folders/jr/0kj0xfdd4s1ggs921sr2d7f80000gn/T/cerberus-sqgAnJ/packet",
+    "--file",
+    "<request-file>",
+    "--model",
+    "openrouter/deepseek/deepseek-v4-pro",
+    "--agent",
+    "build"
+  ],
+  "cwd": "/var/folders/jr/0kj0xfdd4s1ggs921sr2d7f80000gn/T/cerberus-sqgAnJ/packet",
+  "timeout_ms": 180000,
+  "env_allowlist": [
+    "OPENROUTER_API_KEY"
+  ],
+  "context_capabilities": {
+    "diff": true,
+    "repo_head": false,
+    "repo_base": false,
+    "local_runtime": false,
+    "remote_runtime": false,
+    "external_research": "forbid"
+  },
+  "prompt_transport": "private request file attachment plus argv instructions",
+  "private_material_in_argv": false,
+  "workspace_mode": "diff_packet",
+  "runtime_transcripts": []
+}

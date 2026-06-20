@@ -1,0 +1,8 @@
+request runs/cerberus-rd-lab-live-omp/request.json
+artifact runs/cerberus-rd-lab-live-omp/artifact.json
+findings runs/cerberus-rd-lab-live-omp/findings.json
+score runs/cerberus-rd-lab-live-omp/score.json
+summary runs/cerberus-rd-lab-live-omp/summary.json
+report runs/cerberus-rd-lab-live-omp/report.md
+transcript runs/cerberus-rd-lab-live-omp/transcript.txt
+receipt runs/cerberus-rd-lab-live-omp/execution_plan.json

@@ -1,0 +1,91 @@
+{
+  "schema_version": "cerberus-lab-comparison.v1",
+  "candidate_count": 3,
+  "recommendation_scope": "live_fixture_comparison",
+  "best_candidate": {
+    "run_dir": "runs/cerberus-rd-lab-fixture",
+    "run_id": "cerberus-rd-lab-fixture",
+    "candidate_id": "fixture-self-review",
+    "substrate": "fixture",
+    "model": null,
+    "artifact_valid": true,
+    "lifecycle_state": "completed",
+    "verdict": "WARN",
+    "reward": 1.0,
+    "recall": 1.0,
+    "false_positives": 0,
+    "cost_usd": null,
+    "duration_ms": 1,
+    "report": "runs/cerberus-rd-lab-fixture/report.md"
+  },
+  "best_live_candidate": {
+    "run_dir": "runs/cerberus-rd-lab-live-opencode",
+    "run_id": "cerberus-rd-lab-live-opencode",
+    "candidate_id": "opencode-live-review",
+    "substrate": "opencode",
+    "model": "deepseek/deepseek-v4-pro",
+    "artifact_valid": true,
+    "lifecycle_state": "completed",
+    "verdict": "WARN",
+    "reward": 0.8,
+    "recall": 1.0,
+    "false_positives": 1,
+    "cost_usd": null,
+    "duration_ms": 0,
+    "report": "runs/cerberus-rd-lab-live-opencode/report.md"
+  },
+  "candidates": [
+    {
+      "run_dir": "runs/cerberus-rd-lab-fixture",
+      "run_id": "cerberus-rd-lab-fixture",
+      "candidate_id": "fixture-self-review",
+      "substrate": "fixture",
+      "model": null,
+      "artifact_valid": true,
+      "lifecycle_state": "completed",
+      "verdict": "WARN",
+      "reward": 1.0,
+      "recall": 1.0,
+      "false_positives": 0,
+      "cost_usd": null,
+      "duration_ms": 1,
+      "report": "runs/cerberus-rd-lab-fixture/report.md"
+    },
+    {
+      "run_dir": "runs/cerberus-rd-lab-live-opencode",
+      "run_id": "cerberus-rd-lab-live-opencode",
+      "candidate_id": "opencode-live-review",
+      "substrate": "opencode",
+      "model": "deepseek/deepseek-v4-pro",
+      "artifact_valid": true,
+      "lifecycle_state": "completed",
+      "verdict": "WARN",
+      "reward": 0.8,
+      "recall": 1.0,
+      "false_positives": 1,
+      "cost_usd": null,
+      "duration_ms": 0,
+      "report": "runs/cerberus-rd-lab-live-opencode/report.md"
+    },
+    {
+      "run_dir": "runs/cerberus-rd-lab-live-omp",
+      "run_id": "cerberus-rd-lab-live-omp",
+      "candidate_id": "omp-live-review",
+      "substrate": "omp",
+      "model": "deepseek/deepseek-v4-flash",
+      "artifact_valid": true,
+      "lifecycle_state": "completed",
+      "verdict": "PASS",
+      "reward": 0.0,
+      "recall": 0.0,
+      "false_positives": 0,
+      "cost_usd": null,
+      "duration_ms": 0,
+      "report": "runs/cerberus-rd-lab-live-omp/report.md"
+    }
+  ],
+  "outputs": {
+    "summary": "runs/cerberus-rd-lab-live-comparison/summary.json",
+    "report": "runs/cerberus-rd-lab-live-comparison/report.md"
+  }
+}

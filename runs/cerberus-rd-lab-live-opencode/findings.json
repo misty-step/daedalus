@@ -1,0 +1,18 @@
+{
+  "findings": [
+    {
+      "file": "src/ratio.rs",
+      "line": 2,
+      "category": "correctness",
+      "description": "Unconditional zero return silences division-by-zero for non-zero numerators: When denominator is zero and numerator is non-zero, the function returns 0.0 instead of the IEEE 754 result (Inf or -Inf). For numerator 0.0 / 0.0, it returns 0.0 instead of NaN. Both behaviors replace a well-defined floating-point error signal with an arbitrary sentinel value that downstream code may misinterpret.\nEvidence: Diff line: `if denominator == 0.0 { return 0.0; }` — the guard does not distinguish numerator cases.",
+      "severity": "serious"
+    },
+    {
+      "file": "src/ratio.rs",
+      "line": 2,
+      "category": "robustness",
+      "description": "Exact zero check does not protect against underflow or near-zero overflow: The comparison `denominator == 0.0` catches exact zero (and -0.0) but will not catch extremely small non-zero values such as f64::MIN_POSITIVE, which can still produce Inf when used as a divisor with sufficiently large numerators.\nEvidence: Diff line: `if denominator == 0.0` — equality on f64 misses values that are epsilon-close to zero.",
+      "severity": "minor"
+    }
+  ]
+}

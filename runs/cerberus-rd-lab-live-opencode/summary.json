@@ -1,0 +1,68 @@
+{
+  "schema_version": "cerberus-lab-import.v1",
+  "run_id": "cerberus-rd-lab-live-opencode",
+  "candidate": {
+    "candidate_id": "opencode-live-review",
+    "substrate": "opencode",
+    "model": "deepseek/deepseek-v4-pro"
+  },
+  "arena": {
+    "path": "arenas/cerberus-fixture-v0",
+    "id": "cerberus-fixture-v0",
+    "version": "0.1.0",
+    "task_id": "ratio-zero"
+  },
+  "request": {
+    "path": "runs/cerberus-rd-lab-live-opencode/request.json",
+    "source_path": "/tmp/cerberus-live-request.json",
+    "request_id": "fixture-diff-only-001",
+    "request_digest": "sha256:6dd721b49c9ffa97c5ac7d3cf810f1c01ac115e75e030c6c81e3af39b8995e36",
+    "source_kind": "fixture"
+  },
+  "artifact": {
+    "path": "runs/cerberus-rd-lab-live-opencode/artifact.json",
+    "source_path": "/tmp/cerberus-live-opencode-patched/artifact.json",
+    "artifact_id": "artifact-fixture-diff-only-001",
+    "request_id": "fixture-diff-only-001",
+    "lifecycle_state": "completed",
+    "verdict": "WARN",
+    "context_capabilities": {
+      "diff": true,
+      "repo_head": false,
+      "repo_base": false,
+      "local_runtime": false,
+      "remote_runtime": false,
+      "external_research": "forbid"
+    },
+    "valid": true
+  },
+  "run": {
+    "engine_version": "cerberus-opencode",
+    "duration_ms": 0,
+    "cost_usd": null
+  },
+  "score": {
+    "status": "scored",
+    "task_id": "ratio-zero",
+    "result": {
+      "reward": 0.8,
+      "recall": 1.0,
+      "matched": [
+        "ratio-zero"
+      ],
+      "false_positives": 1,
+      "expected_defects": 1,
+      "error": null
+    }
+  },
+  "outputs": {
+    "request": "runs/cerberus-rd-lab-live-opencode/request.json",
+    "artifact": "runs/cerberus-rd-lab-live-opencode/artifact.json",
+    "findings": "runs/cerberus-rd-lab-live-opencode/findings.json",
+    "score": "runs/cerberus-rd-lab-live-opencode/score.json",
+    "summary": "runs/cerberus-rd-lab-live-opencode/summary.json",
+    "report": "runs/cerberus-rd-lab-live-opencode/report.md",
+    "transcript": "runs/cerberus-rd-lab-live-opencode/transcript.txt",
+    "receipt": "runs/cerberus-rd-lab-live-opencode/execution_plan.json"
+  }
+}

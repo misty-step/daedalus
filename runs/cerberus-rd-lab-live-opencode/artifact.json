@@ -1,0 +1,106 @@
+{
+  "schema_version": "cerberus.review_artifact.v1",
+  "artifact_id": "artifact-fixture-diff-only-001",
+  "request_id": "fixture-diff-only-001",
+  "request_digest": "sha256:6dd721b49c9ffa97c5ac7d3cf810f1c01ac115e75e030c6c81e3af39b8995e36",
+  "lifecycle_state": "completed",
+  "verdict": "WARN",
+  "context_capabilities": {
+    "diff": true,
+    "repo_head": false,
+    "repo_base": false,
+    "local_runtime": false,
+    "remote_runtime": false,
+    "external_research": "forbid"
+  },
+  "summary": {
+    "title": "Zero-denominator guard is well-intentioned but produces a silently incorrect result for non-zero numerators",
+    "body": "The change adds a guard that returns 0.0 when denominator == 0.0. This prevents division-by-zero (which in IEEE 754 produces Inf or -Inf for non-zero numerators, and NaN for 0/0), but does so by unconditionally returning 0.0 regardless of the numerator. This masks the error condition and can produce misleading results downstream.",
+    "analysis": "The diff is a single-file, 3-line addition. The floating-point check `denominator == 0.0` is technically correct for exact zero (including -0.0) but does not guard against underflow-to-zero or extremely small denominators that could still overflow to infinity. The unconditional return of 0.0 is the primary concern: a caller expecting Inf for a non-zero numerator will silently receive 0.0, which can propagate incorrect calculations. In domain contexts where 'ratio' means e.g. a percentage with an empty baseline, returning 0.0 may be acceptable — but this cannot be verified from the diff alone.",
+    "residual_risk": [
+      "Callers of ratio() may have relied on Inf/NaN propagation for error detection; the silent 0.0 return breaks that contract.",
+      "Near-zero but non-zero denominators (e.g., f64::MIN_POSITIVE) are not guarded and could still overflow.",
+      "Without access to the caller sites or test suite, the actual runtime impact is unknown."
+    ]
+  },
+  "findings": [
+    {
+      "id": "F001",
+      "severity": "major",
+      "category": "correctness",
+      "title": "Unconditional zero return silences division-by-zero for non-zero numerators",
+      "description": "When denominator is zero and numerator is non-zero, the function returns 0.0 instead of the IEEE 754 result (Inf or -Inf). For numerator 0.0 / 0.0, it returns 0.0 instead of NaN. Both behaviors replace a well-defined floating-point error signal with an arbitrary sentinel value that downstream code may misinterpret.",
+      "evidence": "Diff line: `if denominator == 0.0 { return 0.0; }` — the guard does not distinguish numerator cases.",
+      "confidence": 0.9,
+      "anchors": [
+        {
+          "kind": "inline",
+          "path": "src/ratio.rs",
+          "line": 2
+        }
+      ],
+      "citations": [],
+      "suggested_fixes": []
+    },
+    {
+      "id": "F002",
+      "severity": "minor",
+      "category": "robustness",
+      "title": "Exact zero check does not protect against underflow or near-zero overflow",
+      "description": "The comparison `denominator == 0.0` catches exact zero (and -0.0) but will not catch extremely small non-zero values such as f64::MIN_POSITIVE, which can still produce Inf when used as a divisor with sufficiently large numerators.",
+      "evidence": "Diff line: `if denominator == 0.0` — equality on f64 misses values that are epsilon-close to zero.",
+      "confidence": 0.7,
+      "anchors": [
+        {
+          "kind": "inline",
+          "path": "src/ratio.rs",
+          "line": 2
+        }
+      ],
+      "citations": [],
+      "suggested_fixes": []
+    }
+  ],
+  "comments": [
+    {
+      "id": "C001",
+      "kind": "contextual",
+      "intent": "note",
+      "body": "If the domain semantics of `ratio` intentionally treat an empty/zero baseline as producing zero, consider documenting this contract and adding a test to make it explicit. Alternatively, consider returning NaN for 0/0 and using `is_finite()` checks at call sites to handle the error case explicitly.",
+      "anchor": {
+        "kind": "inline",
+        "path": "src/ratio.rs",
+        "line": 2
+      },
+      "suggested_fixes": []
+    }
+  ],
+  "suggested_fixes": [],
+  "citations": [],
+  "receipts": [
+    {
+      "id": "receipt-master",
+      "role": "master",
+      "harness": "opencode",
+      "status": "completed",
+      "verdict": "WARN",
+      "summary": "Inspected the unified diff for src/ratio.rs; no additional repo files, tests, or runtime evidence available. Two findings raised: one major (silent zero return masks non-zero-numerator division-by-zero) and one minor (exact-zero check misses near-zero overflow)."
+    }
+  ],
+  "run": {
+    "engine_version": "cerberus-opencode",
+    "config_digest": "sha256:prompt-only",
+    "started_at": "0",
+    "finished_at": "0",
+    "duration_ms": 0,
+    "coverage": {
+      "files_reviewed": [
+        "src/ratio.rs"
+      ],
+      "files_with_findings": [
+        "src/ratio.rs"
+      ]
+    }
+  },
+  "errors": []
+}
