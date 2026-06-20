@@ -1,20 +1,22 @@
 # Request Bitterblossom reflex review orchestrator swarm
 
 Priority: P0
-Status: pending
+Status: blocked - waiting for 048 Cerberus lab recommendation
 Estimate: XL
 
 ## Goal
 
-Produce a Bitterblossom-specific reflex code-review launch packet: an
-orchestrator plus focused reviewer subagents that can run on PR-ready/update
-events now and later on a less GitHub-dependent VCS event source.
+Produce a Bitterblossom-specific reflex code-review launch packet from the
+Cerberus lab recommendation: the exact Cerberus request/artifact path,
+substrate, topology, payload, and event-plane mapping that should run on
+PR-ready/update events and later on a less GitHub-dependent VCS event source.
 
-This ticket should consume, not fork, the broader Daedalus review-swarm program
-in `backlog.d/034-build-daedalus-review-swarm.md`. The output is the
-Bitterblossom import and runtime contract: which agents run, what payload they
-receive, what artifacts they emit, how the master consolidates findings, and
-what trigger/debounce rules keep the event plane sane.
+This ticket should consume, not fork, `backlog.d/048-build-cerberus-substrate-rd-lab.md`.
+`034` is now historical/reusable review-swarm evidence, not the parent product
+path. The output is the Bitterblossom import and runtime contract: which
+Cerberus config runs, what payload it receives, what artifact it emits, how any
+selected multi-agent topology consolidates findings, and what trigger/debounce
+rules keep the event plane sane.
 
 ## Why Now
 
@@ -27,7 +29,8 @@ The target product loop is an Amjad/Replit-style reflex plane:
 
 Bitterblossom already has review lanes, submissions, storms, gates, and manual
 builder dispatch. It needs a measured, Daedalus-backed reflex review packet
-that can replace ad-hoc review prompts with a reproducible swarm.
+that can replace ad-hoc review prompts with a reproducible Cerberus-backed
+review artifact path.
 
 ## Boundaries
 
@@ -52,17 +55,20 @@ Initial trigger shape:
 | `pull_request.synchronize` | non-draft, debounce by repo/pr/head_sha | refresh or open review submission |
 | manual `bb run review-orchestrator` | operator payload | run same artifact path without webhook |
 
-Member lanes:
+Candidate topology is no longer assumed to be a Pi specialist swarm. `048` must
+first decide whether Cerberus should run a single autonomous reviewer, dynamic
+lanes, or a measured multi-member topology. The legacy lane shape below is
+only a comparison scaffold if a multi-member topology survives the lab.
 
-| lane | responsibility | first model seeds |
+| lane | responsibility | substrate/model source |
 |---|---|---|
-| `general` | broad review baseline and context sanity | Pi `moonshotai/kimi-k2.7-code`; Pi `qwen/qwen3-coder-next` |
-| `correctness` | logic, invariants, data loss, crashes, lifecycle races | Pi `deepseek/deepseek-v4-pro`; Pi `moonshotai/kimi-k2.7-code` |
-| `security` | auth, secrets, injection, unsafe input, supply chain | Pi `deepseek/deepseek-v4-pro`; Pi `minimax/minimax-m3` |
-| `verification` | tests, gates, CI evidence, acceptance proof gaps | Pi `deepseek/deepseek-v4-flash`; Pi `qwen/qwen3-coder-next` |
-| `simplification` | gate weakening, needless surface, shallow abstraction | Pi `deepseek/deepseek-v4-flash`; Pi `z-ai/glm-5.1` |
-| `product` | ticket fit, UX/API intent, scope mismatch | Pi `moonshotai/kimi-k2.7-code`; Pi `z-ai/glm-5.1` |
-| `master` | consolidate member artifacts, dedupe, severity calibration | Pi `deepseek/deepseek-v4-pro`; Pi `moonshotai/kimi-k2.7-code`; Fusion only for council experiments |
+| `general` | broad review baseline and context sanity | `048` Cerberus recommendation |
+| `correctness` | logic, invariants, data loss, crashes, lifecycle races | `048` Cerberus recommendation |
+| `security` | auth, secrets, injection, unsafe input, supply chain | `048` Cerberus recommendation |
+| `verification` | tests, gates, CI evidence, acceptance proof gaps | `048` Cerberus recommendation |
+| `simplification` | gate weakening, needless surface, shallow abstraction | `048` Cerberus recommendation |
+| `product` | ticket fit, UX/API intent, scope mismatch | `048` Cerberus recommendation |
+| `master` | consolidate member artifacts, dedupe, severity calibration | `048` Cerberus recommendation, only if the lab recommends a multi-member topology |
 
 `z-ai/glm-5.2` is requested by the operator and its OpenRouter model page was
 visible on 2026-06-15 as released, with API access releasing 2026-06-16. It was
@@ -125,13 +131,15 @@ and the artifact records which member was waived and why.
 
 ## Requested Daedalus Work
 
-1. Align this ticket with `034` so Bitterblossom does not get a divergent
-   review taxonomy or output schema.
-2. Produce a Bitterblossom launch packet that maps Daedalus member/master
-   contracts into `plane/agents`, `plane/tasks`, cards, payload examples,
-   budget defaults, idempotency keys, and status surfaces.
-3. Search the Pi/OpenRouter candidates above under the review-swarm cost and
-   wall-time envelope, preserving member artifacts as first-class evidence.
+1. Align this ticket with `048` so Bitterblossom consumes the Cerberus request,
+   artifact, topology, and substrate recommendation instead of forking a
+   divergent review system.
+2. Produce a Bitterblossom launch packet that maps the selected Cerberus config
+   into `plane/agents`, `plane/tasks`, cards, payload examples, budget defaults,
+   idempotency keys, and status surfaces.
+3. Import or run the Cerberus candidates recommended by `048` under the
+   review cost and wall-time envelope, preserving artifacts as first-class
+   evidence.
 4. Make the master a consolidation task, not a fresh broad reviewer that
    launders weak member output.
 5. Define failure behavior: timed-out member, malformed JSON, budget-blocked
@@ -143,8 +151,9 @@ and the artifact records which member was waived and why.
 
 - [ ] The packet names the exact Bitterblossom task ids, agent ids, payload
       fields, idempotency keys, artifact paths, and run/gate read commands.
-- [ ] At least one measured Daedalus vertical slice covers member artifacts
-      plus master consolidation, not just a single reviewer prompt.
+- [ ] At least one measured Daedalus/Cerberus vertical slice covers
+      `ReviewRequest.v1`, `ReviewArtifact.v1`, and any selected topology
+      rather than assuming a Pi specialist swarm.
 - [ ] Total recommended sandbox envelope is <= $2.00/PR and <= 20 minutes
       wall time, or the packet carries an explicit waiver and a cheaper
       fallback.
@@ -161,7 +170,8 @@ and the artifact records which member was waived and why.
 
 ## Evidence
 
-- Parent Daedalus work: `backlog.d/034-build-daedalus-review-swarm.md`
+- Active Daedalus parent: `backlog.d/048-build-cerberus-substrate-rd-lab.md`
+- Historical review-swarm evidence: `backlog.d/034-build-daedalus-review-swarm.md`
 - Bitterblossom reflex ticket:
   `/Users/phaedrus/Development/bitterblossom/backlog.d/061-sdlc-lifecycle-reflex-pack.md`
 - Current handoff precedent: `deliveries/pr-review/plane-handoff.md`

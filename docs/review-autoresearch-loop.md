@@ -9,6 +9,12 @@ This document is the operating primitive for the review-swarm research program.
 It complements `docs/review-swarm-taxonomy.md`, `docs/primitives.md`, and
 `docs/operator-sop.md`.
 
+Direction update, 2026-06-20: Cerberus has usurped the active product path for
+autonomous/reflex code review. Treat this loop as preserved research evidence
+for lane scoring, artifact contracts, and plateau discipline. New review
+product work flows through `backlog.d/048-build-cerberus-substrate-rd-lab.md`
+unless that lab explicitly revives a swarm topology.
+
 The machine-readable contract is intentionally small. Tests parse this block;
 the prose below explains judgment around it.
 

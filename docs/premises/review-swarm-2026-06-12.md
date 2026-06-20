@@ -2,6 +2,10 @@
 
 Captured: 2026-06-12
 
+Superseded: 2026-06-20 by the Cerberus-first substrate lab direction in
+`backlog.d/048-build-cerberus-substrate-rd-lab.md`. Preserve this premise as
+history and reusable evaluation context, not as the active product parent.
+
 The operator wants Daedalus to shape a program for finding an optimal code
 review agent configuration and harness, with "optimal" understood as a
 measured result rather than a prompt preference. The desired end state is not
