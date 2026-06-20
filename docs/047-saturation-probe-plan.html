@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>047 Saturation Probe Replacement Plan</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; color: #171717; background: #f7f7f4; }
+    main { max-width: 1120px; margin: 0 auto; padding: 32px; }
+    section { border-top: 1px solid #c9c7bf; padding: 24px 0; }
+    h1 { font-size: 42px; line-height: 1.05; margin: 0 0 12px; }
+    h2 { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; margin: 0 0 10px; }
+    p, li { line-height: 1.45; }
+    .hero { display: grid; grid-template-columns: 1.4fr .9fr; gap: 28px; align-items: end; }
+    .panel, .grid > div { background: white; border: 1px solid #d8d6ce; padding: 18px; }
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    @media (max-width: 800px) { .hero, .grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+<main>
+  <section class="hero">
+    <div>
+      <p><code>backlog.d/047-replace-real-repo-saturation-probe.md</code></p>
+      <h1>Replace brittle whole-workspace one-shot freeze probe with bounded review-context probe.</h1>
+      <p>Outcome: `arena-freeze arenas/pr-review-correctness-v0` can produce a non-inconclusive probe verdict before candidate search, without treating context overflow or empty model output as evidence.</p>
+    </div>
+    <div class="panel">
+      <h2>Chosen Design</h2>
+      <p>Keep probe as `kind = "oneshot"` reference, but add manifest-driven workspace modes. Default remains full workspace; freeze probe uses a bounded review-context prompt: task instruction, `PR.diff`, intent, README if present, changed-file snippets, and manifest limits.</p>
+      <h2>Quality System</h2>
+      <p>Live oracle: `arena-freeze` + `arena-validate --probe-run`. Structural gate: Rust tests + `bin/gate`. Critic: artifact-only review of diff and 047 oracle.</p>
+    </div>
+  </section>
+
+  <section class="grid">
+    <div>
+      <h2>Standards</h2>
+      <p>No scorer weakening. Probe remains reference-only and excluded from search/recommendations. Candidates still never see `tests/` or `solution/`.</p>
+    </div>
+    <div>
+      <h2>Acceptance</h2>
+      <p>Correctness v0.3 freeze yields `probe_verdict` saturated or unsaturated, not inconclusive from overflow/empty content. Validation report explains semantics.</p>
+    </div>
+    <div>
+      <h2>Stop If</h2>
+      <p>Live provider errors persist after bounded prompt, model catalog/auth is missing, or probe result shows true saturation.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Verification System</h2>
+    <ul>
+      <li>Claim: real-repo arena freeze probe is falsifiable and bounded.</li>
+      <li>Falsifier: probe trials error on context overflow/empty content while validation passes or no useful artifact records why.</li>
+      <li>Driver: `cargo run --quiet --bin daedalus -- arena-freeze arenas/pr-review-correctness-v0 --out-dir runs/&lt;047-freeze&gt;`.</li>
+      <li>Grader: `arena-validate --probe-run` status plus `summary.json` probe errors/trials/verdict.</li>
+      <li>Evidence packet: freeze dir with `trials.jsonl`, `summary.json`, and `freeze-report.md`.</li>
+      <li>Cadence: tests before live spend, live freeze before PR.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Alternatives</h2>
+    <p>Raise context window: rejected, still fails on empty provider output and expensive prompts. Chunked multi-call probe: better later, but changes scoring semantics. Tool-using agent baseline: useful but no longer no-tool saturation probe. Bounded review-context one-shot is smallest durable replacement.</p>
+  </section>
+</main>
+</body>
+</html>

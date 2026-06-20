@@ -22,7 +22,7 @@ search space.
 | kind | what it is | search status |
 |---|---|---|
 | `pi` | pi coding agent (headless `-p --mode json --no-session`), default tools read/bash/edit/write, OpenRouter provider | **the V1 agent harness** — every candidate is a pi composition |
-| `oneshot` | single chat completion, workspace inlined | reference probe only (saturation detection); never a candidate |
+| `oneshot` | single chat completion, full or bounded review-context workspace | reference probe only (saturation detection); never a candidate |
 | `null` / `oracle` | floor / ceiling | references only |
 | claude-code, codex, … | other harnesses via Harbor adapters | frozen out of V1; reopen at Phase 2 prompt-plateau (DESIGN.md) |
 
@@ -59,6 +59,17 @@ CLI flag for either, so the runner ignores them for `kind = "pi"`. A
 mutation there would change the composition hash without changing behavior
 (false attribution). They are oneshot-adapter knobs only; the mutation
 validator must reject them for pi parents.
+
+## One-shot Reference Probe
+
+`kind = "oneshot"` is a reference baseline, not a candidate harness. It can use
+`workspace_mode = "full"` for small fixtures, or
+`workspace_mode = "review-context"` for real-repo freeze probes. The
+review-context mode sends task intent, `PR.diff`, changed files, and small
+project anchors under `workspace_max_bytes` / `workspace_file_bytes`; it avoids
+turning context overflow or empty provider output into a false
+"unsaturated" signal. The probe remains excluded from Pareto fronts,
+recommendations, parent selection, and launch exports.
 
 ## Tool policies (named subsets for the search space)
 

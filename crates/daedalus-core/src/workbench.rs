@@ -74,6 +74,9 @@ pub struct ValidationReport {
     pub oracle_mean: Option<f64>,
     pub null_mean: Option<f64>,
     pub probe_mean: Option<f64>,
+    pub probe_errors: Option<i64>,
+    pub probe_trials: Option<i64>,
+    pub probe_verdict: Option<String>,
     pub holdout_counts: HashMap<String, i64>,
 }
 
@@ -88,6 +91,9 @@ impl ValidationReport {
             oracle_mean: None,
             null_mean: None,
             probe_mean: None,
+            probe_errors: None,
+            probe_trials: None,
+            probe_verdict: None,
             holdout_counts: HashMap::new(),
         }
     }
@@ -632,7 +638,18 @@ pub fn validate_probe_run(probe_run: Option<&Path>, report: &mut ValidationRepor
     report.probe_mean = Some(probe_mean);
     let probe_errors = probe.get("errors").and_then(|v| v.as_i64()).unwrap_or(0);
     let probe_trials = probe.get("trials").and_then(|v| v.as_i64()).unwrap_or(0);
-    match probe_saturation_verdict(probe_mean, oracle_mean, probe_errors, probe_trials) {
+    report.probe_errors = Some(probe_errors);
+    report.probe_trials = Some(probe_trials);
+    let verdict = probe_saturation_verdict(probe_mean, oracle_mean, probe_errors, probe_trials);
+    report.probe_verdict = Some(
+        match verdict {
+            ProbeVerdict::Saturated => "saturated",
+            ProbeVerdict::Unsaturated => "unsaturated",
+            ProbeVerdict::Inconclusive => "inconclusive",
+        }
+        .to_string(),
+    );
+    match verdict {
         ProbeVerdict::Saturated => report.fail(format!(
             "one-shot probe saturates the arena: {probe_mean:.4} >= oracle {oracle_mean:.4} - 0.1"
         )),
@@ -944,6 +961,18 @@ pub fn render_validation_report(report: &ValidationReport) -> String {
             "| one-shot probe mean | `{}` |",
             format_opt_f64(report.probe_mean)
         ),
+        format!(
+            "| one-shot probe verdict | `{}` |",
+            report.probe_verdict.as_deref().unwrap_or("None")
+        ),
+        format!(
+            "| one-shot probe errors | `{}` |",
+            format_opt_i64(report.probe_errors)
+        ),
+        format!(
+            "| one-shot probe trials | `{}` |",
+            format_opt_i64(report.probe_trials)
+        ),
         format!("| holdout exposures | `{holdout_json}` |"),
         String::new(),
     ];
@@ -977,6 +1006,11 @@ fn format_opt_f64(v: Option<f64>) -> String {
         None => "None".to_string(),
         Some(f) => format_py_float(f),
     }
+}
+
+fn format_opt_i64(v: Option<i64>) -> String {
+    v.map(|n| n.to_string())
+        .unwrap_or_else(|| "None".to_string())
 }
 
 /// Format an f64 the way Python's str()/f-string does: always at least one
@@ -1429,6 +1463,12 @@ mod tests {
         let mut report = ValidationReport::new("a", "0.0.0");
         validate_probe_run(Some(&dir), &mut report);
         assert!(!report.ok, "errored probe must not pass the freeze gate");
+        assert_eq!(report.probe_errors, Some(3));
+        assert_eq!(report.probe_trials, Some(3));
+        assert_eq!(report.probe_verdict.as_deref(), Some("inconclusive"));
+        let rendered = render_validation_report(&report);
+        assert!(rendered.contains("| one-shot probe errors | `3` |"));
+        assert!(rendered.contains("| one-shot probe trials | `3` |"));
         assert!(report.messages.iter().any(|m| m.contains("inconclusive")));
         let _ = std::fs::remove_dir_all(&dir);
     }

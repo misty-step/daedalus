@@ -1,6 +1,6 @@
 # Replace the one-shot saturation probe for real-repo arenas
 
-Priority: P0 · Status: ready · Estimate: M
+Priority: P0 · Status: delivered · Estimate: M
 
 ## Goal
 
@@ -10,19 +10,19 @@ provider empty-output behavior.
 
 ## Oracle
 
-- [ ] `cargo run --quiet --bin daedalus -- arena-freeze
+- [x] `cargo run --quiet --bin daedalus -- arena-freeze
       arenas/pr-review-correctness-v0 --out-dir <tmp-or-run-dir>` produces a
       non-inconclusive probe verdict for correctness v0.3.0 without running
       candidate search.
-- [ ] `cargo run --quiet --bin daedalus -- arena-validate
+- [x] `cargo run --quiet --bin daedalus -- arena-validate
       arenas/pr-review-correctness-v0 --probe-run <freeze-dir>` exits 0 or
       fails only for a true saturated arena, not context overflow or empty
       provider output.
-- [ ] The replacement probe remains a reference baseline and is excluded from
+- [x] The replacement probe remains a reference baseline and is excluded from
       Pareto fronts, recommendations, parent selection, and launch exports.
-- [ ] Docs name the semantics clearly: what failure means, what saturation
+- [x] Docs name the semantics clearly: what failure means, what saturation
       means, and why the probe is comparable across arena versions.
-- [ ] `bin/gate` passes.
+- [x] `bin/gate` passes.
 
 ## Verification System
 
@@ -51,3 +51,18 @@ Do not weaken the freeze gate by treating errored probes as unsaturated. The
 replacement may be a chunked no-tool probe, a sampled workspace probe with
 documented limitations, or a different reference baseline, but it must stay
 outside the candidate pool and recommendation logic.
+
+## Delivery Evidence
+
+2026-06-20 delivery uses a bounded review-context one-shot reference probe:
+task intent, `PR.diff`, changed files, and small project anchors instead of the
+full copied repository. The probe remains `kind = "oneshot"` and therefore
+stays reference-only.
+
+- Plan: `docs/047-saturation-probe-plan.html`
+- Freeze: `runs/047-saturation-probe-freeze-v2/`
+- Report: `runs/047-saturation-probe-freeze-v2/freeze-report.md`
+- Offline validation:
+  `runs/047-saturation-probe-freeze-v2/arena-validate-report.md`
+- Result: oracle `1.0`, null `0.25`, one-shot probe `0.625`, probe errors `0`,
+  known probe cost `$0.07904`.

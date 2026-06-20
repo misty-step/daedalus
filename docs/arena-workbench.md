@@ -38,15 +38,18 @@ cargo run --quiet --bin daedalus -- arena-validate arenas/pr-review-v2 \
 ```
 
 `arena-freeze` runs the reference ceiling/floor and one-shot probe without
-falling through into candidate seeding or search. `arena-validate` is offline.
-It checks:
+falling through into candidate seeding or search. The default one-shot probe is
+bounded for real-repo arenas: it sends task intent, `PR.diff`, changed files,
+and small project anchors rather than inlining the full copied repository.
+`arena-validate` is offline. It checks:
 
 - fixture symlinks;
 - answer-key shape;
 - oracle solution scores 1.0;
 - null scores exactly the clean-task floor;
 - every task is in exactly one split;
-- one-shot probe behavior from an existing run directory;
+- one-shot probe behavior from an existing run directory, including
+  inconclusive error counts and saturated/unsaturated semantics;
 - holdout exposure counts against the burn threshold.
 
 If a holdout ledger has an `arena version` semver column, validation counts
@@ -55,7 +58,8 @@ column are still counted by task name for backward compatibility.
 
 The validation command does not spend model budget. `arena-freeze` may spend
 model budget for the one-shot probe; run it before any certified search so an
-inconclusive or saturated arena stops early.
+inconclusive or saturated arena stops early. A failed provider call or context
+overflow is not evidence that an arena is unsaturated.
 
 ## Adjudicate Disputed Findings
 
