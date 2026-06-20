@@ -1,0 +1,14 @@
+{
+  "status": "scored",
+  "task_id": "ratio-zero",
+  "result": {
+    "reward": 1.0,
+    "recall": 1.0,
+    "matched": [
+      "ratio-zero"
+    ],
+    "false_positives": 0,
+    "expected_defects": 1,
+    "error": null
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "schema_version": "cerberus-lab-comparison.v1",
+  "candidate_count": 3,
+  "recommendation_scope": "fixture_only",
+  "best_candidate": {
+    "run_dir": "runs/cerberus-rd-lab-omp",
+    "candidate_id": "omp-fixture-review",
+    "substrate": "omp",
+    "model": null,
+    "artifact_valid": true,
+    "lifecycle_state": "completed",
+    "verdict": "WARN",
+    "reward": 1.0,
+    "recall": 1.0,
+    "false_positives": 0,
+    "cost_usd": null,
+    "duration_ms": 1,
+    "report": "runs/cerberus-rd-lab-omp/report.md"
+  },
+  "candidates": [
+    {
+      "run_dir": "runs/cerberus-rd-lab-omp",
+      "candidate_id": "omp-fixture-review",
+      "substrate": "omp",
+      "model": null,
+      "artifact_valid": true,
+      "lifecycle_state": "completed",
+      "verdict": "WARN",
+      "reward": 1.0,
+      "recall": 1.0,
+      "false_positives": 0,
+      "cost_usd": null,
+      "duration_ms": 1,
+      "report": "runs/cerberus-rd-lab-omp/report.md"
+    },
+    {
+      "run_dir": "runs/cerberus-rd-lab-opencode",
+      "candidate_id": "opencode-fixture-review",
+      "substrate": "opencode",
+      "model": null,
+      "artifact_valid": true,
+      "lifecycle_state": "completed",
+      "verdict": "WARN",
+      "reward": 1.0,
+      "recall": 1.0,
+      "false_positives": 0,
+      "cost_usd": null,
+      "duration_ms": 1,
+      "report": "runs/cerberus-rd-lab-opencode/report.md"
+    },
+    {
+      "run_dir": "runs/cerberus-rd-lab-fixture",
+      "candidate_id": "fixture-self-review",
+      "substrate": "fixture",
+      "model": null,
+      "artifact_valid": true,
+      "lifecycle_state": "completed",
+      "verdict": "WARN",
+      "reward": 1.0,
+      "recall": 1.0,
+      "false_positives": 0,
+      "cost_usd": null,
+      "duration_ms": 1,
+      "report": "runs/cerberus-rd-lab-fixture/report.md"
+    }
+  ],
+  "outputs": {
+    "summary": "runs/cerberus-rd-lab-comparison/summary.json",
+    "report": "runs/cerberus-rd-lab-comparison/report.md"
+  }
+}

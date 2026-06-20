@@ -1,0 +1,8 @@
+request runs/cerberus-rd-lab-fixture/request.json
+artifact runs/cerberus-rd-lab-fixture/artifact.json
+findings runs/cerberus-rd-lab-fixture/findings.json
+score runs/cerberus-rd-lab-fixture/score.json
+summary runs/cerberus-rd-lab-fixture/summary.json
+report runs/cerberus-rd-lab-fixture/report.md
+transcript runs/cerberus-rd-lab-fixture/transcript.txt
+receipt runs/cerberus-rd-lab-fixture/execution_plan.json

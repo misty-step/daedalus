@@ -1,0 +1,8 @@
+id = "ratio-zero"
+source_repo = "cerberus-fixture"
+
+[agent]
+timeout_sec = 30
+
+[verifier]
+timeout_sec = 10

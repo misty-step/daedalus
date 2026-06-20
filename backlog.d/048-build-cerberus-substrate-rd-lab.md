@@ -1,6 +1,6 @@
 # Build the Cerberus substrate R&D lab
 
-Priority: P0 · Status: ready · Estimate: L
+Priority: P0 · Status: in progress - fixture import/comparison slice verified; live model-backed comparison remains · Estimate: L
 
 ## Shaped Context
 
@@ -66,10 +66,10 @@ Allie-style evidence systems and other task domains.
 
 ## Oracle
 
-- [ ] The context packet and HTML plan name the lab surfaces, dials, ownership
+- [x] The context packet and HTML plan name the lab surfaces, dials, ownership
       boundaries, executable oracle, stop conditions, and premise sources
       without relying on chat context.
-- [ ] A Cerberus fixture `ReviewArtifact.v1` can be validated and converted or
+- [x] A Cerberus fixture `ReviewArtifact.v1` can be validated and converted or
       scored through a Daedalus run/eval path without live model spend.
 - [ ] A live OpenCode-backed Cerberus review and an OMP-backed Cerberus review
       for the same request leave comparable Daedalus evidence: artifact,
@@ -126,6 +126,14 @@ Allie-style evidence systems and other task domains.
 
 - Context packet: `docs/048-cerberus-rd-lab-context.md`
 - HTML plan: `docs/048-cerberus-rd-lab-shape.html`
+- Fixture import command:
+  `daedalus cerberus-lab import --arena arenas/cerberus-fixture-v0 --request /Users/phaedrus/Development/cerberus/fixtures/requests/diff-only.json --artifact /Users/phaedrus/Development/cerberus/target/cerberus/artifact.json --candidate-id fixture-self-review --substrate fixture --task-id ratio-zero --out-dir runs/cerberus-rd-lab-fixture`
+- Fixture comparison command:
+  `daedalus cerberus-lab compare --run-dir runs/cerberus-rd-lab-fixture --run-dir runs/cerberus-rd-lab-opencode --run-dir runs/cerberus-rd-lab-omp --out-dir runs/cerberus-rd-lab-comparison`
+- Fixture evidence:
+  `runs/cerberus-rd-lab-fixture/`, `runs/cerberus-rd-lab-opencode/`,
+  `runs/cerberus-rd-lab-omp/`, and
+  `runs/cerberus-rd-lab-comparison/report.md`
 - Premise source:
   `sha256:2c10aea3a38c845bfe492fa42aede414a049ec9b78c5007c5c66a5a1db6fbc05`
   `docs/premises/2026-06-19-coding-agent-substrates.md`
@@ -140,6 +148,16 @@ Allie-style evidence systems and other task domains.
   `/Users/phaedrus/Development/allie/README.md`
 
 ## Notes
+
+2026-06-20 delivery slice: Daedalus now has `cerberus-lab import` and
+`cerberus-lab compare`, plus `arenas/cerberus-fixture-v0`, to validate
+Cerberus `ReviewArtifact.v1`, map findings into Daedalus scoring, preserve
+receipt/transcript provenance, and compare fixture-backed substrate artifacts
+without live spend. The checked evidence is adapter proof only: the OpenCode
+and OMP artifacts imported here come from Cerberus' fake-harness verification
+receipts, not live model-backed autonomous runs. Child 3, Pi comparability, and
+047-gated real-repo freeze/probe evidence remain open before any substrate
+recommendation.
 
 The strategic split is supervised versus unsupervised:
 

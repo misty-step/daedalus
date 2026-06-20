@@ -1,0 +1,20 @@
+id = "cerberus-fixture-v0"
+version = "0.1.0"
+taskspec = "specs/cerberus-lab/taskspec.toml"
+description = """
+Fixture-only arena for proving the Daedalus Cerberus lab import path. The
+single task mirrors Cerberus' deterministic ratio-review fixture and gives the
+importer a real answer key without live model spend.
+"""
+
+[risk]
+class = "low"
+notes = "Offline fixture JSON and synthetic Rust diff only; no live repos, secrets, comments, or write actions."
+
+[template]
+file = "template.md"
+
+[split]
+train = ["ratio-zero"]
+validation = []
+holdout = []

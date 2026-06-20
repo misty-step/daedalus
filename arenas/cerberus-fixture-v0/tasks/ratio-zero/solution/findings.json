@@ -1,0 +1,11 @@
+{
+  "findings": [
+    {
+      "file": "src/ratio.rs",
+      "line": 3,
+      "category": "correctness",
+      "severity": "serious",
+      "description": "Returning 0.0 for a zero denominator silently converts invalid input into a plausible ratio."
+    }
+  ]
+}

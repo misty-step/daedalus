@@ -1,0 +1,13 @@
+{
+  "defects": [
+    {
+      "id": "ratio-zero",
+      "file": "src/ratio.rs",
+      "line_start": 1,
+      "line_end": 5,
+      "category": "correctness",
+      "severity": "serious",
+      "note": "Returning 0.0 for a zero denominator silently converts invalid input into a plausible ratio."
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+# Daedalus task specification: Cerberus lab fixture import.
+
+id = "cerberus-lab"
+goal = "Import validated Cerberus ReviewArtifact.v1 outputs and score them against a fixture oracle without live model spend."
+domain = "code-review-artifact-import"
+mode = "threshold-then-cheap"
+
+[inputs]
+description = "Cerberus ReviewRequest.v1 plus ReviewArtifact.v1"
+fixtures = "arenas/cerberus-fixture-v0"
+
+[output]
+contract = "Daedalus evidence packet: request.json, artifact.json, findings.json, score.json, summary.json, report.md, and artifacts.index"
+
+[oracle]
+type = "deterministic"
+description = "Validated Cerberus artifacts are mapped into Daedalus findings and scored against fixture answer keys."
+
+[risk]
+class = "low"
+notes = "Fixture import only; no live model spend, no production posting, no secrets, no write authority outside the requested out-dir."
+
+[budget]
+max_cost_per_trial_usd = 0.0
+max_wall_per_trial_sec = 30
+
+[trigger]
+intent = "Manual lab import for Cerberus fixture artifacts before live OpenCode/OMP comparison."
+
+[boundaries]
+data = "Cerberus fixture request/artifact JSON. Candidates never read tests/ or solution/."
+
+[checkpoints]
+gates = ["G1-spec", "G2-eval-quality"]
+
+[negative_examples]
+bad = [
+  "accepting an artifact with a mismatched request_digest",
+  "scoring an artifact that overstates available context",
+  "treating missing cost as estimated cost",
+  "emitting a production-looking recommendation from a fixture-only import",
+]
