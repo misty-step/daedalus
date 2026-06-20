@@ -1,0 +1,34 @@
+{
+  "harness": "omp",
+  "command": "/Users/phaedrus/.bun/bin/omp",
+  "args": [
+    "-p",
+    "--no-session",
+    "--no-pty",
+    "--no-extensions",
+    "--no-skills",
+    "--no-rules",
+    "--cwd",
+    "/var/folders/jr/0kj0xfdd4s1ggs921sr2d7f80000gn/T/cerberus-xRRqYh/packet",
+    "--model",
+    "openrouter/deepseek/deepseek-v4-flash",
+    "@<prompt-file>"
+  ],
+  "cwd": "/var/folders/jr/0kj0xfdd4s1ggs921sr2d7f80000gn/T/cerberus-xRRqYh/packet",
+  "timeout_ms": 180000,
+  "env_allowlist": [
+    "OPENROUTER_API_KEY"
+  ],
+  "context_capabilities": {
+    "diff": true,
+    "repo_head": false,
+    "repo_base": false,
+    "local_runtime": false,
+    "remote_runtime": false,
+    "external_research": "forbid"
+  },
+  "prompt_transport": "private prompt file",
+  "private_material_in_argv": false,
+  "workspace_mode": "diff_packet",
+  "runtime_transcripts": []
+}

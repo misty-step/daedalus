@@ -1,6 +1,6 @@
 # Build the Cerberus substrate R&D lab
 
-Priority: P0 · Status: in progress - fixture import/comparison slice verified; live model-backed comparison remains · Estimate: L
+Priority: P0 · Status: in progress - live OpenCode/OMP comparison verified; final gate/review closeout pending · Estimate: L
 
 ## Shaped Context
 
@@ -71,20 +71,20 @@ Allie-style evidence systems and other task domains.
       without relying on chat context.
 - [x] A Cerberus fixture `ReviewArtifact.v1` can be validated and converted or
       scored through a Daedalus run/eval path without live model spend.
-- [ ] A live OpenCode-backed Cerberus review and an OMP-backed Cerberus review
+- [x] A live OpenCode-backed Cerberus review and an OMP-backed Cerberus review
       for the same request leave comparable Daedalus evidence: artifact,
       transcript/receipt, substrate, model, lifecycle state, cost or `null`,
       latency, and scoring output.
-- [ ] The current Pi review baseline remains measurable or is explicitly
+- [x] The current Pi review baseline remains measurable or is explicitly
       marked incomparable with a documented reason.
-- [ ] The comparison report answers: which substrate produced the best valid
+- [x] The comparison report answers: which substrate produced the best valid
       autonomous review artifact under the chosen objective, what it cost, what
       context it actually used, and what remains unproven.
-- [ ] `docs/primitives.md`, `docs/review-autoresearch-loop.md`, and active
+- [x] `docs/primitives.md`, `docs/review-autoresearch-loop.md`, and active
       Bitterblossom-facing tickets no longer imply Pi is the default substrate
       or that `034` is the parent product path for unsupervised/reflex review
       labs.
-- [ ] `arena-freeze` / `arena-validate` either produce non-inconclusive probe
+- [x] `arena-freeze` / `arena-validate` either produce non-inconclusive probe
       evidence for the chosen real-repo arena or the run is explicitly limited
       to fixture/adapter proof before paid search.
 - [ ] `bin/gate` passes.
@@ -134,6 +134,23 @@ Allie-style evidence systems and other task domains.
   `runs/cerberus-rd-lab-fixture/`, `runs/cerberus-rd-lab-opencode/`,
   `runs/cerberus-rd-lab-omp/`, and
   `runs/cerberus-rd-lab-comparison/report.md`
+- Live OMP command:
+  `cargo run --quiet --manifest-path /Users/phaedrus/Development/cerberus/Cargo.toml -- review --request /tmp/cerberus-live-request.json --harness omp --model openrouter/deepseek/deepseek-v4-flash --out /tmp/cerberus-live-omp/artifact.json --markdown /tmp/cerberus-live-omp/review.md --execution-plan /tmp/cerberus-live-omp/execution_plan.json --transcript /tmp/cerberus-live-omp/transcript.txt --timeout-seconds 180`
+- Live OpenCode command:
+  `cargo run --quiet --manifest-path /tmp/cerberus-daedalus-048/Cargo.toml -- review --request /tmp/cerberus-live-request.json --harness opencode --model openrouter/deepseek/deepseek-v4-pro --out /tmp/cerberus-live-opencode-patched/artifact.json --markdown /tmp/cerberus-live-opencode-patched/review.md --execution-plan /tmp/cerberus-live-opencode-patched/execution_plan.json --transcript /tmp/cerberus-live-opencode-patched/transcript.txt --timeout-seconds 180`
+- Live Daedalus import commands:
+  `cargo run --quiet --bin daedalus -- cerberus-lab import --arena arenas/cerberus-fixture-v0 --request /tmp/cerberus-live-request.json --artifact /tmp/cerberus-live-omp/artifact.json --candidate-id omp-live-review --substrate omp --model deepseek/deepseek-v4-flash --task-id ratio-zero --transcript /tmp/cerberus-live-omp/transcript.txt --receipt /tmp/cerberus-live-omp/execution_plan.json --out-dir runs/cerberus-rd-lab-live-omp`
+  `cargo run --quiet --bin daedalus -- cerberus-lab import --arena arenas/cerberus-fixture-v0 --request /tmp/cerberus-live-request.json --artifact /tmp/cerberus-live-opencode-patched/artifact.json --candidate-id opencode-live-review --substrate opencode --model deepseek/deepseek-v4-pro --task-id ratio-zero --transcript /tmp/cerberus-live-opencode-patched/transcript.txt --receipt /tmp/cerberus-live-opencode-patched/execution_plan.json --out-dir runs/cerberus-rd-lab-live-opencode`
+- Live comparison command:
+  `cargo run --quiet --bin daedalus -- cerberus-lab compare --run-dir runs/cerberus-rd-lab-live-opencode --run-dir runs/cerberus-rd-lab-live-omp --run-dir runs/cerberus-rd-lab-fixture --out-dir runs/cerberus-rd-lab-live-comparison`
+- Live evidence:
+  `runs/cerberus-rd-lab-live-opencode/`,
+  `runs/cerberus-rd-lab-live-omp/`, and
+  `runs/cerberus-rd-lab-live-comparison/report.md`
+- Arena validation waiver evidence:
+  `cargo run --quiet --bin daedalus -- arena-validate arenas/cerberus-fixture-v0 --report runs/cerberus-rd-lab-live-comparison/arena-validate-report.md`
+  failed as expected because no `--probe-run` was supplied; report:
+  `runs/cerberus-rd-lab-live-comparison/arena-validate-report.md`
 - Premise source:
   `sha256:2c10aea3a38c845bfe492fa42aede414a049ec9b78c5007c5c66a5a1db6fbc05`
   `docs/premises/2026-06-19-coding-agent-substrates.md`
@@ -158,6 +175,33 @@ and OMP artifacts imported here come from Cerberus' fake-harness verification
 receipts, not live model-backed autonomous runs. Child 3, Pi comparability, and
 047-gated real-repo freeze/probe evidence remain open before any substrate
 recommendation.
+
+2026-06-20 live slice: the same diff-only request was reviewed through live
+Cerberus OMP (`deepseek/deepseek-v4-flash`) and live Cerberus OpenCode
+(`deepseek/deepseek-v4-pro`) and imported into Daedalus. OpenCode produced a
+valid `WARN` artifact, matched the seeded `ratio-zero` defect, and scored
+reward `0.8` with one false positive. OMP produced a valid `PASS` artifact but
+missed the seeded defect and scored reward `0.0`. Both runs record unknown
+cost as `null`. The first sandbox recommendation is OpenCode for this fixture
+objective, with the caveat that the OpenCode run used an isolated Cerberus
+patch to permit the private temp request attachment and harden strict artifact
+JSON prompting. That patch is captured in
+`runs/cerberus-rd-lab-live-opencode/cerberus-live-dependency.patch` and must
+land upstream before the live OpenCode lane is reproducible from Cerberus
+`master`.
+
+Pi is explicitly incomparable for this Cerberus adapter proof: current Pi
+Daedalus candidates emit Daedalus-native `findings.json` under the V1 search
+harness, not Cerberus `ReviewArtifact.v1` receipts with lifecycle, substrate,
+request digest, context capability, and artifact validation fields. Pi can be
+added to this lab only after a Cerberus-compatible wrapper emits the same
+request/artifact contract.
+
+The real-repo freeze/probe requirement is deliberately waived for this item:
+the live evidence is limited to the fixture/adapter proof,
+`arena-validate-report.md` records the missing one-shot probe as a FAIL, and no
+paid search or production review-default recommendation is made from a
+real-repo arena.
 
 The strategic split is supervised versus unsupervised:
 

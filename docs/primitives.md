@@ -21,10 +21,16 @@ search space.
 
 | kind | what it is | search status |
 |---|---|---|
-| `pi` | pi coding agent (headless `-p --mode json --no-session`), default tools read/bash/edit/write, OpenRouter provider | **the V1 agent harness** — every candidate is a pi composition |
+| `pi` | pi coding agent (headless `-p --mode json --no-session`), default tools read/bash/edit/write, OpenRouter provider | **the V1 Daedalus native search harness** — every native candidate is a pi composition |
 | `oneshot` | single chat completion, full or bounded review-context workspace | reference probe only (saturation detection); never a candidate |
 | `null` / `oracle` | floor / ceiling | references only |
 | claude-code, codex, … | other harnesses via Harbor adapters | frozen out of V1; reopen at Phase 2 prompt-plateau (DESIGN.md) |
+
+Cerberus review-lab imports are a separate downstream artifact path, not a
+replacement for the native Pi search harness above. `daedalus cerberus-lab`
+compares Cerberus `ReviewArtifact.v1` receipts from substrates such as
+OpenCode and OMP; Pi is comparable there only after it emits the same Cerberus
+request/artifact/lifecycle contract.
 
 pi version is captured per run record (`harness_version`); pin-worthy
 behavior changes ride on that field.

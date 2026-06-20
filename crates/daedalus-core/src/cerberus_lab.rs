@@ -9,10 +9,19 @@
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
-use serde_json::{json, Map, Value};
-use sha2::{Digest, Sha256};
+use serde_json::{json, Value};
 
 use crate::score::{self, ScoreResult};
+
+mod digest;
+mod report;
+
+use digest::{accepted_request_digests, request_digest, sha256_digest};
+use report::{
+    best_live_candidate, build_summary, compare_candidate, compare_candidate_order,
+    comparison_scope, render_artifact_index, render_comparison_report, render_report,
+    ArtifactIndexPaths, SummaryArtifactPaths,
+};
 
 const REQUEST_SCHEMA: &str = "cerberus.review_request.v1";
 const ARTIFACT_SCHEMA: &str = "cerberus.review_artifact.v1";
@@ -180,14 +189,16 @@ pub fn compare_imports(
     }
 
     candidates.sort_by(compare_candidate_order);
+    let recommendation_scope = comparison_scope(&candidates);
     std::fs::create_dir_all(&options.out_dir)?;
     let summary_path = options.out_dir.join("summary.json");
     let report_path = options.out_dir.join("report.md");
     let comparison = json!({
         "schema_version": "cerberus-lab-comparison.v1",
         "candidate_count": candidates.len(),
-        "recommendation_scope": "fixture_only",
+        "recommendation_scope": recommendation_scope,
         "best_candidate": candidates.first().cloned().unwrap_or(Value::Null),
+        "best_live_candidate": best_live_candidate(&candidates),
         "candidates": candidates,
         "outputs": {
             "summary": summary_path.to_string_lossy(),
@@ -285,11 +296,15 @@ fn validate_artifact_for_request(
         )));
     }
 
-    let expected_digest = request_digest(request)?;
+    let expected_digests = accepted_request_digests(request)?;
     let actual_digest = require_string(artifact, &["request_digest"], "artifact.request_digest")?;
-    if expected_digest != actual_digest {
+    if !expected_digests
+        .iter()
+        .any(|digest| digest == actual_digest)
+    {
         return Err(CerberusLabError(format!(
-            "artifact request digest mismatch: expected {expected_digest}, got {actual_digest}"
+            "artifact request digest mismatch: expected one of {}, got {actual_digest}",
+            expected_digests.join(", ")
         )));
     }
 
@@ -566,279 +581,6 @@ fn copy_optional_artifact(
     Ok(Some(out))
 }
 
-struct SummaryArtifactPaths<'a> {
-    request: &'a Path,
-    artifact: &'a Path,
-    findings: &'a Path,
-    score: &'a Path,
-    report: &'a Path,
-    transcript: Option<&'a Path>,
-    receipt: Option<&'a Path>,
-}
-
-fn build_summary(
-    options: &ImportOptions,
-    request: &Value,
-    artifact: &Value,
-    arena: &ArenaInfo,
-    score: &Value,
-    paths: SummaryArtifactPaths<'_>,
-) -> Value {
-    let run_id = options
-        .out_dir
-        .file_name()
-        .and_then(|name| name.to_str())
-        .unwrap_or("cerberus-lab-import");
-    let cost = artifact
-        .get("run")
-        .and_then(|run| run.get("cost_usd"))
-        .cloned()
-        .unwrap_or(Value::Null);
-    json!({
-        "schema_version": "cerberus-lab-import.v1",
-        "run_id": run_id,
-        "candidate": {
-            "candidate_id": options.candidate_id,
-            "substrate": options.substrate,
-            "model": options.model
-        },
-        "arena": {
-            "path": options.arena.to_string_lossy(),
-            "id": arena.id,
-            "version": arena.version,
-            "task_id": options.task_id
-        },
-        "request": {
-            "path": paths.request.to_string_lossy(),
-            "source_path": options.request.to_string_lossy(),
-            "request_id": value_at(request, &["request_id"]),
-            "request_digest": request_digest(request).unwrap_or_else(|err| format!("error:{err}")),
-            "source_kind": value_at(request, &["source", "kind"])
-        },
-        "artifact": {
-            "path": paths.artifact.to_string_lossy(),
-            "source_path": options.artifact.to_string_lossy(),
-            "artifact_id": value_at(artifact, &["artifact_id"]),
-            "request_id": value_at(artifact, &["request_id"]),
-            "lifecycle_state": value_at(artifact, &["lifecycle_state"]),
-            "verdict": value_at(artifact, &["verdict"]),
-            "context_capabilities": artifact.get("context_capabilities").cloned().unwrap_or(Value::Null),
-            "valid": true
-        },
-        "run": {
-            "engine_version": value_at(artifact, &["run", "engine_version"]),
-            "duration_ms": value_at(artifact, &["run", "duration_ms"]),
-            "cost_usd": cost
-        },
-        "score": score,
-        "outputs": {
-            "request": paths.request.to_string_lossy(),
-            "artifact": paths.artifact.to_string_lossy(),
-            "findings": paths.findings.to_string_lossy(),
-            "score": paths.score.to_string_lossy(),
-            "summary": options.out_dir.join("summary.json").to_string_lossy(),
-            "report": paths.report.to_string_lossy(),
-            "transcript": paths.transcript.map(|p| p.to_string_lossy().into_owned()),
-            "receipt": paths.receipt.map(|p| p.to_string_lossy().into_owned())
-        }
-    })
-}
-
-fn render_report(summary: &Value, artifact: &Value, score: &Value) -> String {
-    let mut out = String::new();
-    out.push_str("# Cerberus Lab Import Report\n\n");
-    out.push_str("## Candidate\n\n");
-    out.push_str(&format!(
-        "- Candidate: `{}`\n- Substrate: `{}`\n- Model: `{}`\n\n",
-        string_value(summary, &["candidate", "candidate_id"]),
-        string_value(summary, &["candidate", "substrate"]),
-        string_value(summary, &["candidate", "model"])
-    ));
-    out.push_str("## Artifact\n\n");
-    out.push_str(&format!(
-        "- Artifact: `{}`\n- Lifecycle: `{}`\n- Verdict: `{}`\n- Validation: passed\n\n",
-        string_value(summary, &["artifact", "artifact_id"]),
-        string_value(summary, &["artifact", "lifecycle_state"]),
-        string_value(summary, &["artifact", "verdict"])
-    ));
-    out.push_str("## Score\n\n");
-    if score.get("status").and_then(Value::as_str) == Some("scored") {
-        let result = score.get("result").unwrap_or(&Value::Null);
-        out.push_str(&format!(
-            "- Task: `{}`\n- Reward: `{}`\n- Recall: `{}`\n- False positives: `{}`\n- Matched: `{}`\n\n",
-            string_value(score, &["task_id"]),
-            string_value(result, &["reward"]),
-            string_value(result, &["recall"]),
-            string_value(result, &["false_positives"]),
-            string_value(result, &["matched"])
-        ));
-    } else {
-        out.push_str("- Status: not scored; no `--task-id` supplied.\n\n");
-    }
-    out.push_str("## Summary\n\n");
-    out.push_str(&format!(
-        "{}\n\n{}\n\n",
-        string_value(artifact, &["summary", "title"]),
-        string_value(artifact, &["summary", "body"])
-    ));
-    let residual = artifact
-        .get("summary")
-        .and_then(|s| s.get("residual_risk"))
-        .and_then(Value::as_array)
-        .cloned()
-        .unwrap_or_default();
-    if !residual.is_empty() {
-        out.push_str("## Residual Risk\n\n");
-        for item in residual {
-            out.push_str(&format!("- {}\n", string_for_markdown(&item)));
-        }
-        out.push('\n');
-    }
-    out.push_str("## Evidence\n\n");
-    for key in [
-        "request", "artifact", "findings", "score", "summary", "report",
-    ] {
-        out.push_str(&format!(
-            "- {key}: `{}`\n",
-            string_value(summary, &["outputs", key])
-        ));
-    }
-    out
-}
-
-struct ArtifactIndexPaths<'a> {
-    request: &'a Path,
-    artifact: &'a Path,
-    findings: &'a Path,
-    score: &'a Path,
-    summary: &'a Path,
-    report: &'a Path,
-    transcript: Option<&'a Path>,
-    receipt: Option<&'a Path>,
-}
-
-fn render_artifact_index(paths: ArtifactIndexPaths<'_>) -> String {
-    let mut lines = vec![
-        format!("request {}", paths.request.display()),
-        format!("artifact {}", paths.artifact.display()),
-        format!("findings {}", paths.findings.display()),
-        format!("score {}", paths.score.display()),
-        format!("summary {}", paths.summary.display()),
-        format!("report {}", paths.report.display()),
-    ];
-    if let Some(path) = paths.transcript {
-        lines.push(format!("transcript {}", path.display()));
-    }
-    if let Some(path) = paths.receipt {
-        lines.push(format!("receipt {}", path.display()));
-    }
-    lines.push(String::new());
-    lines.join("\n")
-}
-
-fn compare_candidate(run_dir: &Path, summary: &Value) -> Value {
-    json!({
-        "run_dir": run_dir.to_string_lossy(),
-        "candidate_id": value_at(summary, &["candidate", "candidate_id"]),
-        "substrate": value_at(summary, &["candidate", "substrate"]),
-        "model": value_at(summary, &["candidate", "model"]),
-        "artifact_valid": value_at(summary, &["artifact", "valid"]),
-        "lifecycle_state": value_at(summary, &["artifact", "lifecycle_state"]),
-        "verdict": value_at(summary, &["artifact", "verdict"]),
-        "reward": value_at(summary, &["score", "result", "reward"]),
-        "recall": value_at(summary, &["score", "result", "recall"]),
-        "false_positives": value_at(summary, &["score", "result", "false_positives"]),
-        "cost_usd": value_at(summary, &["run", "cost_usd"]),
-        "duration_ms": value_at(summary, &["run", "duration_ms"]),
-        "report": value_at(summary, &["outputs", "report"])
-    })
-}
-
-fn compare_candidate_order(left: &Value, right: &Value) -> std::cmp::Ordering {
-    let left_valid = left
-        .get("artifact_valid")
-        .and_then(Value::as_bool)
-        .unwrap_or(false);
-    let right_valid = right
-        .get("artifact_valid")
-        .and_then(Value::as_bool)
-        .unwrap_or(false);
-    right_valid
-        .cmp(&left_valid)
-        .then_with(|| {
-            value_f64(right, "reward")
-                .partial_cmp(&value_f64(left, "reward"))
-                .unwrap_or(std::cmp::Ordering::Equal)
-        })
-        .then_with(|| compare_optional_cost(left.get("cost_usd"), right.get("cost_usd")))
-        .then_with(|| is_fixture_substrate(left).cmp(&is_fixture_substrate(right)))
-        .then_with(|| value_u64(left, "duration_ms").cmp(&value_u64(right, "duration_ms")))
-        .then_with(|| {
-            string_value(left, &["candidate_id"]).cmp(&string_value(right, &["candidate_id"]))
-        })
-}
-
-fn is_fixture_substrate(candidate: &Value) -> bool {
-    candidate.get("substrate").and_then(Value::as_str) == Some("fixture")
-}
-
-fn compare_optional_cost(left: Option<&Value>, right: Option<&Value>) -> std::cmp::Ordering {
-    match (value_opt_f64(left), value_opt_f64(right)) {
-        (Some(a), Some(b)) => a.partial_cmp(&b).unwrap_or(std::cmp::Ordering::Equal),
-        (Some(_), None) => std::cmp::Ordering::Less,
-        (None, Some(_)) => std::cmp::Ordering::Greater,
-        (None, None) => std::cmp::Ordering::Equal,
-    }
-}
-
-fn render_comparison_report(comparison: &Value) -> String {
-    let mut out = String::new();
-    out.push_str("# Cerberus Lab Comparison Report\n\n");
-    out.push_str("Scope: fixture-only imported Cerberus artifacts. This is sandbox evidence, not a production default change.\n\n");
-    out.push_str("| candidate | substrate | valid | lifecycle | verdict | reward | recall | false positives | cost | duration ms |\n");
-    out.push_str("|---|---|---:|---|---|---:|---:|---:|---:|---:|\n");
-    for candidate in comparison
-        .get("candidates")
-        .and_then(Value::as_array)
-        .into_iter()
-        .flatten()
-    {
-        out.push_str(&format!(
-            "| `{}` | `{}` | `{}` | `{}` | `{}` | `{}` | `{}` | `{}` | `{}` | `{}` |\n",
-            string_value(candidate, &["candidate_id"]),
-            string_value(candidate, &["substrate"]),
-            string_value(candidate, &["artifact_valid"]),
-            string_value(candidate, &["lifecycle_state"]),
-            string_value(candidate, &["verdict"]),
-            string_value(candidate, &["reward"]),
-            string_value(candidate, &["recall"]),
-            string_value(candidate, &["false_positives"]),
-            string_value(candidate, &["cost_usd"]),
-            string_value(candidate, &["duration_ms"])
-        ));
-    }
-    out.push_str("\n## Fixture Ordering\n\n");
-    let best = comparison.get("best_candidate").unwrap_or(&Value::Null);
-    out.push_str(&format!(
-        "`{}` is first under the fixture-only ordering: valid artifacts first, reward descending, known lower cost, then lower latency. This is not a substrate recommendation; live Cerberus OpenCode/OMP runs and Pi comparability remain required before any sandbox recommendation.\n\n",
-        string_value(best, &["candidate_id"])
-    ));
-    out.push_str("## Evidence\n\n");
-    for candidate in comparison
-        .get("candidates")
-        .and_then(Value::as_array)
-        .into_iter()
-        .flatten()
-    {
-        out.push_str(&format!(
-            "- `{}`: `{}`\n",
-            string_value(candidate, &["candidate_id"]),
-            string_value(candidate, &["report"])
-        ));
-    }
-    out
-}
-
 fn context_capabilities_from_request(request: &Value) -> Value {
     let diff = optional_string(request, &["change", "diff", "body"])
         .map(|body| !body.trim().is_empty())
@@ -877,266 +619,6 @@ fn changed_paths(request: &Value) -> HashSet<String> {
                 .collect()
         })
         .unwrap_or_default()
-}
-
-fn request_digest(request: &Value) -> Result<String, CerberusLabError> {
-    let canonical = canonical_request_for_digest(request);
-    serde_json::to_vec(&canonical)
-        .map(sha256_digest)
-        .map_err(|err| CerberusLabError(format!("request is not serializable: {err}")))
-}
-
-fn canonical_request_for_digest(request: &Value) -> Value {
-    let mut out = Map::new();
-    out.insert(
-        "schema_version".to_string(),
-        value_at(request, &["schema_version"]),
-    );
-    out.insert("request_id".to_string(), value_at(request, &["request_id"]));
-    out.insert(
-        "source".to_string(),
-        canonical_source(request.get("source")),
-    );
-    out.insert(
-        "change".to_string(),
-        canonical_change(request.get("change")),
-    );
-    out.insert(
-        "context".to_string(),
-        canonical_context(request.get("context")),
-    );
-    out.insert(
-        "policy".to_string(),
-        canonical_policy(request.get("policy")),
-    );
-    Value::Object(out)
-}
-
-fn canonical_source(source: Option<&Value>) -> Value {
-    let source = source.unwrap_or(&Value::Null);
-    let mut out = Map::new();
-    out.insert("kind".to_string(), value_at(source, &["kind"]));
-    insert_if_present(&mut out, source, "external_id");
-    insert_if_present(&mut out, source, "repo");
-    insert_if_present(&mut out, source, "uri");
-    out.insert(
-        "metadata".to_string(),
-        source.get("metadata").cloned().unwrap_or(Value::Null),
-    );
-    Value::Object(out)
-}
-
-fn canonical_change(change: Option<&Value>) -> Value {
-    let change = change.unwrap_or(&Value::Null);
-    let mut out = Map::new();
-    out.insert("title".to_string(), value_at(change, &["title"]));
-    insert_if_present(&mut out, change, "description");
-    insert_if_present(&mut out, change, "base_ref");
-    insert_if_present(&mut out, change, "head_ref");
-    insert_if_present(&mut out, change, "head_sha");
-    out.insert("diff".to_string(), canonical_diff(change.get("diff")));
-    out.insert(
-        "files".to_string(),
-        Value::Array(
-            change
-                .get("files")
-                .and_then(Value::as_array)
-                .map(|files| files.iter().map(canonical_changed_file).collect())
-                .unwrap_or_default(),
-        ),
-    );
-    Value::Object(out)
-}
-
-fn canonical_diff(diff: Option<&Value>) -> Value {
-    let diff = diff.unwrap_or(&Value::Null);
-    let mut out = Map::new();
-    out.insert(
-        "format".to_string(),
-        diff.get("format")
-            .cloned()
-            .unwrap_or_else(|| json!("unified")),
-    );
-    out.insert("body".to_string(), value_at(diff, &["body"]));
-    insert_if_present(&mut out, diff, "digest");
-    Value::Object(out)
-}
-
-fn canonical_changed_file(file: &Value) -> Value {
-    let mut out = Map::new();
-    out.insert("path".to_string(), value_at(file, &["path"]));
-    out.insert("status".to_string(), value_at(file, &["status"]));
-    insert_if_present(&mut out, file, "old_path");
-    insert_if_present(&mut out, file, "additions");
-    insert_if_present(&mut out, file, "deletions");
-    Value::Object(out)
-}
-
-fn canonical_context(context: Option<&Value>) -> Value {
-    let context = context.unwrap_or(&Value::Null);
-    let mut out = Map::new();
-    insert_if_present(&mut out, context, "summary");
-    out.insert(
-        "acceptance".to_string(),
-        context
-            .get("acceptance")
-            .cloned()
-            .unwrap_or_else(|| json!([])),
-    );
-    out.insert(
-        "instructions".to_string(),
-        context
-            .get("instructions")
-            .cloned()
-            .unwrap_or_else(|| json!([])),
-    );
-    out.insert(
-        "artifacts".to_string(),
-        Value::Array(
-            context
-                .get("artifacts")
-                .and_then(Value::as_array)
-                .map(|artifacts| artifacts.iter().map(canonical_context_artifact).collect())
-                .unwrap_or_default(),
-        ),
-    );
-    out.insert(
-        "workspaces".to_string(),
-        canonical_workspaces(context.get("workspaces")),
-    );
-    out.insert(
-        "local_runtime".to_string(),
-        Value::Array(
-            context
-                .get("local_runtime")
-                .and_then(Value::as_array)
-                .map(|targets| targets.iter().map(canonical_runtime_target).collect())
-                .unwrap_or_default(),
-        ),
-    );
-    out.insert(
-        "remote_runtime".to_string(),
-        Value::Array(
-            context
-                .get("remote_runtime")
-                .and_then(Value::as_array)
-                .map(|targets| targets.iter().map(canonical_remote_target).collect())
-                .unwrap_or_default(),
-        ),
-    );
-    out.insert(
-        "metadata".to_string(),
-        context.get("metadata").cloned().unwrap_or(Value::Null),
-    );
-    Value::Object(out)
-}
-
-fn canonical_context_artifact(artifact: &Value) -> Value {
-    let mut out = Map::new();
-    out.insert("kind".to_string(), value_at(artifact, &["kind"]));
-    out.insert("uri".to_string(), value_at(artifact, &["uri"]));
-    insert_if_present(&mut out, artifact, "digest");
-    Value::Object(out)
-}
-
-fn canonical_workspaces(workspaces: Option<&Value>) -> Value {
-    let workspaces = workspaces.unwrap_or(&Value::Null);
-    let mut out = Map::new();
-    if let Some(head) = workspaces.get("head") {
-        out.insert("head".to_string(), canonical_workspace_ref(head));
-    }
-    if let Some(base) = workspaces.get("base") {
-        out.insert("base".to_string(), canonical_workspace_ref(base));
-    }
-    Value::Object(out)
-}
-
-fn canonical_workspace_ref(workspace: &Value) -> Value {
-    let mut out = Map::new();
-    out.insert("kind".to_string(), value_at(workspace, &["kind"]));
-    out.insert("path".to_string(), value_at(workspace, &["path"]));
-    insert_if_present(&mut out, workspace, "ref_name");
-    insert_if_present(&mut out, workspace, "sha");
-    Value::Object(out)
-}
-
-fn canonical_runtime_target(target: &Value) -> Value {
-    let mut out = Map::new();
-    out.insert("kind".to_string(), value_at(target, &["kind"]));
-    out.insert("command".to_string(), value_at(target, &["command"]));
-    out.insert(
-        "args".to_string(),
-        target.get("args").cloned().unwrap_or_else(|| json!([])),
-    );
-    insert_if_present(&mut out, target, "cwd");
-    Value::Object(out)
-}
-
-fn canonical_remote_target(target: &Value) -> Value {
-    let mut out = Map::new();
-    out.insert("name".to_string(), value_at(target, &["name"]));
-    out.insert("url".to_string(), value_at(target, &["url"]));
-    out.insert(
-        "allowed_methods".to_string(),
-        target
-            .get("allowed_methods")
-            .cloned()
-            .unwrap_or_else(|| json!([])),
-    );
-    Value::Object(out)
-}
-
-fn canonical_policy(policy: Option<&Value>) -> Value {
-    let policy = policy.unwrap_or(&Value::Null);
-    let mut out = Map::new();
-    out.insert(
-        "allow_degraded".to_string(),
-        policy
-            .get("allow_degraded")
-            .cloned()
-            .unwrap_or_else(|| json!(true)),
-    );
-    out.insert(
-        "timeout_ms".to_string(),
-        policy
-            .get("timeout_ms")
-            .cloned()
-            .unwrap_or_else(|| json!(120_000)),
-    );
-    out.insert(
-        "external_research".to_string(),
-        policy
-            .get("external_research")
-            .cloned()
-            .unwrap_or_else(|| json!("forbid")),
-    );
-    out.insert(
-        "render_targets".to_string(),
-        policy
-            .get("render_targets")
-            .cloned()
-            .unwrap_or_else(|| json!(["json", "markdown"])),
-    );
-    out.insert(
-        "allowed_env".to_string(),
-        policy
-            .get("allowed_env")
-            .cloned()
-            .unwrap_or_else(|| json!([])),
-    );
-    Value::Object(out)
-}
-
-fn insert_if_present(out: &mut Map<String, Value>, source: &Value, key: &str) {
-    if let Some(value) = source.get(key) {
-        out.insert(key.to_string(), value.clone());
-    }
-}
-
-fn sha256_digest(bytes: impl AsRef<[u8]>) -> String {
-    let mut hasher = Sha256::new();
-    hasher.update(bytes);
-    format!("sha256:{:x}", hasher.finalize())
 }
 
 fn require_nonempty_string<'a>(
@@ -1233,6 +715,9 @@ fn value_u64(value: &Value, key: &str) -> u64 {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::sync::atomic::{AtomicU64, Ordering};
+
+    static TEMP_COUNTER: AtomicU64 = AtomicU64::new(0);
 
     #[test]
     fn imports_and_scores_valid_cerberus_fixture() {
@@ -1328,6 +813,37 @@ mod tests {
     }
 
     #[test]
+    fn accepts_legacy_request_digest() {
+        let root = tempdir("cerberus-lab-legacy-digest");
+        let arena = write_arena(&root);
+        let request = sample_request();
+        let mut artifact = sample_artifact(&request, "completed", "WARN");
+        artifact["request_digest"] = json!(digest::legacy_request_digest(&request).unwrap());
+        let request_path = root.join("request.json");
+        let artifact_path = root.join("artifact.json");
+        write_json(&request_path, &request).unwrap();
+        write_json(&artifact_path, &artifact).unwrap();
+
+        let result = import_review_artifact(&ImportOptions {
+            arena,
+            request: request_path,
+            artifact: artifact_path,
+            candidate_id: "fixture-self-review".to_string(),
+            substrate: "fixture".to_string(),
+            model: None,
+            task_id: Some("ratio-zero".to_string()),
+            transcript: None,
+            receipt: None,
+            out_dir: root.join("runs/cerberus-lab"),
+            repo_root: root.clone(),
+        })
+        .unwrap();
+
+        assert!(result.summary.is_file());
+        let _ = std::fs::remove_dir_all(root);
+    }
+
+    #[test]
     fn rejects_context_overclaim() {
         let root = tempdir("cerberus-lab-capability");
         let arena = write_arena(&root);
@@ -1360,6 +876,40 @@ mod tests {
             "{err}"
         );
         let _ = std::fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn live_comparison_report_marks_pi_incomparable() {
+        let comparison = json!({
+            "recommendation_scope": "live_fixture_comparison",
+            "best_candidate": {"candidate_id": "opencode-live-review"},
+            "best_live_candidate": {
+                "candidate_id": "opencode-live-review",
+                "substrate": "opencode",
+                "reward": 0.8,
+                "cost_usd": null
+            },
+            "candidates": [
+                {
+                    "candidate_id": "opencode-live-review",
+                    "substrate": "opencode",
+                    "artifact_valid": true,
+                    "lifecycle_state": "completed",
+                    "verdict": "WARN",
+                    "reward": 0.8,
+                    "recall": 1.0,
+                    "false_positives": 1,
+                    "cost_usd": null,
+                    "duration_ms": 0,
+                    "report": "runs/cerberus-rd-lab-live-opencode/report.md"
+                }
+            ]
+        });
+
+        let report = render_comparison_report(&comparison);
+
+        assert!(report.contains("live imported Cerberus artifacts"));
+        assert!(report.contains("Pi is not included"));
     }
 
     fn sample_request() -> Value {
@@ -1456,7 +1006,13 @@ mod tests {
     }
 
     fn tempdir(prefix: &str) -> PathBuf {
-        let path = std::env::temp_dir().join(format!("{prefix}-{}", std::process::id()));
+        let counter = TEMP_COUNTER.fetch_add(1, Ordering::Relaxed);
+        let nanos = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let path =
+            std::env::temp_dir().join(format!("{prefix}-{}-{nanos}-{counter}", std::process::id()));
         let _ = std::fs::remove_dir_all(&path);
         std::fs::create_dir_all(&path).unwrap();
         path
