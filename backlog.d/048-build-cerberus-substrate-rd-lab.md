@@ -6,6 +6,9 @@ Priority: P0 · Status: ready · Estimate: L
 
 - Context packet: `docs/048-cerberus-rd-lab-context.md`
 - HTML plan: `docs/048-cerberus-rd-lab-shape.html`
+- Strategic direction: Cerberus now supersedes the Daedalus review-swarm
+  product lane for autonomous/reflex code review. The old 034 swarm work is
+  reusable evaluation evidence, not the parent path.
 - Deliverable type: harness primitive plus research report. The first
   implementation proves a Cerberus-first lab vertical slice before any generic
   external-agent lab framework.
@@ -46,7 +49,8 @@ Allie-style evidence systems and other task domains.
   state, cost, latency, and failure mode in evidence Daedalus can rank.
 - Keep Bitterblossom and Olympus as control-plane consumers/comparators; do not
   move production posting, trigger, budget, or approval authority into
-  Daedalus.
+  Daedalus, and do not resurrect 034's Pi-first specialist swarm as the parent
+  product path.
 - Resolve or explicitly sequence with `047` so real-repo arena validation is
   not based on an inconclusive one-shot saturation probe.
 
@@ -78,7 +82,8 @@ Allie-style evidence systems and other task domains.
       context it actually used, and what remains unproven.
 - [ ] `docs/primitives.md`, `docs/review-autoresearch-loop.md`, and active
       Bitterblossom-facing tickets no longer imply Pi is the default substrate
-      for unsupervised/reflex review labs.
+      or that `034` is the parent product path for unsupervised/reflex review
+      labs.
 - [ ] `arena-freeze` / `arena-validate` either produce non-inconclusive probe
       evidence for the chosen real-repo arena or the run is explicitly limited
       to fixture/adapter proof before paid search.
@@ -105,7 +110,8 @@ Allie-style evidence systems and other task domains.
 ## Children
 
 1. Land and reconcile the substrate premise on `master`; update stale Pi-first
-   wording in `036` and `037` so they depend on this lab instead of forking it.
+   and `034`-parent wording in `036` and `037` so they depend on this lab
+   instead of forking it.
 2. Add a fixture-only Cerberus artifact ingestion/scoring path in Daedalus.
 3. Add live Cerberus OpenCode and OMP candidate execution or import receipts
    with honest cost/latency/failure fields.

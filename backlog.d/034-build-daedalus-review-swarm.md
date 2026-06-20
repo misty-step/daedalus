@@ -1,8 +1,21 @@
 # Build a Daedalus-optimized PR review swarm
 
 Priority: P0
-Status: in progress - member-only slice verified (offline oracle green); full-swarm replay/export remain
+Status: blocked - superseded by 048 Cerberus lab; member-only evidence preserved; do not resume full-swarm replay/export unless 048 revives the topology
 Estimate: XL
+
+## Direction Update (2026-06-20)
+
+Cerberus has usurped the active product direction for autonomous/reflex code
+review. This ticket is no longer the parent implementation path for
+Bitterblossom, Olympus, or future review products.
+
+Preserve and reuse the useful 034 outputs: taxonomy, member artifact contract,
+master-consolidation falsifiers, cost/latency envelopes, and member-only
+delivery evidence. Feed those into `048` as prior research. Do not spend on
+full-swarm child work or new plane handoffs from this ticket unless the
+Cerberus lab produces evidence that a multi-member swarm is the right
+Cerberus configuration.
 
 ## PRD Summary
 
@@ -515,17 +528,18 @@ Current correctness repair:
   certification. The real-repo-scale probe-design gap is tracked separately
   in `backlog.d/047-replace-real-repo-saturation-probe.md`.
 
-Remaining children:
+Remaining children are parked behind `048`:
 
 - Continue correctness autoresearch on v0.3.0 after the fresh freeze report.
   Focus on Qwen/GPT candidates, live-lock, clean-trap stability, and
   runtime-crash repeatability. Only then complete child 8 with the first
   certified full suite search. If `047` remains open, the correct next action
   is to fix the freeze probe, not to bypass the gate with `--allow-saturated`.
-- Complete child 9 with real-member replay through the master benchmark.
+- Complete child 9 with real-member replay through the master benchmark only if
+  `048` revives a swarm topology.
 - Promote `deliveries/pr-review-swarm/` from member-only inspection to
-  full-swarm only after real-member replay passes and the G2 specialist
-  caveats are accepted or resolved.
+  full-swarm only after `048` says Cerberus should run that topology, real-member
+  replay passes, and the G2 specialist caveats are accepted or resolved.
 
 Verification (2026-06-15):
 
