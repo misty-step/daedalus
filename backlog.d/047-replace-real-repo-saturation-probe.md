@@ -60,9 +60,9 @@ full copied repository. The probe remains `kind = "oneshot"` and therefore
 stays reference-only.
 
 - Plan: `docs/047-saturation-probe-plan.html`
-- Freeze: `runs/047-saturation-probe-freeze-v2/`
-- Report: `runs/047-saturation-probe-freeze-v2/freeze-report.md`
+- Freeze: `runs/047-saturation-probe-freeze-v3/`
+- Report: `runs/047-saturation-probe-freeze-v3/freeze-report.md`
 - Offline validation:
-  `runs/047-saturation-probe-freeze-v2/arena-validate-report.md`
+  `runs/047-saturation-probe-freeze-v3/arena-validate-report.md`
 - Result: oracle `1.0`, null `0.25`, one-shot probe `0.625`, probe errors `0`,
-  known probe cost `$0.07904`.
+  known probe cost `$0.096589`.

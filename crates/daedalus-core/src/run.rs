@@ -782,7 +782,7 @@ fn review_context_workspace(
     }
 
     if truncated {
-        text.push_str("\n\nContext truncated by oneshot review-context limits.\n");
+        push_truncation_notice(&mut text, total_limit);
     }
 
     OneshotWorkspaceContext {
@@ -807,15 +807,57 @@ fn changed_paths_from_diff(diff: &str) -> Vec<String> {
         let Some(raw) = line.strip_prefix("+++ ") else {
             continue;
         };
-        if raw == "/dev/null" {
+        let Some(rel) = normalize_diff_new_path(raw) else {
             continue;
-        }
-        let rel = raw.strip_prefix("b/").unwrap_or(raw);
-        if is_safe_workspace_rel(rel) && !paths.iter().any(|p| p == rel) {
+        };
+        if is_safe_workspace_rel(&rel) && !paths.iter().any(|p| p == &rel) {
             paths.push(rel.to_string());
         }
     }
     paths
+}
+
+fn normalize_diff_new_path(raw: &str) -> Option<String> {
+    let token = diff_path_token(raw);
+    let token = strip_surrounding_quotes(token.trim());
+    if token == "/dev/null" {
+        return None;
+    }
+    let rel = token.strip_prefix("b/").unwrap_or(&token);
+    if rel == "/dev/null" {
+        None
+    } else {
+        Some(rel.to_string())
+    }
+}
+
+fn diff_path_token(raw: &str) -> &str {
+    let raw = raw.trim();
+    if raw.starts_with('"') {
+        let mut escaped = false;
+        for (idx, ch) in raw.char_indices().skip(1) {
+            if escaped {
+                escaped = false;
+                continue;
+            }
+            if ch == '\\' {
+                escaped = true;
+                continue;
+            }
+            if ch == '"' {
+                return &raw[..=idx];
+            }
+        }
+    }
+    raw.split('\t').next().unwrap_or(raw).trim()
+}
+
+fn strip_surrounding_quotes(raw: &str) -> String {
+    if raw.starts_with('"') && raw.ends_with('"') && raw.len() >= 2 {
+        raw[1..raw.len() - 1].to_string()
+    } else {
+        raw.to_string()
+    }
 }
 
 fn is_safe_workspace_rel(rel: &str) -> bool {
@@ -843,8 +885,9 @@ fn push_workspace_file(
     let Ok(content) = std::fs::read_to_string(&path) else {
         return;
     };
-    push_text_section(out, rel, &content, file_limit, total_limit, truncated);
-    files.push(rel.to_string());
+    if push_text_section(out, rel, &content, file_limit, total_limit, truncated) {
+        files.push(rel.to_string());
+    }
 }
 
 fn push_text_section(
@@ -854,25 +897,60 @@ fn push_text_section(
     file_limit: usize,
     total_limit: usize,
     truncated: &mut bool,
-) {
+) -> bool {
     let header = format!("\n### {title}\n```\n");
     let footer = "```\n";
-    let used = out.chars().count();
-    let fixed = header.chars().count() + footer.chars().count();
+    let trunc_msg = "\n...<truncated>\n";
+    let used = out.len();
+    let fixed = header.len() + footer.len();
     if used.saturating_add(fixed) >= total_limit {
         *truncated = true;
-        return;
+        return false;
     }
     let available = total_limit.saturating_sub(used + fixed).min(file_limit);
-    let total_chars = content.chars().count();
-    let body: String = content.chars().take(available).collect();
-    out.push_str(&header);
-    out.push_str(&body);
-    if total_chars > available {
+    let (body, truncated_body) = if content.len() > available {
+        if available <= trunc_msg.len() {
+            *truncated = true;
+            return false;
+        }
+        (utf8_prefix(content, available - trunc_msg.len()), true)
+    } else {
+        (content, false)
+    };
+    if body.is_empty() && truncated_body {
         *truncated = true;
-        out.push_str("\n...<truncated>\n");
+        return false;
+    }
+    out.push_str(&header);
+    out.push_str(body);
+    if truncated_body {
+        *truncated = true;
+        out.push_str(trunc_msg);
     }
     out.push_str(footer);
+    true
+}
+
+fn utf8_prefix(content: &str, max_bytes: usize) -> &str {
+    if content.len() <= max_bytes {
+        return content;
+    }
+    let mut end = 0;
+    for (idx, ch) in content.char_indices() {
+        let next = idx + ch.len_utf8();
+        if next > max_bytes {
+            break;
+        }
+        end = next;
+    }
+    &content[..end]
+}
+
+fn push_truncation_notice(out: &mut String, total_limit: usize) {
+    let notice = "\n\nContext truncated by oneshot review-context limits.\n";
+    if out.len().saturating_add(notice.len()) <= total_limit {
+        out.push_str(notice);
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -2965,6 +3043,82 @@ prompt_packet = \"/old/machine/daedalus/runs/legacy/packets/prompt.md\"\n",
         assert!(context.text.contains("### src/ratio.py"));
         assert!(!context.text.contains("src/unrelated.py"));
         assert_eq!(context.files, vec!["PR.diff", "src/ratio.py"]);
+        let _ = std::fs::remove_dir_all(tmp);
+    }
+
+    #[test]
+    fn changed_paths_from_diff_handles_metadata_and_quoted_paths() {
+        let diff = "\
+diff --git a/src/plain.py b/src/plain.py
+--- a/src/plain.py
++++ b/src/plain.py\t2026-06-20
+diff --git a/src/ratio with spaces.py b/src/ratio with spaces.py
+--- \"a/src/ratio with spaces.py\"
++++ \"b/src/ratio with spaces.py\"
+diff --git a/src/deleted.py b/src/deleted.py
+--- a/src/deleted.py
++++ /dev/null
+diff --git a/secret b/secret
+--- a/secret
++++ b/../secret
+";
+
+        assert_eq!(
+            changed_paths_from_diff(diff),
+            vec!["src/plain.py", "src/ratio with spaces.py"]
+        );
+    }
+
+    #[test]
+    fn push_text_section_enforces_byte_limits_on_utf8_boundaries() {
+        let mut out = String::new();
+        let mut truncated = false;
+
+        assert!(push_text_section(
+            &mut out,
+            "unicode",
+            &"é".repeat(100),
+            40,
+            64,
+            &mut truncated,
+        ));
+
+        assert!(truncated);
+        assert!(out.len() <= 64);
+        assert!(out.contains("...<truncated>"));
+    }
+
+    #[test]
+    fn review_context_probe_keeps_truncation_notice_within_byte_limit() {
+        let tmp = std::env::temp_dir().join(format!(
+            "daedalus-run-review-context-limit-{}",
+            std::process::id()
+        ));
+        let _ = std::fs::remove_dir_all(&tmp);
+        let task = tmp.join("task");
+        let workdir = tmp.join("workdir");
+        std::fs::create_dir_all(&task).unwrap();
+        std::fs::create_dir_all(workdir.join("src")).unwrap();
+        std::fs::write(task.join("intent.md"), "é".repeat(200)).unwrap();
+        std::fs::write(
+            workdir.join("PR.diff"),
+            "diff --git a/src/main.py b/src/main.py\n--- a/src/main.py\n+++ b/src/main.py\n",
+        )
+        .unwrap();
+        std::fs::write(workdir.join("src/main.py"), "print('new')\n").unwrap();
+
+        let candidate = serde_json::json!({
+            "workspace_mode": "review-context",
+            "workspace_max_bytes": 96,
+            "workspace_file_bytes": 64
+        })
+        .as_object()
+        .unwrap()
+        .clone();
+        let context = oneshot_workspace_context(&candidate, &task, &workdir).unwrap();
+
+        assert!(context.truncated);
+        assert!(context.text.len() <= 96);
         let _ = std::fs::remove_dir_all(tmp);
     }
 

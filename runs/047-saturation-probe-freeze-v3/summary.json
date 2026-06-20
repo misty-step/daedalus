@@ -1,0 +1,299 @@
+{
+  "oracle": {
+    "composition_hash": "07d8650e238cd916",
+    "kind": "oracle",
+    "tasks": {
+      "py-export-clear": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          18
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-formatter-clean": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          38
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-formatter-missing-crash": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          39
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-live-lock": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          16
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-measure-normalize": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          16
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-padding-clean": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          16
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-plugin-cache": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          42
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-progress-speed": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          18
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      }
+    },
+    "trials": 8,
+    "errors": 0,
+    "cost_usd_total": 0.0,
+    "cost_known": false,
+    "reward_mean": 1.0
+  },
+  "null": {
+    "composition_hash": "40f2f6e05112c409",
+    "kind": "null",
+    "tasks": {
+      "py-export-clear": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          17
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-formatter-clean": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          41
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-formatter-missing-crash": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          41
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-live-lock": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          18
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-measure-normalize": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          16
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-padding-clean": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          16
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-plugin-cache": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          37
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-progress-speed": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          16
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      }
+    },
+    "trials": 8,
+    "errors": 0,
+    "cost_usd_total": 0.0,
+    "cost_known": false,
+    "reward_mean": 0.25
+  },
+  "probe-oneshot": {
+    "composition_hash": "8d5c0d7a1188c916",
+    "kind": "oneshot",
+    "tasks": {
+      "py-export-clear": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          38644
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-formatter-clean": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          7639
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-formatter-missing-crash": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          19481
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-live-lock": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          909
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-measure-normalize": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          38810
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-padding-clean": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          11261
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-plugin-cache": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          45310
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-progress-speed": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          30357
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      }
+    },
+    "trials": 8,
+    "errors": 0,
+    "cost_usd_total": 0.096589,
+    "cost_known": true,
+    "reward_mean": 0.625
+  }
+}
