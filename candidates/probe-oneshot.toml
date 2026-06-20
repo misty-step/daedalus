@@ -5,9 +5,10 @@
 # Pareto fronts, recommendations, and parent selection by kind.
 #
 # Real-repo workspaces can exceed model context when inlined whole. The default
-# probe therefore uses a bounded review-context prompt: task intent, PR.diff,
-# changed files, and small project anchors. This keeps the probe falsifiable
-# without letting context overflow masquerade as "unsaturated".
+# probe therefore uses a bounded review-context prompt when PR.diff exists:
+# task intent, PR.diff, changed files, and small project anchors. Fixtures
+# without PR.diff fall back to the full workspace, preserving the old small-arena
+# saturation signal instead of hiding fixture files.
 composition = 1
 id = "probe-oneshot"
 kind = "oneshot"

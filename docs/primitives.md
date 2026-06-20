@@ -68,7 +68,9 @@ validator must reject them for pi parents.
 review-context mode sends task intent, `PR.diff`, changed files, and small
 project anchors under `workspace_max_bytes` / `workspace_file_bytes`; it avoids
 turning context overflow or empty provider output into a false
-"unsaturated" signal. The probe remains excluded from Pareto fronts,
+"unsaturated" signal. When `PR.diff` is absent or empty, review-context falls
+back to the full workspace so small non-PR arenas are still probed honestly.
+The probe remains excluded from Pareto fronts,
 recommendations, parent selection, and launch exports.
 
 ## Tool policies (named subsets for the search space)

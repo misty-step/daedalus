@@ -712,13 +712,17 @@ fn oneshot_workspace_context(
         .and_then(Value::as_str)
         .unwrap_or("full");
     match mode {
-        "full" => Ok(OneshotWorkspaceContext {
-            text: workspace_listing(workdir),
-            files: Vec::new(),
-            truncated: false,
-        }),
+        "full" => Ok(full_workspace_context(workdir)),
         "review-context" => Ok(review_context_workspace(candidate, task_dir, workdir)),
         other => Err(format!("unsupported oneshot workspace_mode: {other}").into()),
+    }
+}
+
+fn full_workspace_context(workdir: &Path) -> OneshotWorkspaceContext {
+    OneshotWorkspaceContext {
+        text: workspace_listing(workdir),
+        files: Vec::new(),
+        truncated: false,
     }
 }
 
@@ -744,18 +748,21 @@ fn review_context_workspace(
         );
     }
 
-    let diff = std::fs::read_to_string(workdir.join("PR.diff")).unwrap_or_default();
-    if !diff.is_empty() {
-        push_workspace_file(
-            &mut text,
-            &mut files,
-            workdir,
-            "PR.diff",
-            file_limit,
-            total_limit,
-            &mut truncated,
-        );
+    let Ok(diff) = std::fs::read_to_string(workdir.join("PR.diff")) else {
+        return full_workspace_context(workdir);
+    };
+    if diff.trim().is_empty() {
+        return full_workspace_context(workdir);
     }
+    push_workspace_file(
+        &mut text,
+        &mut files,
+        workdir,
+        "PR.diff",
+        file_limit,
+        total_limit,
+        &mut truncated,
+    );
 
     for rel in changed_paths_from_diff(&diff) {
         push_workspace_file(
@@ -3043,6 +3050,36 @@ prompt_packet = \"/old/machine/daedalus/runs/legacy/packets/prompt.md\"\n",
         assert!(context.text.contains("### src/ratio.py"));
         assert!(!context.text.contains("src/unrelated.py"));
         assert_eq!(context.files, vec!["PR.diff", "src/ratio.py"]);
+        let _ = std::fs::remove_dir_all(tmp);
+    }
+
+    #[test]
+    fn review_context_probe_without_diff_falls_back_to_full_workspace() {
+        let tmp = std::env::temp_dir().join(format!(
+            "daedalus-run-review-context-no-diff-{}",
+            std::process::id()
+        ));
+        let _ = std::fs::remove_dir_all(&tmp);
+        let task = tmp.join("task");
+        let workdir = tmp.join("workdir");
+        std::fs::create_dir_all(&task).unwrap();
+        std::fs::create_dir_all(workdir.join("src")).unwrap();
+        std::fs::write(task.join("intent.md"), "Small fixture without PR diff").unwrap();
+        std::fs::write(workdir.join("src/main.py"), "print('covered')\n").unwrap();
+
+        let candidate = serde_json::json!({
+            "workspace_mode": "review-context",
+            "workspace_max_bytes": 96,
+            "workspace_file_bytes": 64
+        })
+        .as_object()
+        .unwrap()
+        .clone();
+        let context = oneshot_workspace_context(&candidate, &task, &workdir).unwrap();
+
+        assert!(context.text.contains("src/main.py"));
+        assert!(context.text.contains("print('covered')"));
+        assert_eq!(context.files, Vec::<String>::new());
         let _ = std::fs::remove_dir_all(tmp);
     }
 

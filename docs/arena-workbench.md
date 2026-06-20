@@ -40,7 +40,9 @@ cargo run --quiet --bin daedalus -- arena-validate arenas/pr-review-v2 \
 `arena-freeze` runs the reference ceiling/floor and one-shot probe without
 falling through into candidate seeding or search. The default one-shot probe is
 bounded for real-repo arenas: it sends task intent, `PR.diff`, changed files,
-and small project anchors rather than inlining the full copied repository.
+and small project anchors rather than inlining the full copied repository. If a
+fixture has no `PR.diff`, the probe falls back to the full workspace so small
+non-PR arenas keep their old saturation signal.
 `arena-validate` is offline. It checks:
 
 - fixture symlinks;
