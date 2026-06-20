@@ -10,7 +10,7 @@
 //! Python original. See `docs/rust-migration.md` for migration status.
 
 use std::collections::HashMap;
-use std::path::{Path, PathBuf};
+use std::path::{Component, Path, PathBuf};
 
 use serde_json::{Map, Value};
 use sha2::{Digest, Sha256};
@@ -467,19 +467,69 @@ pub fn toml_to_json(v: toml::Value) -> Value {
 // ---------------------------------------------------------------------------
 
 /// Resolve a relative or absolute file reference against the repo root.
-/// Mirrors `_resolve_ref(ref)` from Python:
+/// Mirrors `_resolve_ref(ref)` from Python for live paths:
 /// ```python
 /// path = Path(ref)
 /// return path if path.is_absolute() else REPO / path
 /// ```
 /// where `REPO` is the repository root (two levels above `runner/run.py`).
+///
+/// Legacy delivery manifests may contain absolute paths from the checkout that
+/// produced the measured artifact. If that checkout path is gone, preserve the
+/// manifest string for hashing but resolve known repo-local suffixes from the
+/// current checkout so committed evidence remains portable.
 pub fn resolve_ref(ref_str: &str, repo_root: &Path) -> PathBuf {
     let p = Path::new(ref_str);
     if p.is_absolute() {
+        if p.exists() {
+            return p.to_path_buf();
+        }
+        if let Some(path) = rebase_legacy_repo_ref(p, repo_root) {
+            return path;
+        }
         p.to_path_buf()
     } else {
         repo_root.join(p)
     }
+}
+
+fn rebase_legacy_repo_ref(path: &Path, repo_root: &Path) -> Option<PathBuf> {
+    const REPO_ANCHORS: &[&str] = &[
+        "approvals",
+        "arenas",
+        "backlog.d",
+        "crates",
+        "deliveries",
+        "docs",
+        "runs",
+        "specs",
+    ];
+
+    let parts: Vec<_> = path
+        .components()
+        .filter_map(|component| match component {
+            Component::Normal(part) => Some(part),
+            _ => None,
+        })
+        .collect();
+
+    for (index, part) in parts.iter().enumerate() {
+        let Some(part) = part.to_str() else {
+            continue;
+        };
+        if !REPO_ANCHORS.contains(&part) {
+            continue;
+        }
+        let mut rebased = repo_root.to_path_buf();
+        for suffix in &parts[index..] {
+            rebased.push(suffix);
+        }
+        if rebased.exists() {
+            return Some(rebased);
+        }
+    }
+
+    None
 }
 
 // ---------------------------------------------------------------------------
@@ -2367,6 +2417,34 @@ skills = [\"{skill}\"]\nagents_md = \"{agents}\"\n",
             .unwrap()
             .to_string();
         assert_eq!(h1, h3);
+        let _ = std::fs::remove_dir_all(&tmp);
+    }
+
+    #[test]
+    fn load_candidate_rebases_legacy_absolute_repo_refs() {
+        let tmp =
+            std::env::temp_dir().join(format!("daedalus-run-legacy-abs-{}", std::process::id()));
+        std::fs::create_dir_all(tmp.join("runs/legacy/packets")).unwrap();
+        let packet = tmp.join("runs/legacy/packets/prompt.md");
+        std::fs::write(&packet, "Review from a moved checkout.").unwrap();
+        let manifest = tmp.join("cand.toml");
+        std::fs::write(
+            &manifest,
+            "id = \"x\"\nkind = \"oneshot\"\nmodel = \"m\"\n\
+prompt_packet = \"/old/machine/daedalus/runs/legacy/packets/prompt.md\"\n",
+        )
+        .unwrap();
+
+        let candidate = load_candidate(&manifest, &tmp).unwrap();
+
+        assert_eq!(
+            candidate["prompt_packet"].as_str().unwrap(),
+            "/old/machine/daedalus/runs/legacy/packets/prompt.md"
+        );
+        assert_eq!(
+            candidate["_packet_text"].as_str().unwrap(),
+            "Review from a moved checkout."
+        );
         let _ = std::fs::remove_dir_all(&tmp);
     }
 
