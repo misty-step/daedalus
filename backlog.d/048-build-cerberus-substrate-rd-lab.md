@@ -1,6 +1,6 @@
 # Build the Cerberus substrate R&D lab
 
-Priority: P0 · Status: in progress - live OpenCode/OMP comparison verified; final gate/review closeout pending · Estimate: L
+Priority: P0 · Status: delivered · Estimate: L
 
 ## Shaped Context
 
