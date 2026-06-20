@@ -1,145 +1,346 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-ae-mode="light">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Daedalus Cerberus R&D Lab Shape</title>
+  <title>048 Cerberus R&amp;D Lab Operating Model</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&amp;family=Geist+Mono:wght@100..900&amp;display=swap">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/misty-step/aesthetic@v2.5.1/aesthetic.css">
   <style>
-    body { font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; color: #111; background: #f7f7f4; }
-    main { max-width: 1180px; margin: 0 auto; padding: 40px 28px 64px; }
-    h1 { font-size: 44px; line-height: 1.02; margin: 0 0 16px; letter-spacing: 0; }
-    h2 { font-size: 15px; letter-spacing: .08em; text-transform: uppercase; margin: 0 0 12px; }
-    h3 { margin: 0 0 8px; }
-    p { margin: 0 0 12px; }
-    code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .92em; }
-    .hero { display: grid; grid-template-columns: 1.2fr .8fr; gap: 28px; align-items: end; padding-bottom: 28px; border-bottom: 1px solid #cfcfc8; }
-    .panel, .cell { background: #fff; border: 1px solid #d8d8d0; padding: 18px; }
-    .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 18px; }
-    .grid2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 18px; }
-    .phase { display: grid; grid-template-columns: 140px 1fr 330px; gap: 16px; padding: 16px 0; border-top: 1px solid #d8d8d0; }
-    .muted { color: #666; }
-    .tag { display: inline-block; border: 1px solid #aaa; padding: 2px 7px; border-radius: 999px; font-size: 12px; margin-right: 6px; background: #fff; }
-    ul { margin: 0 0 0 18px; padding: 0; }
-    li { margin: 5px 0; }
-    table { width: 100%; border-collapse: collapse; background: #fff; margin-top: 12px; }
-    th, td { text-align: left; vertical-align: top; padding: 10px; border: 1px solid #d8d8d0; }
-    th { background: #ecece6; }
-    @media (max-width: 860px) { .hero, .grid2, .grid3, .phase { grid-template-columns: 1fr; } h1 { font-size: 34px; } }
+    :root {
+      --ae-accent: #2643d0;
+      --ae-accent-dark: #8c9eff;
+    }
+
+    .plan-wide .ae-bar,
+    .plan-wide .ae-stage {
+      width: min(94rem, 100% - 4rem);
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.08fr) minmax(26em, 0.72fr);
+      gap: 3em;
+      align-items: end;
+    }
+
+    .kicker { display: block; margin-bottom: 0.8em; }
+    .rule { border-top: 1px solid var(--ae-line); margin: 1.5em 0; }
+
+    .grid-2,
+    .grid-3,
+    .grid-4,
+    .grid-5 {
+      display: grid;
+      gap: 1px;
+      background: var(--ae-line);
+    }
+
+    .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .grid-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+
+    .cell {
+      min-width: 0;
+      background: var(--ae-surface);
+      padding: 1.2em 1.35em;
+    }
+
+    .wash { background: var(--ae-wash); }
+
+    .phase {
+      display: grid;
+      grid-template-columns: 8em minmax(0, 1fr) minmax(16em, 0.72fr);
+      gap: 1.3em;
+      border-top: 1px solid var(--ae-line);
+      padding-top: 1em;
+      margin-top: 1em;
+    }
+
+    .phase:first-child {
+      border-top: 0;
+      margin-top: 0;
+      padding-top: 0;
+    }
+
+    .table-wrap { overflow-x: auto; }
+
+    .status {
+      display: inline-flex;
+      gap: 0.45em;
+      align-items: baseline;
+    }
+
+    .status svg { transform: translateY(0.15em); }
+
+    .ladder {
+      display: grid;
+      gap: 1px;
+      background: var(--ae-line);
+    }
+
+    .ladder-row {
+      display: grid;
+      grid-template-columns: 10em minmax(0, 1fr) minmax(16em, 0.55fr);
+      gap: 1.2em;
+      background: var(--ae-surface);
+      padding: 1em 1.2em;
+    }
+
+    .mini-meter {
+      height: 0.55em;
+      border: 1px solid var(--ae-line);
+      margin-top: 0.45em;
+      position: relative;
+    }
+
+    .mini-meter span {
+      display: block;
+      height: 100%;
+      background: var(--ae-accent);
+    }
+
+    @media (max-width: 980px) {
+      .plan-wide .ae-bar,
+      .plan-wide .ae-stage {
+        width: min(100% - 2rem, 94rem);
+      }
+
+      .hero,
+      .grid-2,
+      .grid-3,
+      .grid-4,
+      .grid-5,
+      .phase,
+      .ladder-row {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
 <body>
-<main>
-  <section class="hero">
-    <div>
-      <p><span class="tag">Daedalus</span><span class="tag">Cerberus</span><span class="tag">R&D lab</span></p>
-      <h1>Make Daedalus useful by proving the best autonomous review substrate for Cerberus first.</h1>
-      <p class="muted">Chosen direction: build a Cerberus-focused upstream lab that compares OpenCode, OMP, and current Pi-style review candidates by validated artifacts, cost, latency, and lifecycle truth. Generalize only after this lab produces trustworthy evidence.</p>
-    </div>
-    <aside class="panel">
-      <h2>Contract</h2>
-      <p><strong>Outcome:</strong> Daedalus can recommend a Cerberus review configuration because it measured agent substrates, not because a report favored one.</p>
-      <p><strong>Proof:</strong> same review request, same arena, comparable run records, strict artifact validation, no production posting.</p>
-      <p><strong>Stop if:</strong> Cerberus artifact validation cannot be mapped into Daedalus scoring, OpenCode output cannot be captured deterministically, or the freeze probe remains inconclusive for the chosen arena.</p>
-    </aside>
-  </section>
+<svg aria-hidden="true" style="display: none" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="i-check" viewBox="0 0 24 24">
+    <path d="M20 6 9 17l-5-5"></path>
+  </symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24">
+    <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"></path>
+    <path d="M12 9v4"></path>
+    <path d="M12 17h.01"></path>
+  </symbol>
+  <symbol id="i-x" viewBox="0 0 24 24">
+    <path d="M18 6 6 18"></path>
+    <path d="m6 6 12 12"></path>
+  </symbol>
+</svg>
 
-  <section class="grid3">
-    <article class="cell">
-      <h2>Current State</h2>
-      <p>Daedalus V1 measures <code>pi</code> candidates plus reference <code>oneshot/null/oracle</code>. Cerberus now has <code>opencode</code>, <code>omp</code>, and fixture harnesses around <code>ReviewArtifact.v1</code>. Bitterblossom and Olympus are consumers/control planes, not the lab.</p>
-    </article>
-    <article class="cell">
-      <h2>Thesis</h2>
-      <p>Supervised agents can be terminal-first. Unsupervised agents need server/session shape, strict artifacts, durable lifecycle, bounded env, and replayable receipts. OpenCode is the first autonomous substrate candidate to test, not a belief to install globally.</p>
-    </article>
-    <article class="cell">
-      <h2>First Deliverable</h2>
-      <p>A Cerberus substrate-eval vertical slice: Daedalus runs or ingests Cerberus OpenCode and OMP artifacts, compares them against the Pi incumbent on one review arena, and emits a report suitable for a G2-style decision.</p>
-    </article>
-  </section>
+<div class="ae-screen plan-wide">
+  <header class="ae-bar">
+    <a class="ae-name" href="../backlog.d/048-build-cerberus-substrate-rd-lab.md">048 / CERBERUS R&amp;D LAB</a>
+    <p class="ae-chrome">context packet: docs/048-cerberus-rd-lab-context.md</p>
+  </header>
 
-  <section class="grid2">
-    <article class="cell">
-      <h2>Repo Anchors</h2>
-      <ul>
-        <li><code>docs/premises/2026-06-19-coding-agent-substrates.md</code> - substrate premise.</li>
-        <li><code>docs/primitives.md</code> - current Daedalus harness pool says Pi V1 only.</li>
-        <li><code>crates/daedalus-core/src/run.rs</code> - candidate executor dispatch.</li>
-        <li><code>/Users/phaedrus/Development/cerberus/src/harness.rs</code> - OpenCode/OMP runner shape.</li>
-        <li><code>/Users/phaedrus/Development/bitterblossom/README.md</code> - reflex/dispatch split and plane boundary.</li>
-        <li><code>/Users/phaedrus/Development/allie/README.md</code> - later generalization pattern: evidence packets first.</li>
-      </ul>
-    </article>
-    <article class="cell">
-      <h2>Non-Goals</h2>
-      <ul>
-        <li>No production PR posting from Daedalus.</li>
-        <li>No generic arbitrary-lab framework before the Cerberus lab works.</li>
-        <li>No hardcoded reviewer roster as the product claim.</li>
-        <li>No self-approval of G1/G2/G3/G4/G5.</li>
-        <li>No weakening the real-repo freeze gate to get a result.</li>
-      </ul>
-    </article>
-  </section>
+  <main class="ae-stage ae-stage-scroll">
+    <article class="ae-view">
+      <section class="hero" aria-label="Plan contract">
+        <div>
+          <p class="ae-chrome kicker">DAEDALUS -> CERBERUS / SUBSTRATE LAB</p>
+          <h1 class="ae-strong">Prove what Cerberus should run next before changing what Cerberus runs.</h1>
+          <p class="ae-lede">Chosen design: a Cerberus-first R&amp;D lab inside Daedalus. It compares OpenCode, OMP, and a current Pi-style baseline through Cerberus <code>ReviewRequest.v1</code> and <code>ReviewArtifact.v1</code>, then emits sandbox-only evidence. It is not a generic lab framework, posting bot, or production control plane.</p>
+        </div>
+        <aside class="ae-panel">
+          <h2 class="ae-h">CHOSEN DESIGN</h2>
+          <p><span class="status"><svg class="ae-icon ae-ok"><use href="#i-check"></use></svg> Cerberus-first lab adapter and operating workbench.</span></p>
+          <p class="ae-dim">First implementation imports fixture artifacts, then compares live OpenCode and OMP receipts only after freeze evidence is credible.</p>
+          <div class="rule"></div>
+          <h2 class="ae-h">PROOF SURFACE</h2>
+          <p><code>bin/gate</code>, <code>daedalus doctor</code>, <code>arena-freeze</code>, <code>arena-validate</code>, Cerberus <code>./scripts/verify.sh</code>, and one Daedalus report over imported Cerberus artifacts.</p>
+          <div class="rule"></div>
+          <p class="ae-dim">Premise: <code>sha256:2c10aea3... docs/premises/2026-06-19-coding-agent-substrates.md</code></p>
+          <p class="ae-dim">Stop if: artifact validation fails, freeze remains inconclusive, or the report hides substrate failure behind model quality.</p>
+        </aside>
+      </section>
 
-  <section class="panel" style="margin-top:18px">
-    <h2>Alternatives</h2>
-    <table>
-      <tr><th>Option</th><th>Why tempting</th><th>Failure mode</th><th>Verdict</th></tr>
-      <tr><td>Continue Pi-only review swarm</td><td>Daedalus already supports it.</td><td>Optimizes the old substrate axis and leaves autonomous review architecture untested.</td><td>Reject as strategic default.</td></tr>
-      <tr><td>Switch everything to OpenCode now</td><td>Matches the substrate report.</td><td>Belief without Daedalus run records; risks replacing one unmeasured default with another.</td><td>Reject.</td></tr>
-      <tr><td>Cerberus-first substrate lab</td><td>Uses live Cerberus code and strict artifacts.</td><td>Requires adapter/scoring work and may expose freeze-probe gaps.</td><td>Choose.</td></tr>
-      <tr><td>General arbitrary labs now</td><td>Sounds like the long-term product.</td><td>Framework before a proven exemplar; likely shallow abstractions.</td><td>Defer until Cerberus lab proves the seams.</td></tr>
-    </table>
-  </section>
+      <section class="grid-5" aria-label="Workbench surfaces" style="margin-top: 2em">
+        <article class="cell">
+          <h2 class="ae-h">TASK CONTRACT</h2>
+          <p>Arena id/version, objective, context tier, split, frozen keys, gate state, and stop conditions.</p>
+        </article>
+        <article class="cell">
+          <h2 class="ae-h">CANDIDATE RACK</h2>
+          <p>Substrate, model, prompt packet, context capability, tool policy, budget, timeout, and run source.</p>
+        </article>
+        <article class="cell">
+          <h2 class="ae-h">EXPERIMENT CONSOLE</h2>
+          <p>Hypothesis, seeds, trial count, baseline/probe state, exact command shape, and expected spend.</p>
+        </article>
+        <article class="cell">
+          <h2 class="ae-h">EVIDENCE NOTEBOOK</h2>
+          <p>Artifacts, transcripts, receipts, cost, latency, lifecycle state, invalid-output reasons, and overclaim flags.</p>
+        </article>
+        <article class="cell wash">
+          <h2 class="ae-h">PROMOTION GATE</h2>
+          <p>Sandbox-only recommendation, G2/G3/G4/G5 state, rollback, waivers, and residual risk.</p>
+        </article>
+      </section>
 
-  <section class="panel" style="margin-top:18px">
-    <h2>Sequence</h2>
-    <div class="phase">
-      <strong>0 codify</strong>
-      <p>Land the substrate premise on Daedalus master and update the active backlog wording so 036/037 are not Pi-first.</p>
-      <p class="muted">Evidence: clean master diff; no code behavior claim.</p>
-    </div>
-    <div class="phase">
-      <strong>1 adapter</strong>
-      <p>Add a Daedalus candidate/import path for Cerberus <code>ReviewArtifact.v1</code>, starting with fixture ingestion before live OpenCode spend.</p>
-      <p class="muted">Evidence: fixture artifact validates, scores, and produces a normal run record.</p>
-    </div>
-    <div class="phase">
-      <strong>2 substrate slice</strong>
-      <p>Run the same review request through Cerberus OpenCode and OMP, plus current Pi baseline where comparable. Record cost, latency, artifact validity, lifecycle, and scoring.</p>
-      <p class="muted">Evidence: one report comparing substrates on the same arena.</p>
-    </div>
-    <div class="phase">
-      <strong>3 freeze repair</strong>
-      <p>Resolve the real-repo saturation probe so future substrate comparisons are not blocked by one-shot context overflow or empty provider output.</p>
-      <p class="muted">Evidence: <code>arena-freeze</code> and <code>arena-validate</code> produce non-inconclusive probe evidence.</p>
-    </div>
-    <div class="phase">
-      <strong>4 generalize</strong>
-      <p>Extract a lab template only after Cerberus succeeds: task contract, candidate adapter, artifact schema, scorer, freeze, report, handoff.</p>
-      <p class="muted">Evidence: Allie or another project can define a lab without Cerberus-specific branches.</p>
-    </div>
-  </section>
+      <section class="grid-3" aria-label="Current state" style="margin-top: 1px">
+        <article class="cell">
+          <h2 class="ae-h">CURRENT STATE</h2>
+          <p>Daedalus V1 still centers Pi candidates. Cerberus now has OpenCode, OMP, fixture harnesses, artifact validation, and PR/git-range request builders on <code>master</code> at <code>99c4b21</code>.</p>
+        </article>
+        <article class="cell">
+          <h2 class="ae-h">CHANGE SHAPE</h2>
+          <p>Add <code>daedalus cerberus-lab import</code>: a narrow Cerberus artifact import path that reports comparable substrate evidence before any generalization.</p>
+        </article>
+        <article class="cell wash">
+          <h2 class="ae-h">QUALITY BAR</h2>
+          <p>Artifact validity, hidden-key score where mappable, cost/latency, context truth, lifecycle honesty, and freeze status are all first-class evidence.</p>
+        </article>
+      </section>
 
-  <section class="grid2">
-    <article class="cell">
-      <h2>Verification System</h2>
-      <p><strong>Claim:</strong> Daedalus can compare autonomous review substrates for Cerberus credibly.</p>
-      <p><strong>Falsifier:</strong> artifacts are not comparable, OpenCode output is not deterministic enough to score, or Daedalus cannot distinguish substrate failure from model quality.</p>
-      <p><strong>Driver:</strong> Cerberus fixture run, then live OpenCode/OMP run, then Daedalus scoring/report generation.</p>
-      <p><strong>Grader:</strong> artifact schema validation, score against hidden answer key, cost/latency lifecycle fields present, non-inconclusive freeze.</p>
-      <p><strong>Evidence packet:</strong> run directory, Cerberus transcript/artifact, Daedalus summary, and substrate comparison report.</p>
-      <p><strong>Cadence:</strong> fixture before live spend; gate before landing; fresh critic before recommendation.</p>
+      <section class="ae-panel" aria-label="Levers and dials" style="margin-top: 2em">
+        <h2 class="ae-h">LEVERS AND DIALS</h2>
+        <div class="table-wrap">
+          <table class="ae-table">
+            <thead>
+              <tr><th>group</th><th>dials</th><th>owner</th><th>failure this catches</th></tr>
+            </thead>
+            <tbody>
+              <tr><td class="ae-item">task</td><td>arena version, split, clean traps, context tier</td><td>Daedalus</td><td>scores that move because the arena moved</td></tr>
+              <tr><td class="ae-item">candidate</td><td>substrate, model, prompt packet, dynamic-lane permission</td><td>Daedalus measures; Cerberus runs</td><td>unattributed "better prompt" claims</td></tr>
+              <tr><td class="ae-item">context</td><td>diff only, repo head, base/head, runtime, external research</td><td>Cerberus records</td><td>reviews claiming evidence they did not have</td></tr>
+              <tr><td class="ae-item">safety</td><td>env allowlist, secrets/network policy, timeout, degraded mode</td><td>Cerberus + Daedalus risk metadata</td><td>unsafe local runs or hidden credentials</td></tr>
+              <tr><td class="ae-item">analysis</td><td>reward, validity, false positives, cost, latency, CI, holdout burn</td><td>Daedalus</td><td>mean-score theater</td></tr>
+              <tr><td class="ae-item">promotion</td><td>threshold, sandbox flag, waiver, rollback, gate state</td><td>Daedalus emits; human approves</td><td>lab result becoming production by accident</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="grid-2" aria-label="Scope and anchors" style="margin-top: 2em">
+        <article class="cell">
+          <h2 class="ae-h">SCOPE</h2>
+          <p><strong>Goal:</strong> compare Cerberus review substrates credibly enough to recommend a sandbox configuration.</p>
+          <p><strong>Non-goals:</strong> production posting, Bitterblossom eventing, model-roster mutation from memory, generic lab framework, static specialist roster.</p>
+          <p><strong>Invariants:</strong> no candidate sees hidden grader files; no cross-version averaging; unknown cost is <code>null</code>; G1-G5 stay human.</p>
+        </article>
+        <article class="cell">
+          <h2 class="ae-h">REPO ANCHORS</h2>
+          <p><a href="../DESIGN.md">DESIGN.md</a> - pipeline, run records, candidate manifests, Cerberus handoff.</p>
+          <p><a href="primitives.md">docs/primitives.md</a> - verified model and harness pool.</p>
+          <p><a href="arena-workbench.md">docs/arena-workbench.md</a> - freeze and adjudication commands.</p>
+          <p><a href="../backlog.d/047-replace-real-repo-saturation-probe.md">backlog.d/047</a> - real-repo freeze blocker.</p>
+          <p><code>/Users/phaedrus/Development/cerberus/spec.md</code> - Cerberus runtime contract.</p>
+        </article>
+      </section>
+
+      <section class="ae-panel" aria-label="Execution plan" style="margin-top: 2em">
+        <h2 class="ae-h">EXECUTION PLAN</h2>
+        <div class="phase">
+          <strong class="ae-accent">1 fixture</strong>
+          <p>Import or score a Cerberus fixture <code>ReviewArtifact.v1</code> without live model spend.</p>
+          <p class="ae-dim">Evidence: valid request/artifact pair, Daedalus score or explicit unmappable fields, report stub.</p>
+        </div>
+        <div class="phase">
+          <strong class="ae-accent">2 freeze</strong>
+          <p>Run or require non-inconclusive arena freeze evidence before any recommendation.</p>
+          <p class="ae-dim">Evidence: <code>arena-freeze</code> and <code>arena-validate</code> reports, or fixture-only waiver.</p>
+        </div>
+        <div class="phase">
+          <strong class="ae-accent">3 live slice</strong>
+          <p>Run the same request through Cerberus OpenCode and OMP, then compare against Pi where comparable.</p>
+          <p class="ae-dim">Evidence: artifacts, transcripts, lifecycle/cost/latency fields, context-overclaim checks.</p>
+        </div>
+        <div class="phase">
+          <strong class="ae-accent">4 report</strong>
+          <p>Write one substrate comparison report with task grid, cost/quality plane, failures, and residual risk.</p>
+          <p class="ae-dim">Evidence: committed run records where small, artifact index for heavy local receipts.</p>
+        </div>
+        <div class="phase">
+          <strong class="ae-accent">5 handoff</strong>
+          <p>Emit only sandbox recommendation material; production import remains blocked by G3/G4/G5.</p>
+          <p class="ae-dim">Evidence: Cerberus validation/dry-run import path, rollback note, fresh critic receipt.</p>
+        </div>
+      </section>
+
+      <section class="grid-2" aria-label="Alternatives and proof" style="margin-top: 2em">
+        <article class="cell">
+          <h2 class="ae-h">ALTERNATIVES</h2>
+          <div class="table-wrap">
+            <table class="ae-table">
+              <thead>
+                <tr><th>option</th><th>why tempting</th><th>failure mode</th><th>verdict</th></tr>
+              </thead>
+              <tbody>
+                <tr><td class="ae-item">manual report</td><td>fast</td><td>no repeatable run records</td><td>reject as final</td></tr>
+                <tr><td class="ae-item">Pi-only</td><td>already works</td><td>does not test Cerberus substrate choice</td><td>reject</td></tr>
+                <tr><td class="ae-item">OpenCode now</td><td>matches premise</td><td>unmeasured default swap</td><td>reject</td></tr>
+                <tr><td class="ae-item">generic lab</td><td>sounds durable</td><td>framework before exemplar</td><td>defer</td></tr>
+                <tr><td class="ae-item">Cerberus-first adapter</td><td>real consumer, real contract</td><td>must handle freeze blockers honestly</td><td>choose</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+        <article class="cell wash">
+          <h2 class="ae-h">VERIFICATION SYSTEM</h2>
+          <p><strong>Claim:</strong> Daedalus can compare Cerberus autonomous review substrates credibly enough to recommend what Cerberus should run next.</p>
+          <p><strong>Falsifier:</strong> invalid artifacts pass, substrate failure is scored as model quality, unknown cost is guessed, or an inconclusive freeze still produces a recommendation.</p>
+          <p><strong>Driver:</strong> Cerberus fixture/live runs, Daedalus import/scoring/report, <code>arena-freeze</code>, <code>arena-validate</code>, <code>bin/gate</code>.</p>
+          <p><strong>Evidence:</strong> request, artifact, transcript, run directory, report, freeze reports, critic receipt.</p>
+        </article>
+      </section>
+
+      <section class="ae-panel" aria-label="Operator flow" style="margin-top: 2em">
+        <h2 class="ae-h">OPERATOR FLOW</h2>
+        <div class="ladder">
+          <div class="ladder-row">
+            <strong>1 choose task</strong>
+            <p>Select arena, task family, objective, context tier, and whether this is fixture-only or live-spend.</p>
+            <p class="ae-dim">Stop: no frozen arena or missing answer key.</p>
+          </div>
+          <div class="ladder-row">
+            <strong>2 choose matrix</strong>
+            <p>Select OpenCode, OMP, and Pi/comparator arms with one controlled hypothesis per run.</p>
+            <p class="ae-dim">Stop: model missing from refreshed primitives.</p>
+          </div>
+          <div class="ladder-row">
+            <strong>3 run</strong>
+            <p>Execute fixture import first, then live Cerberus receipts only with explicit cost/time/security posture.</p>
+            <p class="ae-dim">Stop: hidden files, secrets, or prompt/diff material leak into unsafe surfaces.</p>
+          </div>
+          <div class="ladder-row">
+            <strong>4 analyze</strong>
+            <p>Read task grid, invalid-output reasons, context overclaims, false positives, misses, cost, and latency.</p>
+            <p class="ae-dim">Stop: result moves only inside observed trial noise.</p>
+          </div>
+          <div class="ladder-row">
+            <strong>5 promote or postmortem</strong>
+            <p>Emit a sandbox-only recommendation or plateau postmortem. Production gates remain human.</p>
+            <p class="ae-dim">Stop: G2/G3/G4/G5 approval is missing.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="grid-3" aria-label="Review focus" style="margin-top: 2em">
+        <article class="cell">
+          <h2 class="ae-h">WORKS CRITIQUE</h2>
+          <p>Can an operator run the lab without chat-only ordering? Does the first viewport say whether the result is fixture-only, live, or blocked?</p>
+        </article>
+        <article class="cell">
+          <h2 class="ae-h">ADVERSARIAL CRITIC</h2>
+          <p>Look for invalid artifact acceptance, wrong ownership boundary, generic framework creep, hidden costs, and fake confidence from bad freeze evidence.</p>
+        </article>
+        <article class="cell wash">
+          <h2 class="ae-h">MODE B BOUNDARY</h2>
+          <p>Recurring triggers, queues, budgets, and posting stay outside this packet. Bitterblossom may consume sandbox evidence later.</p>
+        </article>
+      </section>
     </article>
-    <article class="cell">
-      <h2>Premise Sources</h2>
-      <p><code>sha256:2c10aea3a38c845bfe492fa42aede414a049ec9b78c5007c5c66a5a1db6fbc05 docs/premises/2026-06-19-coding-agent-substrates.md</code></p>
-      <p><code>sha256:40183960599f9b076c4fd453609a76b7b2ed917f156303f93e51497bfabd3555 /Users/phaedrus/Development/cerberus/src/harness.rs</code></p>
-      <p><code>sha256:447d2b863ca2fca4b7bc13c1fa67bc4c22fbe29559f5e36d1d8992bf80796cb8 /Users/phaedrus/Development/allie/README.md</code></p>
-      <p class="muted">Shape reference gap: requested <code>shape/references/loop-readiness.md</code> is missing in Harness Kit; verification-system reference was loaded.</p>
-    </article>
-  </section>
-</main>
+  </main>
+</div>
 </body>
 </html>

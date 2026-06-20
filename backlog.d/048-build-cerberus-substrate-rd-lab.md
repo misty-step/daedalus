@@ -2,6 +2,14 @@
 
 Priority: P0 · Status: ready · Estimate: L
 
+## Shaped Context
+
+- Context packet: `docs/048-cerberus-rd-lab-context.md`
+- HTML plan: `docs/048-cerberus-rd-lab-shape.html`
+- Deliverable type: harness primitive plus research report. The first
+  implementation proves a Cerberus-first lab vertical slice before any generic
+  external-agent lab framework.
+
 ## Goal
 
 Make Daedalus useful for Cerberus by measuring autonomous code-review
@@ -16,8 +24,11 @@ The substrate premise is now explicit:
 better default substrate than OMP for unsupervised review services because it is
 server/session-first. Live Cerberus code has moved from architecture memory into
 an actual Rust runner with `opencode`, `omp`, and fixture harnesses plus strict
-artifact validation. Daedalus, however, still treats `pi` as the only V1
-candidate harness and cannot yet compare Cerberus substrate runs.
+artifact validation. Cerberus `master` now also includes PR/git-range request
+builders (`99c4b21 Add Cerberus PR request builder (#463)`), so Daedalus can
+start from real `ReviewRequest.v1` and `ReviewArtifact.v1` fixtures. Daedalus,
+however, still treats `pi` as the only V1 candidate harness and cannot yet
+compare Cerberus substrate runs.
 
 This is the narrowest useful bridge between Daedalus and real applications:
 prove one upstream R&D lab for Cerberus, then extract the lab template for
@@ -27,6 +38,8 @@ Allie-style evidence systems and other task domains.
 
 - Add or shape a Daedalus candidate/import path for Cerberus
   `ReviewArtifact.v1` outputs.
+- Shape the operator-facing lab surface: task contract, candidate rack,
+  experiment console, evidence notebook, and promotion gate.
 - Compare at least one OpenCode-backed Cerberus run, one OMP-backed Cerberus
   run, and the current Pi-style review baseline where comparable.
 - Record substrate, model, context capability, artifact validity, lifecycle
@@ -49,6 +62,9 @@ Allie-style evidence systems and other task domains.
 
 ## Oracle
 
+- [ ] The context packet and HTML plan name the lab surfaces, dials, ownership
+      boundaries, executable oracle, stop conditions, and premise sources
+      without relying on chat context.
 - [ ] A Cerberus fixture `ReviewArtifact.v1` can be validated and converted or
       scored through a Daedalus run/eval path without live model spend.
 - [ ] A live OpenCode-backed Cerberus review and an OMP-backed Cerberus review
@@ -102,13 +118,17 @@ Allie-style evidence systems and other task domains.
 
 ## Evidence
 
-- Context packet: `docs/048-cerberus-rd-lab-shape.html`
+- Context packet: `docs/048-cerberus-rd-lab-context.md`
+- HTML plan: `docs/048-cerberus-rd-lab-shape.html`
 - Premise source:
   `sha256:2c10aea3a38c845bfe492fa42aede414a049ec9b78c5007c5c66a5a1db6fbc05`
   `docs/premises/2026-06-19-coding-agent-substrates.md`
 - Cerberus runner source:
-  `sha256:40183960599f9b076c4fd453609a76b7b2ed917f156303f93e51497bfabd3555`
+  `sha256:05d51736e468c41bee0ebe6d6cabccca72e7f7cc52348e07e5202d12cb219449`
   `/Users/phaedrus/Development/cerberus/src/harness.rs`
+- Cerberus request-builder source:
+  `sha256:d2c75d882aab7917112c8d2431656308275eef8674303c87059e96151abf8648`
+  `/Users/phaedrus/Development/cerberus/src/request.rs`
 - Allie generalization anchor:
   `sha256:447d2b863ca2fca4b7bc13c1fa67bc4c22fbe29559f5e36d1d8992bf80796cb8`
   `/Users/phaedrus/Development/allie/README.md`
