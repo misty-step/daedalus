@@ -1,14 +1,22 @@
 # Saturation probe (reference, like null/oracle — never a candidate): one
-# chat completion with the whole workspace inlined, no tools, no agent loop.
-# Its only job is the meta-eval question "is this arena too easy?". When the
-# probe approaches the oracle, the arena cannot rank agent configurations and
-# the search aborts. Excluded from Pareto fronts, recommendations, and parent
-# selection by kind.
+# chat completion, no tools, no agent loop. Its only job is the meta-eval
+# question "is this arena too easy?". When the probe approaches the oracle, the
+# arena cannot rank agent configurations and the search aborts. Excluded from
+# Pareto fronts, recommendations, and parent selection by kind.
+#
+# Real-repo workspaces can exceed model context when inlined whole. The default
+# probe therefore uses a bounded review-context prompt when PR.diff exists:
+# task intent, PR.diff, changed files, and small project anchors. Fixtures
+# without PR.diff fall back to the full workspace, preserving the old small-arena
+# saturation signal instead of hiding fixture files.
 composition = 1
 id = "probe-oneshot"
 kind = "oneshot"
-model = "moonshotai/kimi-k2.6"
+model = "deepseek/deepseek-v4-pro"
 prompt_packet = "packets/reviewer-v1.md"
 temperature = 0.2
-max_tokens = 8192
+max_tokens = 16384
 timeout_sec = 300
+workspace_mode = "review-context"
+workspace_max_bytes = 120000
+workspace_file_bytes = 24000

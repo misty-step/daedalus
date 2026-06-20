@@ -695,6 +695,271 @@ pub fn workspace_listing(workdir: &Path) -> String {
     parts
 }
 
+#[derive(Debug, Clone)]
+struct OneshotWorkspaceContext {
+    text: String,
+    files: Vec<String>,
+    truncated: bool,
+}
+
+fn oneshot_workspace_context(
+    candidate: &Map<String, Value>,
+    task_dir: &Path,
+    workdir: &Path,
+) -> Result<OneshotWorkspaceContext, Box<dyn std::error::Error>> {
+    let mode = candidate
+        .get("workspace_mode")
+        .and_then(Value::as_str)
+        .unwrap_or("full");
+    match mode {
+        "full" => Ok(full_workspace_context(workdir)),
+        "review-context" => Ok(review_context_workspace(candidate, task_dir, workdir)),
+        other => Err(format!("unsupported oneshot workspace_mode: {other}").into()),
+    }
+}
+
+fn full_workspace_context(workdir: &Path) -> OneshotWorkspaceContext {
+    OneshotWorkspaceContext {
+        text: workspace_listing(workdir),
+        files: Vec::new(),
+        truncated: false,
+    }
+}
+
+fn review_context_workspace(
+    candidate: &Map<String, Value>,
+    task_dir: &Path,
+    workdir: &Path,
+) -> OneshotWorkspaceContext {
+    let total_limit = manifest_usize(candidate, "workspace_max_bytes", 120_000);
+    let file_limit = manifest_usize(candidate, "workspace_file_bytes", 24_000);
+    let mut text = String::new();
+    let mut files = Vec::new();
+    let mut truncated = false;
+
+    if let Ok(intent) = std::fs::read_to_string(task_dir.join("intent.md")) {
+        push_text_section(
+            &mut text,
+            "Task intent",
+            &intent,
+            file_limit,
+            total_limit,
+            &mut truncated,
+        );
+    }
+
+    let Ok(diff) = std::fs::read_to_string(workdir.join("PR.diff")) else {
+        return full_workspace_context(workdir);
+    };
+    if diff.trim().is_empty() {
+        return full_workspace_context(workdir);
+    }
+    push_workspace_file(
+        &mut text,
+        &mut files,
+        workdir,
+        "PR.diff",
+        file_limit,
+        total_limit,
+        &mut truncated,
+    );
+
+    for rel in changed_paths_from_diff(&diff) {
+        push_workspace_file(
+            &mut text,
+            &mut files,
+            workdir,
+            &rel,
+            file_limit,
+            total_limit,
+            &mut truncated,
+        );
+    }
+
+    for rel in ["README.md", "pyproject.toml", "setup.py"] {
+        push_workspace_file(
+            &mut text,
+            &mut files,
+            workdir,
+            rel,
+            file_limit.min(8_000),
+            total_limit,
+            &mut truncated,
+        );
+    }
+
+    if truncated {
+        push_truncation_notice(&mut text, total_limit);
+    }
+
+    OneshotWorkspaceContext {
+        text,
+        files,
+        truncated,
+    }
+}
+
+fn manifest_usize(candidate: &Map<String, Value>, key: &str, default: usize) -> usize {
+    candidate
+        .get(key)
+        .and_then(Value::as_u64)
+        .and_then(|n| usize::try_from(n).ok())
+        .filter(|&n| n > 0)
+        .unwrap_or(default)
+}
+
+fn changed_paths_from_diff(diff: &str) -> Vec<String> {
+    let mut paths = Vec::new();
+    for line in diff.lines() {
+        let Some(raw) = line.strip_prefix("+++ ") else {
+            continue;
+        };
+        let Some(rel) = normalize_diff_new_path(raw) else {
+            continue;
+        };
+        if is_safe_workspace_rel(&rel) && !paths.iter().any(|p| p == &rel) {
+            paths.push(rel.to_string());
+        }
+    }
+    paths
+}
+
+fn normalize_diff_new_path(raw: &str) -> Option<String> {
+    let token = diff_path_token(raw);
+    let token = strip_surrounding_quotes(token.trim());
+    if token == "/dev/null" {
+        return None;
+    }
+    let rel = token.strip_prefix("b/").unwrap_or(&token);
+    if rel == "/dev/null" {
+        None
+    } else {
+        Some(rel.to_string())
+    }
+}
+
+fn diff_path_token(raw: &str) -> &str {
+    let raw = raw.trim();
+    if raw.starts_with('"') {
+        let mut escaped = false;
+        for (idx, ch) in raw.char_indices().skip(1) {
+            if escaped {
+                escaped = false;
+                continue;
+            }
+            if ch == '\\' {
+                escaped = true;
+                continue;
+            }
+            if ch == '"' {
+                return &raw[..=idx];
+            }
+        }
+    }
+    raw.split('\t').next().unwrap_or(raw).trim()
+}
+
+fn strip_surrounding_quotes(raw: &str) -> String {
+    if raw.starts_with('"') && raw.ends_with('"') && raw.len() >= 2 {
+        raw[1..raw.len() - 1].to_string()
+    } else {
+        raw.to_string()
+    }
+}
+
+fn is_safe_workspace_rel(rel: &str) -> bool {
+    let path = Path::new(rel);
+    !rel.is_empty()
+        && !path.is_absolute()
+        && path
+            .components()
+            .all(|c| matches!(c, Component::Normal(_) | Component::CurDir))
+}
+
+fn push_workspace_file(
+    out: &mut String,
+    files: &mut Vec<String>,
+    workdir: &Path,
+    rel: &str,
+    file_limit: usize,
+    total_limit: usize,
+    truncated: &mut bool,
+) {
+    if files.iter().any(|p| p == rel) || !is_safe_workspace_rel(rel) {
+        return;
+    }
+    let path = workdir.join(rel);
+    let Ok(content) = std::fs::read_to_string(&path) else {
+        return;
+    };
+    if push_text_section(out, rel, &content, file_limit, total_limit, truncated) {
+        files.push(rel.to_string());
+    }
+}
+
+fn push_text_section(
+    out: &mut String,
+    title: &str,
+    content: &str,
+    file_limit: usize,
+    total_limit: usize,
+    truncated: &mut bool,
+) -> bool {
+    let header = format!("\n### {title}\n```\n");
+    let footer = "```\n";
+    let trunc_msg = "\n...<truncated>\n";
+    let used = out.len();
+    let fixed = header.len() + footer.len();
+    if used.saturating_add(fixed) >= total_limit {
+        *truncated = true;
+        return false;
+    }
+    let available = total_limit.saturating_sub(used + fixed).min(file_limit);
+    let (body, truncated_body) = if content.len() > available {
+        if available <= trunc_msg.len() {
+            *truncated = true;
+            return false;
+        }
+        (utf8_prefix(content, available - trunc_msg.len()), true)
+    } else {
+        (content, false)
+    };
+    if body.is_empty() && truncated_body {
+        *truncated = true;
+        return false;
+    }
+    out.push_str(&header);
+    out.push_str(body);
+    if truncated_body {
+        *truncated = true;
+        out.push_str(trunc_msg);
+    }
+    out.push_str(footer);
+    true
+}
+
+fn utf8_prefix(content: &str, max_bytes: usize) -> &str {
+    if content.len() <= max_bytes {
+        return content;
+    }
+    let mut end = 0;
+    for (idx, ch) in content.char_indices() {
+        let next = idx + ch.len_utf8();
+        if next > max_bytes {
+            break;
+        }
+        end = next;
+    }
+    &content[..end]
+}
+
+fn push_truncation_notice(out: &mut String, total_limit: usize) {
+    let notice = "\n\nContext truncated by oneshot review-context limits.\n";
+    if out.len().saturating_add(notice.len()) <= total_limit {
+        out.push_str(notice);
+    }
+}
+
 // ---------------------------------------------------------------------------
 // extract_json_object
 // ---------------------------------------------------------------------------
@@ -1473,7 +1738,7 @@ fn oneshot_context_fits(
 pub fn run_oneshot(
     candidate: &Map<String, Value>,
     instruction: &str,
-    _task_dir: &Path,
+    task_dir: &Path,
     workdir: &Path,
     record: &mut Map<String, Value>,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -1481,9 +1746,14 @@ pub fn run_oneshot(
 
     let key = std::env::var("OPENROUTER_API_KEY").map_err(|_| "OPENROUTER_API_KEY is not set")?;
 
+    let workspace_context = oneshot_workspace_context(candidate, task_dir, workdir)?;
+    let workspace_mode = candidate
+        .get("workspace_mode")
+        .and_then(Value::as_str)
+        .unwrap_or("full");
     let prompt = format!(
         "{instruction}\n\n## Workspace files\n{}\nRespond with ONLY the findings JSON object, no prose.",
-        workspace_listing(workdir)
+        workspace_context.text
     );
 
     let system = candidate
@@ -1512,6 +1782,32 @@ pub fn run_oneshot(
         .get("context_window")
         .and_then(Value::as_u64)
         .unwrap_or(DEFAULT_CONTEXT_WINDOW);
+    record.insert(
+        "oneshot_workspace_mode".to_string(),
+        Value::String(workspace_mode.to_string()),
+    );
+    record.insert(
+        "oneshot_prompt_chars".to_string(),
+        Value::Number(serde_json::Number::from(prompt.chars().count() as u64)),
+    );
+    record.insert(
+        "oneshot_context_window".to_string(),
+        Value::Number(serde_json::Number::from(context_window)),
+    );
+    record.insert(
+        "oneshot_workspace_truncated".to_string(),
+        Value::Bool(workspace_context.truncated),
+    );
+    record.insert(
+        "oneshot_included_files".to_string(),
+        Value::Array(
+            workspace_context
+                .files
+                .iter()
+                .map(|path| Value::String(path.clone()))
+                .collect(),
+        ),
+    );
     if let Err(reason) = oneshot_context_fits(
         system.chars().count() + prompt.chars().count(),
         max_tokens,
@@ -2717,5 +3013,186 @@ prompt_packet = \"/old/machine/daedalus/runs/legacy/packets/prompt.md\"\n",
         // not admitted by floor division.
         assert!(oneshot_context_fits(256_000 * 4 + 1, 0, 256_000).is_err());
         assert!(oneshot_context_fits(256_000 * 4, 0, 256_000).is_ok());
+    }
+
+    #[test]
+    fn review_context_probe_includes_diff_and_changed_file_not_full_repo() {
+        let tmp = std::env::temp_dir().join(format!(
+            "daedalus-run-review-context-{}",
+            std::process::id()
+        ));
+        let _ = std::fs::remove_dir_all(&tmp);
+        let task = tmp.join("task");
+        let workdir = tmp.join("workdir");
+        std::fs::create_dir_all(&task).unwrap();
+        std::fs::create_dir_all(workdir.join("src")).unwrap();
+        std::fs::write(task.join("intent.md"), "Fix changed path only").unwrap();
+        std::fs::write(
+            workdir.join("PR.diff"),
+            "diff --git a/src/ratio.py b/src/ratio.py\n--- a/src/ratio.py\n+++ b/src/ratio.py\n@@ -1 +1 @@\n-old\n+new\n",
+        )
+        .unwrap();
+        std::fs::write(workdir.join("src/ratio.py"), "def ratio():\n    return 0\n").unwrap();
+        std::fs::write(workdir.join("src/unrelated.py"), "UNRELATED\n".repeat(2000)).unwrap();
+
+        let candidate = serde_json::json!({
+            "workspace_mode": "review-context",
+            "workspace_max_bytes": 4096,
+            "workspace_file_bytes": 1024
+        })
+        .as_object()
+        .unwrap()
+        .clone();
+        let context = oneshot_workspace_context(&candidate, &task, &workdir).unwrap();
+
+        assert!(context.text.contains("Fix changed path only"));
+        assert!(context.text.contains("### PR.diff"));
+        assert!(context.text.contains("### src/ratio.py"));
+        assert!(!context.text.contains("src/unrelated.py"));
+        assert_eq!(context.files, vec!["PR.diff", "src/ratio.py"]);
+        let _ = std::fs::remove_dir_all(tmp);
+    }
+
+    #[test]
+    fn review_context_probe_without_diff_falls_back_to_full_workspace() {
+        let tmp = std::env::temp_dir().join(format!(
+            "daedalus-run-review-context-no-diff-{}",
+            std::process::id()
+        ));
+        let _ = std::fs::remove_dir_all(&tmp);
+        let task = tmp.join("task");
+        let workdir = tmp.join("workdir");
+        std::fs::create_dir_all(&task).unwrap();
+        std::fs::create_dir_all(workdir.join("src")).unwrap();
+        std::fs::write(task.join("intent.md"), "Small fixture without PR diff").unwrap();
+        std::fs::write(workdir.join("src/main.py"), "print('covered')\n").unwrap();
+
+        let candidate = serde_json::json!({
+            "workspace_mode": "review-context",
+            "workspace_max_bytes": 96,
+            "workspace_file_bytes": 64
+        })
+        .as_object()
+        .unwrap()
+        .clone();
+        let context = oneshot_workspace_context(&candidate, &task, &workdir).unwrap();
+
+        assert!(context.text.contains("src/main.py"));
+        assert!(context.text.contains("print('covered')"));
+        assert_eq!(context.files, Vec::<String>::new());
+        let _ = std::fs::remove_dir_all(tmp);
+    }
+
+    #[test]
+    fn changed_paths_from_diff_handles_metadata_and_quoted_paths() {
+        let diff = "\
+diff --git a/src/plain.py b/src/plain.py
+--- a/src/plain.py
++++ b/src/plain.py\t2026-06-20
+diff --git a/src/ratio with spaces.py b/src/ratio with spaces.py
+--- \"a/src/ratio with spaces.py\"
++++ \"b/src/ratio with spaces.py\"
+diff --git a/src/deleted.py b/src/deleted.py
+--- a/src/deleted.py
++++ /dev/null
+diff --git a/secret b/secret
+--- a/secret
++++ b/../secret
+";
+
+        assert_eq!(
+            changed_paths_from_diff(diff),
+            vec!["src/plain.py", "src/ratio with spaces.py"]
+        );
+    }
+
+    #[test]
+    fn push_text_section_enforces_byte_limits_on_utf8_boundaries() {
+        let mut out = String::new();
+        let mut truncated = false;
+
+        assert!(push_text_section(
+            &mut out,
+            "unicode",
+            &"é".repeat(100),
+            40,
+            64,
+            &mut truncated,
+        ));
+
+        assert!(truncated);
+        assert!(out.len() <= 64);
+        assert!(out.contains("...<truncated>"));
+    }
+
+    #[test]
+    fn review_context_probe_keeps_truncation_notice_within_byte_limit() {
+        let tmp = std::env::temp_dir().join(format!(
+            "daedalus-run-review-context-limit-{}",
+            std::process::id()
+        ));
+        let _ = std::fs::remove_dir_all(&tmp);
+        let task = tmp.join("task");
+        let workdir = tmp.join("workdir");
+        std::fs::create_dir_all(&task).unwrap();
+        std::fs::create_dir_all(workdir.join("src")).unwrap();
+        std::fs::write(task.join("intent.md"), "é".repeat(200)).unwrap();
+        std::fs::write(
+            workdir.join("PR.diff"),
+            "diff --git a/src/main.py b/src/main.py\n--- a/src/main.py\n+++ b/src/main.py\n",
+        )
+        .unwrap();
+        std::fs::write(workdir.join("src/main.py"), "print('new')\n").unwrap();
+
+        let candidate = serde_json::json!({
+            "workspace_mode": "review-context",
+            "workspace_max_bytes": 96,
+            "workspace_file_bytes": 64
+        })
+        .as_object()
+        .unwrap()
+        .clone();
+        let context = oneshot_workspace_context(&candidate, &task, &workdir).unwrap();
+
+        assert!(context.truncated);
+        assert!(context.text.len() <= 96);
+        let _ = std::fs::remove_dir_all(tmp);
+    }
+
+    #[cfg(feature = "http")]
+    #[test]
+    fn review_context_probe_can_fit_when_full_workspace_would_overflow() {
+        let tmp = std::env::temp_dir().join(format!(
+            "daedalus-run-review-context-fit-{}",
+            std::process::id()
+        ));
+        let _ = std::fs::remove_dir_all(&tmp);
+        let task = tmp.join("task");
+        let workdir = tmp.join("workdir");
+        std::fs::create_dir_all(&task).unwrap();
+        std::fs::create_dir_all(workdir.join("src")).unwrap();
+        std::fs::write(task.join("intent.md"), "Review bounded context").unwrap();
+        std::fs::write(
+            workdir.join("PR.diff"),
+            "diff --git a/src/main.py b/src/main.py\n--- a/src/main.py\n+++ b/src/main.py\n@@ -1 +1 @@\n-old\n+new\n",
+        )
+        .unwrap();
+        std::fs::write(workdir.join("src/main.py"), "print('new')\n").unwrap();
+        std::fs::write(workdir.join("huge.txt"), "x".repeat(1_400_000)).unwrap();
+
+        let full = workspace_listing(&workdir);
+        assert!(oneshot_context_fits(full.chars().count(), 8192, 256_000).is_err());
+
+        let candidate = serde_json::json!({
+            "workspace_mode": "review-context",
+            "workspace_max_bytes": 4096,
+            "workspace_file_bytes": 1024
+        })
+        .as_object()
+        .unwrap()
+        .clone();
+        let context = oneshot_workspace_context(&candidate, &task, &workdir).unwrap();
+        assert!(oneshot_context_fits(context.text.chars().count(), 8192, 256_000).is_ok());
+        let _ = std::fs::remove_dir_all(tmp);
     }
 }
