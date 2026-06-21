@@ -156,6 +156,13 @@ asking.
   model responses, findings (gitignored; records reference them)
 - `summary.json` — per-candidate, per-task reward distributions
   (rewards list, mean/min/max, wall, cost totals)
+- `report.md` / `report.html` — the comparison report in two registers: the
+  markdown source of truth, and a self-contained static HTML companion
+  (`daedalus report-html <run-dir>`, auto-emitted by `run`) that draws the
+  leaderboard, the reward-delta CI forest, the candidate×task coverage heatmap,
+  and a transcript drill behind every score, in the Misty Step / lab.css
+  language. Offline (`file://`), PR-attachable; a *derived view*, never the
+  source of truth. Backlog 044.
 
 Retention rule: run *records* (trials.jsonl, compositions/, summary.json,
 rig/seed/loop/pareto JSON, report.md, lineage.md, packets/, manifests/,
