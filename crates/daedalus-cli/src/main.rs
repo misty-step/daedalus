@@ -41,6 +41,15 @@ enum Cmd {
         #[arg(long = "run-dir")]
         run_dir: PathBuf,
     },
+    /// Render a run directory as a self-contained static HTML report — the
+    /// visual companion to report.md (leaderboard, CI forest, coverage heatmap,
+    /// transcript drill). Opens offline from file://; PR-attachable.
+    ReportHtml {
+        run_dir: PathBuf,
+        /// Output path. Default: `<run-dir>/report.html`.
+        #[arg(long)]
+        out: Option<PathBuf>,
+    },
     /// Basin-trap detector: compare the certified tops of >=2 seed runs and flag
     /// when different seeds crown different compositions beyond the pooled noise.
     Basin {
@@ -267,6 +276,7 @@ fn main() -> ExitCode {
     match cli.command {
         Cmd::Score { findings, expected } => cmd_score(&findings, &expected),
         Cmd::Trace { run_dir } => cmd_trace(&run_dir),
+        Cmd::ReportHtml { run_dir, out } => cmd_report_html(&run_dir, out.as_deref()),
         Cmd::Basin { run_dirs } => cmd_basin(&run_dirs),
         Cmd::Export { delivery, spec } => cmd_export(&delivery, &spec),
         Cmd::ExportCerberus {
@@ -450,6 +460,29 @@ fn cmd_trace(run_dir: &std::path::Path) -> ExitCode {
             ExitCode::FAILURE
         }
     }
+}
+
+fn cmd_report_html(run_dir: &std::path::Path, out: Option<&std::path::Path>) -> ExitCode {
+    if !run_dir.join("trials.jsonl").exists() {
+        eprintln!("no trials.jsonl in {}", run_dir.display());
+        return ExitCode::FAILURE;
+    }
+    let html = match daedalus_core::report_html::render_html(run_dir) {
+        Ok(h) => h,
+        Err(err) => {
+            eprintln!("render report.html: {err}");
+            return ExitCode::FAILURE;
+        }
+    };
+    let dest = out
+        .map(PathBuf::from)
+        .unwrap_or_else(|| run_dir.join("report.html"));
+    if let Err(err) = std::fs::write(&dest, &html) {
+        eprintln!("write {}: {err}", dest.display());
+        return ExitCode::FAILURE;
+    }
+    println!("report: {}", dest.display());
+    ExitCode::SUCCESS
 }
 
 // ---------------------------------------------------------------------------
@@ -2572,6 +2605,13 @@ fn cmd_run(
     // Lineage
     let lineage_text = daedalus_core::lineage::render(&exp_dir);
     let _ = std::fs::write(exp_dir.join("lineage.md"), lineage_text);
+
+    // Visual companion to report.md: a self-contained static report.html, drawn
+    // from the same trials.jsonl plus the loop.json verdict and rig.json just
+    // written. Emitted last so it reads the run's certified set and CIs (044).
+    if let Ok(html) = daedalus_core::report_html::render_html(&exp_dir) {
+        let _ = std::fs::write(exp_dir.join("report.html"), html);
+    }
 
     let notebook = repo.join("runs").join("NOTEBOOK.md");
     if !notebook.exists() {
