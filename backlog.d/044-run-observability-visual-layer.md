@@ -1,6 +1,21 @@
 # Run-observability + visual review layer (watch runs, sanity-check design/results)
 
-Priority: P1 · Status: ready · Estimate: XL
+Priority: P1 · Status: in-progress · Estimate: XL
+
+> **Delivered 2026-06-21 — static `report-html` (children 1, 2, 3, 5).**
+> `daedalus report-html <run-dir>` emits a self-contained offline HTML report
+> (leaderboard, reward-delta CI forest, coverage heatmap, transcript drill, rig
+> panel) in the lab.css language, auto-emitted by `run` Stage 5. Evidence:
+> `crates/daedalus-core/src/report_html.rs` (+5 golden/DOM/escaping/anchor
+> tests), sample at `runs/20260613T214006Z-search-pr-review-correctness/report.html`,
+> `bin/gate` green. Cross-model review caught and fixed a drill-anchor slug
+> collision (now keyed by position index). Two threads remain open below.
+>
+> **Remaining:** child 4 — the live `daedalus view` server (oracle bullet 3) —
+> is split to its own ticket (distinct streaming architecture). And oracle
+> bullet 4 is only partially met: the **rig panel** ships, but the
+> **contamination advisory** and **`arena-redteam` span audit** are not yet
+> surfaced in the report (they live in arena files, not the run dir) — follow-up.
 
 ## Goal
 A human can watch a search run live, sanity-check its design and execution, and review results — which configs win under what conditions, with confidence — through reviewable **visuals**, while everything stays CLI/agent-friendly and local-first.
@@ -11,8 +26,8 @@ The foundry already emits the hard part — a structured source of truth (`loop.
 External grounding (research 2026-06-18): the convergent local-first pattern is **Inspect AI** (UK AISI) — JSONL source of truth → self-contained static HTML (`inspect view bundle`) → live `view` server/TUI → one-click drill into a trial transcript. Every commercial tool (LangSmith, Braintrust, W&B Weave, Langfuse) **omits rendered confidence intervals** — daedalus's CI/consistency/power layer is the differentiation; it just needs to be *drawn*. Caution (Bowyer et al., ICML 2025, arXiv:2503.01747): at small per-config n, naive CLT bars lie — render the t-corrected interval we already compute and flag when n is too small.
 
 ## Oracle
-- [ ] `daedalus report-html <run-dir>` emits a **self-contained** static HTML (CSS/JS/images base64-inlined, opens from `file://`, PR-attachable, offline) from `loop.json` + `trials.jsonl` — the visual companion to `report.md`, in the Misty Step / lab.css design language.
-- [ ] It renders the four review surfaces: (a) a **leaderboard** (config × arena, sortable, cost/latency columns); (b) a **CI forest/caterpillar plot** of each certified candidate's reward-delta CI with the `sig`/`clstr→95%` columns (the 039 stats, drawn); (c) a **per-task/per-cluster heatmap** (config × task) to expose Simpson's-paradox wins; (d) one-click **drill from a score row into the trial transcript** (the candidate's findings + the scorer's matched/missed/FP explanation).
+- [x] `daedalus report-html <run-dir>` emits a **self-contained** static HTML (CSS/JS/images base64-inlined, opens from `file://`, PR-attachable, offline) from `loop.json` + `trials.jsonl` — the visual companion to `report.md`, in the Misty Step / lab.css design language.
+- [x] It renders the four review surfaces: (a) a **leaderboard** (config × arena, sortable, cost/latency columns); (b) a **CI forest/caterpillar plot** of each certified candidate's reward-delta CI with the `sig`/`clstr→95%` columns (the 039 stats, drawn); (c) a **per-task/per-cluster heatmap** (config × task) to expose Simpson's-paradox wins; (d) one-click **drill from a score row into the trial transcript** (the candidate's findings + the scorer's matched/missed/FP explanation).
 - [ ] A **live** surface: `daedalus view <run-dir>` (local server or TUI) streams trials as they complete with running scores, per-candidate progress, and **live $ spend** (the gap even Inspect's TUI doesn't nail) — reads the same JSONL, no rewrite.
 - [ ] Sanity-check affordances: the rig panel (oracle 1.0 / null floor / probe verdict incl. the slice-B Inconclusive state), the contamination advisory, and the `arena-redteam` span audit are visible in the report so design flaws are caught *before* trusting a ranking.
 
