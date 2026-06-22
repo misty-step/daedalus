@@ -164,6 +164,12 @@ asking.
   language. Offline (`file://`), PR-attachable; a *derived view*, never the
   source of truth. Backlog 044.
 
+The *live* counterpart is `daedalus view <run-dir>` (backlog 049): a terminal
+roll-up — per-candidate running mean, trials so far, cumulative known spend —
+that polls `trials.jsonl` while a `run` is in flight and stops when `loop.json`
+appears. It reuses the same aggregate, so the live numbers never drift from the
+batch report; the rich surfaces (CI forest, certification) stay post-run.
+
 Retention rule: run *records* (trials.jsonl, compositions/, summary.json,
 rig/seed/loop/pareto JSON, report.md, lineage.md, packets/, manifests/,
 artifacts.index) are committed; heavy *artifacts* (transcripts, responses,

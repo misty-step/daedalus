@@ -1,6 +1,18 @@
 # `daedalus view` — live run surface (watch trials, scores, $ spend stream in)
 
-Priority: P1 · Status: ready · Estimate: L
+Priority: P1 · Status: delivered · Estimate: L
+
+> **Delivered 2026-06-22.** `daedalus view <run-dir>` — a dependency-free
+> terminal roll-up (per-candidate running mean, trials so far, cumulative known
+> spend, last-trial heartbeat) that polls `trials.jsonl` and reprints until
+> `loop.json` appears, then shows the authoritative run-total spend. `--once`
+> for scripts/CI. Chosen over a server/TUI: the rich surfaces are inherently
+> post-run (no certified verdict mid-search), so the live signal is the roll-up;
+> `report-html` stays the post-run artifact. Reuses `report::aggregate` (no
+> drift). Evidence: `crates/daedalus-core/src/view.rs` (+6 tests), live QA —
+> `view --once` on a real run matches `loop.json.spend_known_usd` exactly
+> ($1.3002), a simulated streaming run, and a follow-loop that self-terminates
+> on completion. `bin/gate` green; fresh-context review SHIP (1 nit fixed).
 
 ## Goal
 A human can watch a search run **as it happens** — trials streaming in with
@@ -16,16 +28,19 @@ Inspect's TUI doesn't surface. This is a distinct architecture from 044 (a
 long-running process that polls/streams), which is why it is its own ticket.
 
 ## Oracle
-- [ ] `daedalus view <run-dir>` (local server or TUI) starts against a run
+- [x] `daedalus view <run-dir>` (terminal roll-up) starts against a run
       directory and streams trials **as they complete**: running mean reward
-      per candidate, trials done / expected, and cumulative known $ spend.
-- [ ] It reads the live `trials.jsonl` incrementally (tail/poll), reusing the
-      `report_html`/`report` aggregate — **no rewrite of the run loop**, no new
+      per candidate, trials so far, and cumulative known $ spend. (The "/
+      expected" denominator is omitted by design — it moves as the search spawns
+      child candidates; trials-so-far is the honest live figure.)
+- [x] It reads the live `trials.jsonl` incrementally (poll), reusing the
+      `report::aggregate` — **no rewrite of the run loop**, no new
       source of truth (JSONL stays authoritative).
-- [ ] It works while a `daedalus run` is in flight (new trial rows appear within
-      a poll interval) and degrades cleanly when the run finishes or the file is
-      briefly mid-write.
-- [ ] Local-first / offline (no network); an `arena-redteam` / OTel export stays
+- [x] It works while a `daedalus run` is in flight (new trial rows appear within
+      a poll interval) and degrades cleanly when the run finishes (stops on
+      `loop.json`) or the file is briefly mid-write (a half-written line is
+      skipped).
+- [x] Local-first / offline (no network, no new dependency); OTel export stays
       an optional downstream, not core.
 
 ## Verification System
