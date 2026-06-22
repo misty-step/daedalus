@@ -50,6 +50,18 @@ enum Cmd {
         #[arg(long)]
         out: Option<PathBuf>,
     },
+    /// Watch a run in flight: a live terminal roll-up (per-candidate running
+    /// mean, trials so far, cumulative known spend) that polls trials.jsonl and
+    /// reprints until the run completes. The live companion to report-html.
+    View {
+        run_dir: PathBuf,
+        /// Print one snapshot and exit (no follow) — for scripts and CI.
+        #[arg(long)]
+        once: bool,
+        /// Seconds between refreshes while following.
+        #[arg(long, default_value_t = 2)]
+        interval: u64,
+    },
     /// Basin-trap detector: compare the certified tops of >=2 seed runs and flag
     /// when different seeds crown different compositions beyond the pooled noise.
     Basin {
@@ -277,6 +289,11 @@ fn main() -> ExitCode {
         Cmd::Score { findings, expected } => cmd_score(&findings, &expected),
         Cmd::Trace { run_dir } => cmd_trace(&run_dir),
         Cmd::ReportHtml { run_dir, out } => cmd_report_html(&run_dir, out.as_deref()),
+        Cmd::View {
+            run_dir,
+            once,
+            interval,
+        } => cmd_view(&run_dir, once, interval),
         Cmd::Basin { run_dirs } => cmd_basin(&run_dirs),
         Cmd::Export { delivery, spec } => cmd_export(&delivery, &spec),
         Cmd::ExportCerberus {
@@ -483,6 +500,47 @@ fn cmd_report_html(run_dir: &std::path::Path, out: Option<&std::path::Path>) -> 
     }
     println!("report: {}", dest.display());
     ExitCode::SUCCESS
+}
+
+/// Watch a run in flight. Polls `trials.jsonl` and reprints the live roll-up
+/// until `loop.json` appears (run complete) or, with `--once`, after one frame.
+/// The poll/redraw loop is the only IO here; the roll-up and rendering are the
+/// tested pure core in `daedalus_core::view`.
+fn cmd_view(run_dir: &std::path::Path, once: bool, interval: u64) -> ExitCode {
+    use std::io::Write;
+    if !run_dir.is_dir() {
+        eprintln!("no such run dir: {}", run_dir.display());
+        return ExitCode::FAILURE;
+    }
+    let label = run_dir
+        .file_name()
+        .and_then(|n| n.to_str())
+        .unwrap_or("run");
+    let period = std::time::Duration::from_secs(interval.max(1));
+    loop {
+        let records = daedalus_core::report::load_records(&[run_dir]);
+        let loop_path = run_dir.join("loop.json");
+        let complete = loop_path.exists();
+        // At completion, loop.json carries the authoritative run-total spend.
+        let auth_spend = complete
+            .then(|| std::fs::read_to_string(&loop_path).ok())
+            .flatten()
+            .and_then(|t| serde_json::from_str::<Value>(&t).ok())
+            .and_then(|v| v.get("spend_known_usd").and_then(Value::as_f64));
+        let snap = daedalus_core::view::snapshot(&records);
+        let body = daedalus_core::view::render(&snap, label, complete, auth_spend);
+        if once {
+            print!("{body}");
+        } else {
+            // Clear screen + home cursor, then redraw the frame in place.
+            print!("\x1b[2J\x1b[H{body}");
+        }
+        let _ = std::io::stdout().flush();
+        if once || complete {
+            return ExitCode::SUCCESS;
+        }
+        std::thread::sleep(period);
+    }
 }
 
 // ---------------------------------------------------------------------------
