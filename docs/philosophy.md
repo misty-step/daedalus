@@ -3,6 +3,10 @@
 Daedalus is a lab for measured agent craft. It exists to turn a task into a
 focused agent with evidence, not to generate prompts that feel convincing.
 
+> North star: [`VISION.md`](../VISION.md) — what Daedalus is and what it
+> refuses. This file is the operating philosophy beneath it: the principles and
+> the review-swarm shape that the vision implies.
+
 ## Vision
 
 The highest-quality version of Daedalus is a disciplined agent foundry:

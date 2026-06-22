@@ -26,6 +26,8 @@
 - Architecture and schemas: `DESIGN.md`. Phases: `ROADMAP.md`. Work items:
   `backlog.d/` (Goal + Oracle required; close via `Closes-backlog: <id>`
   commit trailers).
-- Philosophy, vision, and operating principles: `docs/philosophy.md`. Keep
-  delivery choices consistent with that document, or update it deliberately
-  when the philosophy changes.
+- North star: `VISION.md` — what Daedalus is (the constellation's certified-agent
+  foundry), the load-bearing commitments, and what it refuses. Operating
+  principles and the review-swarm shape: `docs/philosophy.md`. Keep delivery
+  choices consistent with both, or update them deliberately when direction
+  changes.
