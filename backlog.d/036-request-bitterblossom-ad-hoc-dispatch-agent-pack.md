@@ -1,8 +1,138 @@
 # Request Bitterblossom ad-hoc dispatch agent pack
 
 Priority: P0
-Status: pending
+Status: shaped
 Estimate: L
+
+> **Shaped 2026-06-22 — the immediate `/deliver` is the First Slice below.**
+> The 5-family content beneath it is the broader roadmap. The first slice was
+> reframed during shaping (operator steer: "why not code review / Cerberus?") —
+> see the alternatives table.
+
+---
+
+## First Slice — measure one bb review lane on the existing arena ($0 dry-run)
+
+**Reframe.** Don't build a new dispatch-agent arena+scorer. Code review already
+has the whole measurement loop: validated arenas
+(`arenas/pr-review-correctness-v0`), the deterministic findings scorer
+(`crates/daedalus-core/src/score.rs`), and the Cerberus substrate lab (048) —
+and Bitterblossom already ships the review consumers
+(`plane/agents/storm-correctness.toml`, `review-coordinator.toml`, the storm
+lanes), today wired to **hand-picked** models (`storm-correctness` →
+`deepseek/deepseek-v4-pro`). So 036's value is to **certify** those model/config
+choices with cost/latency/quality evidence, reusing the loop that exists.
+
+### Goal
+Stand up and rig-validate (at ~$0) a measured search for **one** Bitterblossom
+code-review lane (`storm-correctness`) over bb's candidate models on the existing
+`pr-review-correctness-v0` arena — so the next, paid, G1 search can certify the
+model/config bb imports instead of the current gut-picked `deepseek-v4-pro`.
+
+### Non-Goals (this slice)
+- The paid candidate search itself — a separate, informed G1 once the rig holds.
+- Building any new arena or scorer — the pr-review-correctness arena + findings
+  scorer exist and are validated.
+- builder / fixer / a diff-producing harness adapter / execution-graded arenas
+  (036 non-goal); other lenses (security/simplification/product); the
+  review-coordinator; the diagnoser/verifier/release-support families — replicate
+  after the first lane proves the loop.
+- Editing bb plane files directly — emit a *proposed* overlay shape; bb imports.
+
+### Constraints / Invariants
+- Candidates never read `tests/` or `solution/` (arena boundary holds).
+- Pi runs sequentially per machine (concurrency-deadlock constraint).
+- The grader is gospel — no scorer/answer-key change without an arena version bump.
+- Latest-models-only — every `[search].models` entry must be in the refreshed pool.
+- bb plane boundary — the overlay carries `model`/config only; bb owns dispatch,
+  ledger, budget, leases, receipts.
+
+### Repo Anchors
+- `specs/pr-review-security/taskspec.toml` — the `[search]` block shape to copy.
+- `arenas/pr-review-correctness-v0/` — the validated arena (rig: oracle 1.0 / null
+  floor / one-shot probe).
+- `crates/daedalus-core/src/score.rs` — the deterministic findings scorer (unchanged).
+- `docs/primitives.md` — the model pool to refresh + the Pi concurrency constraint.
+- `~/Development/bitterblossom/plane/agents/storm-correctness.toml` — import target
+  (`harness="pi"`, `model=…`).
+- `daedalus doctor` · `arena-freeze` · `arena-validate` — the reused rig harness.
+
+### Alternatives
+| option | how it fails | verdict |
+|---|---|---|
+| **Reuse code-review arena + Cerberus (chosen)** | report-quality nuance not graded (deterministic only) — acceptable, judge later | **chosen** — zero new machinery, serves bb's shipped review storm |
+| Build a new `diagnoser` arena+scorer first | a whole measurement loop (arena, root-cause keys, scorer) before any bb value; weeks of work the code-review loop already provides | rejected (operator steer) — revisit for the diagnoser family later |
+| Go wide (all 5 families' specs+arenas) | spreads spend and scorer-design risk across 5 unbuilt loops before proving one | rejected — verification-system-first on one lane |
+| Paid search immediately | spends before confirming the arena ranks these cheap reflex models (saturation risk) | rejected — `$0` dry-run gates the spend |
+
+### Design (reuse, don't rebuild)
+1. **Refresh `docs/primitives.md`** — verify bb's candidates
+   (`moonshotai/kimi-k2.7-code`, `deepseek/deepseek-v4-pro`,
+   `deepseek/deepseek-v4-flash`, `z-ai/glm-5.2`) against OpenRouter
+   `/api/v1/models`; confirm `glm-5.2` now catalog-listed (bb confirmed 2026-06-16). $0.
+2. **Author `specs/bb-review-correctness/taskspec.toml`** — copy the
+   pr-review-correctness shape; `[search].models` = bb's candidate set;
+   `fixtures = arenas/pr-review-correctness-v0`; lens = correctness;
+   `mode = "threshold-then-cheap"` (cheap reflex lane).
+3. **Validate the rig at ~$0** — `daedalus doctor` (model-primitives +
+   roster-in-pool); `arena-freeze` + `arena-validate` confirm non-saturable for
+   this model set (oracle 1.0 / null floor / one-shot probe). Oracle/null are
+   costless; the probe is one cheap call. **No paid candidate search.**
+4. **Emit the dry-run packet** — the validated taskspec + the `arena-validate`
+   report (rig holds) + a **paid-search plan** (candidate count, sequential
+   budget, expected cluster-robust CIs given the arena's cluster count) + the
+   **proposed `storm-correctness.toml` overlay shape** (the `model`/config the
+   certified search will fill + the evidence fields it carries). Paid search is a
+   separate `/deliver` under an explicit G1 budget.
+
+### Oracle (executable — this $0 slice)
+- [ ] `cargo run -q --bin daedalus -- doctor` passes `model-primitives` and
+      `roster-in-pool` (every `specs/bb-review-correctness` model is in the pool).
+- [ ] `docs/primitives.md` lists all four bb candidates with current
+      price/context/tools; `z-ai/glm-5.2` is catalog-listed or explicitly waived
+      with a live-checked reason.
+- [ ] `cargo run -q --bin daedalus -- arena-freeze arenas/pr-review-correctness-v0
+      --out-dir <tmp>` then `arena-validate … --probe-run <tmp>` exits 0
+      (non-saturable) or records a true probe verdict for the bb model set — with
+      **no paid candidate search**.
+- [ ] A committed dry-run report names the rig (oracle/null/probe), the
+      paid-search plan, and the proposed `storm-correctness.toml` `model`/config
+      shape + evidence fields. No bb plane file is edited.
+- [ ] `bin/gate` passes.
+
+### Verification System
+- **Claim:** the existing pr-review-correctness arena ranks bb's review-lane
+  candidate models and is non-saturable for them, so a paid search would certify.
+- **Falsifier:** a one-shot ties the oracle (saturated) → no paid search until the
+  arena is hardened; or a bb candidate is absent from the verified pool.
+- **Driver:** `daedalus doctor` + `arena-freeze`/`arena-validate` over the new
+  taskspec ($0).
+- **Grader:** `arena-validate` exit 0 / probe verdict; `doctor` green; the report.
+- **Evidence:** committed taskspec + arena-validate report + paid-search plan.
+- **Cadence:** once, as the $0 gate before any paid bb-review search.
+- **Gaps/waiver:** report-quality nuance (judge-rubric) deferred; other
+  lenses/lanes/families deferred; bb-side import is a bb step. HTML plan waived —
+  the contestable framing is resolved here; the slice is a fenced $0 rig
+  validation reusing existing machinery.
+
+### Risks + Rollout
+- Refresh finds a bb candidate retired/renamed → swap to the latest per-tier
+  (`doctor` enforces).
+- The arena IS saturated for the cheap reflex models → the falsifier fires; harden
+  the arena (040) before paying. The $0 slice exists to catch this *before* spend.
+- Rollout: purely additive (a new taskspec + a report); no code/scorer change;
+  trivially revertible.
+- Follow-up (separate G1 `/deliver`): paid search → certified config → proposed bb
+  overlay → (bb-side) import; then replicate to the next lens/lane.
+
+### Premise Source
+`sha256:3753299836dca286a27a53ab7afb0928093c047e03f32619db426b6bbfec9540`
+`~/Development/bitterblossom/backlog.d/_done/061-sdlc-lifecycle-reflex-pack.md`
+(the shipped consumer) + this ticket (036) + the 2026-06-22 shaping interrogation
+(operator: reuse code-review/Cerberus; deterministic findings scorer; $0 dry-run
+first).
+
+---
 
 ## Goal
 
