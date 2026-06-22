@@ -203,24 +203,17 @@ fn sorted_tasks(cands: &Map<String, Value>) -> Vec<String> {
 }
 
 /// Non-reference candidates first (by descending mean reward), then references —
-/// the leaderboard reading order, reused for the heatmap columns.
+/// the leaderboard reading order ([`report::cmp_leaderboard`]), reused for the
+/// heatmap columns.
 fn ordered_candidates(cands: &Map<String, Value>) -> Vec<String> {
+    let key = |c: &Value| {
+        (
+            is_reference(c),
+            c.get("reward_mean").and_then(Value::as_f64).unwrap_or(0.0),
+        )
+    };
     let mut ids: Vec<String> = cands.keys().cloned().collect();
-    ids.sort_by(|a, b| {
-        let ra = is_reference(&cands[a]);
-        let rb = is_reference(&cands[b]);
-        ra.cmp(&rb).then_with(|| {
-            let ma = cands[a]
-                .get("reward_mean")
-                .and_then(Value::as_f64)
-                .unwrap_or(0.0);
-            let mb = cands[b]
-                .get("reward_mean")
-                .and_then(Value::as_f64)
-                .unwrap_or(0.0);
-            mb.partial_cmp(&ma).unwrap_or(std::cmp::Ordering::Equal)
-        })
-    });
+    ids.sort_by(|a, b| report::cmp_leaderboard(key(&cands[a]), key(&cands[b])));
     ids
 }
 

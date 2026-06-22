@@ -12,7 +12,6 @@
 //! report. The poll/redraw loop is a thin IO shell in the CLI; everything here is
 //! pure and tested.
 
-use std::cmp::Ordering;
 use std::fmt::Write as _;
 
 use serde_json::Value;
@@ -72,13 +71,10 @@ pub fn snapshot(records: &[Value]) -> Snapshot {
             reference: report::is_reference_kind(c.get("kind").and_then(Value::as_str)),
         })
         .collect();
-    // Non-reference candidates first, by descending mean reward; references last.
+    // The canonical leaderboard order — shared with report_html so the live view
+    // and the HTML report can never disagree on who leads.
     rows.sort_by(|a, b| {
-        a.reference.cmp(&b.reference).then_with(|| {
-            b.reward_mean
-                .partial_cmp(&a.reward_mean)
-                .unwrap_or(Ordering::Equal)
-        })
+        report::cmp_leaderboard((a.reference, a.reward_mean), (b.reference, b.reward_mean))
     });
 
     let total_trials = rows.iter().map(|r| r.trials).sum();

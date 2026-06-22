@@ -25,6 +25,17 @@ pub fn is_reference_kind(kind: Option<&str>) -> bool {
     }
 }
 
+/// The canonical leaderboard reading order, keyed by `(is_reference,
+/// reward_mean)`: non-reference candidates first, then by descending mean reward
+/// (NaN sorts as equal). The single source of this rule — `report_html` and
+/// `view` both order their rows by it, so the live view and the HTML report
+/// never disagree on who leads. (This crate's markdown `render` deliberately
+/// sorts reward-desc only, for `runner/report.py` parity, and does not use it.)
+pub fn cmp_leaderboard(a: (bool, f64), b: (bool, f64)) -> std::cmp::Ordering {
+    a.0.cmp(&b.0)
+        .then(b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal))
+}
+
 fn is_costless_kind(kind: Option<&str>) -> bool {
     match kind {
         Some(k) => COSTLESS_KINDS.contains(&k),
