@@ -18,7 +18,7 @@ use crate::pycompat::round_half_even;
 const REFERENCE_KINDS: &[&str] = &["null", "oracle", "oneshot"];
 const COSTLESS_KINDS: &[&str] = &["null", "oracle"];
 
-fn is_reference_kind(kind: Option<&str>) -> bool {
+pub fn is_reference_kind(kind: Option<&str>) -> bool {
     match kind {
         Some(k) => REFERENCE_KINDS.contains(&k),
         None => false,

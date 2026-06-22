@@ -21,6 +21,7 @@ pub mod prompt_packet;
 pub mod pycompat;
 pub mod pyrandom;
 pub mod report;
+pub mod report_html; // backlog 044: self-contained static HTML report (lab.css)
 pub mod run;
 pub mod score;
 pub mod search_loop; // ports runner/loop.py (`loop` is a Rust keyword)
