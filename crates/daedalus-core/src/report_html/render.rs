@@ -1,154 +1,21 @@
-//! Self-contained static HTML report over an experiment run directory.
-//!
-//! The visual companion to [`crate::report`]'s markdown: the same aggregate,
-//! drawn in the Misty Step / `lab.css` design language. `report-html <run-dir>`
-//! emits a single offline file — CSS inlined, no network, opens from `file://`,
-//! PR-attachable — that renders four review surfaces and the rig panel that says
-//! whether the ranking can be trusted at all:
-//!
-//! 1. **Leaderboard** — candidates by mean reward with cost/latency/trials,
-//!    certified and recommended marked, reference rows (oracle/null/oneshot)
-//!    receding.
-//! 2. **CI forest** — each certified candidate's `(candidate − null)`
-//!    reward-delta 95% CI drawn as a caterpillar, with the cluster-robust width,
-//!    the `sig` verdict, and the `clstr→95%` power note (backlog 039).
-//! 3. **Coverage heatmap** — the candidate × task grid in the lawful encoding
-//!    (status glyph + tabular figure, best-in-row heavy), exposing the
-//!    Simpson's-paradox wins a single mean hides (backlog 040).
-//! 4. **Transcript drill** — every score cell anchors into the representative
-//!    trial: its lineage, the candidate's findings, and the scorer's
-//!    matched / missed / false-positive verdict.
-//!
-//! Layered architecture (backlog 044, after Inspect AI): `trials.jsonl` is the
-//! source of truth and `loop.json` the run's own verdict; this is a derived
-//! viewer, never authoritative. Confidence intervals are drawn only from
-//! `loop.json.reward_delta_cis` — the bounds the run actually certified with.
-//! A run that predates CI persistence gets an honest "not recorded" notice, not
-//! a recomputed band: the cluster-robust interval depends on the arena's
-//! source-repo clustering, which a bare run-dir does not carry, and a per-task
-//! guess is anticonservative and can contradict the run's own verdict.
+//! Turn the derived model into HTML. Each section renderer takes the pieces it
+//! draws; [`super::build_html_from`] assembles them. The `format!`/`write!`
+//! string-building idiom matches [`crate::report`]'s markdown renderer — no
+//! template engine, no dependency.
 
-use std::collections::{BTreeSet, HashSet};
+use std::collections::HashMap;
 use std::fmt::Write as _;
-use std::path::Path;
 
 use serde_json::{Map, Value};
 
-use crate::report;
-use crate::stats;
-
-/// The vendored Misty Step design system + the Daedalus lab extensions, inlined
-/// into every report so the file is self-contained and offline. Provenance and
-/// sync instructions: `crates/daedalus-core/assets/VENDORED.md`.
-const AESTHETIC_CSS: &str = include_str!("../assets/aesthetic.css");
-const LAB_CSS: &str = include_str!("../assets/lab.css");
-
-/// Kinds that bound the verifier rather than compete: excluded from the
-/// leaderboard ranking, Pareto, recommendation, and best-in-row marks.
-const REFERENCE_KINDS: &[&str] = &["null", "oracle", "oneshot"];
-
-/// Render the self-contained HTML report for a run directory. Reads
-/// `trials.jsonl`, `loop.json`, and `rig.json` (the last two optional) and
-/// returns the complete document as a string.
-pub fn render_html(run_dir: &Path) -> std::io::Result<String> {
-    let records = report::load_records(&[run_dir]);
-    let loop_json = read_json(&run_dir.join("loop.json")).unwrap_or(Value::Null);
-    let rig = read_json(&run_dir.join("rig.json"));
-    let label = run_dir
-        .file_name()
-        .and_then(|n| n.to_str())
-        .unwrap_or("run");
-    Ok(build_html_from(&records, &loop_json, rig.as_ref(), label))
-}
-
-fn read_json(path: &Path) -> Option<Value> {
-    let text = std::fs::read_to_string(path).ok()?;
-    serde_json::from_str(&text).ok()
-}
-
-/// Pure renderer: build the HTML document from already-loaded run data. The IO
-/// shell [`render_html`] loads these from disk; tests build them in memory.
-pub fn build_html_from(
-    records: &[Value],
-    loop_json: &Value,
-    rig: Option<&Value>,
-    run_label: &str,
-) -> String {
-    let cands = report::aggregate(records);
-
-    // The run's own verdict, preferred over recomputation; falls back to the
-    // report kernel when loop.json is absent (e.g. a bare records dir).
-    let front =
-        arr_strings(loop_json, "pareto_front").unwrap_or_else(|| report::pareto_front(&cands));
-    let certified: HashSet<String> = arr_strings(loop_json, "certified")
-        .unwrap_or_default()
-        .into_iter()
-        .collect();
-    let recommended = loop_json
-        .get("recommended")
-        .and_then(Value::as_str)
-        .map(str::to_string)
-        .or_else(|| report::recommend(&cands, &front, None));
-
-    let arena_id = records
-        .first()
-        .and_then(|r| r.get("arena_id"))
-        .and_then(Value::as_str)
-        .unwrap_or("—");
-    let arena_version = records
-        .first()
-        .and_then(|r| r.get("arena_version"))
-        .and_then(Value::as_str)
-        .unwrap_or("");
-
-    let tasks = sorted_tasks(&cands);
-    let order = ordered_candidates(&cands);
-
-    let (baseline_id, ci_rows) = gather_delta_cis(loop_json);
-    let consistency = gather_consistency(&cands, loop_json);
-
-    let mut body = String::new();
-    body.push_str(&header_section(
-        &cands,
-        &tasks,
-        loop_json,
-        recommended.as_deref(),
-        run_label,
-        arena_id,
-        arena_version,
-    ));
-    body.push_str(&rig_section(rig));
-    body.push_str(&leaderboard_section(
-        &cands,
-        &order,
-        &certified,
-        recommended.as_deref(),
-    ));
-    body.push_str(&stats_section(
-        &baseline_id,
-        &ci_rows,
-        &consistency,
-        &order,
-        &cands,
-    ));
-    body.push_str(&heatmap_section(
-        &cands,
-        &tasks,
-        &order,
-        recommended.as_deref(),
-    ));
-    body.push_str(&drill_section(records, &cands, &order, &tasks));
-    body.push_str(&footer_section(loop_json));
-
-    document(run_label, arena_id, &body)
-}
+use super::{cell_mean, ci_axis, is_reference, or_dash, representative_trial, Ci};
 
 // ---------------------------------------------------------------------------
 // Sections
 // ---------------------------------------------------------------------------
 
 #[allow(clippy::too_many_arguments)]
-fn header_section(
+pub(super) fn header_section(
     cands: &Map<String, Value>,
     tasks: &[String],
     loop_json: &Value,
@@ -226,7 +93,7 @@ fn header_section(
     s
 }
 
-fn rig_section(rig: Option<&Value>) -> String {
+pub(super) fn rig_section(rig: Option<&Value>) -> String {
     // The sanity gate: a ranking is only trustworthy if the rig is calibrated —
     // the oracle nears 1.0, the floor sits low, and the saturation probe has not
     // collapsed the reward scale. The panel renders even when rig.json is
@@ -277,10 +144,10 @@ fn rig_section(rig: Option<&Value>) -> String {
     )
 }
 
-fn leaderboard_section(
+pub(super) fn leaderboard_section(
     cands: &Map<String, Value>,
     order: &[String],
-    certified: &HashSet<String>,
+    certified: &std::collections::HashSet<String>,
     recommended: Option<&str>,
 ) -> String {
     let mut rows = String::new();
@@ -363,82 +230,99 @@ fn leaderboard_section(
     )
 }
 
-fn stats_section(
+pub(super) fn stats_section(
     baseline_id: &str,
-    ci_rows: &[(String, Value)],
+    ci_rows: &[(String, Ci)],
     consistency: &Map<String, Value>,
     order: &[String],
     cands: &Map<String, Value>,
 ) -> String {
     let has_real = order.iter().any(|cid| !is_reference(&cands[cid]));
-    let mut s = String::new();
-    s.push_str(r#"<section style="margin-bottom:1.8em">
+    let mut s = String::from(
+        r#"<section style="margin-bottom:1.8em">
   <p class="ae-plate-cap">STATISTICS · is a win real? · the 95% CI even commercial eval tools omit</p>
-"#);
+"#,
+    );
+    if !has_real {
+        s.push_str("</section>\n");
+        return s;
+    }
 
     if !ci_rows.is_empty() {
-        // Caterpillar: one band per candidate on a shared delta axis, with the
-        // zero line drawn so a CI crossing it reads as "not yet certified".
-        let (axis_lo, axis_hi) = ci_axis(ci_rows);
-        let span = (axis_hi - axis_lo).max(1e-9);
-        let pos = |x: f64| ((x - axis_lo) / span * 100.0).clamp(0.0, 100.0);
-        let zero = pos(0.0);
+        s.push_str(&forest_block(baseline_id, ci_rows));
+    } else {
+        // No forest: this run predates CI persistence. Recomputing here would
+        // need the arena's source-repo clustering, which a bare run-dir does not
+        // carry — and a per-task guess yields anticonservative bars that can
+        // contradict the run's own certification. Show the gap honestly.
+        let _ = writeln!(
+            s,
+            "  <p class=\"ae-chrome\" style=\"margin-bottom:0.6em\">{} Reward-delta CIs were not recorded by this run — re-run to draw the forest. The leaderboard's certified marks still reflect the run's own clustered certification; reliability below is recomputed from the trials.</p>",
+            icon("i-alert", "ae-warn"),
+        );
+    }
+    s.push_str(&stats_table(order, cands, ci_rows, consistency));
+    s.push_str("</section>\n");
+    s
+}
 
+/// The caterpillar: one band per candidate on a shared delta axis, with the zero
+/// line drawn so a CI crossing it reads as "not yet certified".
+fn forest_block(baseline_id: &str, ci_rows: &[(String, Ci)]) -> String {
+    let (axis_lo, axis_hi) = ci_axis(ci_rows);
+    let span = (axis_hi - axis_lo).max(1e-9);
+    let pos = |x: f64| ((x - axis_lo) / span * 100.0).clamp(0.0, 100.0);
+    let zero = pos(0.0);
+
+    let mut s = String::new();
+    let _ = write!(
+        s,
+        "  <p class=\"ae-chrome\" style=\"margin-bottom:0.6em\">Δ reward vs <span class=\"ae-num\">{}</span> · cluster-robust 95% CI from the run's record · the zero line is the floor</p>\n  <div class=\"rep-forest\">\n",
+        esc(baseline_id),
+    );
+    for (cid, ci) in ci_rows {
+        let point = ci.point;
+        let lo = ci.lo;
+        let hi = ci.hi;
+        let sig_mark = if ci.excludes_zero {
+            icon("i-check", "ae-ok")
+        } else {
+            icon("i-minus", "ae-warn")
+        };
         let _ = write!(
             s,
-            "  <p class=\"ae-chrome\" style=\"margin-bottom:0.6em\">Δ reward vs <span class=\"ae-num\">{}</span> · cluster-robust 95% CI from the run's record · the zero line is the floor</p>\n  <div class=\"rep-forest\">\n",
-            esc(baseline_id),
-        );
-        for (cid, ci) in ci_rows {
-            let point = ci.get("point").and_then(Value::as_f64).unwrap_or(0.0);
-            let lo = ci.get("lo").and_then(Value::as_f64).unwrap_or(0.0);
-            let hi = ci.get("hi").and_then(Value::as_f64).unwrap_or(0.0);
-            let sig = ci
-                .get("excludes_zero")
-                .and_then(Value::as_bool)
-                .unwrap_or(false);
-            let n_clusters = ci.get("n_clusters").and_then(Value::as_u64).unwrap_or(0);
-            let small_n =
-                n_clusters < 2 || ci.get("n_tasks").and_then(Value::as_u64).unwrap_or(0) < 2;
-            let sig_mark = if sig {
-                icon("i-check", "ae-ok")
-            } else {
-                icon("i-minus", "ae-warn")
-            };
-            let _ = write!(
-                s,
-                r#"    <div class="rep-forest-label"><span class="ae-item">{cid}</span> <span class="ae-num ae-dim">{point:+.3}</span> {sig_mark}{warn}</div>
+            r#"    <div class="rep-forest-label"><span class="ae-item">{cid}</span> <span class="ae-num ae-dim">{point:+.3}</span> {sig_mark}{warn}</div>
     <div class="rep-forest-track">
       <span class="rep-zero" style="left:{zero:.2}%"></span>
       <span class="ae-ci"><span class="ae-ci-band" style="left:{l:.2}%;right:{r:.2}%"></span><span class="ae-ci-mean" style="left:{m:.2}%"></span></span>
       <span class="rep-forest-ci ae-num ae-dim">[{lo:+.3}, {hi:+.3}]</span>
     </div>
 "#,
-                cid = esc(cid),
-                warn = if small_n {
-                    format!(" {}", icon("i-alert", "ae-warn"))
-                } else {
-                    String::new()
-                },
-                l = pos(lo),
-                r = 100.0 - pos(hi),
-                m = pos(point),
-            );
-        }
-        s.push_str("  </div>\n");
-    } else if has_real {
-        // No forest: this run predates CI persistence. Recomputing here would
-        // need the arena's source-repo clustering, which a bare run-dir does not
-        // carry — and a per-task guess yields anticonservative bars that can
-        // contradict the run's own certification. Show the gap honestly.
-        s.push_str("  <p class=\"ae-chrome\" style=\"margin-bottom:0.6em\"><svg class=\"ae-icon ae-warn\"><use href=\"#i-alert\" /></svg> Reward-delta CIs were not recorded by this run — re-run to draw the forest. The leaderboard's certified marks still reflect the run's own clustered certification; reliability below is recomputed from the trials.</p>\n");
+            cid = esc(cid),
+            warn = if ci.small_n() {
+                format!(" {}", icon("i-alert", "ae-warn"))
+            } else {
+                String::new()
+            },
+            l = pos(lo),
+            r = 100.0 - pos(hi),
+            m = pos(point),
+        );
     }
+    s.push_str("  </div>\n");
+    s
+}
 
-    if has_real {
-        // The exact numbers, including the 039 power note and reliability — the
-        // figures behind the caterpillar, for anyone who needs to cite them.
-        s.push_str(
-            r#"  <div class="mx-scroll" style="margin-top:1.2em">
+/// The exact numbers behind the caterpillar, including the 039 power note and
+/// reliability, for anyone who needs to cite them.
+fn stats_table(
+    order: &[String],
+    cands: &Map<String, Value>,
+    ci_rows: &[(String, Ci)],
+    consistency: &Map<String, Value>,
+) -> String {
+    let mut s = String::from(
+        r#"  <div class="mx-scroll" style="margin-top:1.2em">
     <table class="rep-board">
       <thead><tr>
         <th scope="col">candidate</th><th scope="col" class="rep-num">Δ reward</th>
@@ -449,71 +333,41 @@ fn stats_section(
       </tr></thead>
       <tbody>
 "#,
+    );
+    let ci_by_id: HashMap<&str, &Ci> = ci_rows.iter().map(|(k, v)| (k.as_str(), v)).collect();
+    for cid in order {
+        if is_reference(&cands[cid]) {
+            continue;
+        }
+        let ci = ci_by_id.get(cid.as_str()).copied();
+        let con = consistency.get(cid);
+        let dpt = or_dash(ci.map(|c| c.point), |x| format!("{x:+.4}"));
+        let interval = or_dash(ci, |c| format!("[{:+.4}, {:+.4}]", c.lo, c.hi));
+        let ntasks = or_dash(ci.map(|c| c.n_tasks), |n| n.to_string());
+        let nclusters = or_dash(ci.map(|c| c.n_clusters), |n| n.to_string());
+        let need = or_dash(ci.and_then(|c| c.min_clusters_95), |n| n.to_string());
+        let rate = or_dash(
+            con.and_then(|c| c.get("rate")).and_then(Value::as_f64),
+            |x| format!("{x:.2}"),
         );
-        let ci_by_id: Map<String, Value> = ci_rows.iter().cloned().collect();
-        for cid in order {
-            if is_reference(&cands[cid]) {
-                continue;
-            }
-            let ci = ci_by_id.get(cid);
-            let con = consistency.get(cid);
-            let dpt = ci
-                .and_then(|c| c.get("point"))
-                .and_then(Value::as_f64)
-                .map(|x| format!("{x:+.4}"))
-                .unwrap_or_else(|| "—".to_string());
-            let interval = match ci {
-                Some(c) => format!(
-                    "[{:+.4}, {:+.4}]",
-                    c.get("lo").and_then(Value::as_f64).unwrap_or(0.0),
-                    c.get("hi").and_then(Value::as_f64).unwrap_or(0.0)
-                ),
-                None => "—".to_string(),
-            };
-            let ntasks = ci
-                .and_then(|c| c.get("n_tasks"))
-                .and_then(Value::as_u64)
-                .map(|n| n.to_string())
-                .unwrap_or_else(|| "—".to_string());
-            let nclusters = ci
-                .and_then(|c| c.get("n_clusters"))
-                .and_then(Value::as_u64)
-                .map(|n| n.to_string())
-                .unwrap_or_else(|| "—".to_string());
-            let need = ci
-                .and_then(|c| c.get("min_clusters_95"))
-                .and_then(Value::as_u64)
-                .map(|n| n.to_string())
-                .unwrap_or_else(|| "—".to_string());
-            let rate = con
-                .and_then(|c| c.get("rate"))
-                .and_then(Value::as_f64)
-                .map(|x| format!("{x:.2}"))
-                .unwrap_or_else(|| "—".to_string());
-            let passk = con
-                .and_then(|c| c.get("pass_k"))
-                .and_then(Value::as_f64)
-                .map(|x| format!("{x:.2}"))
-                .unwrap_or_else(|| "—".to_string());
-            let sig = ci
-                .and_then(|c| c.get("excludes_zero"))
-                .and_then(Value::as_bool)
-                .unwrap_or(false);
-            let _ = writeln!(
+        let passk = or_dash(
+            con.and_then(|c| c.get("pass_k")).and_then(Value::as_f64),
+            |x| format!("{x:.2}"),
+        );
+        let sig = ci.map(|c| c.excludes_zero).unwrap_or(false);
+        let _ = writeln!(
             s,
             "        <tr><th scope=\"row\" class=\"rep-cand\">{cid}</th><td class=\"rep-num\">{dpt}</td><td class=\"rep-num\">{interval}</td><td class=\"rep-num\">{ntasks}</td><td class=\"rep-num\">{nclusters}</td><td class=\"rep-num\">{need}</td><td class=\"rep-num\">{rate}</td><td class=\"rep-num\">{passk}</td><td>{sigmark}</td></tr>",
             cid = esc(cid),
             sigmark = if sig { icon("i-check", "ae-ok") } else { icon("i-minus", "ae-warn") },
         );
-        }
-        s.push_str("      </tbody>\n    </table>\n  </div>\n");
-        s.push_str("  <p class=\"ae-plate-note\" style=\"border:0;padding:0;margin-top:0.8em\"><span class=\"ae-num\">clstr→95%</span> is the power note: the cluster count at which the observed effect would just reach significance — adding trials inside existing clusters does not shrink the interval, clusters do. The <span class=\"ae-num\">!</span> flag marks intervals too thin to bound (n&lt;2).</p>\n");
     }
-    s.push_str("</section>\n");
+    s.push_str("      </tbody>\n    </table>\n  </div>\n");
+    s.push_str("  <p class=\"ae-plate-note\" style=\"border:0;padding:0;margin-top:0.8em\"><span class=\"ae-num\">clstr→95%</span> is the power note: the cluster count at which the observed effect would just reach significance — adding trials inside existing clusters does not shrink the interval, clusters do. The <span class=\"ae-num\">!</span> flag marks intervals too thin to bound (n&lt;2).</p>\n");
     s
 }
 
-fn heatmap_section(
+pub(super) fn heatmap_section(
     cands: &Map<String, Value>,
     tasks: &[String],
     order: &[String],
@@ -647,7 +501,7 @@ fn heatmap_section(
     )
 }
 
-fn drill_section(
+pub(super) fn drill_section(
     records: &[Value],
     cands: &Map<String, Value>,
     order: &[String],
@@ -783,7 +637,7 @@ fn drill_block(ci: usize, ti: usize, cid: &str, task: &str, trial: &Value) -> St
     )
 }
 
-fn footer_section(loop_json: &Value) -> String {
+pub(super) fn footer_section(loop_json: &Value) -> String {
     let baseline = loop_json
         .get("reward_delta_baseline")
         .and_then(Value::as_str)
@@ -795,149 +649,6 @@ fn footer_section(loop_json: &Value) -> String {
 "#,
         baseline = esc(baseline),
     )
-}
-
-// ---------------------------------------------------------------------------
-// Data helpers
-// ---------------------------------------------------------------------------
-
-fn is_reference(c: &Value) -> bool {
-    matches!(
-        c.get("kind").and_then(Value::as_str),
-        Some(k) if REFERENCE_KINDS.contains(&k)
-    )
-}
-
-fn arr_strings(v: &Value, key: &str) -> Option<Vec<String>> {
-    v.get(key).and_then(Value::as_array).map(|a| {
-        a.iter()
-            .filter_map(|x| x.as_str().map(str::to_string))
-            .collect()
-    })
-}
-
-fn sorted_tasks(cands: &Map<String, Value>) -> Vec<String> {
-    let mut set: BTreeSet<String> = BTreeSet::new();
-    for c in cands.values() {
-        if let Some(tasks) = c.get("tasks").and_then(Value::as_object) {
-            for tid in tasks.keys() {
-                set.insert(tid.clone());
-            }
-        }
-    }
-    set.into_iter().collect()
-}
-
-/// Non-reference candidates first (by descending mean reward), then references —
-/// the leaderboard reading order, reused for the heatmap columns.
-fn ordered_candidates(cands: &Map<String, Value>) -> Vec<String> {
-    let mut ids: Vec<String> = cands.keys().cloned().collect();
-    ids.sort_by(|a, b| {
-        let ra = is_reference(&cands[a]);
-        let rb = is_reference(&cands[b]);
-        ra.cmp(&rb).then_with(|| {
-            let ma = cands[a]
-                .get("reward_mean")
-                .and_then(Value::as_f64)
-                .unwrap_or(0.0);
-            let mb = cands[b]
-                .get("reward_mean")
-                .and_then(Value::as_f64)
-                .unwrap_or(0.0);
-            mb.partial_cmp(&ma).unwrap_or(std::cmp::Ordering::Equal)
-        })
-    });
-    ids
-}
-
-fn cell_mean(c: &Value, task: &str) -> Option<(f64, usize)> {
-    let arr = c
-        .get("tasks")
-        .and_then(|t| t.get(task))
-        .and_then(Value::as_array)?;
-    let vals: Vec<f64> = arr.iter().filter_map(Value::as_f64).collect();
-    if vals.is_empty() {
-        None
-    } else {
-        Some((vals.iter().sum::<f64>() / vals.len() as f64, vals.len()))
-    }
-}
-
-/// Read the run's persisted reward-delta CIs. The boolean reports whether the
-/// run recorded any.
-///
-/// The report never *recomputes* a CI: the cluster-robust interval depends on
-/// the arena's `source_repo` clustering, which the run applied and a bare
-/// run-dir does not carry. Recomputing with a guessed (per-task) clustering
-/// yields anticonservative bars that can contradict the run's own
-/// certification — a lie is worse than a gap. Runs that predate CI persistence
-/// get an honest "not recorded" notice instead (see [`stats_section`]).
-fn gather_delta_cis(loop_json: &Value) -> (String, Vec<(String, Value)>) {
-    let baseline = loop_json
-        .get("reward_delta_baseline")
-        .and_then(Value::as_str)
-        .unwrap_or("null")
-        .to_string();
-
-    let rows = loop_json
-        .get("reward_delta_cis")
-        .and_then(Value::as_object)
-        .map(|obj| {
-            let mut rows: Vec<(String, Value)> =
-                obj.iter().map(|(k, v)| (k.clone(), v.clone())).collect();
-            rows.sort_by(|a, b| a.0.cmp(&b.0));
-            rows
-        })
-        .unwrap_or_default();
-    (baseline, rows)
-}
-
-fn gather_consistency(cands: &Map<String, Value>, loop_json: &Value) -> Map<String, Value> {
-    if let Some(obj) = loop_json.get("consistency").and_then(Value::as_object) {
-        if !obj.is_empty() {
-            return obj.clone();
-        }
-    }
-    let floor = loop_json
-        .get("consistency_floor")
-        .and_then(Value::as_f64)
-        .unwrap_or(1.0);
-    let mut out = Map::new();
-    for (cid, c) in cands {
-        if is_reference(c) {
-            continue;
-        }
-        // Recompute the pass *rate* from the trials, but leave pass^k null: a
-        // bare run-dir doesn't record the certification k, and pass^(n_trials)
-        // would print a near-zero that reads as a finding rather than a gap.
-        let con = stats::candidate_consistency(c, floor);
-        let mut m = Map::new();
-        m.insert("n_trials".into(), Value::from(con.n_trials as u64));
-        m.insert("passes".into(), Value::from(con.passes as u64));
-        m.insert("floor".into(), Value::from(con.floor));
-        m.insert("rate".into(), Value::from(con.rate));
-        m.insert("pass_k".into(), Value::Null);
-        out.insert(cid.clone(), Value::Object(m));
-    }
-    out
-}
-
-fn ci_axis(rows: &[(String, Value)]) -> (f64, f64) {
-    let mut lo = 0.0_f64;
-    let mut hi = 0.0_f64;
-    for (_, ci) in rows {
-        lo = lo.min(ci.get("lo").and_then(Value::as_f64).unwrap_or(0.0));
-        hi = hi.max(ci.get("hi").and_then(Value::as_f64).unwrap_or(0.0));
-    }
-    let pad = (hi - lo).max(0.1) * 0.08;
-    (lo - pad, hi + pad)
-}
-
-fn representative_trial<'a>(records: &'a [Value], cid: &str, task: &str) -> Option<&'a Value> {
-    records.iter().find(|r| {
-        r.get("candidate_id").and_then(Value::as_str) == Some(cid)
-            && r.get("task_id").and_then(Value::as_str) == Some(task)
-    })
 }
 
 // ---------------------------------------------------------------------------
@@ -1000,6 +711,12 @@ fn short_model(m: &str) -> String {
 // Document shell
 // ---------------------------------------------------------------------------
 
+/// The vendored Misty Step design system + the Daedalus lab extensions, inlined
+/// into every report so the file is self-contained and offline. Provenance and
+/// sync instructions: `crates/daedalus-core/assets/VENDORED.md`.
+const AESTHETIC_CSS: &str = include_str!("../../assets/aesthetic.css");
+const LAB_CSS: &str = include_str!("../../assets/lab.css");
+
 const SPRITE: &str = r##"<svg style="display:none" xmlns="http://www.w3.org/2000/svg">
   <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5" /></symbol>
   <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></symbol>
@@ -1055,7 +772,7 @@ const MODE_JS: &str = r#"<script>
 })();
 </script>"#;
 
-fn document(run_label: &str, arena_id: &str, body: &str) -> String {
+pub(super) fn document(run_label: &str, arena_id: &str, body: &str) -> String {
     format!(
         r##"<!doctype html>
 <html lang="en" class="rep">
@@ -1089,233 +806,4 @@ fn document(run_label: &str, arena_id: &str, body: &str) -> String {
         body = body,
         mode_js = MODE_JS,
     )
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use serde_json::json;
-
-    /// A synthetic run: a `null` floor and one real candidate across two tasks,
-    /// with findings and a scorer verdict on each trial, plus a `loop.json` that
-    /// certifies the candidate and persists its reward-delta CI, and a `rig.json`.
-    fn fixture() -> (Vec<Value>, Value, Value) {
-        let records = vec![
-            json!({
-                "candidate_id": "null", "candidate_kind": "null", "model": null,
-                "composition_hash": "nullhash", "task_id": "alpha", "trial": 1,
-                "reward": 0.0, "recall": 0.0, "matched": [], "false_positives": 0,
-                "expected_defects": 1, "cost_usd": null, "wall_ms": 10.0,
-                "findings": [], "error": null,
-            }),
-            json!({
-                "candidate_id": "null", "candidate_kind": "null", "model": null,
-                "composition_hash": "nullhash", "task_id": "beta", "trial": 1,
-                "reward": 0.0, "recall": 0.0, "matched": [], "false_positives": 0,
-                "expected_defects": 1, "cost_usd": null, "wall_ms": 10.0,
-                "findings": [], "error": null,
-            }),
-            json!({
-                "candidate_id": "skeptic-R&D", "candidate_kind": "pi",
-                "model": "z-ai/glm-4.7-flash", "composition_hash": "abc123",
-                "task_id": "alpha", "trial": 1, "reward": 1.0, "recall": 1.0,
-                "matched": ["alpha-defect"], "false_positives": 0,
-                "expected_defects": 1, "cost_usd": 0.012, "wall_ms": 42000.0,
-                "findings": [{
-                    "file": "src/<core>.rs", "line": 12, "category": "logic-invariant",
-                    "severity": "blocking",
-                    "description": "aliases the live list & empties it before render <hack>",
-                }],
-                "error": null,
-            }),
-            json!({
-                "candidate_id": "skeptic-R&D", "candidate_kind": "pi",
-                "model": "z-ai/glm-4.7-flash", "composition_hash": "abc123",
-                "task_id": "beta", "trial": 1, "reward": 0.0, "recall": 0.0,
-                "matched": [], "false_positives": 1, "expected_defects": 1,
-                "cost_usd": 0.012, "wall_ms": 51000.0,
-                "findings": [], "error": null,
-            }),
-        ];
-        let loop_json = json!({
-            "stop_reason": "max-candidates", "mode": "threshold-then-cheap",
-            "recommended": "skeptic-R&D", "certified": ["skeptic-R&D"],
-            "pareto_front": ["skeptic-R&D"], "spend_known_usd": 1.3002,
-            "trial_complete": ["skeptic-R&D"], "min_effect": 0.0,
-            "consistency_floor": 1.0, "reward_delta_baseline": "null",
-            "reward_delta_cis": {
-                "skeptic-R&D": {
-                    "baseline": "null", "point": 0.5, "se": 0.5,
-                    "lo": -0.05, "hi": 1.05, "ci": 0.95, "n_tasks": 2,
-                    "n_clusters": 2, "excludes_zero": false, "min_clusters_95": 8,
-                },
-            },
-            "consistency": {
-                "skeptic-R&D": {
-                    "n_trials": 2, "passes": 1, "floor": 1.0, "rate": 0.5,
-                    "pass_k_k": 5, "pass_k": null,
-                },
-            },
-        });
-        let rig = json!({
-            "oracle_mean": 1.0, "null_mean": 0.0, "probe_mean": 0.0, "saturated": false,
-        });
-        (records, loop_json, rig)
-    }
-
-    #[test]
-    fn renders_a_self_contained_document() {
-        let (records, loop_json, rig) = fixture();
-        let html = build_html_from(&records, &loop_json, Some(&rig), "20260613T000000Z-test");
-
-        assert!(
-            html.starts_with("<!doctype html>"),
-            "must be a full HTML doc"
-        );
-        // CSS is inlined, not linked — the vendored token proves the <style> shipped.
-        assert!(html.contains("<style>"), "CSS must be inlined in a <style>");
-        assert!(
-            html.contains("--ae-accent"),
-            "vendored design tokens must be inlined"
-        );
-
-        // Self-contained / offline invariant: no external CSS/JS, no network, no
-        // relative asset paths that would 404 from a PR attachment.
-        assert!(
-            !html.contains("<link rel=\"stylesheet\""),
-            "must not link external stylesheets"
-        );
-        assert!(
-            !html.contains("<script src="),
-            "must not load external scripts"
-        );
-        assert!(
-            !html.contains("href=\"http"),
-            "must not reference the network"
-        );
-        assert!(
-            !html.contains("href=\"../") && !html.contains("src=\"../"),
-            "must not reference sibling files by relative path"
-        );
-    }
-
-    #[test]
-    fn draws_the_four_review_surfaces() {
-        let (records, loop_json, rig) = fixture();
-        let html = build_html_from(&records, &loop_json, Some(&rig), "20260613T000000Z-test");
-
-        // (1) leaderboard — recommended candidate is named and marked.
-        assert!(
-            html.contains("skeptic-R&amp;D"),
-            "candidate id must appear (escaped)"
-        );
-        // (2) CI forest — a *positioned* interval band is drawn (the class alone
-        // also lives in the vendored CSS, so assert the inline position too).
-        assert!(
-            html.contains("ae-ci-band\" style=\"left:"),
-            "a positioned CI band must be drawn"
-        );
-        assert!(html.contains("95%"), "the confidence level must be shown");
-        // (3) coverage heatmap — the lawful candidate × task matrix.
-        assert!(
-            html.contains("class=\"matrix\""),
-            "coverage heatmap must render"
-        );
-        // (4) transcript drill — every score reaches its trial behind an anchor.
-        assert!(
-            html.contains("id=\"trial-"),
-            "score cells must drill to a transcript"
-        );
-
-        // rig panel — the sanity gate (oracle ceiling / null floor / probe).
-        assert!(html.contains("id=\"rig\""), "rig panel must render");
-    }
-
-    #[test]
-    fn omits_forest_and_notices_when_cis_absent() {
-        // A run predating CI persistence: no reward_delta_cis recorded. The
-        // report must NOT recompute a (potentially contradictory) band — it
-        // shows an honest notice and still renders reliability + the verdict.
-        let (records, mut loop_json, rig) = fixture();
-        loop_json
-            .as_object_mut()
-            .unwrap()
-            .remove("reward_delta_cis");
-        let html = build_html_from(&records, &loop_json, Some(&rig), "t");
-        assert!(
-            !html.contains("ae-ci-band\" style=\"left:"),
-            "no recomputed band may be drawn for a run that didn't record CIs"
-        );
-        assert!(
-            html.contains("were not recorded by this run"),
-            "the gap must be stated honestly"
-        );
-        assert!(html.contains("pass rate"), "reliability still renders");
-        // the run's verdict is still trusted from loop.json.
-        assert!(
-            html.contains("recommended"),
-            "the certified pick still shows"
-        );
-    }
-
-    #[test]
-    fn drill_anchors_are_unique_and_resolve_despite_punctuation() {
-        // Two candidate ids that differ only in punctuation (a dotted model
-        // version vs a hyphenated one) must NOT collapse to the same anchor —
-        // otherwise a score row drills into the wrong transcript.
-        let mk = |cid: &str| {
-            json!({
-                "candidate_id": cid, "candidate_kind": "pi", "model": "m",
-                "composition_hash": "h", "task_id": "t", "trial": 1,
-                "reward": 1.0, "recall": 1.0, "matched": ["t-defect"],
-                "false_positives": 0, "expected_defects": 1, "cost_usd": 0.01,
-                "wall_ms": 1000.0, "findings": [], "error": null,
-            })
-        };
-        let records = vec![mk("seed3-qwen3.7-plus"), mk("seed3-qwen3-7-plus")];
-        let html = build_html_from(&records, &Value::Null, None, "t");
-
-        // Pull the fragment after a marker up to the closing quote.
-        let frags = |pat: &str| -> Vec<String> {
-            html.match_indices(pat)
-                .map(|(i, _)| {
-                    let rest = &html[i + pat.len()..];
-                    rest[..rest.find('"').unwrap()].to_string()
-                })
-                .collect()
-        };
-        let ids = frags("id=\"trial-");
-        let unique: std::collections::HashSet<&String> = ids.iter().collect();
-        assert_eq!(
-            ids.len(),
-            unique.len(),
-            "drill anchors must be unique: {ids:?}"
-        );
-        assert_eq!(
-            ids.len(),
-            2,
-            "both candidates must get their own transcript"
-        );
-
-        // Every heatmap link must resolve to one of those transcript ids.
-        for frag in frags("href=\"#trial-") {
-            assert!(
-                ids.contains(&frag),
-                "heatmap link #trial-{frag} has no matching transcript id"
-            );
-        }
-    }
-
-    #[test]
-    fn escapes_candidate_and_finding_text() {
-        let (records, loop_json, rig) = fixture();
-        let html = build_html_from(&records, &loop_json, Some(&rig), "t");
-        // The injected markup must be escaped, never emitted raw.
-        assert!(html.contains("R&amp;D"), "ampersands escaped");
-        assert!(
-            !html.contains("<hack>"),
-            "angle brackets in findings escaped"
-        );
-        assert!(!html.contains("src/<core>.rs"), "file paths escaped");
-    }
 }
