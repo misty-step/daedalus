@@ -52,7 +52,22 @@ pub fn render_html(run_dir: &Path) -> std::io::Result<String> {
         .file_name()
         .and_then(|n| n.to_str())
         .unwrap_or("run");
-    Ok(build_html_from(&records, &loop_json, rig.as_ref(), label))
+
+    // The contamination + redteam advisory lives in the arena dir, not the run
+    // dir; compute it here in the IO shell so build_html_from stays disk-free.
+    let arena_id = records
+        .first()
+        .and_then(|r| r.get("arena_id"))
+        .and_then(Value::as_str);
+    let sanity = arena_id.and_then(|id| compute_sanity_audit(id, run_dir));
+
+    Ok(build_html_from(
+        &records,
+        &loop_json,
+        rig.as_ref(),
+        sanity.as_ref(),
+        label,
+    ))
 }
 
 fn read_json(path: &Path) -> Option<Value> {
@@ -60,12 +75,45 @@ fn read_json(path: &Path) -> Option<Value> {
     serde_json::from_str(&text).ok()
 }
 
+/// Locate an arena dir for `arena_id`. Runs live at `<repo>/runs/<stamp>`, so
+/// the repo root is the run-dir's grandparent; arenas live at
+/// `<repo>/arenas/<id>`. Try the CWD-relative path first (the common
+/// `daedalus report-html runs/…` invocation), then the run-dir's repo root.
+/// `None` when neither is a directory — the section then degrades gracefully.
+fn locate_arena_dir(arena_id: &str, run_dir: &Path) -> Option<std::path::PathBuf> {
+    let cwd_rel = Path::new("arenas").join(arena_id);
+    if cwd_rel.is_dir() {
+        return Some(cwd_rel);
+    }
+    let from_run = run_dir
+        .parent()
+        .and_then(Path::parent)
+        .map(|root| root.join("arenas").join(arena_id))
+        .filter(|p| p.is_dir());
+    from_run
+}
+
+/// The IO half of the sanity audit: read the arena's `contamination.toml` and
+/// red-team every answer key on disk into the pure [`SanityAudit`] model that
+/// [`render::sanity_section`] draws. `None` when the arena dir is not reachable
+/// — the section then renders an honest "not reachable" note rather than
+/// fabricating a verdict.
+fn compute_sanity_audit(arena_id: &str, run_dir: &Path) -> Option<SanityAudit> {
+    let arena_dir = locate_arena_dir(arena_id, run_dir)?;
+    Some(SanityAudit::from_arena_dir(&arena_dir))
+}
+
 /// Pure renderer: build the HTML document from already-loaded run data. The IO
 /// shell [`render_html`] loads these from disk; tests build them in memory.
+///
+/// `sanity` is the contamination + redteam advisory derived from the arena dir
+/// (the IO shell computes it; `None` means the arena was not reachable, and the
+/// sanity section renders an honest "not reachable" note rather than crashing).
 pub fn build_html_from(
     records: &[Value],
     loop_json: &Value,
     rig: Option<&Value>,
+    sanity: Option<&SanityAudit>,
     run_label: &str,
 ) -> String {
     let cands = report::aggregate(records);
@@ -112,6 +160,7 @@ pub fn build_html_from(
         arena_version,
     ));
     body.push_str(&render::rig_section(rig));
+    body.push_str(&render::sanity_section(sanity, arena_id));
     body.push_str(&render::leaderboard_section(
         &cands,
         &order,
@@ -175,6 +224,111 @@ impl Ci {
     /// The interval is too thin to bound a win (fewer than 2 tasks/clusters).
     fn small_n(&self) -> bool {
         self.n_clusters < 2 || self.n_tasks < 2
+    }
+}
+
+/// The sanity-check affordance beyond the rig panel (backlog 044 oracle 4):
+/// whether the arena's fixtures are contamination-resistant, and how many of
+/// its answer keys carry spans wide enough to game. Both are derived from the
+/// arena dir on disk by [`SanityAudit::from_arena_dir`]; the renderer
+/// ([`render::sanity_section`]) only formats this typed model, so it stays unit
+/// testable without disk.
+pub struct SanityAudit {
+    /// `Some(true)` = at least one source is public (score-inflation risk);
+    /// `Some(false)` = all sources private/synthetic (contamination-resistant);
+    /// `None` = no `contamination.toml` recorded for this arena.
+    public: Option<bool>,
+    /// The contamination record's free-text note, if any.
+    note: Option<String>,
+    /// The wide-span threshold the audit flagged against (lines).
+    wide_threshold: i64,
+    /// Total answer-key defects audited across the arena's tasks.
+    n_defects: usize,
+    /// Tasks carrying at least one gameable wide span, each with its count.
+    wide_tasks: Vec<(String, usize)>,
+    /// Total gameable wide-span defects across the arena.
+    total_wide: usize,
+    /// `true` when at least one task's answer key could not be audited (parse or
+    /// IO error) — surfaced so a partial audit is not read as a clean one.
+    audit_incomplete: bool,
+}
+
+impl SanityAudit {
+    /// The threshold the report audits answer-key spans against — matches the
+    /// `arena-redteam` CLI default ([`crate::score::redteam_audit`]).
+    const WIDE_THRESHOLD: i64 = 8;
+
+    /// Read `<arena_dir>/contamination.toml` and red-team every task's
+    /// `expected.json`, reusing the existing core functions
+    /// ([`crate::workbench::load_contamination`] and
+    /// [`crate::score::redteam_audit`]) rather than reimplementing either.
+    fn from_arena_dir(arena_dir: &Path) -> SanityAudit {
+        let contam = crate::workbench::load_contamination(arena_dir)
+            .ok()
+            .flatten();
+        let public = contam.as_ref().map(|c| c.source.iter().any(|s| s.public));
+        let note = contam.and_then(|c| c.notes);
+
+        let mut n_defects = 0usize;
+        let mut total_wide = 0usize;
+        let mut wide_tasks: Vec<(String, usize)> = Vec::new();
+        let mut audit_incomplete = false;
+
+        // Reuse the canonical sorted task walk. No expected.json pre-filter:
+        // redteam_audit returns Err for a missing/unreadable key, and the
+        // Err arm below honestly counts that task as audit-incomplete.
+        for td in crate::workbench::task_dirs(arena_dir) {
+            let tid = td
+                .file_name()
+                .and_then(|n| n.to_str())
+                .unwrap_or("?")
+                .to_string();
+            let expected = td.join("tests").join("expected.json");
+            match crate::score::redteam_audit(&expected, Self::WIDE_THRESHOLD) {
+                Ok(a) => {
+                    n_defects += a.n_defects;
+                    let wide = a.wide_defects.len();
+                    if wide > 0 {
+                        total_wide += wide;
+                        wide_tasks.push((tid, wide));
+                    }
+                }
+                Err(_) => audit_incomplete = true,
+            }
+        }
+
+        SanityAudit {
+            public,
+            note,
+            wide_threshold: Self::WIDE_THRESHOLD,
+            n_defects,
+            wide_tasks,
+            total_wide,
+            audit_incomplete,
+        }
+    }
+
+    // Read accessors for the renderer (in the `render` submodule).
+    pub(super) fn public(&self) -> Option<bool> {
+        self.public
+    }
+    pub(super) fn note(&self) -> Option<&str> {
+        self.note.as_deref()
+    }
+    pub(super) fn wide_threshold(&self) -> i64 {
+        self.wide_threshold
+    }
+    pub(super) fn n_defects(&self) -> usize {
+        self.n_defects
+    }
+    pub(super) fn wide_tasks(&self) -> &[(String, usize)] {
+        &self.wide_tasks
+    }
+    pub(super) fn total_wide(&self) -> usize {
+        self.total_wide
+    }
+    pub(super) fn audit_incomplete(&self) -> bool {
+        self.audit_incomplete
     }
 }
 
@@ -390,7 +544,13 @@ mod tests {
     #[test]
     fn renders_a_self_contained_document() {
         let (records, loop_json, rig) = fixture();
-        let html = build_html_from(&records, &loop_json, Some(&rig), "20260613T000000Z-test");
+        let html = build_html_from(
+            &records,
+            &loop_json,
+            Some(&rig),
+            None,
+            "20260613T000000Z-test",
+        );
 
         assert!(
             html.starts_with("<!doctype html>"),
@@ -426,7 +586,13 @@ mod tests {
     #[test]
     fn draws_the_four_review_surfaces() {
         let (records, loop_json, rig) = fixture();
-        let html = build_html_from(&records, &loop_json, Some(&rig), "20260613T000000Z-test");
+        let html = build_html_from(
+            &records,
+            &loop_json,
+            Some(&rig),
+            None,
+            "20260613T000000Z-test",
+        );
 
         // (1) leaderboard — recommended candidate is named and marked.
         assert!(
@@ -465,7 +631,7 @@ mod tests {
             .as_object_mut()
             .unwrap()
             .remove("reward_delta_cis");
-        let html = build_html_from(&records, &loop_json, Some(&rig), "t");
+        let html = build_html_from(&records, &loop_json, Some(&rig), None, "t");
         assert!(
             !html.contains("ae-ci-band\" style=\"left:"),
             "no recomputed band may be drawn for a run that didn't record CIs"
@@ -497,7 +663,7 @@ mod tests {
             })
         };
         let records = vec![mk("seed3-qwen3.7-plus"), mk("seed3-qwen3-7-plus")];
-        let html = build_html_from(&records, &Value::Null, None, "t");
+        let html = build_html_from(&records, &Value::Null, None, None, "t");
 
         // Pull the fragment after a marker up to the closing quote.
         let frags = |pat: &str| -> Vec<String> {
@@ -533,7 +699,7 @@ mod tests {
     #[test]
     fn escapes_candidate_and_finding_text() {
         let (records, loop_json, rig) = fixture();
-        let html = build_html_from(&records, &loop_json, Some(&rig), "t");
+        let html = build_html_from(&records, &loop_json, Some(&rig), None, "t");
         // The injected markup must be escaped, never emitted raw.
         assert!(html.contains("R&amp;D"), "ampersands escaped");
         assert!(
@@ -541,5 +707,157 @@ mod tests {
             "angle brackets in findings escaped"
         );
         assert!(!html.contains("src/<core>.rs"), "file paths escaped");
+    }
+
+    // -----------------------------------------------------------------------
+    // Sanity affordances: contamination advisory + redteam span audit (044
+    // oracle 4). These exercise the IO half (SanityAudit::from_arena_dir reads
+    // a real arena dir on disk) since that is the seam that can mislead.
+    // -----------------------------------------------------------------------
+
+    use std::sync::atomic::{AtomicU64, Ordering};
+    static SANITY_SEQ: AtomicU64 = AtomicU64::new(0);
+
+    /// A throwaway arena dir with a contamination record and an answer key
+    /// carrying one gameable wide span (30 lines > the 8-line threshold) and
+    /// one tight span. Mirrors the `arenas/<id>/tasks/<t>/tests/expected.json`
+    /// layout the real audit reads.
+    fn write_arena_fixture(public: bool, note: &str) -> std::path::PathBuf {
+        let n = SANITY_SEQ.fetch_add(1, Ordering::SeqCst);
+        let arena =
+            std::env::temp_dir().join(format!("daedalus-sanity-{}-{n}", std::process::id()));
+        let task = arena.join("tasks").join("wide-key").join("tests");
+        std::fs::create_dir_all(&task).unwrap();
+        std::fs::write(
+            arena.join("contamination.toml"),
+            format!(
+                "defects_novel = true\nnotes = \"{note}\"\n[[source]]\nrepo = \"src\"\npublic = {public}\n"
+            ),
+        )
+        .unwrap();
+        std::fs::write(
+            task.join("expected.json"),
+            r#"{"defects":[
+              {"id":"wide","file":"a.py","line_start":1,"line_end":30,"category":"correctness"},
+              {"id":"tight","file":"a.py","line_start":50,"line_end":51,"category":"security"}
+            ]}"#,
+        )
+        .unwrap();
+        arena
+    }
+
+    fn records_for(arena_id: &str) -> Vec<Value> {
+        vec![json!({
+            "candidate_id": "c1", "candidate_kind": "pi", "model": "m",
+            "composition_hash": "h", "arena_id": arena_id, "arena_version": "0.1.0",
+            "task_id": "wide-key", "trial": 1, "reward": 1.0, "recall": 1.0,
+            "matched": ["wide"], "false_positives": 0, "expected_defects": 1,
+            "cost_usd": 0.01, "wall_ms": 1000.0, "findings": [], "error": null,
+        })]
+    }
+
+    #[test]
+    fn sanity_section_shows_contamination_verdict_and_wide_span_count() {
+        let arena = write_arena_fixture(true, "drawn from public rich");
+        let sanity = SanityAudit::from_arena_dir(&arena);
+        let records = records_for("my-arena");
+        let html = build_html_from(&records, &Value::Null, None, Some(&sanity), "t");
+
+        // The sanity cluster renders beside the rig panel.
+        assert!(html.contains("id=\"sanity\""), "sanity section must render");
+        // (a) contamination advisory: a public source → score-inflation verdict.
+        assert!(
+            html.contains("public-derived"),
+            "public-derived contamination verdict must show: {}",
+            &html[html.find("id=\"sanity\"").unwrap()..][..1200]
+        );
+        assert!(
+            html.contains("drawn from public rich"),
+            "the contamination note must surface"
+        );
+        // (b) redteam span audit: the 30-line key is flagged, the 2-line one not.
+        assert!(
+            html.contains("REDTEAM SPAN AUDIT"),
+            "the span audit must render"
+        );
+        assert!(
+            html.contains("1 of 2 answer-key defects carry a wide span"),
+            "the wide-span count must show (1 of 2)"
+        );
+        assert!(
+            html.contains("wide-key:1"),
+            "the flagged task must be named with its wide-span count"
+        );
+        // Regression guard for the double-escape fix: the threshold `>` must be
+        // escaped exactly once (`&gt;`), never the literal `&amp;gt;` that a
+        // pre-escaped string passed back through esc() would produce.
+        assert!(
+            html.contains("wide span (&gt; 8 lines)"),
+            "the threshold > must be escaped exactly once"
+        );
+        assert!(
+            !html.contains("&amp;gt;"),
+            "no double-escaped entity may appear"
+        );
+
+        // A contamination-resistant arena reads the other way.
+        let arena2 = write_arena_fixture(false, "synthetic, author-written");
+        let sanity2 = SanityAudit::from_arena_dir(&arena2);
+        let html2 = build_html_from(&records, &Value::Null, None, Some(&sanity2), "t");
+        assert!(
+            html2.contains("contamination-resistant"),
+            "all-private sources → contamination-resistant verdict"
+        );
+
+        let _ = std::fs::remove_dir_all(&arena);
+        let _ = std::fs::remove_dir_all(&arena2);
+    }
+
+    #[test]
+    fn sanity_section_degrades_gracefully_when_arena_unreachable() {
+        // The arena dir is not reachable (the common case for a bare run-dir
+        // attachment): the IO shell passes None, and the section must render an
+        // honest "not reachable" note rather than crash or fabricate a verdict.
+        let records = records_for("absent-arena");
+        let html = build_html_from(&records, &Value::Null, None, None, "t");
+        assert!(
+            html.contains("id=\"sanity\""),
+            "the section renders even when the arena is unreachable"
+        );
+        assert!(
+            html.contains("not reachable for the sanity audit"),
+            "the gap must be stated honestly"
+        );
+        assert!(
+            html.contains("absent-arena"),
+            "the unreachable arena id must be named"
+        );
+        // No verdict may be fabricated for an unreachable arena.
+        assert!(
+            !html.contains("public-derived") && !html.contains("contamination-resistant"),
+            "no contamination verdict may be fabricated when the arena is absent"
+        );
+    }
+
+    #[test]
+    fn locate_arena_dir_resolves_relative_to_the_run_dirs_repo_root() {
+        // Layout: <root>/runs/<stamp> as the run dir, <root>/arenas/<id> the
+        // arena — the IO shell must find the arena via the run-dir's grandparent
+        // even when CWD is elsewhere.
+        let n = SANITY_SEQ.fetch_add(1, Ordering::SeqCst);
+        let root = std::env::temp_dir().join(format!("daedalus-root-{}-{n}", std::process::id()));
+        let run_dir = root.join("runs").join("20260101T000000Z-x");
+        let arena_dir = root.join("arenas").join("the-arena").join("tasks");
+        std::fs::create_dir_all(&run_dir).unwrap();
+        std::fs::create_dir_all(&arena_dir).unwrap();
+
+        let found = locate_arena_dir("the-arena", &run_dir);
+        assert_eq!(found, Some(root.join("arenas").join("the-arena")));
+        assert_eq!(
+            locate_arena_dir("no-such-arena", &run_dir),
+            None,
+            "an absent arena is not located"
+        );
+        let _ = std::fs::remove_dir_all(&root);
     }
 }

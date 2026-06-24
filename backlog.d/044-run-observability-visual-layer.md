@@ -6,16 +6,27 @@ Priority: P1 · Status: in-progress · Estimate: XL
 > `daedalus report-html <run-dir>` emits a self-contained offline HTML report
 > (leaderboard, reward-delta CI forest, coverage heatmap, transcript drill, rig
 > panel) in the lab.css language, auto-emitted by `run` Stage 5. Evidence:
-> `crates/daedalus-core/src/report_html.rs` (+5 golden/DOM/escaping/anchor
+> `crates/daedalus-core/src/report_html/` (+5 golden/DOM/escaping/anchor
 > tests), sample at `runs/20260613T214006Z-search-pr-review-correctness/report.html`,
 > `bin/gate` green. Cross-model review caught and fixed a drill-anchor slug
-> collision (now keyed by position index). Two threads remain open below.
+> collision (now keyed by position index).
 >
-> **Remaining:** child 4 — the live `daedalus view` server (oracle bullet 3) —
-> is split to its own ticket (distinct streaming architecture). And oracle
-> bullet 4 is only partially met: the **rig panel** ships, but the
-> **contamination advisory** and **`arena-redteam` span audit** are not yet
-> surfaced in the report (they live in arena files, not the run dir) — follow-up.
+> **Delivered 2026-06-23 — sanity affordances complete (oracle bullet 4).**
+> The report's `ARENA SANITY` section now surfaces, beside the rig panel, the
+> **contamination advisory** (public-derived → score-inflation risk vs
+> contamination-resistant → synthetic/private, with the record's note) and the
+> **`arena-redteam` span audit** (count of gameable wide answer-key spans, with
+> the flagged tasks and the threshold). Derived from `arenas/<arena_id>` (CWD
+> first, then the run-dir's repo root) by the IO shell, reusing
+> `workbench::load_contamination` and `score::redteam_audit` — `build_html_from`
+> stays disk-free and unit-testable. Degrades gracefully with an honest "arena
+> not reachable" note when the arena dir is absent. Evidence:
+> `crates/daedalus-core/src/report_html/{mod.rs,render.rs}` (+3 tests: reachable
+> verdict+span-count, unreachable note, repo-root resolution), `bin/gate` green.
+>
+> **Remaining:** only child 4 — the live `daedalus view` server (oracle bullet
+> 3) — is split to its own ticket (distinct streaming architecture). 044 stays
+> open on that single thread.
 
 ## Goal
 A human can watch a search run live, sanity-check its design and execution, and review results — which configs win under what conditions, with confidence — through reviewable **visuals**, while everything stays CLI/agent-friendly and local-first.
@@ -29,7 +40,7 @@ External grounding (research 2026-06-18): the convergent local-first pattern is 
 - [x] `daedalus report-html <run-dir>` emits a **self-contained** static HTML (CSS/JS/images base64-inlined, opens from `file://`, PR-attachable, offline) from `loop.json` + `trials.jsonl` — the visual companion to `report.md`, in the Misty Step / lab.css design language.
 - [x] It renders the four review surfaces: (a) a **leaderboard** (config × arena, sortable, cost/latency columns); (b) a **CI forest/caterpillar plot** of each certified candidate's reward-delta CI with the `sig`/`clstr→95%` columns (the 039 stats, drawn); (c) a **per-task/per-cluster heatmap** (config × task) to expose Simpson's-paradox wins; (d) one-click **drill from a score row into the trial transcript** (the candidate's findings + the scorer's matched/missed/FP explanation).
 - [ ] A **live** surface: `daedalus view <run-dir>` (local server or TUI) streams trials as they complete with running scores, per-candidate progress, and **live $ spend** (the gap even Inspect's TUI doesn't nail) — reads the same JSONL, no rewrite.
-- [ ] Sanity-check affordances: the rig panel (oracle 1.0 / null floor / probe verdict incl. the slice-B Inconclusive state), the contamination advisory, and the `arena-redteam` span audit are visible in the report so design flaws are caught *before* trusting a ranking.
+- [x] Sanity-check affordances: the rig panel (oracle 1.0 / null floor / probe verdict incl. the slice-B Inconclusive state), the contamination advisory, and the `arena-redteam` span audit are visible in the report so design flaws are caught *before* trusting a ranking. (rig panel: 2026-06-21; contamination advisory + redteam span audit: 2026-06-23 — `report_html::render::sanity_section`.)
 
 ## Verification System
 - Claim: a human can watch a run and review its results/validity from visuals alone, and an agent can still consume the JSONL.

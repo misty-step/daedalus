@@ -8,7 +8,7 @@ use std::fmt::Write as _;
 
 use serde_json::{Map, Value};
 
-use super::{cell_mean, ci_axis, is_reference, or_dash, representative_trial, Ci};
+use super::{cell_mean, ci_axis, is_reference, or_dash, representative_trial, Ci, SanityAudit};
 
 // ---------------------------------------------------------------------------
 // Sections
@@ -141,6 +141,130 @@ pub(super) fn rig_section(rig: Option<&Value>) -> String {
         probe = cell(probe),
         vi = verdict_icon,
         verdict = esc(&verdict),
+    )
+}
+
+pub(super) fn sanity_section(sanity: Option<&SanityAudit>, arena_id: &str) -> String {
+    // The second sanity gate, beside the rig panel: even a calibrated rig can
+    // rank on a flawed arena. Two design flaws a reviewer must catch *before*
+    // trusting a ranking — (a) is the arena contamination-resistant, or
+    // public-derived with score-inflation risk, and (b) how many answer keys
+    // carry spans wide enough that a candidate could guess file+category without
+    // locating the defect. The advisory lives in the arena dir, not the run dir,
+    // so it degrades gracefully when the arena is not reachable.
+    let Some(s) = sanity else {
+        return format!(
+            r#"<section id="sanity" style="margin-bottom:1.8em">
+  <p class="ae-plate-cap">ARENA SANITY · is this arena sound enough to rank on?</p>
+  <p class="ae-chrome" style="margin-top:0.7em">{vi} arena <span class="ae-num">{arena}</span> is not reachable for the sanity audit — its <span class="ae-num">contamination.toml</span> and answer keys were not found beside this run, so the contamination verdict and the wide-span audit cannot be drawn. Run from the repo root (so <span class="ae-num">arenas/{arena}</span> resolves) to surface them.</p>
+</section>
+"#,
+            vi = icon("i-minus", "ae-warn"),
+            arena = esc(arena_id),
+        );
+    };
+
+    // (a) Contamination advisory.
+    let (contam_icon, contam_verdict) = match s.public() {
+        Some(true) => (
+            icon("i-alert", "ae-warn"),
+            "public-derived — scores may be inflated by training contamination; pair with a contamination-resistant holdout before trusting rankings".to_string(),
+        ),
+        Some(false) => (
+            icon("i-check", "ae-ok"),
+            "contamination-resistant — synthetic/private sources, so a config cannot inflate its score from training-data familiarity".to_string(),
+        ),
+        None => (
+            icon("i-minus", "ae-warn"),
+            "no contamination.toml recorded for this arena — contamination resistance is unverified".to_string(),
+        ),
+    };
+    let note_html = match s.note() {
+        Some(n) if !n.trim().is_empty() => format!(
+            "<p class=\"ae-plate-note\" style=\"border:0;padding:0;margin-top:0.4em\">{}</p>",
+            esc(n.trim()),
+        ),
+        _ => String::new(),
+    };
+
+    // (b) Red-team wide-span audit.
+    // These verdict strings are passed through `esc()` below, so they carry a
+    // plain `>` (esc renders it as `&gt;`) — never a pre-escaped entity, which
+    // would double-escape to a literal "&gt;".
+    let (span_icon, span_verdict) = if s.n_defects() == 0 {
+        (
+            icon("i-minus", "ae-warn"),
+            format!(
+                "no answer-key defects found to audit (threshold > {} lines)",
+                s.wide_threshold()
+            ),
+        )
+    } else if s.total_wide() == 0 {
+        (
+            icon("i-check", "ae-ok"),
+            format!(
+                "0 of {} answer-key defects carry a wide span (> {} lines): the line constraint demands real localization",
+                s.n_defects(),
+                s.wide_threshold(),
+            ),
+        )
+    } else {
+        // Task ids are interpolated into a string that is then esc()'d as a
+        // whole, so they must NOT be pre-escaped here (that would double-escape).
+        let tasks = s
+            .wide_tasks()
+            .iter()
+            .map(|(tid, n)| format!("{tid}:{n}"))
+            .collect::<Vec<_>>()
+            .join(", ");
+        (
+            icon("i-alert", "ae-warn"),
+            format!(
+                "{} of {} answer-key defects carry a wide span (> {} lines) — a candidate could score by guessing file+category at any in-span line without locating the defect. Tasks: {}",
+                s.total_wide(),
+                s.n_defects(),
+                s.wide_threshold(),
+                tasks,
+            ),
+        )
+    };
+    let incomplete_html = if s.audit_incomplete() {
+        format!(
+            "<p class=\"ae-chrome\" style=\"margin-top:0.4em\">{} some answer keys could not be parsed — the wide-span count is a lower bound.</p>",
+            icon("i-alert", "ae-warn"),
+        )
+    } else {
+        String::new()
+    };
+
+    format!(
+        r#"<section id="sanity" style="margin-bottom:1.8em">
+  <p class="ae-plate-cap">ARENA SANITY · is this arena sound enough to rank on?</p>
+  <div class="lab-figrow">
+    <div class="lab-fig"><p class="lab-fig-k">contamination</p><p class="lab-fig-v">{contam_state}</p></div>
+    <div class="lab-fig"><p class="lab-fig-k">wide spans</p><p class="lab-fig-v">{total_wide} <span class="ae-dim">/ {n_defects} keys</span></p></div>
+    <div class="lab-fig"><p class="lab-fig-k">threshold</p><p class="lab-fig-v">&gt;{threshold}</p></div>
+  </div>
+  <p class="ae-chrome" style="margin-top:0.7em">{ci} <span class="ae-h">CONTAMINATION</span> {cv}</p>
+  {note}
+  <p class="ae-chrome" style="margin-top:0.5em">{si} <span class="ae-h">REDTEAM SPAN AUDIT</span> {sv}</p>
+  {incomplete}
+</section>
+"#,
+        contam_state = match s.public() {
+            Some(true) => "public",
+            Some(false) => "resistant",
+            None => "—",
+        },
+        total_wide = s.total_wide(),
+        n_defects = s.n_defects(),
+        threshold = s.wide_threshold(),
+        ci = contam_icon,
+        cv = esc(&contam_verdict),
+        note = note_html,
+        si = span_icon,
+        sv = esc(&span_verdict),
+        incomplete = incomplete_html,
     )
 }
 

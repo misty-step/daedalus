@@ -213,7 +213,7 @@ fn load_toml(path: &Path) -> Result<TomlValue, WorkbenchError> {
 }
 
 /// Return sorted task subdirectories from `<arena_dir>/tasks/`.
-fn task_dirs(arena_dir: &Path) -> Vec<PathBuf> {
+pub(crate) fn task_dirs(arena_dir: &Path) -> Vec<PathBuf> {
     let tasks = arena_dir.join("tasks");
     let mut dirs: Vec<PathBuf> = match fs::read_dir(&tasks) {
         Ok(rd) => rd
