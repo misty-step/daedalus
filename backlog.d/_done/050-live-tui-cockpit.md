@@ -1,12 +1,28 @@
 # Live TUI cockpit — watch a research loop run (with a hypothesis ledger)
 
-Priority: P1 · Status: shaped · Estimate: M
+Priority: P1 · Status: delivered · Estimate: M
 
 > **Shaped 2026-06-23.** Completes 044's open oracle bullet 3 (the deferred live
 > view surface, ex-Child-4). Operator chose: **TUI** transport (not a web
 > server), **live-run console** scope, and **incremental hypothesis logging** so
 > the tested hypotheses stream live instead of only landing in loop.json at the
 > end.
+>
+> **Delivered 2026-06-23.** Both slices shipped. Slice 1: `run_search` gained a
+> defaulted `SearchWorld::record_history` hook (pure loop preserved); the CLI
+> world appends each entry to `loop.history.jsonl` — streamed log equals the
+> returned history exactly (unit-tested), loop.json unchanged. Slice 2:
+> `daedalus view` renders the cockpit (spend/cap, headroom rig, leader callout
+> with per-trial cost, candidate roll-up, hypotheses panel), reusing
+> `report::aggregate` so it never drifts from the static report; rig/hypotheses/
+> cap fold into `Snapshot` via `with_*` builders, each degrading gracefully when
+> its source is absent; the budget cap is persisted to seed.json at run start.
+> Fresh-context thermonuclear review applied (hypotheses now render before the
+> first trial; alt-screen dropped for Ctrl-C safety). Evidence:
+> `crates/daedalus-core/src/view.rs` (19 view tests), `search_loop.rs`
+> (streaming-equivalence test), `crates/daedalus-cli/src/main.rs`; verified live
+> via `daedalus view <fixture> --once` (mid-flight / early-window / empty-dir);
+> `bin/gate` green.
 
 ## Goal
 A human can watch a `daedalus run` as it happens in a single full-screen
