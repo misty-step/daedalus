@@ -218,6 +218,53 @@ pub fn check_roster_in_pool(repo: &Path) -> Check {
     }
 }
 
+/// Validate every committed launch contract through the validation kernel.
+///
+/// Backlog 045: the accepted launch contracts under `deliveries/*/contract.toml`
+/// (the same glob `check_approvals` / `check_harness_versions` walk) are run
+/// through `launch::load_contract`, which is the kernel-backed `contract.v1`
+/// schema validator. A malformed or schema-incompatible contract — wrong
+/// `contract` version, missing required field, broken evidence reference —
+/// surfaces here as a `fail` carrying the kernel's actionable message, instead
+/// of only blowing up later when `launch-pack` / `export` consume it.
+///
+/// This passes with no compatibility shim on the repo's currently-accepted
+/// records (`deliveries/launch-contract`, `deliveries/pr-review`); if a real
+/// accepted contract ever fails, widen the kernel to the real contract — never
+/// weaken this check.
+pub fn check_launch_contracts(repo: &Path) -> Check {
+    let mut malformed: Vec<String> = Vec::new();
+    for path in delivery_contracts(repo) {
+        let delivery_dir = match path.parent() {
+            Some(d) => d,
+            None => continue,
+        };
+        if let Err(err) = crate::launch::load_contract(delivery_dir, repo) {
+            let rel = path
+                .strip_prefix(repo)
+                .map(|p| p.to_string_lossy().into_owned())
+                .unwrap_or_else(|_| path.to_string_lossy().into_owned());
+            malformed.push(format!("{rel}: {err}"));
+        }
+    }
+    if !malformed.is_empty() {
+        malformed.sort();
+        return Check::new(
+            "launch-contracts",
+            "fail",
+            &format!(
+                "launch contract failed kernel validation (fix the contract, never the validator): {}",
+                malformed.join("; ")
+            ),
+        );
+    }
+    Check::new(
+        "launch-contracts",
+        "ok",
+        "delivery launch contracts pass the validation kernel",
+    )
+}
+
 /// Check delivery contract approvals. Mirrors `_check_approvals(repo)` in Python.
 pub fn check_approvals(repo: &Path) -> Check {
     let mut missing: Vec<String> = Vec::new();
@@ -465,6 +512,7 @@ pub fn run_checks(
         check_roster_in_pool(repo),
         check_approvals(repo),
         check_harness_versions(repo),
+        check_launch_contracts(repo),
         check_parallel_pi(repo),
         check_run_artifacts(repo, use_git),
     ]
@@ -552,6 +600,92 @@ g3_approval = "approvals/G3-demo.md"
             .iter()
             .map(|c| (c.name.clone(), c.status.clone()))
             .collect()
+    }
+
+    fn repo_root() -> PathBuf {
+        Path::new(env!("CARGO_MANIFEST_DIR"))
+            .ancestors()
+            .nth(2)
+            .expect("repo root")
+            .to_path_buf()
+    }
+
+    #[test]
+    fn launch_contracts_pass_on_accepted_records() {
+        // Oracle (backlog 045): the repo's currently-accepted launch contracts
+        // validate through the kernel with no compatibility shim. This is the
+        // gate-time exercise of the kernel — `bin/gate` runs `cargo test
+        // --workspace`, so this test (reading the real committed records) is
+        // what proves the kernel runs against accepted records, with no
+        // dependence on working-tree run litter or `git status`.
+        let repo = repo_root();
+
+        // The glob must actually discover both committed accepted records —
+        // otherwise `check_launch_contracts` would return a vacuous "ok".
+        let discovered: Vec<PathBuf> = delivery_contracts(&repo);
+        for expected in [
+            repo.join("deliveries/launch-contract/contract.toml"),
+            repo.join("deliveries/pr-review/contract.toml"),
+        ] {
+            assert!(
+                discovered.contains(&expected),
+                "accepted record not discovered by delivery_contracts glob: {}",
+                expected.display()
+            );
+            // And each one loads cleanly through the kernel-backed validator.
+            crate::launch::load_contract(expected.parent().unwrap(), &repo).unwrap_or_else(|e| {
+                panic!(
+                    "accepted record failed kernel validation: {}: {e}",
+                    expected.display()
+                )
+            });
+        }
+
+        // The aggregate operator check is green on the same records.
+        let check = check_launch_contracts(&repo);
+        assert_eq!(check.status, "ok", "{}", check.message);
+    }
+
+    #[test]
+    fn launch_contracts_reject_wrong_contract_version() {
+        // A `contract = 2` record must fail with the kernel's "version 1" message.
+        let tmp = tempdir();
+        let delivery = tmp.join("deliveries").join("bad-version");
+        fs::create_dir_all(&delivery).unwrap();
+        fs::write(
+            delivery.join("contract.toml"),
+            "contract = 2\nagent = \"x\"\ncomposition_hash = \"h\"\ntaskspec = \"t\"\nmode = \"m\"\n",
+        )
+        .unwrap();
+        let check = check_launch_contracts(&tmp);
+        assert_eq!(check.status, "fail");
+        assert!(
+            check.message.contains("contract must be version 1"),
+            "{}",
+            check.message
+        );
+        let _ = fs::remove_dir_all(&tmp);
+    }
+
+    #[test]
+    fn launch_contracts_surface_missing_field_actionably() {
+        let tmp = tempdir();
+        let delivery = tmp.join("deliveries").join("missing-field");
+        fs::create_dir_all(&delivery).unwrap();
+        // Valid version, but missing the required top-level fields.
+        fs::write(delivery.join("contract.toml"), "contract = 1\n").unwrap();
+        let check = check_launch_contracts(&tmp);
+        assert_eq!(check.status, "fail");
+        assert!(
+            check.message.contains("missing required field(s)"),
+            "{}",
+            check.message
+        );
+        // The actionable framing names the remedy.
+        assert!(check
+            .message
+            .contains("fix the contract, never the validator"));
+        let _ = fs::remove_dir_all(&tmp);
     }
 
     #[test]

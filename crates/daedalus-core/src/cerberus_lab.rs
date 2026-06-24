@@ -23,8 +23,10 @@ use report::{
     ArtifactIndexPaths, SummaryArtifactPaths,
 };
 
-const REQUEST_SCHEMA: &str = "cerberus.review_request.v1";
-const ARTIFACT_SCHEMA: &str = "cerberus.review_artifact.v1";
+use crate::validate::SchemaVersion;
+
+const REQUEST_SCHEMA: &str = SchemaVersion::CERBERUS_REVIEW_REQUEST;
+const ARTIFACT_SCHEMA: &str = SchemaVersion::CERBERUS_REVIEW_ARTIFACT;
 
 #[derive(Debug)]
 pub struct CerberusLabError(pub String);
@@ -36,6 +38,12 @@ impl std::fmt::Display for CerberusLabError {
 }
 
 impl std::error::Error for CerberusLabError {}
+
+impl From<crate::validate::ValidationError> for CerberusLabError {
+    fn from(err: crate::validate::ValidationError) -> Self {
+        CerberusLabError(err.0)
+    }
+}
 
 #[derive(Debug, Clone)]
 pub struct ImportOptions {
@@ -178,7 +186,9 @@ pub fn compare_imports(
     for run_dir in &options.run_dirs {
         let summary_path = run_dir.join("summary.json");
         let summary = load_json(&summary_path)?;
-        if summary.get("schema_version").and_then(Value::as_str) != Some("cerberus-lab-import.v1") {
+        if summary.get("schema_version").and_then(Value::as_str)
+            != Some(SchemaVersion::CERBERUS_LAB_IMPORT)
+        {
             return Err(CerberusLabError(format!(
                 "{} is not a cerberus-lab import summary",
                 summary_path.display()
@@ -194,7 +204,7 @@ pub fn compare_imports(
     let summary_path = options.out_dir.join("summary.json");
     let report_path = options.out_dir.join("report.md");
     let comparison = json!({
-        "schema_version": "cerberus-lab-comparison.v1",
+        "schema_version": SchemaVersion::CERBERUS_LAB_COMPARISON,
         "candidate_count": candidates.len(),
         "recommendation_scope": recommendation_scope,
         "best_candidate": candidates.first().cloned().unwrap_or(Value::Null),
@@ -639,17 +649,16 @@ fn changed_paths(request: &Value) -> HashSet<String> {
         .unwrap_or_default()
 }
 
+// The JSON require/optional family is now the validation kernel's (backlog
+// 045). These thin wrappers keep `CerberusLabError` return types and the
+// byte-identical `"{label} is required"` messages while the implementation
+// lives once in `crate::validate`.
 fn require_nonempty_string<'a>(
     value: &'a Value,
     path: &[&str],
     label: &str,
 ) -> Result<&'a str, CerberusLabError> {
-    let text = require_string(value, path, label)?;
-    if text.trim().is_empty() {
-        Err(CerberusLabError(format!("{label} is required")))
-    } else {
-        Ok(text)
-    }
+    crate::validate::require_json_nonempty_string(value, path, label).map_err(Into::into)
 }
 
 fn require_string<'a>(
@@ -657,15 +666,11 @@ fn require_string<'a>(
     path: &[&str],
     label: &str,
 ) -> Result<&'a str, CerberusLabError> {
-    optional_string(value, path).ok_or_else(|| CerberusLabError(format!("{label} is required")))
+    crate::validate::require_json_string(value, path, label).map_err(Into::into)
 }
 
 fn optional_string<'a>(value: &'a Value, path: &[&str]) -> Option<&'a str> {
-    let mut current = value;
-    for segment in path {
-        current = current.get(*segment)?;
-    }
-    current.as_str()
+    crate::validate::optional_json_string(value, path)
 }
 
 fn value_at(value: &Value, path: &[&str]) -> Value {
@@ -859,6 +864,23 @@ mod tests {
 
         assert!(result.summary.is_file());
         let _ = std::fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn rejects_wrong_artifact_schema_version() {
+        // Oracle (backlog 045): a wrong ReviewArtifact schema_version yields the
+        // existing cerberus_lab message after the schema literal moved into the
+        // kernel registry — proving the registry preserved the literal.
+        let request = sample_request();
+        let mut artifact = sample_artifact(&request, "completed", "WARN");
+        artifact["schema_version"] = json!("cerberus.review_artifact.v2");
+        let err = validate_artifact_for_request(&artifact, &request)
+            .unwrap_err()
+            .to_string();
+        assert_eq!(
+            err,
+            "unsupported artifact schema: cerberus.review_artifact.v2"
+        );
     }
 
     #[test]

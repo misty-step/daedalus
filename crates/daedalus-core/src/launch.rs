@@ -45,6 +45,12 @@ impl std::fmt::Display for ContractValidationError {
 
 impl std::error::Error for ContractValidationError {}
 
+impl From<crate::validate::ValidationError> for ContractValidationError {
+    fn from(err: crate::validate::ValidationError) -> Self {
+        ContractValidationError(err.0)
+    }
+}
+
 // ---------------------------------------------------------------------------
 // TOML string escaping — mirrors Python's `_toml_str`
 // ---------------------------------------------------------------------------
@@ -89,7 +95,11 @@ fn resolve_contract_path(ref_: &str, delivery_dir: &Path, repo: &Path) -> PathBu
 }
 
 // ---------------------------------------------------------------------------
-// Require helpers — mirror Python's `_require_*` family
+// Require helpers — now the validation kernel's TOML family (backlog 045).
+//
+// These thin wrappers preserve `ContractValidationError` return types (and so
+// every existing call site and the byte-identical message strings) while the
+// implementation lives once in `crate::validate`.
 // ---------------------------------------------------------------------------
 
 fn require_keys(
@@ -97,61 +107,32 @@ fn require_keys(
     keys: &[&str],
     label: &str,
 ) -> Result<(), ContractValidationError> {
-    let missing: Vec<&str> = keys
-        .iter()
-        .copied()
-        .filter(|k| !table.contains_key(*k))
-        .collect();
-    if !missing.is_empty() {
-        return Err(ContractValidationError(format!(
-            "{label} missing required field(s): {}",
-            missing.join(", ")
-        )));
-    }
-    Ok(())
+    crate::validate::require_keys(table, keys, label).map_err(Into::into)
 }
 
 fn require_string(
     value: Option<&toml::Value>,
     label: &str,
 ) -> Result<String, ContractValidationError> {
-    match value {
-        Some(toml::Value::String(s)) if !s.is_empty() => Ok(s.clone()),
-        Some(toml::Value::String(_)) => Err(ContractValidationError(format!(
-            "{label} must not be empty"
-        ))),
-        _ => Err(ContractValidationError(format!("{label} must be str"))),
-    }
+    crate::validate::require_string(value, label).map_err(Into::into)
 }
 
 fn require_number(
     value: Option<&toml::Value>,
     label: &str,
 ) -> Result<f64, ContractValidationError> {
-    match value {
-        Some(toml::Value::Integer(i)) => Ok(*i as f64),
-        Some(toml::Value::Float(f)) => Ok(*f),
-        _ => Err(ContractValidationError(format!(
-            "{label} must be int|float"
-        ))),
-    }
+    crate::validate::require_number(value, label).map_err(Into::into)
 }
 
 fn require_bool(value: Option<&toml::Value>, label: &str) -> Result<bool, ContractValidationError> {
-    match value {
-        Some(toml::Value::Boolean(b)) => Ok(*b),
-        _ => Err(ContractValidationError(format!("{label} must be bool"))),
-    }
+    crate::validate::require_bool(value, label).map_err(Into::into)
 }
 
 fn require_array<'a>(
     value: Option<&'a toml::Value>,
     label: &str,
 ) -> Result<&'a toml::value::Array, ContractValidationError> {
-    match value {
-        Some(toml::Value::Array(a)) => Ok(a),
-        _ => Err(ContractValidationError(format!("{label} must be list"))),
-    }
+    crate::validate::require_array(value, label).map_err(Into::into)
 }
 
 // ---------------------------------------------------------------------------
@@ -197,9 +178,9 @@ pub fn validate_contract(
         "contract",
     )?;
 
-    // contract == 1
+    // contract == SchemaVersion::LAUNCH_CONTRACT (1)
     match root.get("contract") {
-        Some(toml::Value::Integer(1)) => {}
+        Some(toml::Value::Integer(v)) if *v == crate::validate::SchemaVersion::LAUNCH_CONTRACT => {}
         _ => {
             return Err(ContractValidationError(
                 "contract must be version 1".to_string(),

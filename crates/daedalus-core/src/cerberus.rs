@@ -10,6 +10,7 @@ use serde_json::{json, Map, Value};
 use sha2::{Digest, Sha256};
 
 use crate::pycompat::utc_now_iso;
+use crate::validate::SchemaVersion;
 
 #[derive(Debug)]
 pub struct CerberusExportError(pub String);
@@ -109,7 +110,7 @@ pub fn build_reviewer_config_packet(
         }));
 
     let packet = json!({
-        "schema_version": "reviewer-config-packet.v1",
+        "schema_version": SchemaVersion::REVIEWER_CONFIG_PACKET,
         "packet_id": format!(
             "daedalus-{}-{}-{}-sandbox",
             sanitize(&suite_id),
@@ -205,7 +206,7 @@ fn load_arena(arena_ref: &str, repo_root: &Path) -> Result<Value, Box<dyn std::e
 
 fn review_config(agent: &str, provider: &str, model: &str) -> Value {
     json!({
-        "schema_version": "review-config.v1",
+        "schema_version": SchemaVersion::REVIEW_CONFIG,
         "config_id": format!("daedalus-sandbox-{}", sanitize(agent)),
         "reviewers": [{
             "id": "pr_review",

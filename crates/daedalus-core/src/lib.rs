@@ -32,5 +32,6 @@ pub mod stats; // backlog 039: confidence-bounded reward deltas (cluster-robust 
 pub mod swarm;
 pub mod taxonomy;
 pub mod trace;
+pub mod validate; // backlog 045: the Rust validation kernel (schemas, receipts, contracts)
 pub mod view; // backlog 049: live terminal dashboard over a run in flight
 pub mod workbench;
