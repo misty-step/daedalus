@@ -568,6 +568,81 @@ Every recommendable candidate is an agent composition._"
     lines.join("\n") + "\n"
 }
 
+/// Render the search verdict — WHY the search stopped, and what it concluded —
+/// as a `report.md` section, from the run's `loop.json`. Returns an empty string
+/// when `loop.json` carries no `stop_reason`, so callers can append
+/// unconditionally (mirrors `stats::delta_ci_markdown` / `consistency_markdown`).
+///
+/// 041: the stop reason previously lived only in `loop.json`, stdout, and the
+/// HTML report — never in `report.md`. A `--plateau` early-stop in particular is
+/// invisible to an operator reading the markdown. This surfaces it, plus the
+/// recommended/certified summary and known spend, without grepping prose.
+///
+/// Spend prints only when `loop.json` carries `spend_known_usd`; an absent key
+/// prints nothing rather than `$0` (AGENTS: unknown cost is null, never an
+/// estimate).
+pub fn verdict_markdown(loop_json: &Value) -> String {
+    let stop = match loop_json.get("stop_reason").and_then(Value::as_str) {
+        Some(s) if !s.is_empty() => s,
+        _ => return String::new(),
+    };
+    // Plain-language gloss so the stop reason is self-explaining in the report.
+    let gloss = match stop {
+        "budget" => "the run hit its cost budget",
+        "plateau" => "consecutive non-improving generations exhausted the plateau limit",
+        "max-candidates" => "the search reached its candidate budget",
+        "proposal-failures" => "the optimizer could not propose valid candidates",
+        s if s.starts_with("arena-saturated") => {
+            "the arena saturated at the top — rewards can no longer rank candidates"
+        }
+        _ => "see loop.json for detail",
+    };
+
+    let mut s = String::new();
+    s.push_str(&format!(
+        "\n## Verdict\n\nThe search stopped because **{stop}** — {gloss}.\n\n"
+    ));
+
+    let recommended = loop_json.get("recommended").and_then(Value::as_str);
+    let certified: Vec<&str> = loop_json
+        .get("certified")
+        .and_then(Value::as_array)
+        .map(|a| a.iter().filter_map(Value::as_str).collect())
+        .unwrap_or_default();
+    match recommended {
+        Some(r) => {
+            let cert = if certified.contains(&r) {
+                " (certified)"
+            } else {
+                " (UNCERTIFIED — no provable win over the null floor)"
+            };
+            s.push_str(&format!("- **Recommended:** `{r}`{cert}\n"));
+        }
+        None => {
+            s.push_str(
+                "- **Recommended:** none — no candidate is provably better than the floor.\n",
+            );
+        }
+    }
+    s.push_str(&format!(
+        "- **Certified:** {}\n",
+        if certified.is_empty() {
+            "none".to_string()
+        } else {
+            certified
+                .iter()
+                .map(|c| format!("`{c}`"))
+                .collect::<Vec<_>>()
+                .join(", ")
+        }
+    ));
+    // Known spend only when recorded; never fabricate a dollar figure.
+    if let Some(spend) = loop_json.get("spend_known_usd").and_then(Value::as_f64) {
+        s.push_str(&format!("- **Known spend:** ${spend:.4}\n"));
+    }
+    s
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -745,5 +820,52 @@ mod tests {
         let front = pareto_front(&cands);
         assert!(front.contains(&"known".to_string()));
         assert!(!front.contains(&"mystery".to_string()));
+    }
+
+    #[test]
+    fn verdict_markdown_surfaces_stop_reason_and_recommendation() {
+        // Fixture mirrors loop.json: a plateau stop with a recommended +
+        // certified pick. The operator must read WHY the search stopped and what
+        // it concluded without grepping prose (041 / ticket oracle).
+        let loop_json = json!({
+            "stop_reason": "plateau",
+            "mode": "threshold-then-cheap",
+            "recommended": "seed1-glm-5-spec-first",
+            "certified": ["seed1-glm-5-spec-first", "g1b-seed1-glm-5-spec-first"],
+            "spend_known_usd": 3.027,
+        });
+        let md = verdict_markdown(&loop_json);
+        assert!(md.starts_with("\n## Verdict\n"), "section header: {md}");
+        assert!(md.contains("plateau"), "stop reason missing: {md}");
+        assert!(md.contains("non-improving"), "plateau gloss missing: {md}");
+        assert!(
+            md.contains("seed1-glm-5-spec-first"),
+            "recommendation missing: {md}"
+        );
+        assert!(md.contains("$3.0270"), "spend missing: {md}");
+    }
+
+    #[test]
+    fn verdict_markdown_honest_when_nothing_certified() {
+        let loop_json = json!({
+            "stop_reason": "max-candidates",
+            "recommended": Value::Null,
+            "certified": [],
+        });
+        let md = verdict_markdown(&loop_json);
+        assert!(md.contains("max-candidates"), "stop reason: {md}");
+        assert!(
+            md.contains("provably better than the floor"),
+            "uncertified honesty missing: {md}"
+        );
+        // No spend key → no fabricated dollar figure (AGENTS: unknown cost is null).
+        assert!(!md.contains('$'), "fabricated spend: {md}");
+    }
+
+    #[test]
+    fn verdict_markdown_empty_without_stop_reason() {
+        // No verdict to render (e.g. a malformed/absent loop.json) → empty string
+        // so the caller can append unconditionally, mirroring stats::*_markdown.
+        assert_eq!(verdict_markdown(&json!({})), "");
     }
 }

@@ -10,8 +10,10 @@
 
 pub mod cerberus;
 pub mod cerberus_lab;
+pub mod compare; // backlog 041: offline two-run delta (`daedalus compare`)
 pub mod doctor;
 pub mod export;
+pub mod forecast; // backlog 041: offline cost/scale forecast (`run --estimate`)
 pub mod judge;
 pub mod launch;
 pub mod lineage;

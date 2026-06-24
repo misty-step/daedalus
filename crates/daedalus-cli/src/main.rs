@@ -242,7 +242,16 @@ enum Cmd {
         consistency_floor: f64,
         #[arg(long)]
         max_errors_per_candidate: Option<usize>,
+        /// Offline cost/scale forecast: project the trial count and (when the
+        /// taskspec declares a per-trial ceiling) the worst-case cost, then exit
+        /// before any trial runs. No spend, no `runs/` directory created.
+        #[arg(long)]
+        estimate: bool,
     },
+    /// Offline two-run delta: compare two existing run directories' pareto.json +
+    /// loop.json without spending. Per-candidate reward/rank/cost deltas, plus
+    /// spend and stop-reason deltas, so cross-run comparison is mechanical.
+    Compare { run_a: PathBuf, run_b: PathBuf },
 }
 
 #[derive(Subcommand)]
@@ -425,6 +434,7 @@ fn main() -> ExitCode {
             min_effect,
             consistency_floor,
             max_errors_per_candidate,
+            estimate,
         } => cmd_run(
             &taskspec,
             arena.as_deref(),
@@ -441,7 +451,9 @@ fn main() -> ExitCode {
             min_effect,
             consistency_floor,
             max_errors_per_candidate,
+            estimate,
         ),
+        Cmd::Compare { run_a, run_b } => cmd_compare(&run_a, &run_b),
     }
 }
 
@@ -547,6 +559,16 @@ fn cmd_view(run_dir: &std::path::Path, once: bool, interval: u64) -> ExitCode {
 // basin (039 child-4): trajectory-divergence detector over >=2 seed runs
 // ---------------------------------------------------------------------------
 
+/// A run's display label: its directory basename, or `"?"` when it has none.
+/// Shared by the read-only multi-run readers (`read_run_top`,
+/// `read_run_for_compare`).
+fn run_dir_label(dir: &std::path::Path) -> String {
+    dir.file_name()
+        .and_then(|n| n.to_str())
+        .unwrap_or("?")
+        .to_string()
+}
+
 /// Read one seed run's certified top from its `pareto.json` (the recommended
 /// candidate). `None` when the file is absent/unparseable or nothing certified.
 fn read_run_top(dir: &std::path::Path) -> Option<daedalus_core::stats::RunTop> {
@@ -557,11 +579,7 @@ fn read_run_top(dir: &std::path::Path) -> Option<daedalus_core::stats::RunTop> {
         .iter()
         .find(|c| c.get("recommended").and_then(Value::as_bool) == Some(true))?;
     Some(daedalus_core::stats::RunTop {
-        label: dir
-            .file_name()
-            .and_then(|n| n.to_str())
-            .unwrap_or("?")
-            .to_string(),
+        label: run_dir_label(dir),
         top_id: rec
             .get("candidate_id")
             .and_then(Value::as_str)
@@ -657,6 +675,105 @@ fn cmd_basin(run_dirs: &[PathBuf]) -> ExitCode {
             ExitCode::SUCCESS
         }
     }
+}
+
+// ---------------------------------------------------------------------------
+// compare (041): offline two-run delta over pareto.json + loop.json
+// ---------------------------------------------------------------------------
+
+/// Read one run's `pareto.json` + `loop.json` into a `compare::RunSummary`.
+/// `None` when `pareto.json` is absent/unparseable; a missing `loop.json` is
+/// tolerated (rank/spend/stop-reason simply stay empty). Mirrors the read-only
+/// multi-run pattern of `read_run_top`.
+fn read_run_for_compare(dir: &std::path::Path) -> Option<daedalus_core::compare::RunSummary> {
+    let pareto: Value =
+        serde_json::from_str(&std::fs::read_to_string(dir.join("pareto.json")).ok()?).ok()?;
+    let loop_json: Value = std::fs::read_to_string(dir.join("loop.json"))
+        .ok()
+        .and_then(|t| serde_json::from_str(&t).ok())
+        .unwrap_or(Value::Null);
+    let label = run_dir_label(dir);
+    Some(daedalus_core::compare::summarize_run(
+        &label, &pareto, &loop_json,
+    ))
+}
+
+fn cmd_compare(run_a: &std::path::Path, run_b: &std::path::Path) -> ExitCode {
+    let a = match read_run_for_compare(run_a) {
+        Some(s) => s,
+        None => {
+            eprintln!(
+                "error: {} has no readable pareto.json — not a completed run dir",
+                run_a.display()
+            );
+            return ExitCode::FAILURE;
+        }
+    };
+    let b = match read_run_for_compare(run_b) {
+        Some(s) => s,
+        None => {
+            eprintln!(
+                "error: {} has no readable pareto.json — not a completed run dir",
+                run_b.display()
+            );
+            return ExitCode::FAILURE;
+        }
+    };
+    let cmp = daedalus_core::compare::compare(&a, &b);
+
+    // Unknown is never 0: a missing delta prints "—" / "unknown".
+    let f4 = |x: Option<f64>| match x {
+        Some(v) => format!("{v:+.4}"),
+        None => "—".to_string(),
+    };
+    let rank = |x: Option<i64>| match x {
+        Some(0) => "0".to_string(),
+        Some(v) => format!("{v:+}"),
+        None => "—".to_string(),
+    };
+    let presence = |c: &daedalus_core::compare::CandidateDelta| match (c.in_a, c.in_b) {
+        (true, true) => "",
+        (true, false) => " (only A)",
+        (false, true) => " (only B)",
+        (false, false) => "",
+    };
+
+    println!("Compare A → B:");
+    println!("  A: {}", cmp.label_a);
+    println!("  B: {}", cmp.label_b);
+    println!();
+    println!("| candidate | Δ reward | Δ rank | Δ cost/trial |");
+    println!("|---|---|---|---|");
+    for c in &cmp.candidates {
+        println!(
+            "| {}{} | {} | {} | {} |",
+            c.candidate_id,
+            presence(c),
+            f4(c.reward_delta),
+            rank(c.rank_delta),
+            f4(c.cost_per_trial_delta),
+        );
+    }
+    println!();
+    // Intentionally NOT `view::money`: that takes a bare f64 and collapses -0.0
+    // → 0.0; this takes Option and must render an absent spend as "unknown"
+    // (AGENTS: unknown cost is null, never 0).
+    let money = |x: Option<f64>| match x {
+        Some(v) => format!("${v:.4}"),
+        None => "unknown".to_string(),
+    };
+    println!(
+        "spend:       A {}  →  B {}  (Δ {})",
+        money(cmp.spend_a),
+        money(cmp.spend_b),
+        f4(cmp.spend_delta),
+    );
+    println!(
+        "stop reason: A {}  →  B {}",
+        cmp.stop_reason_a.as_deref().unwrap_or("unknown"),
+        cmp.stop_reason_b.as_deref().unwrap_or("unknown"),
+    );
+    ExitCode::SUCCESS
 }
 
 // ---------------------------------------------------------------------------
@@ -1443,6 +1560,7 @@ fn cmd_run(
     min_effect: f64,
     consistency_floor: f64,
     max_errors_per_candidate: Option<usize>,
+    estimate: bool,
 ) -> ExitCode {
     let repo = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
 
@@ -1546,6 +1664,66 @@ fn cmd_run(
 
     let stamp = daedalus_core::run::utc_stamp();
     let spec_id = spec.get("id").and_then(Value::as_str).unwrap_or("unknown");
+
+    // 041: `--estimate` is an offline forecast — project the trial count and
+    // (when the taskspec declares a per-trial ceiling) the worst-case cost, then
+    // EARLY-RETURN before any `runs/` directory is created and before any stage
+    // runs. Zero trials, zero spend.
+    if estimate {
+        // References that run alongside the search: null floor, oracle ceiling,
+        // and the one-shot saturation probe (stages 1, 1b — see cmd_run below).
+        const REFERENCE_KINDS: usize = 3;
+        let max_cost_per_trial_usd = spec
+            .get("budget")
+            .and_then(|b| b.get("max_cost_per_trial_usd"))
+            .and_then(Value::as_f64);
+        let inputs = daedalus_core::forecast::ForecastInputs {
+            max_candidates,
+            reference_kinds: REFERENCE_KINDS,
+            n_search_tasks: search_tasks.len(),
+            trials,
+            certify_top,
+            n_holdout: holdout_ids.len(),
+            certify_trials,
+            max_cost_per_trial_usd,
+        };
+        let f = daedalus_core::forecast::forecast(&inputs);
+        let n_tasks = search_tasks.len();
+        let n_holdout = holdout_ids.len();
+        println!("Forecast for {spec_id} (offline — NO trials run, NO spend):");
+        // Candidates run `--trials`-deep; references (null/oracle/one-shot probe)
+        // run once per task — so they are shown at ×1, not ×trials.
+        println!(
+            "  candidates:    {max_candidates} × {n_tasks} search tasks × {trials} trials \
+             = {} trials",
+            f.candidate_trials,
+        );
+        println!(
+            "  references:    {REFERENCE_KINDS} × {n_tasks} search tasks × 1 trial (single-shot) \
+             = {} trials",
+            f.reference_trials,
+        );
+        println!(
+            "  certification: {certify_top} top × {n_holdout} holdout × {certify_trials} trials \
+             = {} trials",
+            f.certify_trials_total,
+        );
+        // "up to" — the plateau/budget stops can end the search early, so this is
+        // an upper bound, not a definite count.
+        println!("  total:         up to {} trials", f.total_trials);
+        match f.max_cost_usd {
+            Some(c) => println!(
+                "  max cost:      up to ${c:.4} (worst case = {} trials × ${:.4}/trial ceiling)",
+                f.total_trials,
+                max_cost_per_trial_usd.unwrap_or(0.0),
+            ),
+            None => println!(
+                "  max cost:      unknown (taskspec declares no [budget].max_cost_per_trial_usd)"
+            ),
+        }
+        return ExitCode::SUCCESS;
+    }
+
     let exp_dir = repo.join("runs").join(format!("{stamp}-search-{spec_id}"));
     if let Err(e) = std::fs::create_dir_all(&exp_dir) {
         eprintln!("create exp_dir: {e}");
@@ -2492,6 +2670,23 @@ fn cmd_run(
 
     // Render report
     let mut report_text = daedalus_core::report::render(&cands2, &front2, pick.as_deref());
+    // 041: surface WHY the search stopped + the recommendation/certified summary
+    // in report.md, not only loop.json/stdout/HTML. `outcome` carries stop_reason
+    // and mode; `recommended`/`certified`/`spend_known_usd` are not folded into
+    // loop.json until after this point, so we hand verdict_markdown a verdict-
+    // shaped Value built from the values already in scope.
+    {
+        let mut sorted_cert_v: Vec<String> = certified.iter().cloned().collect();
+        sorted_cert_v.sort();
+        let verdict_view = serde_json::json!({
+            "stop_reason": outcome.get("stop_reason").cloned().unwrap_or(Value::Null),
+            "mode": outcome.get("mode").cloned().unwrap_or(Value::Null),
+            "recommended": pick.as_deref().map(Value::from).unwrap_or(Value::Null),
+            "certified": sorted_cert_v,
+            "spend_known_usd": total_known_spend,
+        });
+        report_text.push_str(&daedalus_core::report::verdict_markdown(&verdict_view));
+    }
     if !certified.is_empty() {
         let mut sorted_cert: Vec<String> = certified.iter().cloned().collect();
         sorted_cert.sort();
