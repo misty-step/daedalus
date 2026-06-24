@@ -1,0 +1,1286 @@
+{
+  "oracle": {
+    "composition_hash": "07d8650e238cd916",
+    "kind": "oracle",
+    "tasks": {
+      "js-cart-total": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          0
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "js-clean-rename": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          0
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-auth-sqli": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          0
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-file-cache": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          0
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-pagination": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          0
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "rs-retry-backoff": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          0
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      }
+    },
+    "trials": 6,
+    "errors": 0,
+    "cost_usd_total": 0.0,
+    "cost_known": false,
+    "reward_mean": 1.0
+  },
+  "null": {
+    "composition_hash": "40f2f6e05112c409",
+    "kind": "null",
+    "tasks": {
+      "js-cart-total": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          0
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "js-clean-rename": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          0
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-auth-sqli": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          0
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-file-cache": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          0
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-pagination": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          0
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "rs-retry-backoff": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          0
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      }
+    },
+    "trials": 6,
+    "errors": 0,
+    "cost_usd_total": 0.0,
+    "cost_known": false,
+    "reward_mean": 0.1667
+  },
+  "probe-oneshot": {
+    "composition_hash": "8d5c0d7a1188c916",
+    "kind": "oneshot",
+    "tasks": {
+      "js-cart-total": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          2063
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "js-clean-rename": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          661
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-auth-sqli": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          27016
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-file-cache": {
+        "rewards": [
+          0.1333
+        ],
+        "wall_ms": [
+          2338
+        ],
+        "mean": 0.1333,
+        "min": 0.1333,
+        "max": 0.1333
+      },
+      "py-pagination": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          4780
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "rs-retry-backoff": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          728
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      }
+    },
+    "trials": 6,
+    "errors": 0,
+    "cost_usd_total": 0.013579,
+    "cost_known": true,
+    "reward_mean": 0.5222
+  },
+  "seed1-glm-5-2-spec-first": {
+    "composition_hash": "ba1cd08718fb0e5f",
+    "kind": "pi",
+    "tasks": {
+      "js-cart-total": {
+        "rewards": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "wall_ms": [
+          50134,
+          36127,
+          25828
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "js-clean-rename": {
+        "rewards": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "wall_ms": [
+          29594,
+          14305,
+          15318
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-auth-sqli": {
+        "rewards": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "wall_ms": [
+          61112,
+          21088,
+          29088
+        ],
+        "mean": 0.5,
+        "min": 0.5,
+        "max": 0.5
+      },
+      "py-file-cache": {
+        "rewards": [
+          0.1333,
+          0.1333,
+          0.1333
+        ],
+        "wall_ms": [
+          35106,
+          36916,
+          36021
+        ],
+        "mean": 0.1333,
+        "min": 0.1333,
+        "max": 0.1333
+      },
+      "py-pagination": {
+        "rewards": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "wall_ms": [
+          33386,
+          20647,
+          46713
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "rs-retry-backoff": {
+        "rewards": [
+          0.5,
+          0.0,
+          0.0,
+          0.5,
+          0.0
+        ],
+        "wall_ms": [
+          33178,
+          16700,
+          38150,
+          12294,
+          30438
+        ],
+        "mean": 0.2,
+        "min": 0.0,
+        "max": 0.5
+      }
+    },
+    "trials": 20,
+    "errors": 0,
+    "cost_usd_total": 0.123529,
+    "cost_known": true,
+    "reward_mean": 0.445
+  },
+  "seed2-kimi-k2-7-code-trace-callers": {
+    "composition_hash": "1df8c73c5cfbb4db",
+    "kind": "pi",
+    "tasks": {
+      "js-cart-total": {
+        "rewards": [
+          1.0,
+          0.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "wall_ms": [
+          52119,
+          31417,
+          63876,
+          35007,
+          60593
+        ],
+        "mean": 0.8,
+        "min": 0.0,
+        "max": 1.0
+      },
+      "js-clean-rename": {
+        "rewards": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "wall_ms": [
+          58540,
+          13389,
+          17825,
+          31062,
+          40810
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-auth-sqli": {
+        "rewards": [
+          0.5,
+          0.5,
+          1.0,
+          0.5,
+          0.1
+        ],
+        "wall_ms": [
+          30631,
+          32562,
+          39811,
+          15242,
+          27234
+        ],
+        "mean": 0.52,
+        "min": 0.1,
+        "max": 1.0
+      },
+      "py-file-cache": {
+        "rewards": [
+          0.4667,
+          0.8,
+          0.0,
+          0.8,
+          0.4667
+        ],
+        "wall_ms": [
+          178415,
+          260479,
+          400861,
+          135285,
+          145103
+        ],
+        "mean": 0.5067,
+        "min": 0.0,
+        "max": 0.8
+      },
+      "py-pagination": {
+        "rewards": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "wall_ms": [
+          47028,
+          15460,
+          31643,
+          23082,
+          16248
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "rs-retry-backoff": {
+        "rewards": [
+          0.5,
+          0.5,
+          1.0,
+          1.0,
+          0.5
+        ],
+        "wall_ms": [
+          105547,
+          120965,
+          40283,
+          100418,
+          71915
+        ],
+        "mean": 0.7,
+        "min": 0.5,
+        "max": 1.0
+      }
+    },
+    "trials": 30,
+    "errors": 0,
+    "cost_usd_total": 0.550503,
+    "cost_known": true,
+    "reward_mean": 0.7544
+  },
+  "seed3-gpt-5-4-mini-test-runner": {
+    "composition_hash": "0557a75164a92fdd",
+    "kind": "pi",
+    "tasks": {
+      "js-cart-total": {
+        "rewards": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "wall_ms": [
+          12535,
+          17463,
+          12683
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "js-clean-rename": {
+        "rewards": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "wall_ms": [
+          7359,
+          11450,
+          12654
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-auth-sqli": {
+        "rewards": [
+          0.5,
+          0.5,
+          0.3
+        ],
+        "wall_ms": [
+          13279,
+          6446,
+          13513
+        ],
+        "mean": 0.4333,
+        "min": 0.3,
+        "max": 0.5
+      },
+      "py-file-cache": {
+        "rewards": [
+          0.3333,
+          0.0,
+          0.1333
+        ],
+        "wall_ms": [
+          13407,
+          10289,
+          19338
+        ],
+        "mean": 0.1555,
+        "min": 0.0,
+        "max": 0.3333
+      },
+      "py-pagination": {
+        "rewards": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "wall_ms": [
+          7279,
+          6351,
+          8408
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "rs-retry-backoff": {
+        "rewards": [
+          0.0,
+          0.0,
+          0.5,
+          0.5,
+          0.0
+        ],
+        "wall_ms": [
+          12931,
+          15011,
+          9827,
+          13187,
+          13931
+        ],
+        "mean": 0.2,
+        "min": 0.0,
+        "max": 0.5
+      }
+    },
+    "trials": 20,
+    "errors": 0,
+    "cost_usd_total": 0.119637,
+    "cost_known": true,
+    "reward_mean": 0.5883
+  },
+  "seed4-deepseek-v4-flash-spec-first": {
+    "composition_hash": "2ba897345f64ac56",
+    "kind": "pi",
+    "tasks": {
+      "js-cart-total": {
+        "rewards": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "wall_ms": [
+          33963,
+          43635,
+          44006
+        ],
+        "mean": 0.3333,
+        "min": 0.0,
+        "max": 1.0
+      },
+      "js-clean-rename": {
+        "rewards": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "wall_ms": [
+          21696,
+          21809,
+          18704
+        ],
+        "mean": 0.3333,
+        "min": 0.0,
+        "max": 1.0
+      },
+      "py-auth-sqli": {
+        "rewards": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "wall_ms": [
+          27214,
+          42880,
+          29830
+        ],
+        "mean": 0.5,
+        "min": 0.5,
+        "max": 0.5
+      },
+      "py-file-cache": {
+        "rewards": [
+          0.3333,
+          0.1333,
+          0.3333
+        ],
+        "wall_ms": [
+          120506,
+          81623,
+          59647
+        ],
+        "mean": 0.2666,
+        "min": 0.1333,
+        "max": 0.3333
+      },
+      "py-pagination": {
+        "rewards": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "wall_ms": [
+          27556,
+          32828,
+          28291
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "rs-retry-backoff": {
+        "rewards": [
+          0.0,
+          0.5,
+          0.0,
+          0.5,
+          0.5
+        ],
+        "wall_ms": [
+          113889,
+          93581,
+          60213,
+          65900,
+          71090
+        ],
+        "mean": 0.3,
+        "min": 0.0,
+        "max": 0.5
+      }
+    },
+    "trials": 20,
+    "errors": 0,
+    "cost_usd_total": 0.048537,
+    "cost_known": true,
+    "reward_mean": 0.44
+  },
+  "seed5-deepseek-v4-pro-trace-callers": {
+    "composition_hash": "73e6809a98ab443d",
+    "kind": "pi",
+    "tasks": {
+      "js-cart-total": {
+        "rewards": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "wall_ms": [
+          40001,
+          35866,
+          45699
+        ],
+        "mean": 0.3333,
+        "min": 0.0,
+        "max": 1.0
+      },
+      "js-clean-rename": {
+        "rewards": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "wall_ms": [
+          25236,
+          20746,
+          25687
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-auth-sqli": {
+        "rewards": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "wall_ms": [
+          34417,
+          26609,
+          58632
+        ],
+        "mean": 0.5,
+        "min": 0.5,
+        "max": 0.5
+      },
+      "py-file-cache": {
+        "rewards": [
+          0.1333,
+          0.1333,
+          0.6667
+        ],
+        "wall_ms": [
+          45771,
+          69830,
+          46779
+        ],
+        "mean": 0.3111,
+        "min": 0.1333,
+        "max": 0.6667
+      },
+      "py-pagination": {
+        "rewards": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "wall_ms": [
+          30837,
+          34747,
+          26508
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "rs-retry-backoff": {
+        "rewards": [
+          1.0,
+          0.5,
+          0.3,
+          0.5,
+          0.3
+        ],
+        "wall_ms": [
+          60467,
+          76704,
+          79524,
+          73866,
+          71060
+        ],
+        "mean": 0.52,
+        "min": 0.3,
+        "max": 1.0
+      }
+    },
+    "trials": 20,
+    "errors": 0,
+    "cost_usd_total": 0.07465,
+    "cost_known": true,
+    "reward_mean": 0.6017
+  },
+  "seed6-glm-5-2-test-runner": {
+    "composition_hash": "11eada1eb772ce33",
+    "kind": "pi",
+    "tasks": {
+      "js-cart-total": {
+        "rewards": [
+          0.0,
+          1.0,
+          1.0,
+          0.0,
+          1.0
+        ],
+        "wall_ms": [
+          24087,
+          41489,
+          63585,
+          106154,
+          46334
+        ],
+        "mean": 0.6,
+        "min": 0.0,
+        "max": 1.0
+      },
+      "js-clean-rename": {
+        "rewards": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "wall_ms": [
+          34370,
+          36014,
+          24810,
+          17487,
+          10742
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-auth-sqli": {
+        "rewards": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "wall_ms": [
+          25520,
+          21517,
+          24535,
+          17698,
+          14892
+        ],
+        "mean": 0.5,
+        "min": 0.5,
+        "max": 0.5
+      },
+      "py-file-cache": {
+        "rewards": [
+          0.1333,
+          1.0,
+          0.6667,
+          0.3333,
+          0.0
+        ],
+        "wall_ms": [
+          68345,
+          147304,
+          66872,
+          21611,
+          23612
+        ],
+        "mean": 0.4267,
+        "min": 0.0,
+        "max": 1.0
+      },
+      "py-pagination": {
+        "rewards": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "wall_ms": [
+          28456,
+          29254,
+          44899,
+          32551,
+          16003
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      }
+    },
+    "trials": 25,
+    "errors": 0,
+    "cost_usd_total": 0.178802,
+    "cost_known": true,
+    "reward_mean": 0.7053
+  },
+  "g1a-seed3-gpt-5-4-mini-test-runner": {
+    "composition_hash": "687d605505c0b9ac",
+    "kind": "pi",
+    "tasks": {
+      "js-cart-total": {
+        "rewards": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "wall_ms": [
+          17150,
+          15574,
+          16005
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "js-clean-rename": {
+        "rewards": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "wall_ms": [
+          12857,
+          20316,
+          10512
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-auth-sqli": {
+        "rewards": [
+          0.3,
+          0.5,
+          0.5
+        ],
+        "wall_ms": [
+          10763,
+          12660,
+          12695
+        ],
+        "mean": 0.4333,
+        "min": 0.3,
+        "max": 0.5
+      },
+      "py-file-cache": {
+        "rewards": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "wall_ms": [
+          15380,
+          21499,
+          18362
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-pagination": {
+        "rewards": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "wall_ms": [
+          9446,
+          8850,
+          8093
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      }
+    },
+    "trials": 15,
+    "errors": 0,
+    "cost_usd_total": 0.099922,
+    "cost_known": true,
+    "reward_mean": 0.6867
+  },
+  "g1b-seed1-glm-5-2-spec-first": {
+    "composition_hash": "736b3998490093fb",
+    "kind": "pi",
+    "tasks": {
+      "js-cart-total": {
+        "rewards": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "wall_ms": [
+          19924,
+          41900,
+          41371
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "js-clean-rename": {
+        "rewards": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "wall_ms": [
+          20046,
+          23275,
+          26825
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-auth-sqli": {
+        "rewards": [
+          0.3,
+          0.5,
+          0.5
+        ],
+        "wall_ms": [
+          80284,
+          46757,
+          26195
+        ],
+        "mean": 0.4333,
+        "min": 0.3,
+        "max": 0.5
+      },
+      "py-file-cache": {
+        "rewards": [
+          0.0,
+          0.0,
+          0.3333
+        ],
+        "wall_ms": [
+          62483,
+          45316,
+          141062
+        ],
+        "mean": 0.1111,
+        "min": 0.0,
+        "max": 0.3333
+      },
+      "py-pagination": {
+        "rewards": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "wall_ms": [
+          27736,
+          33648,
+          32779
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      }
+    },
+    "trials": 15,
+    "errors": 0,
+    "cost_usd_total": 0.117998,
+    "cost_known": true,
+    "reward_mean": 0.5089
+  },
+  "g2a-g1a-seed3-gpt-5-4-mini-test-runner": {
+    "composition_hash": "f5f3e00386ea8638",
+    "kind": "pi",
+    "tasks": {
+      "js-cart-total": {
+        "rewards": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "wall_ms": [
+          29742,
+          34922,
+          20682
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "js-clean-rename": {
+        "rewards": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "wall_ms": [
+          19736,
+          6989,
+          14436
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-auth-sqli": {
+        "rewards": [
+          0.3,
+          0.5,
+          0.5
+        ],
+        "wall_ms": [
+          10275,
+          16498,
+          9020
+        ],
+        "mean": 0.4333,
+        "min": 0.3,
+        "max": 0.5
+      },
+      "py-file-cache": {
+        "rewards": [
+          0.0,
+          0.3333,
+          0.3333
+        ],
+        "wall_ms": [
+          269694,
+          195466,
+          97937
+        ],
+        "mean": 0.2222,
+        "min": 0.0,
+        "max": 0.3333
+      },
+      "py-pagination": {
+        "rewards": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "wall_ms": [
+          50981,
+          44322,
+          34474
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "rs-retry-backoff": {
+        "rewards": [
+          0.0,
+          0.5,
+          0.0,
+          0.0,
+          0.5
+        ],
+        "wall_ms": [
+          600036,
+          70132,
+          35404,
+          71994,
+          66393
+        ],
+        "mean": 0.2,
+        "min": 0.0,
+        "max": 0.5
+      }
+    },
+    "trials": 20,
+    "errors": 1,
+    "cost_usd_total": 0.220916,
+    "cost_known": true,
+    "reward_mean": 0.5983
+  },
+  "g2b-seed2-kimi-k2-7-code-trace-callers": {
+    "composition_hash": "1366fbcb37b7fb0b",
+    "kind": "pi",
+    "tasks": {
+      "js-cart-total": {
+        "rewards": [
+          0.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "wall_ms": [
+          71539,
+          30175,
+          51235,
+          39579,
+          97635
+        ],
+        "mean": 0.8,
+        "min": 0.0,
+        "max": 1.0
+      },
+      "js-clean-rename": {
+        "rewards": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "wall_ms": [
+          29253,
+          15953,
+          20771,
+          12546,
+          31784
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-auth-sqli": {
+        "rewards": [
+          0.5,
+          0.5,
+          1.0,
+          1.0,
+          0.5
+        ],
+        "wall_ms": [
+          136456,
+          54641,
+          76994,
+          119648,
+          36051
+        ],
+        "mean": 0.7,
+        "min": 0.5,
+        "max": 1.0
+      },
+      "py-file-cache": {
+        "rewards": [
+          0.8,
+          0.4667,
+          0.4667,
+          1.0,
+          0.1333
+        ],
+        "wall_ms": [
+          393995,
+          184307,
+          335570,
+          334143,
+          526932
+        ],
+        "mean": 0.5733,
+        "min": 0.1333,
+        "max": 1.0
+      },
+      "py-pagination": {
+        "rewards": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "wall_ms": [
+          32260,
+          16267,
+          22281,
+          48456,
+          24707
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "rs-retry-backoff": {
+        "rewards": [
+          0.0,
+          0.5,
+          0.5,
+          1.0,
+          0.5
+        ],
+        "wall_ms": [
+          600049,
+          340993,
+          83086,
+          361943,
+          120533
+        ],
+        "mean": 0.5,
+        "min": 0.0,
+        "max": 1.0
+      }
+    },
+    "trials": 30,
+    "errors": 1,
+    "cost_usd_total": 0.93446,
+    "cost_known": true,
+    "reward_mean": 0.7622
+  }
+}

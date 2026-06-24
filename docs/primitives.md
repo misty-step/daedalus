@@ -100,7 +100,7 @@ then let cost/quality mode decide who survives.
 
 | model | in / out | ctx | notes |
 |---|---|---|---|
-| `deepseek/deepseek-v4-flash` | $0.098 / $0.196 | 1M | strongest cheap all-rounder |
+| `deepseek/deepseek-v4-flash` | $0.090 / $0.180 | 1M | strongest cheap all-rounder; price re-verified 2026-06-23 |
 | `z-ai/glm-4.7-flash` | $0.06 / $0.40 | 200K | |
 | `openai/gpt-oss-120b` | $0.039 / $0.18 | 131K | cheapest plausible agent |
 | `qwen/qwen3.6-flash` | $0.19 / $1.13 | 1M | supersedes qwen3.5-flash |
@@ -111,7 +111,8 @@ then let cost/quality mode decide who survives.
 | model | in / out | ctx | notes |
 |---|---|---|---|
 | `moonshotai/kimi-k2.6` | $0.68 / $3.41 | 262K | current Kimi general flagship; reasoning eats token budget — give headroom |
-| `z-ai/glm-5.2` | $1.20 / $4.20 | 1M | supersedes glm-5/glm-5.1 (Jun 2026); 1M ctx, MIT weights |
+| `moonshotai/kimi-k2.7-code` | $0.68 / $3.41 | 262K | coding-focused Kimi (distinct tier from the k2.6 general flagship); Bitterblossom dispatch coding default; catalog-verified 2026-06-23 |
+| `z-ai/glm-5.2` | $0.98 / $3.08 | 1M | supersedes glm-5/glm-5.1 (Jun 2026); 1M ctx, MIT weights; price drift down, re-verified 2026-06-23 |
 | `openai/gpt-5.4-mini` | $0.75 / $4.50 | 400K | supersedes gpt-5-mini; current OpenAI mini on OR (gpt-5.5-mini is API-only, not on OR) |
 | `deepseek/deepseek-v4-pro` | $0.435 / $0.87 | 1M | SOTA reasoning + structured output at ~1/10 frontier price; default optimizer + a strong candidate |
 | `minimax/minimax-m3` | $0.30 / $1.20 | 1M | |

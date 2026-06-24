@@ -1,0 +1,101 @@
+{
+  "schema_version": "reviewer-config-packet.v1",
+  "packet_id": "daedalus-cerberus-reviewer-1df8c73c5cfbb4db-seed2-kimi-k2-7-code-trace-callers-sandbox",
+  "producer": {
+    "system": "daedalus",
+    "delivery_id": "deliveries/cerberus-reviewer",
+    "generated_at": "2026-06-24T03:14:51Z",
+    "sandbox_only": true,
+    "signature": null
+  },
+  "benchmark": {
+    "benchmark_id": "pr-review-v0",
+    "suite_id": "cerberus-reviewer",
+    "arena_version": "0.3.0",
+    "run_id": "runs/20260623T183514Z-search-cerberus-reviewer",
+    "task_count": 6,
+    "score_distribution": {
+      "min": 0.0,
+      "mean": 0.7544,
+      "median": 1.0,
+      "max": 1.0,
+      "certified_trials": 5
+    }
+  },
+  "promotion": {
+    "status": "sandbox_only",
+    "gates": [
+      {
+        "name": "G2",
+        "status": "waived",
+        "evidence": "approvals/G2-pr-review-v2.md",
+        "waiver": "accepted with sandbox-only waivers; not a production quality claim"
+      },
+      {
+        "name": "G3",
+        "status": "pending",
+        "evidence": "approvals/G3-cerberus-reviewer-seed2-kimi-k2-7-code-trace-callers.md"
+      },
+      {
+        "name": "G4",
+        "status": "pending",
+        "evidence": "approvals/G4-pr-review-write-authority.md"
+      },
+      {
+        "name": "G5",
+        "status": "pending",
+        "evidence": "approvals/G5-pr-review-production-reingestion.md"
+      }
+    ],
+    "rationale": "Daedalus G2 accepted measured composition_hash=1df8c73c5cfbb4db only for sandboxed handoff; G3/G4/G5 remain pending."
+  },
+  "rollback": {
+    "baseline_config_id": "default-fake-review-panel",
+    "rollback_command": "restore ReviewConfig.v1 defaults from cerberus-core::default_config",
+    "reason": "Sandbox-only Daedalus handoff must be reversible before any Cerberus defaults change.",
+    "previous_packet_id": null
+  },
+  "cost": {
+    "measured_cost_usd": 0.01835,
+    "max_cost_usd": 0.5,
+    "measured_wall_sec": 74.8,
+    "max_wall_sec": 600.0
+  },
+  "harnesses": [
+    {
+      "harness_id": "pi-openrouter",
+      "kind": "pi",
+      "provider_name": "openrouter",
+      "command": "pi",
+      "version": "0.78.1",
+      "execution_mode": "sandbox"
+    }
+  ],
+  "models": [
+    {
+      "reviewer_id": "pr_review",
+      "harness_id": "pi-openrouter",
+      "provider": "openrouter",
+      "model": "moonshotai/kimi-k2.7-code",
+      "prompt_hash": "sha256:149bce6d5c64248496d398fc500245788ae7afe1856a2883d22d74fa2381e187",
+      "context_length": null
+    }
+  ],
+  "prompt_hashes": {
+    "pr_review": "sha256:149bce6d5c64248496d398fc500245788ae7afe1856a2883d22d74fa2381e187"
+  },
+  "config_hash": "899f769ac78a5e7c44fb32e83cc8414d3d01f08c0a79cfbbef1e36aa3a8d8241",
+  "config": {
+    "schema_version": "review-config.v1",
+    "config_id": "daedalus-sandbox-seed2-kimi-k2-7-code-trace-callers",
+    "reviewers": [
+      {
+        "id": "pr_review",
+        "perspective": "correctness",
+        "model": "openrouter:moonshotai/kimi-k2.7-code",
+        "fake_behavior": "directive"
+      }
+    ],
+    "confidence_min": 0.7
+  }
+}

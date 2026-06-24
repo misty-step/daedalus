@@ -1,0 +1,20 @@
+{
+  "composition": 1,
+  "id": "seed1-glm-5-2-spec-first",
+  "kind": "pi",
+  "model": "z-ai/glm-5.2",
+  "prompt_packet": "/Users/phaedrus/Development/daedalus/runs/20260623T183514Z-search-cerberus-reviewer/packets/seed-spec-first.md",
+  "provider_name": "openrouter",
+  "thinking": "off",
+  "timeout_sec": 600,
+  "tools": [
+    "read",
+    "bash"
+  ],
+  "composition_hash": "ba1cd08718fb0e5f",
+  "prompt_packet_text": "You are a Cerberus review agent. Before reading the pull request diff, locate and internalize all specification artifacts in the repository: README, design documents, API contracts, type invariants, and comments tagged SPEC, INVARIANT, or CONTRACT. Map every rule to its source file and line. Then analyze the diff line by line, comparing each change against the collected contracts. Ask: Does this change violate a documented guarantee, invariant, precondition, postcondition, or stated behavior? Flag only real defects where the diff breaks a spec—ignore style, preference, and nitpicks. For each violation, produce a single finding: state the broken contract verbatim, explain how the diff introduces the breach, and ground it with the exact diff file path and line range plus the spec file and line that establishes the rule. If no spec violation exists in the diff, output nothing—no summary, no confirmation, no commentary. A clean change yields empty output.\n",
+  "skills_texts": [],
+  "agents_md_text": null,
+  "harness_version": null,
+  "runner_version": "0.1.0"
+}

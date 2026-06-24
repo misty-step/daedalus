@@ -1,0 +1,22 @@
+{
+  "composition": 1,
+  "id": "g1a-seed3-gpt-5-4-mini-test-runner",
+  "kind": "pi",
+  "model": "openai/gpt-5.4-mini",
+  "prompt_packet": "/Users/phaedrus/Development/daedalus/runs/20260623T183514Z-search-cerberus-reviewer/packets/seed-test-runner.md",
+  "provider_name": "openrouter",
+  "thinking": "low",
+  "timeout_sec": 600,
+  "tools": [
+    "read",
+    "bash",
+    "edit",
+    "write"
+  ],
+  "composition_hash": "687d605505c0b9ac",
+  "prompt_packet_text": "You are a defect-focused review agent. Accept a pull request diff and repository context. Your sole output is a list of actionable defects introduced by the change; emit nothing if the change is clean.\n\nFirst, locate and execute any test suite or runnable entrypoint that exercises the modified code. Use observed failures, crashes, panics, or incorrect output as primary evidence. If no such executable exists, fall back to static analysis of the diff against the repository context, but prioritize behavioral evidence.\n\nFor every finding, state:\n- The exact file path and line range where the defect originates.\n- The concrete misbehavior: what you ran, what output you observed, and how it deviates from expected behavior.\n- A terse explanation of why the change caused it, citing specific diff hunks.\n\nDo not report style nits, formatting, or subjective opinions. Ignore any issue that cannot be demonstrated through execution or clear logical contradiction. If you cannot produce a finding with file/line evidence, omit it.\n\nIf the change introduces no demonstrable defect, output absolutely nothing.\n",
+  "skills_texts": [],
+  "agents_md_text": null,
+  "harness_version": null,
+  "runner_version": "0.1.0"
+}

@@ -1,6 +1,6 @@
 # Author a contamination-resistant pr-review holdout arena
 
-Priority: P1 · Status: in-progress · Estimate: L
+Priority: P1 · Status: delivered · Estimate: L
 
 ## Goal
 A contamination-resistant pr-review arena of synthetic, non-public-library code with enough independent sources to certify a config without leakage — so pr-review discoveries can be validated against fixtures whose code models have not heavily trained on.
@@ -11,7 +11,7 @@ A contamination-resistant pr-review arena of synthetic, non-public-library code 
 - [x] Contamination-resistant pr-review arena exists: `pr-review-v0` `contamination.toml` records `public = false`; `arena-validate` blesses it "contamination-resistant: all sources private/synthetic."
 - [x] **≥6 independent sources**: 6 tasks, each a distinct `source_repo` (auth-service, cart, file-cache, pagination, retry, rename) → 5 search clusters (df≥4, t≈2.78), unlike the 2-repo public arenas at df=1.
 - [x] `arena-validate` passes oracle (1.0), null floor (0.1667), holdout ledger; `arena-redteam` shows **0 wide spans** (max 6 lines) — the line constraint demands real localization, not trivially gameable.
-- [~] A run certifies *something* live at pr-review effect sizes — exercised by the two-seed run (also produces the `--probe-run` data to close the last `arena-validate` check).
+- [x] A run certifies *something* live at pr-review effect sizes. The 2026-06-23 Cerberus-reviewer search (`runs/20260623T183514Z-search-cerberus-reviewer`, $2.52) certified **3 candidates** on this arena — each with a reward-delta 95% CI that excludes 0 over the null floor across 6 source-repo clusters (recommended: seed2-kimi-k2.7-code, Δ +0.588, CI [+0.229, +0.947]). The df≥4 cluster count made the proof possible. Freeze probe verdict: unsaturated (oracle 1.0 / null 0.167 / probe 0.6).
 
 **Caveat / further hardening:** pr-review-v0's synthetic code lives in this repo, so it is contamination-resistant *relative to the heavily-trained public-lib arenas* (rich/pygments), not air-gapped. A truly private holdout (code never committed to any indexable repo) remains the gold standard — track separately if leakage from this repo becomes a measured concern.
 

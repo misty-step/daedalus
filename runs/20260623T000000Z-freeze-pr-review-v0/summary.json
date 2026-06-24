@@ -1,0 +1,233 @@
+{
+  "oracle": {
+    "composition_hash": "07d8650e238cd916",
+    "kind": "oracle",
+    "tasks": {
+      "js-cart-total": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          0
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "js-clean-rename": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          0
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-auth-sqli": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          0
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-file-cache": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          0
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-pagination": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          0
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "rs-retry-backoff": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          0
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      }
+    },
+    "trials": 6,
+    "errors": 0,
+    "cost_usd_total": 0.0,
+    "cost_known": false,
+    "reward_mean": 1.0
+  },
+  "null": {
+    "composition_hash": "40f2f6e05112c409",
+    "kind": "null",
+    "tasks": {
+      "js-cart-total": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          0
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "js-clean-rename": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          0
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-auth-sqli": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          0
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-file-cache": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          0
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-pagination": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          0
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "rs-retry-backoff": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          0
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      }
+    },
+    "trials": 6,
+    "errors": 0,
+    "cost_usd_total": 0.0,
+    "cost_known": false,
+    "reward_mean": 0.1667
+  },
+  "probe-oneshot": {
+    "composition_hash": "8d5c0d7a1188c916",
+    "kind": "oneshot",
+    "tasks": {
+      "js-cart-total": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          11962
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "js-clean-rename": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          2582
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "py-auth-sqli": {
+        "rewards": [
+          0.1
+        ],
+        "wall_ms": [
+          18488
+        ],
+        "mean": 0.1,
+        "min": 0.1,
+        "max": 0.1
+      },
+      "py-file-cache": {
+        "rewards": [
+          0.0
+        ],
+        "wall_ms": [
+          52923
+        ],
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "py-pagination": {
+        "rewards": [
+          1.0
+        ],
+        "wall_ms": [
+          2016
+        ],
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "rs-retry-backoff": {
+        "rewards": [
+          0.5
+        ],
+        "wall_ms": [
+          53572
+        ],
+        "mean": 0.5,
+        "min": 0.5,
+        "max": 0.5
+      }
+    },
+    "trials": 6,
+    "errors": 0,
+    "cost_usd_total": 0.020694,
+    "cost_known": true,
+    "reward_mean": 0.6
+  }
+}

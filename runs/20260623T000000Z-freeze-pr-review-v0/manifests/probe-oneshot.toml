@@ -1,0 +1,11 @@
+composition = 1
+id = "probe-oneshot"
+kind = "oneshot"
+max_tokens = 16384
+model = "deepseek/deepseek-v4-pro"
+prompt_packet = "packets/reviewer-v1.md"
+temperature = 0.2
+timeout_sec = 300
+workspace_file_bytes = 24000
+workspace_max_bytes = 120000
+workspace_mode = "review-context"

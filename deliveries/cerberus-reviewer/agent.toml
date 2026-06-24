@@ -1,0 +1,19 @@
+# Delivered agent for specs/cerberus-reviewer/taskspec.toml (threshold-then-cheap).
+# Selected by the Daedalus certification run of 2026-06-23 over the
+# contamination-resistant arena arenas/pr-review-v0 v0.3.0:
+#   run runs/20260623T183514Z-search-cerberus-reviewer
+#   composition hash 1df8c73c5cfbb4db
+# CERTIFIED: reward-delta 95% CI [+0.229, +0.947] over the null floor across
+# 6 source-repo clusters (provably better than the floor); recommended under
+# threshold-then-cheap (within 0.05 reward of the top, cheaper per trial).
+# This manifest preserves the measured prompt_packet path so export recomputes
+# the recorded composition hash.
+composition = 1
+id = "seed2-kimi-k2-7-code-trace-callers"
+kind = "pi"
+provider_name = "openrouter"
+model = "moonshotai/kimi-k2.7-code"
+prompt_packet = "/Users/phaedrus/Development/daedalus/runs/20260623T183514Z-search-cerberus-reviewer/packets/seed-trace-callers.md"
+thinking = "medium"
+tools = ["read", "bash", "edit", "write"]
+timeout_sec = 600

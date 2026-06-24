@@ -1,0 +1,64 @@
+{
+  "rng_seed": 1,
+  "seed_count": 6,
+  "packet_stances": [
+    "spec-first",
+    "trace-callers",
+    "test-runner"
+  ],
+  "optimizer_costs": [
+    0.0014837355,
+    0.00444744,
+    0.00093525
+  ],
+  "combos": [
+    {
+      "model": "z-ai/glm-5.2",
+      "thinking": "off",
+      "policy_name": "explore",
+      "system_prompt_mode": "append",
+      "skill_set_name": null,
+      "agents_md": null
+    },
+    {
+      "model": "moonshotai/kimi-k2.7-code",
+      "thinking": "medium",
+      "policy_name": "full",
+      "system_prompt_mode": "append",
+      "skill_set_name": null,
+      "agents_md": null
+    },
+    {
+      "model": "openai/gpt-5.4-mini",
+      "thinking": "low",
+      "policy_name": "no-exec",
+      "system_prompt_mode": "append",
+      "skill_set_name": null,
+      "agents_md": null
+    },
+    {
+      "model": "deepseek/deepseek-v4-flash",
+      "thinking": "high",
+      "policy_name": "explore",
+      "system_prompt_mode": "append",
+      "skill_set_name": null,
+      "agents_md": null
+    },
+    {
+      "model": "deepseek/deepseek-v4-pro",
+      "thinking": "off",
+      "policy_name": "full",
+      "system_prompt_mode": "append",
+      "skill_set_name": null,
+      "agents_md": null
+    },
+    {
+      "model": "z-ai/glm-5.2",
+      "thinking": "medium",
+      "policy_name": "no-exec",
+      "system_prompt_mode": "append",
+      "skill_set_name": null,
+      "agents_md": null
+    }
+  ]
+}

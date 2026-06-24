@@ -1,0 +1,82 @@
+# Daedalus task specification: the Cerberus reviewer config search.
+# Schema: DESIGN.md "Task specification". Backlog 036 (constellation reviewer).
+#
+# Purpose: certify the provably most cost-effective, high-quality (model x
+# config) composition for the Cerberus code-review agent, on the
+# contamination-resistant pr-review-v0 arena (synthetic, 6 independent sources,
+# df>=4 -> certification is actually achievable). Daedalus mints the contract;
+# Cerberus deploys it (VISION.md: the plane owns production trust).
+#
+# G1 spend authorized under the operator goal directive (2026-06-23): "Daedalus
+# running research loops to determine the provably most cost-effective high
+# quality agent and harness config for Cerberus." Budget is bounded per run.
+
+id = "cerberus-reviewer"
+goal = "Given a pull request diff plus repository context, produce structured review findings that identify the real defects the change introduces — the Cerberus reviewer's core job."
+domain = "code-review"
+mode = "threshold-then-cheap" # hit the quality bar, then minimize cost — the cost-effective objective
+
+[inputs]
+description = "Post-change repository files plus PR.diff (unified diff)"
+# The contamination-resistant holdout (043): author-written synthetic scenarios
+# across py/js/rs, 6 independent source_repos -> 5 search clusters (df>=4),
+# unlike the public rich/pygments arenas (df=1) where t=12.7 certifies nothing.
+fixtures = "arenas/pr-review-v0"
+
+[output]
+contract = "findings.json: {findings: [{file, line, category, description}]} with categories from the fixed taxonomy (see arena instruction.md)"
+
+[oracle]
+type = "deterministic"
+description = "Seeded-defect answer keys; reward = max(0, recall - 0.2 * false_positives) per the Rust scorer (crates/daedalus-core/src/score.rs). The grader is gospel."
+
+[risk]
+class = "low"
+notes = "Offline synthetic fixtures only; no live repos, secrets, or write actions. Candidates never read tests/ or solution/."
+
+[budget]
+max_cost_per_trial_usd = 0.50
+max_wall_per_trial_sec = 600
+
+[trigger]
+intent = "Daedalus research loop (operator-run); the certified contract is exported to Cerberus, which owns the production trigger."
+
+[boundaries]
+data = "Synthetic fixtures in arenas/pr-review-v0 only. Candidates never read tests/ or solution/."
+
+[checkpoints]
+gates = ["G1-spec", "G2-eval-quality", "G3-launch-contract"]
+
+[negative_examples]
+bad = [
+  "style or naming nitpicks",
+  "confident prose without file/line evidence",
+  "flagging pre-existing code the diff does not touch",
+  "inventing findings on a clean change",
+]
+
+# The candidate space the seeder samples and the mutator moves within. Every
+# model must exist in docs/primitives.md (live-verified pool). Chosen for a
+# cost x quality spread so the Pareto front is meaningful:
+#   - deepseek-v4-flash : cheap floor ($0.09/$0.18)
+#   - deepseek-v4-pro   : strong + cheap ($0.435/$0.87)
+#   - glm-5.2           : 1M-ctx flagship ($0.98/$3.08)
+#   - kimi-k2.7-code    : coding-focused ($0.68/$3.41) — bb/Cerberus default
+#   - gpt-5.4-mini      : OpenAI mid ($0.75/$4.50)
+[search]
+models = [
+  "deepseek/deepseek-v4-flash",
+  "deepseek/deepseek-v4-pro",
+  "z-ai/glm-5.2",
+  "moonshotai/kimi-k2.7-code",
+  "openai/gpt-5.4-mini",
+]
+thinking_levels = ["off", "low", "medium", "high"]
+packet_stances = 3
+seed_count = 6
+base_packet = "packets/reviewer-v1.md"
+
+[search.tool_policies]
+full = ["read", "bash", "edit", "write"]
+explore = ["read", "bash"]
+"no-exec" = ["read", "edit", "write"]
