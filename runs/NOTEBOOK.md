@@ -68,3 +68,10 @@ One entry per run: what was tried, what was learned. lineage.md in each run dir 
 - caveat: not sandbox-ready; the certified child had lower quality than the non-certified Qwen seed, missed `py-live-lock`, was unstable on the new runtime-crash task, and showed long-tail latency
 - confirmed hypothesis: transplanting Qwen's skeptic prompt onto cheaper GLM reduced cost during the paired generation, but did not preserve enough quality under certification/holdout
 - full story: 20260613T214006Z-search-pr-review-correctness/lineage.md
+
+## 20260623T183514Z-search-cerberus-reviewer
+
+- spec `cerberus-reviewer` (mode threshold-then-cheap) on arena `pr-review-v0` v0.3.0
+- stop: plateau · spend $2.5224 · generations 2
+- recommended: `seed2-kimi-k2-7-code-trace-callers` (hash 1df8c73c5cfbb4db, reward 0.7544, certified=True)
+- full story: 20260623T183514Z-search-cerberus-reviewer/lineage.md
