@@ -40,11 +40,15 @@ fn py_repr_list(items: &[&str]) -> String {
 // Constants — mirror Python module-level sets
 // ---------------------------------------------------------------------------
 
-/// Slots that the optimizer is allowed to propose.
+/// Slots that the optimizer is allowed to propose — the engine (`model`,
+/// `thinking`) plus the capability surface (`tools`, `skills`, `system_prompt_mode`,
+/// `agents_md`). For the named concepts behind these slots, see
+/// `docs/vocabulary.md`. (An `mcp` slot is a known gap — backlog 052.)
 ///
-/// Frozen slots (temperature, max_tokens, env_allowlist, kind, …) are excluded
-/// by design: pi exposes no flags for them, so "mutating" them would change the
-/// composition hash without changing behavior (false attribution by construction).
+/// Frozen slots (temperature, max_tokens, env_allowlist, `kind` — the substrate)
+/// are excluded by design: pi exposes no flags for them, so "mutating" them would
+/// change the composition hash without changing behavior (false attribution by
+/// construction).
 const MUTABLE_SLOTS: &[&str] = &[
     "prompt_packet",
     "model",
