@@ -22,8 +22,15 @@ terms the field most often confuses.
 | Callable actions | **tools** | `tools` | ✅ mutable |
 | Packaged procedural knowledge | **skills** (Anthropic "Agent Skills") | `skills` | ✅ mutable |
 | Loaded context / briefing | **context** (industry: "context engineering") | `agents_md` | ✅ mutable |
-| External capability/context providers | **MCP servers** | _— none yet —_ | ❌ **gap** ([[052]]) |
+| External capability/context providers | **MCP servers** | _— none —_ | ❌ **gap** — pi has no `--mcp`; its seam is `--extension` ([[052]]) |
 | Runtime loop (Pi / OpenCode / OMP) | **substrate** | `kind` | ❌ frozen by design |
+
+> **Runner-verified 2026-06-24:** `run.rs` `compose_pi_argv` genuinely attaches
+> `skills`/`tools`/`context` to the agent (`--skill`, `--tools`,
+> `--no-context-files`) — the surface is wired, not hollow; it was just *unfed*
+> for cerberus. But pi exposes **no MCP flag** (its capability seam is
+> `--extension`, and the runner forces `--no-extensions`), so MCP is not a clean
+> mutable slot yet — see [[052]].
 
 ## The three terms that earn their keep
 

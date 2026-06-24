@@ -28,6 +28,22 @@ and `agents_md` — but two things block the thesis from being measured:
 So "how much can capability surface help?" is currently unmeasurable — not for
 lack of search machinery, but for lack of declared capability sets to search over.
 
+## Runner reality (verified 2026-06-24, against `run.rs` `compose_pi_argv` + `pi --help`)
+- **skills / tools / context are genuinely attached** to the agent: the runner
+  emits `--skill <path>` (else `--no-skills`), `--tools <csv>`, and
+  `--no-context-files` unless `agents_md` is set. The capability surface is wired
+  and live — it was **unfed** for cerberus (no `skill_sets` declared), not
+  hollow. So feeding the skills axis is clean, no-substrate-work.
+- **MCP-as-protocol is NOT a clean slot.** `pi` has no `--mcp` flag; its
+  extensibility seam is `--extension/-e <path>` (pi "extensions" register custom
+  tools/flags), and the runner currently passes `--no-extensions`. So an `mcp`
+  mutable slot today would be hollow (composition-hash change without behavior
+  change = the exact false-attribution the frozen-slot rule forbids). Two honest
+  paths: (a) reframe the slot to **`extensions`** (the real pi seam — wrap
+  MCP/custom-tools as a loadable extension set, stop forcing `--no-extensions`),
+  or (b) wait for the substrate to gain native MCP support. Either is substrate
+  work, not a quick add.
+
 ## Non-Goals
 - Racing substrates (Pi/OC/OMP) — settled; `kind` stays frozen.
 - Building domain skill/MCP libraries for every plane — this ticket proves the
