@@ -1,16 +1,21 @@
-//! Live terminal dashboard over a run in flight (backlog 049).
+//! Live terminal cockpit over a run in flight (backlog 049 roll-up → 050 cockpit).
 //!
-//! `daedalus view <run-dir>` polls `trials.jsonl` and reprints a roll-up —
-//! per-candidate running mean reward, trials so far, and cumulative known spend
-//! — the live companion to the post-run static report ([`crate::report_html`]).
-//! The rich surfaces (CI forest, certification) are inherently post-run: there is
-//! no certified verdict until the search ends, so the valuable *live* signal is
-//! the roll-up and the spend ticking up.
+//! `daedalus view <run-dir>` polls the run dir and reprints a single-screen
+//! cockpit — the live companion to the post-run static report
+//! ([`crate::report_html`]). The rich post-run surfaces (CI forest, certified
+//! verdict) are inherently post-run; the valuable *live* signals are: the
+//! candidate roll-up (running mean reward, trials), spend ticking up against the
+//! budget cap, the headroom rig ([`Rig`], from `rig.json`), and — the point of
+//! the cockpit — the optimizer's hypotheses streamed as it proposes them
+//! ([`Hypo`], from `loop.history.jsonl`), so a run is legible *as a search*
+//! while it runs, not only at completion.
 //!
 //! `trials.jsonl` stays the source of truth; the snapshot reuses
 //! [`crate::report::aggregate`], so the live view can never drift from the batch
-//! report. The poll/redraw loop is a thin IO shell in the CLI; everything here is
-//! pure and tested.
+//! report. The rig, hypotheses, and cap are attached via [`Snapshot::with_rig`],
+//! [`Snapshot::with_hypotheses`], and [`Snapshot::with_cap`] — each degrades
+//! gracefully when its source file is absent. The poll/redraw loop is a thin IO
+//! shell in the CLI; everything here is pure and tested.
 
 use std::fmt::Write as _;
 
@@ -38,7 +43,71 @@ pub struct LastTrial {
     pub reward: f64,
 }
 
-/// A point-in-time roll-up of a run directory's trials.
+/// The headroom rig: oracle ceiling, null floor, and the one-shot saturation
+/// probe — the at-a-glance "is this arena measuring real skill?" panel. Parsed
+/// from `rig.json`.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Rig {
+    pub oracle: f64,
+    pub null: f64,
+    pub probe: Option<f64>,
+    pub saturated: bool,
+}
+
+/// Parse `rig.json` (`{oracle_mean, null_mean, probe_mean, saturated}`). `None`
+/// when the ceiling/floor are absent, so the cockpit degrades gracefully.
+pub fn parse_rig(v: &Value) -> Option<Rig> {
+    Some(Rig {
+        oracle: v.get("oracle_mean").and_then(Value::as_f64)?,
+        null: v.get("null_mean").and_then(Value::as_f64)?,
+        probe: v.get("probe_mean").and_then(Value::as_f64),
+        saturated: v.get("saturated").and_then(Value::as_bool).unwrap_or(false),
+    })
+}
+
+/// One streamed hypothesis from `loop.history.jsonl`: what the optimizer mutated
+/// and whether it stuck. An `error` makes it a hypothesis that never ran.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Hypo {
+    pub generation: u64,
+    pub parent_id: String,
+    pub slot: String,
+    pub parent_reward: Option<f64>,
+    pub reward: Option<f64>,
+    pub improved: Option<bool>,
+    /// `Some` ⇒ the proposal failed and never ran (carries the optimizer error).
+    pub error: Option<String>,
+}
+
+/// Parse `loop.history.jsonl` rows into the latest `n` hypotheses, oldest-first.
+pub fn parse_hypotheses(rows: &[Value], n: usize) -> Vec<Hypo> {
+    let start = rows.len().saturating_sub(n);
+    rows[start..]
+        .iter()
+        .map(|r| Hypo {
+            generation: r.get("generation").and_then(Value::as_u64).unwrap_or(0),
+            parent_id: r
+                .get("parent_id")
+                .and_then(Value::as_str)
+                .unwrap_or("?")
+                .to_string(),
+            slot: r
+                .get("slot_changed")
+                .and_then(Value::as_str)
+                .unwrap_or("")
+                .to_string(),
+            parent_reward: r.get("parent_reward_mean").and_then(Value::as_f64),
+            reward: r.get("reward_mean").and_then(Value::as_f64),
+            improved: r.get("improved").and_then(Value::as_bool),
+            error: r
+                .get("proposal_error")
+                .and_then(Value::as_str)
+                .map(str::to_string),
+        })
+        .collect()
+}
+
+/// A point-in-time roll-up of a run directory's live state.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Snapshot {
     /// Non-reference candidates first (by descending mean reward), then references.
@@ -49,6 +118,35 @@ pub struct Snapshot {
     /// Some candidate's cost is unknown, so `known_spend` understates the truth.
     pub any_unknown_cost: bool,
     pub last_trial: Option<LastTrial>,
+    /// The headroom rig, when `rig.json` is present.
+    pub rig: Option<Rig>,
+    /// The latest streamed hypotheses, when `loop.history.jsonl` is present.
+    pub hypotheses: Vec<Hypo>,
+    /// The run's budget cap (from `seed.json`), so spend is shown against it.
+    pub budget_cap: Option<f64>,
+}
+
+impl Snapshot {
+    /// Attach the headroom rig (from `rig.json`); a no-op when absent.
+    #[must_use]
+    pub fn with_rig(mut self, rig_json: Option<&Value>) -> Self {
+        self.rig = rig_json.and_then(parse_rig);
+        self
+    }
+
+    /// Attach the budget cap (from `seed.json`'s `budget_usd`), for spend/cap.
+    #[must_use]
+    pub fn with_cap(mut self, cap: Option<f64>) -> Self {
+        self.budget_cap = cap;
+        self
+    }
+
+    /// Attach the latest `n` streamed hypotheses (from `loop.history.jsonl`).
+    #[must_use]
+    pub fn with_hypotheses(mut self, rows: &[Value], n: usize) -> Self {
+        self.hypotheses = parse_hypotheses(rows, n);
+        self
+    }
 }
 
 /// Roll up the trial records into a [`Snapshot`]. Reuses [`report::aggregate`] so
@@ -100,6 +198,9 @@ pub fn snapshot(records: &[Value]) -> Snapshot {
         known_spend,
         any_unknown_cost,
         last_trial,
+        rig: None,
+        hypotheses: Vec::new(),
+        budget_cap: None,
     }
 }
 
@@ -114,18 +215,24 @@ pub fn render(
 ) -> String {
     let mut s = String::new();
     let state = if complete { "complete" } else { "running" };
+    // The budget denominator, shown beside spend so an operator can see how close
+    // a paid run is to its cap (the most actionable live signal).
+    let cap = snap
+        .budget_cap
+        .map(|c| format!(" / {} cap", money(c)))
+        .unwrap_or_default();
     let spend = if complete {
         // At completion loop.json carries the run total (optimizer + certification
         // + holdout), which the trial-level sum understates; prefer it.
         match authoritative_spend {
             // "run total" signals this exceeds the per-candidate cost column: it
             // includes optimizer, certification, and holdout spend from loop.json.
-            Some(a) => format!("spend {} · run total", money(a)),
-            None => format!("known spend {}", money(snap.known_spend)),
+            Some(a) => format!("spend {}{cap} · run total", money(a)),
+            None => format!("known spend {}{cap}", money(snap.known_spend)),
         }
     } else {
         let more = if snap.any_unknown_cost { "+" } else { "" };
-        format!("known spend {}{more}", money(snap.known_spend))
+        format!("known spend {}{more}{cap}", money(snap.known_spend))
     };
     let _ = writeln!(
         s,
@@ -133,28 +240,70 @@ pub fn render(
         snap.total_trials
     );
 
-    if snap.rows.is_empty() {
-        s.push_str("  (no trials yet — waiting for the first result…)\n");
-        return s;
-    }
-
-    let _ = writeln!(
-        s,
-        "  {:>6}  {:>6}  {:>10}  candidate",
-        "reward", "trials", "cost"
-    );
-    for r in &snap.rows {
-        let cost = match r.cost {
-            Some(c) => money(c),
-            None => "—".to_string(),
+    // HEADROOM strip — is the arena measuring real skill, or saturated? Shown
+    // even before the first trial, since the rig is computed up front.
+    if let Some(rig) = &snap.rig {
+        let probe = rig
+            .probe
+            .map(|p| format!("{p:.2}"))
+            .unwrap_or_else(|| "—".to_string());
+        let verdict = if rig.saturated {
+            "saturated"
+        } else {
+            "unsaturated"
         };
-        let tag = if r.reference { " (ref)" } else { "" };
         let _ = writeln!(
             s,
-            "  {:>6.2}  {:>6}  {:>10}  {}{}",
-            r.reward_mean, r.trials, cost, r.id, tag
+            "  headroom · oracle {:.2} · null {:.2} · probe {probe} — {verdict}",
+            rig.oracle, rig.null
         );
     }
+
+    if snap.rows.is_empty() {
+        s.push_str("  (no trials yet — waiting for the first result…)\n");
+    } else {
+        // LEADER — the top deliverable candidate (references never lead). `cost`
+        // is the candidate's total known spend, so divide by trials per-trial.
+        if let Some(leader) = snap.rows.iter().find(|r| !r.reference) {
+            let per_trial = match (leader.cost, leader.trials) {
+                (Some(c), t) if t > 0 => format!("{}/trial", money(c / t as f64)),
+                _ => "—".to_string(),
+            };
+            let _ = writeln!(
+                s,
+                "  ▶ leader {} · reward {:.2} · {per_trial}",
+                leader.id, leader.reward_mean
+            );
+        }
+
+        let _ = writeln!(
+            s,
+            "  {:>6}  {:>6}  {:>10}  candidate",
+            "reward", "trials", "cost"
+        );
+        for r in &snap.rows {
+            let cost = match r.cost {
+                Some(c) => money(c),
+                None => "—".to_string(),
+            };
+            let tag = if r.reference { " (ref)" } else { "" };
+            let _ = writeln!(
+                s,
+                "  {:>6.2}  {:>6}  {:>10}  {}{}",
+                r.reward_mean, r.trials, cost, r.id, tag
+            );
+        }
+    }
+    // HYPOTHESES — what the optimizer is trying, streamed live from
+    // loop.history.jsonl. Rendered even before the first trial lands (the
+    // window where watching the search propose is most valuable).
+    if !snap.hypotheses.is_empty() {
+        s.push_str("  hypotheses (latest):\n");
+        for h in &snap.hypotheses {
+            let _ = writeln!(s, "{}", hypo_line(h));
+        }
+    }
+
     if let Some(lt) = &snap.last_trial {
         let _ = writeln!(
             s,
@@ -163,6 +312,31 @@ pub fn render(
         );
     }
     s
+}
+
+/// One hypotheses-panel line: the mutation, its reward move, and the verdict —
+/// or, for a failed proposal, the optimizer error (it never ran).
+fn hypo_line(h: &Hypo) -> String {
+    let what = if h.slot.is_empty() {
+        h.parent_id.clone()
+    } else {
+        h.slot.clone()
+    };
+    let head = format!("g{} {what}", h.generation);
+    if let Some(err) = &h.error {
+        return format!("    {head} · ✗ proposal error: {err}");
+    }
+    let delta = match (h.parent_reward, h.reward) {
+        (Some(p), Some(c)) => format!("{p:.2}→{c:.2}"),
+        (None, Some(c)) => format!("→{c:.2}"),
+        _ => "—".to_string(),
+    };
+    let verdict = match h.improved {
+        Some(true) => "kept",
+        Some(false) => "discarded",
+        None => "?",
+    };
+    format!("    {head} · {delta} · {verdict}")
 }
 
 /// Format dollars, normalizing negative zero — `f64`'s `Sum` seeds its fold with
@@ -258,6 +432,107 @@ mod tests {
         assert!(txt.contains("strong"), "candidates listed");
         assert!(txt.contains('$'), "spend shown");
         assert!(txt.contains("last:"), "streaming heartbeat shown");
+    }
+
+    fn rig_json() -> Value {
+        json!({"oracle_mean": 1.0, "null_mean": 0.1667, "probe_mean": 0.6, "saturated": false})
+    }
+
+    fn history_rows() -> Vec<Value> {
+        vec![
+            json!({"generation": 1, "parent_id": "base", "slot_changed": "prompt_packet",
+                   "parent_reward_mean": 0.5, "reward_mean": 0.75, "improved": true}),
+            json!({"generation": 2, "parent_id": "base", "slot_changed": "tools",
+                   "parent_reward_mean": 0.5, "reward_mean": 0.48, "improved": false}),
+            json!({"generation": 2, "parent_id": "base", "proposal_error": "optimizer returned garbage"}),
+        ]
+    }
+
+    #[test]
+    fn parse_rig_reads_ceiling_floor_probe() {
+        let rig = parse_rig(&rig_json()).unwrap();
+        assert_eq!(rig.oracle, 1.0);
+        assert_eq!(rig.null, 0.1667);
+        assert_eq!(rig.probe, Some(0.6));
+        assert!(!rig.saturated);
+        // Missing ceiling/floor → no rig (graceful degrade), not a panic.
+        assert!(parse_rig(&json!({"saturated": true})).is_none());
+    }
+
+    #[test]
+    fn parse_hypotheses_takes_latest_n_oldest_first() {
+        let rows = history_rows();
+        let h = parse_hypotheses(&rows, 2);
+        assert_eq!(h.len(), 2, "only the latest 2 of 3");
+        assert_eq!(h[0].generation, 2, "oldest-of-the-tail first");
+        assert_eq!(h[1].error.as_deref(), Some("optimizer returned garbage"));
+        // n larger than available returns all.
+        assert_eq!(parse_hypotheses(&rows, 99).len(), 3);
+    }
+
+    #[test]
+    fn cockpit_renders_rig_leader_and_hypotheses() {
+        let snap = snapshot(&records())
+            .with_rig(Some(&rig_json()))
+            .with_hypotheses(&history_rows(), 5)
+            .with_cap(Some(2.52));
+        let txt = render(&snap, "run-x", false, None);
+        // spend against the budget cap — the actionable live signal
+        assert!(txt.contains("/ $2.5200 cap"), "spend shown against the cap");
+        // headroom strip
+        assert!(txt.contains("headroom"), "rig strip shown");
+        assert!(txt.contains("oracle 1.00"), "ceiling shown");
+        assert!(txt.contains("null 0.17"), "floor shown");
+        assert!(txt.contains("probe 0.60"), "probe shown");
+        assert!(txt.contains("unsaturated"), "verdict shown");
+        // leader callout — `strong` leads the records() fixture; cost is shown
+        // per-trial (total 0.02 over 2 trials = $0.0100/trial), not the total.
+        assert!(txt.contains("▶ leader strong"), "leader callout shown");
+        assert!(
+            txt.contains("$0.0100/trial"),
+            "leader cost is per-trial, not the summed total: {txt}"
+        );
+        // hypotheses panel, streamed
+        assert!(
+            txt.contains("hypotheses (latest):"),
+            "hypotheses panel shown"
+        );
+        assert!(txt.contains("prompt_packet"), "the mutated slot shown");
+        assert!(txt.contains("0.50→0.75"), "reward move shown");
+        assert!(txt.contains("kept"), "improved verdict shown");
+        assert!(txt.contains("discarded"), "non-improving verdict shown");
+        assert!(
+            txt.contains("proposal error: optimizer returned garbage"),
+            "a failed proposal still streams as a hypothesis that never ran"
+        );
+    }
+
+    #[test]
+    fn hypotheses_render_before_the_first_trial_lands() {
+        // The early window — optimizer proposing, no trial result yet — is when
+        // watching the search is most valuable, so the panel must not be gated
+        // behind trials existing.
+        let snap = snapshot(&[]).with_hypotheses(&history_rows(), 5);
+        let txt = render(&snap, "run-x", false, None);
+        assert!(txt.contains("waiting"), "still shows the no-trials line");
+        assert!(
+            txt.contains("hypotheses (latest):"),
+            "hypotheses stream even with zero trials"
+        );
+        assert!(txt.contains("prompt_packet"), "the mutation is shown");
+    }
+
+    #[test]
+    fn cockpit_degrades_without_rig_or_hypotheses() {
+        // The plain snapshot (no rig, no history) renders the roll-up only —
+        // no empty panels.
+        let txt = render(&snapshot(&records()), "run-x", false, None);
+        assert!(!txt.contains("headroom"), "no rig strip without rig.json");
+        assert!(
+            !txt.contains("hypotheses"),
+            "no hypotheses panel without loop.history.jsonl"
+        );
+        assert!(txt.contains("strong"), "candidate roll-up still renders");
     }
 
     #[test]

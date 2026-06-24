@@ -539,12 +539,28 @@ fn cmd_view(run_dir: &std::path::Path, once: bool, interval: u64) -> ExitCode {
             .flatten()
             .and_then(|t| serde_json::from_str::<Value>(&t).ok())
             .and_then(|v| v.get("spend_known_usd").and_then(Value::as_f64));
-        let snap = daedalus_core::view::snapshot(&records);
+        // The headroom rig + the streamed hypotheses — both optional; the cockpit
+        // degrades gracefully when a source is absent.
+        let rig = std::fs::read_to_string(run_dir.join("rig.json"))
+            .ok()
+            .and_then(|t| serde_json::from_str::<Value>(&t).ok());
+        let history = read_jsonl(&run_dir.join("loop.history.jsonl"));
+        // The budget cap, persisted in seed.json at run start.
+        let cap = std::fs::read_to_string(run_dir.join("seed.json"))
+            .ok()
+            .and_then(|t| serde_json::from_str::<Value>(&t).ok())
+            .and_then(|v| v.get("budget_usd").and_then(Value::as_f64));
+        let snap = daedalus_core::view::snapshot(&records)
+            .with_rig(rig.as_ref())
+            .with_hypotheses(&history, 6)
+            .with_cap(cap);
         let body = daedalus_core::view::render(&snap, label, complete, auth_spend);
         if once {
             print!("{body}");
         } else {
-            // Clear screen + home cursor, then redraw the frame in place.
+            // Clear screen + home cursor, then redraw the frame in place. (No
+            // alt-screen: it would corrupt the user's terminal on Ctrl-C, which
+            // skips any restore. The final frame persists on the normal buffer.)
             print!("\x1b[2J\x1b[H{body}");
         }
         let _ = std::io::stdout().flush();
@@ -553,6 +569,17 @@ fn cmd_view(run_dir: &std::path::Path, once: bool, interval: u64) -> ExitCode {
         }
         std::thread::sleep(period);
     }
+}
+
+/// Read a `.jsonl` file into its parsed rows, skipping blank/unparseable lines.
+/// Returns empty when the file is absent — callers treat that as "no data yet".
+fn read_jsonl(path: &std::path::Path) -> Vec<Value> {
+    std::fs::read_to_string(path)
+        .unwrap_or_default()
+        .lines()
+        .filter(|l| !l.trim().is_empty())
+        .filter_map(|l| serde_json::from_str::<Value>(l).ok())
+        .collect()
 }
 
 // ---------------------------------------------------------------------------
@@ -1955,13 +1982,16 @@ fn cmd_run(
         },
     );
 
-    let (seeds, seed_meta) = match seed_result {
+    let (seeds, mut seed_meta) = match seed_result {
         Ok(pair) => pair,
         Err(e) => {
             eprintln!("seed_population: {e}");
             return ExitCode::FAILURE;
         }
     };
+    // Persist the budget cap so `daedalus view` can show live spend against it
+    // (the cap is a CLI arg, not otherwise on disk before loop.json).
+    seed_meta.insert("budget_usd".to_string(), serde_json::json!(budget_usd));
 
     // Gather optimizer costs from seed phase
     if let Some(costs) = seed_meta.get("optimizer_costs").and_then(Value::as_array) {
@@ -2049,6 +2079,22 @@ fn cmd_run(
     impl<'a> SearchWorld for World<'a> {
         fn summary(&mut self) -> Map<String, Value> {
             summarize(&self.exp_dir.join("trials.jsonl")).unwrap_or_default()
+        }
+
+        fn record_history(&mut self, entry: &Value) {
+            // Stream each hypothesis to loop.history.jsonl the instant it lands,
+            // so `daedalus view` can tail the search live (loop.json only appears
+            // at completion). Best-effort: a failed append never derails a run.
+            use std::io::Write as _;
+            if let Ok(line) = serde_json::to_string(entry) {
+                if let Ok(mut f) = std::fs::OpenOptions::new()
+                    .create(true)
+                    .append(true)
+                    .open(self.exp_dir.join("loop.history.jsonl"))
+                {
+                    let _ = writeln!(f, "{line}");
+                }
+            }
         }
 
         fn propose(

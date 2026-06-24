@@ -40,6 +40,13 @@ pub trait SearchWorld {
     fn monitor(&mut self, _summary: &Map<String, Value>, _generation: u64) -> Vec<Value> {
         Vec::new()
     }
+    /// Persist one history entry the instant it is produced — the incremental
+    /// hypothesis log. Default: a no-op (offline policy and tests don't need the
+    /// stream). The CLI world appends it to `loop.history.jsonl` so `daedalus
+    /// view` can tail the optimizer's hypotheses live, instead of them only
+    /// appearing in `loop.json` at completion. The `history` that [`run_search`]
+    /// returns is unchanged — this is a pure addition.
+    fn record_history(&mut self, _entry: &Value) {}
 }
 
 /// Tunables for [`run_search`] (Python keyword args, same defaults).
@@ -389,7 +396,9 @@ pub fn run_search(world: &mut dyn SearchWorld, params: &SearchParams, rng: &mut 
                     h.insert("attempt".to_string(), json!(attempt));
                     h.insert("parent_id".to_string(), json!(parent));
                     h.insert("proposal_error".to_string(), json!(exc));
-                    history.push(Value::Object(h));
+                    let entry = Value::Object(h);
+                    world.record_history(&entry);
+                    history.push(entry);
                     if proposal_failures >= params.max_proposal_failures {
                         stop_reason = "proposal-failures".to_string();
                         stopped = true;
@@ -440,7 +449,9 @@ pub fn run_search(world: &mut dyn SearchWorld, params: &SearchParams, rng: &mut 
                             .unwrap_or(Value::Null),
                     );
                     h.insert("improved".to_string(), json!(improved));
-                    history.push(Value::Object(h));
+                    let entry = Value::Object(h);
+                    world.record_history(&entry);
+                    history.push(entry);
                     ran_any = true;
                     improved_any = improved_any || improved;
                 }
@@ -615,6 +626,33 @@ mod tests {
         }
     }
 
+    /// Wraps a `FakeWorld` and captures every `record_history` call, to prove the
+    /// streamed incremental log equals the `history` `run_search` returns.
+    struct RecordingWorld {
+        inner: FakeWorld,
+        recorded: Vec<Value>,
+    }
+    impl SearchWorld for RecordingWorld {
+        fn summary(&mut self) -> Map<String, Value> {
+            self.inner.summary()
+        }
+        fn propose(
+            &mut self,
+            p: &str,
+            g: u64,
+            a: usize,
+            av: &[String],
+        ) -> Result<(String, Value), String> {
+            self.inner.propose(p, g, a, av)
+        }
+        fn run_child(&mut self, c: &str) {
+            self.inner.run_child(c)
+        }
+        fn record_history(&mut self, entry: &Value) {
+            self.recorded.push(entry.clone());
+        }
+    }
+
     fn search(world: &mut dyn SearchWorld, params: SearchParams) -> Value {
         run_search(world, &params, &mut PyRandom::new(0))
     }
@@ -646,6 +684,37 @@ mod tests {
         assert_eq!(hist_len(&out), 4);
         assert_eq!(out["generations"], 2);
         assert_eq!(out["best_id"], "base");
+    }
+
+    #[test]
+    fn record_history_streams_every_entry_in_order() {
+        // The incremental log (what `daedalus view` tails) must equal the
+        // `history` `run_search` returns — same entries, same order. A `Fail`
+        // proves proposal-error entries stream too, not just successful children.
+        let inner = FakeWorld::new(
+            base(),
+            vec![
+                Item::Child("c1", vec![("t1", vec![0.58]), ("t2", vec![0.5])], 0.01),
+                Item::Fail,
+                Item::Child("c3", vec![("t1", vec![0.59]), ("t2", vec![0.5])], 0.01),
+                Item::Child("c4", vec![("t1", vec![0.3]), ("t2", vec![0.2])], 0.01),
+            ],
+        );
+        let mut w = RecordingWorld {
+            inner,
+            recorded: Vec::new(),
+        };
+        let out = search(&mut w, defaults());
+        let history = out["history"].as_array().unwrap();
+        assert!(!w.recorded.is_empty(), "entries were streamed");
+        assert_eq!(
+            &w.recorded, history,
+            "the streamed log equals the returned history exactly"
+        );
+        assert!(
+            w.recorded.iter().any(|e| e.get("proposal_error").is_some()),
+            "proposal-error entries stream too"
+        );
     }
 
     #[test]
