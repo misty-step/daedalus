@@ -1,6 +1,6 @@
 # Run-observability + visual review layer (watch runs, sanity-check design/results)
 
-Priority: P1 · Status: in-progress · Estimate: XL
+Priority: P1 · Status: delivered · Estimate: XL
 
 > **Delivered 2026-06-21 — static `report-html` (children 1, 2, 3, 5).**
 > `daedalus report-html <run-dir>` emits a self-contained offline HTML report
@@ -24,9 +24,12 @@ Priority: P1 · Status: in-progress · Estimate: XL
 > `crates/daedalus-core/src/report_html/{mod.rs,render.rs}` (+3 tests: reachable
 > verdict+span-count, unreachable note, repo-root resolution), `bin/gate` green.
 >
-> **Remaining:** only child 4 — the live `daedalus view` server (oracle bullet
-> 3) — is split to its own ticket (distinct streaming architecture). 044 stays
-> open on that single thread.
+> **Closed 2026-06-23.** Child 4 — the live surface (oracle bullet 3) — is
+> split to its own shaped ticket **[[050]]** (richer live TUI cockpit + a
+> distinct streaming architecture + incremental hypothesis logging). The basic
+> live roll-up already shipped as `daedalus view` (049); 050 is its cockpit
+> upgrade. 044's static-report + sanity scope is fully delivered; the live
+> thread is tracked there.
 
 ## Goal
 A human can watch a search run live, sanity-check its design and execution, and review results — which configs win under what conditions, with confidence — through reviewable **visuals**, while everything stays CLI/agent-friendly and local-first.
@@ -39,7 +42,7 @@ External grounding (research 2026-06-18): the convergent local-first pattern is 
 ## Oracle
 - [x] `daedalus report-html <run-dir>` emits a **self-contained** static HTML (CSS/JS/images base64-inlined, opens from `file://`, PR-attachable, offline) from `loop.json` + `trials.jsonl` — the visual companion to `report.md`, in the Misty Step / lab.css design language.
 - [x] It renders the four review surfaces: (a) a **leaderboard** (config × arena, sortable, cost/latency columns); (b) a **CI forest/caterpillar plot** of each certified candidate's reward-delta CI with the `sig`/`clstr→95%` columns (the 039 stats, drawn); (c) a **per-task/per-cluster heatmap** (config × task) to expose Simpson's-paradox wins; (d) one-click **drill from a score row into the trial transcript** (the candidate's findings + the scorer's matched/missed/FP explanation).
-- [ ] A **live** surface: `daedalus view <run-dir>` (local server or TUI) streams trials as they complete with running scores, per-candidate progress, and **live $ spend** (the gap even Inspect's TUI doesn't nail) — reads the same JSONL, no rewrite.
+- [~] A **live** surface: `daedalus view <run-dir>` (local server or TUI) streams trials as they complete with running scores, per-candidate progress, and **live $ spend** (the gap even Inspect's TUI doesn't nail) — reads the same JSONL, no rewrite. (Basic live roll-up shipped as 049; the richer cockpit + live hypothesis ledger is split to [[050]].)
 - [x] Sanity-check affordances: the rig panel (oracle 1.0 / null floor / probe verdict incl. the slice-B Inconclusive state), the contamination advisory, and the `arena-redteam` span audit are visible in the report so design flaws are caught *before* trusting a ranking. (rig panel: 2026-06-21; contamination advisory + redteam span audit: 2026-06-23 — `report_html::render::sanity_section`.)
 
 ## Verification System
