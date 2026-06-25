@@ -2,6 +2,11 @@
 
 Priority: P0 · Status: pending · Estimate: L
 
+> Child of [[054]] — hum bar gap #4. **Urgency:** the lone holdout
+> `rs-retry-backoff` was exposed 35× in the 2026-06-23 search (burn rule = 5) and
+> is now burned; rebuilding the holdout likely gates [[052]] — the capability
+> search needs a clean holdout to certify against.
+
 ## Goal
 A pr-review holdout arena whose code was **never committed to any indexable
 repo** (truly air-gapped, not just in-repo synthetic) with **≥8–10 independent

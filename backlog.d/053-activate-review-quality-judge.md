@@ -1,6 +1,10 @@
 # Activate the review-quality judge family (or delete it)
 
-Priority: P1 · Status: pending · Estimate: M
+Priority: P0 · Status: pending · Estimate: M
+
+> Child of [[054]] — hum bar gap #5. Elevated P1→P0 2026-06-24: review-quality
+> corroboration beyond the deterministic recall/FP scorer is part of the
+> deployability bar, not a nice-to-have.
 
 ## Goal
 Either (a) ship one arena that uses the calibration-gated `judge.rs` family to

@@ -1,8 +1,11 @@
 # Request Bitterblossom VCS-native trigger experiment
 
-Priority: P1
-Status: pending
+Priority: P3
+Status: blocked - gated behind 054 (Cerberus-first mandate)
 Estimate: M
+
+> **GATED 2026-06-24** behind [[054]] — VCS-native trigger research is downstream
+> of a humming Cerberus reviewer (VISION). Demoted P1→P3.
 
 ## Goal
 

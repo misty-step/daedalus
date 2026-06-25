@@ -2,6 +2,11 @@
 
 Priority: P0 · Status: pending · Estimate: L
 
+> Child of [[054]] — hum bar gap #1 (highest leverage; the reason Cerberus
+> exists). The 2026-06-23 search ran every seed with `skill_set_name: null` and
+> no MCP, so this axis is entirely unmeasured. Likely needs [[051]]'s rebuilt
+> holdout first.
+
 > **Reframed 2026-06-24** (was: "certified substrate comparison — Pi vs OpenCode
 > vs OMP"). Operator clarified that "agent **and** harness" never meant the
 > substrate (Pi/OC/OMP) — that's settled, default OpenCode, and the kernel

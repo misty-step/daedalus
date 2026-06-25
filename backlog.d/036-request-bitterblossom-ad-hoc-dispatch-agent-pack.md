@@ -1,8 +1,13 @@
 # Request Bitterblossom ad-hoc dispatch agent pack
 
-Priority: P0
-Status: shaped
+Priority: P2
+Status: blocked - gated behind 054 (Cerberus-first mandate); first slice stays shaped
 Estimate: L
+
+> **GATED 2026-06-24** behind [[054]] — per [VISION.md](../VISION.md) "one
+> customer until it hums," no second plane (Bitterblossom) is searched until the
+> Cerberus reviewer loop hums. The First Slice below is still shaped and
+> deliver-ready; it resumes the moment 054 closes. Demoted P0→P2.
 
 > **Shaped 2026-06-22 — the immediate `/deliver` is the First Slice below.**
 > The 5-family content beneath it is the broader roadmap. The first slice was

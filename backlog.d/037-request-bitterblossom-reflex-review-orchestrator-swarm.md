@@ -1,8 +1,12 @@
 # Request Bitterblossom reflex review orchestrator swarm
 
-Priority: P0
-Status: blocked - waiting for 048 Cerberus lab recommendation
+Priority: P2
+Status: blocked - 048 delivered; now gated behind 054 (Cerberus-first mandate)
 Estimate: XL
+
+> **GATED 2026-06-24** behind [[054]] — Bitterblossom reflex-review fan-out waits
+> until the Cerberus reviewer loop hums (VISION). 048 is delivered, so this no
+> longer waits on the lab; it waits on the hum bar. Demoted P0→P2.
 
 ## Goal
 

@@ -4,6 +4,11 @@ Priority: P2
 Status: pending
 Estimate: XL
 
+> **Gated 2026-06-24** behind [[054]] and a real Cerberus G3 deploy. The
+> incumbent-baseline mechanism this ticket needs is being built synthetically
+> first in [[055]] (no live deploy required); 035 upgrades it to the *live*
+> incumbent once Cerberus ships and emits production traces.
+
 ## Goal
 
 Build the Phase 4 production-trace flywheel workstream, with a sandbox
