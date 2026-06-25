@@ -240,6 +240,12 @@ enum Cmd {
         /// discriminate mid-tier candidates.
         #[arg(long, default_value_t = 1.0)]
         consistency_floor: f64,
+        /// Reliability gate (056): a candidate is recommended only when its
+        /// pass^k (k = --certify-trials, at the --consistency-floor reward) is at
+        /// least this. 0.0 = gate off (pre-056 behaviour). A high mean over a
+        /// config that fails most of its runs is not deployable (τ-bench).
+        #[arg(long, default_value_t = 0.0)]
+        reliability_floor: f64,
         #[arg(long)]
         max_errors_per_candidate: Option<usize>,
         /// Offline cost/scale forecast: project the trial count and (when the
@@ -433,6 +439,7 @@ fn main() -> ExitCode {
             certify_trials,
             min_effect,
             consistency_floor,
+            reliability_floor,
             max_errors_per_candidate,
             estimate,
         } => cmd_run(
@@ -450,6 +457,7 @@ fn main() -> ExitCode {
             certify_trials,
             min_effect,
             consistency_floor,
+            reliability_floor,
             max_errors_per_candidate,
             estimate,
         ),
@@ -1586,6 +1594,7 @@ fn cmd_run(
     certify_trials: u32,
     min_effect: f64,
     consistency_floor: f64,
+    reliability_floor: f64,
     max_errors_per_candidate: Option<usize>,
     estimate: bool,
 ) -> ExitCode {
@@ -1598,6 +1607,16 @@ fn cmd_run(
         eprintln!(
             "error: --min-effect must be >= 0 (got {min_effect}); it is the minimum reward \
              delta a candidate must provably beat the null floor by to certify."
+        );
+        return ExitCode::FAILURE;
+    }
+
+    // The reliability floor is a pass^k probability; outside [0, 1] it is
+    // meaningless. 0.0 leaves the 056 gate inert (pre-056 behaviour).
+    if !(0.0..=1.0).contains(&reliability_floor) || reliability_floor.is_nan() {
+        eprintln!(
+            "error: --reliability-floor must be in [0, 1] (got {reliability_floor}); it is the \
+             minimum pass^k a candidate must reach to be recommendable. 0 = gate off."
         );
         return ExitCode::FAILURE;
     }
@@ -2631,8 +2650,22 @@ fn cmd_run(
     );
     let certified: std::collections::HashSet<String> = certified_vec.into_iter().collect();
 
-    let pick = if !certified.is_empty() {
-        daedalus_core::report::recommend(&cands2, &front2, Some(&certified))
+    // Backlog 056: the reliability gate. A certified candidate is recommendable
+    // only if its pass^k clears --reliability-floor; a high mean over a config
+    // that fails most of its runs is not deployable (τ-bench). With the default
+    // floor (0.0) the gate is inert and `recommendable == certified`.
+    let (reliable_vec, unreliable_vec) = daedalus_core::stats::partition_reliable(
+        &cands2,
+        &certified,
+        consistency_floor,
+        certify_trials as usize,
+        reliability_floor,
+    );
+    let recommendable: std::collections::HashSet<String> = reliable_vec.into_iter().collect();
+    let demoted_unreliable: Vec<String> = unreliable_vec;
+
+    let pick = if !recommendable.is_empty() {
+        daedalus_core::report::recommend(&cands2, &front2, Some(&recommendable))
     } else {
         None
     };
@@ -2736,9 +2769,29 @@ fn cmd_run(
     if !certified.is_empty() {
         let mut sorted_cert: Vec<String> = certified.iter().cloned().collect();
         sorted_cert.sort();
+        let gate_note = if reliability_floor > 0.0 {
+            format!(
+                " Recommendation further restricted to candidates whose pass^{certify_trials} clears the reliability floor {reliability_floor:.2} (056)."
+            )
+        } else {
+            " Recommendation restricted to certified candidates.".to_string()
+        };
         report_text.push_str(&format!(
-            "\n_Certified (≥{certify_trials} trials per search task AND 95% CI lower bound > {min_effect:+.4} vs the null floor): {}. Recommendation restricted to certified candidates._\n",
+            "\n_Certified (≥{certify_trials} trials per search task AND 95% CI lower bound > {min_effect:+.4} vs the null floor): {}.{gate_note}_\n",
             sorted_cert.join(", ")
+        ));
+    }
+    if reliability_floor > 0.0 && !demoted_unreliable.is_empty() {
+        let mut demoted = demoted_unreliable.clone();
+        demoted.sort();
+        report_text.push_str(&format!(
+            "\n> **Demoted by the reliability gate (056):** {}. Certified — provably beats the floor — but pass^{certify_trials} < {reliability_floor:.2}, so not deployable (a high mean over a config that fails most of its runs; τ-bench). Excluded from the recommendation.\n",
+            demoted.join(", ")
+        ));
+    }
+    if reliability_floor > 0.0 && recommendable.is_empty() && !certified.is_empty() {
+        report_text.push_str(&format!(
+            "\n> **No deployable candidate.** Certified candidates exist, but none clear the reliability floor (pass^{certify_trials} ≥ {reliability_floor:.2}). Search more, harden the arena, or lower the floor with eyes open.\n"
         ));
     }
     if !underpowered.is_empty() {
@@ -2888,6 +2941,22 @@ fn cmd_run(
         Value::from(consistency_floor),
     );
     outcome_obj.insert("min_effect".to_string(), Value::from(min_effect));
+    // Backlog 056: the reliability gate's inputs and verdict, so a run records
+    // which certified candidates were deployable and which were demoted.
+    outcome_obj.insert(
+        "reliability_floor".to_string(),
+        Value::from(reliability_floor),
+    );
+    outcome_obj.insert("recommendable".to_string(), {
+        let mut rec: Vec<String> = recommendable.iter().cloned().collect();
+        rec.sort();
+        Value::Array(rec.into_iter().map(Value::from).collect())
+    });
+    outcome_obj.insert("reliability_demoted".to_string(), {
+        let mut dem = demoted_unreliable.clone();
+        dem.sort();
+        Value::Array(dem.into_iter().map(Value::from).collect())
+    });
     outcome_obj.insert(
         "trial_complete".to_string(),
         Value::Array({

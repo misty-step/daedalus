@@ -44,8 +44,9 @@ humming. Each gap below is a child. Until they close, "certified" overclaims.
       as null-effect — [[052]].
 - [ ] The recommended config's reward-delta 95% CI clears a registered incumbent
       baseline (not `null`) under cluster-robust stats — [[055]].
-- [ ] The recommendation is reliability-gated: pass^k above a declared floor, or
-      it is not recommended — [[056]].
+- [x] The recommendation is reliability-gated: pass^k above a declared floor, or
+      it is not recommended — [[056]] **delivered (merge-ready)**. Demonstration
+      on the real cerberus data at $0 awaits [[059]]; paid re-run awaits [[057]].
 - [ ] The arena certifies on ≥8 independent clusters with an unburned holdout;
       `rs-retry-backoff` is rotated and replaced — [[051]].
 - [ ] At least one certified reviewer carries a quality-judge corroboration

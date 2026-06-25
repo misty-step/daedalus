@@ -1,8 +1,29 @@
 # Gate the recommendation on deployable reliability (pass^k)
 
-Priority: P0 · Status: pending · Estimate: M
+Priority: P0 · Status: delivered (merge-ready, branch `feat/056-reliability-gate`) · Estimate: M
 
 Child of [[054]]. Retro gap #3.
+
+## Implementation Receipt (2026-06-25)
+- `stats::partition_reliable` (new, `crates/daedalus-core/src/stats.rs`): pure
+  gate splitting certified candidates into (reliable, demoted) by
+  `pass^k ≥ reliability_floor`; `floor ≤ 0.0` is inert (pre-056 behaviour);
+  undefined pass^k (k > n_trials) fails a positive floor.
+- `--reliability-floor <p>` CLI flag (`daedalus run`), validated to `[0,1]`
+  before any spend; restricts the recommendation (`pick`) to certified ∩
+  reliable. `certified` keeps its pre-056 meaning (significance only).
+- `report.md`: demoted candidates get a "Demoted by the reliability gate" block;
+  a "No deployable candidate" note fires when certified is non-empty but nothing
+  clears the floor. `loop.json` carries `reliability_floor`, `recommendable`,
+  `reliability_demoted`. Documented in `docs/operator-sop.md` §3.
+- Evidence: `bin/gate` green (fmt + 323 tests + clippy `-D warnings`); unit test
+  `partition_reliable_demotes_the_real_cerberus_recommendation` encodes the
+  decisive finding (seed2-kimi 17/30 → pass^5 ≈ 0.0434, demoted at a 0.10 floor);
+  fresh-context adversarial review returned no blocking findings; live CLI:
+  invalid floor rejected, valid floor + `--estimate` forecasts with no spend.
+- **Deferred:** a paid end-to-end re-run of `cerberus-reviewer` under a positive
+  floor (real-data demonstration) — needs budget sign-off and belongs with
+  [[057]]'s multi-seed re-runs. The $0-on-real-data path is filed as [[059]].
 
 ## Goal
 Make pass^k a first-class objective that can veto a recommendation, so the foundry

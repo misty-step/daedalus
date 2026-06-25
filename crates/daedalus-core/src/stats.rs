@@ -319,6 +319,44 @@ pub fn partition_certified(
     (certified, underpowered)
 }
 
+/// Split certified candidates into `(reliable, demoted)` by the reliability
+/// gate (backlog 056): a candidate is **reliable** only when its pass^k at `k`
+/// — estimated at reward floor `consistency_floor` — is defined and at least
+/// `reliability_floor`. A high mean reward over a config that fails most of its
+/// runs is not deployable (τ-bench, arXiv 2605.10516), so a certified-but-
+/// unreliable candidate is *demoted* out of the recommendation set.
+///
+/// `reliability_floor <= 0.0` disables the gate (every input is reliable), so
+/// the default preserves pre-056 behaviour. A candidate whose pass^k is
+/// undefined (fewer than `k` trials) fails a positive floor — an unprovable
+/// reliability is not a reliability. Both lists are returned sorted.
+pub fn partition_reliable(
+    cands: &Map<String, Value>,
+    certified: &std::collections::HashSet<String>,
+    consistency_floor: f64,
+    k: usize,
+    reliability_floor: f64,
+) -> (Vec<String>, Vec<String>) {
+    let mut ids: Vec<&String> = certified.iter().collect();
+    ids.sort();
+    let mut reliable = Vec::new();
+    let mut demoted = Vec::new();
+    for cid in ids {
+        let ok = reliability_floor <= 0.0
+            || cands
+                .get(cid)
+                .map(|c| candidate_consistency(c, consistency_floor))
+                .and_then(|con| con.pass_hat_k(k))
+                .is_some_and(|p| p >= reliability_floor);
+        if ok {
+            reliable.push(cid.clone());
+        } else {
+            demoted.push(cid.clone());
+        }
+    }
+    (reliable, demoted)
+}
+
 /// Compute the reward-delta CI for every certified candidate against the
 /// reference whose `kind` is `baseline_kind` (e.g. `"null"`, the floor).
 ///
@@ -824,6 +862,70 @@ mod tests {
             partition_certified(&cands, &trial, "null", &singleton, 0.0);
         assert!(certified.is_empty());
         assert_eq!(underpowered, vec!["sig".to_string()]);
+    }
+
+    #[test]
+    fn partition_reliable_demotes_a_low_pass_k_candidate() {
+        // "solid" clears the reward floor on every trial (pass^2 = 1.0); "flaky"
+        // clears 2 of 5 (pass^2 = C(2,2)/C(5,2) = 0.1). At a 0.5 floor the flaky
+        // one is demoted out of the recommendation set; the solid one survives.
+        let cands = cands_map(&[
+            ("solid", "pi", &[("a", &[1.0, 1.0, 1.0, 1.0, 1.0])]),
+            ("flaky", "pi", &[("a", &[1.0, 1.0, 0.0, 0.0, 0.0])]),
+        ]);
+        let certified: HashSet<String> = ["solid".to_string(), "flaky".to_string()]
+            .into_iter()
+            .collect();
+        let (reliable, demoted) = partition_reliable(&cands, &certified, 1.0, 2, 0.5);
+        assert_eq!(reliable, vec!["solid".to_string()]);
+        assert_eq!(demoted, vec!["flaky".to_string()]);
+    }
+
+    #[test]
+    fn partition_reliable_floor_zero_disables_the_gate() {
+        // The default floor (0.0) keeps every certified candidate, preserving
+        // pre-056 behaviour even for an all-fail config.
+        let cands = cands_map(&[("flaky", "pi", &[("a", &[0.0, 0.0, 0.0])])]);
+        let certified: HashSet<String> = ["flaky".to_string()].into_iter().collect();
+        let (reliable, demoted) = partition_reliable(&cands, &certified, 1.0, 2, 0.0);
+        assert_eq!(reliable, vec!["flaky".to_string()]);
+        assert!(demoted.is_empty());
+    }
+
+    #[test]
+    fn partition_reliable_undefined_pass_k_fails_a_positive_floor() {
+        // Only 2 trials but k=5 → pass^5 undefined → not provably reliable, so a
+        // positive floor demotes it; the gate-off floor keeps it.
+        let cands = cands_map(&[("thin", "pi", &[("a", &[1.0, 1.0])])]);
+        let certified: HashSet<String> = ["thin".to_string()].into_iter().collect();
+        assert_eq!(
+            partition_reliable(&cands, &certified, 1.0, 5, 0.1).1,
+            vec!["thin".to_string()]
+        );
+        assert_eq!(
+            partition_reliable(&cands, &certified, 1.0, 5, 0.0).0,
+            vec!["thin".to_string()]
+        );
+    }
+
+    #[test]
+    fn partition_reliable_demotes_the_real_cerberus_recommendation() {
+        // The 2026-06-23 recommended config (seed2-kimi) reached the reward floor
+        // on 17 of 30 trials → pass^5 = C(17,5)/C(30,5) ≈ 0.0434, the run's own
+        // reported number. Any deployable floor (0.10) demotes it — yet the run
+        // recommended it anyway. This is the bug 056 fixes.
+        let mut trials = vec![1.0_f64; 17];
+        trials.extend(vec![0.0_f64; 13]);
+        let cands = cands_map(&[("seed2", "pi", &[("rs-retry-backoff", trials.as_slice())])]);
+        let certified: HashSet<String> = ["seed2".to_string()].into_iter().collect();
+        assert_eq!(
+            partition_reliable(&cands, &certified, 1.0, 5, 0.10).1,
+            vec!["seed2".to_string()]
+        );
+        assert_eq!(
+            partition_reliable(&cands, &certified, 1.0, 5, 0.04).0,
+            vec!["seed2".to_string()]
+        );
     }
 
     #[test]

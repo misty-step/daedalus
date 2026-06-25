@@ -79,10 +79,21 @@ cargo run --quiet --bin daedalus -- run specs/<id>/taskspec.toml \
   --trials 1 \
   --certify-top <k> \
   --certify-trials 5 \
+  --reliability-floor <p> \
   --children-per-gen 2 \
   --optimizer-model <model> \
   --max-errors-per-candidate 1
 ```
+
+`--reliability-floor <p>` is the deployability gate (056): a certified
+candidate is recommended only if its pass^k (k = `--certify-trials`, at the
+`--consistency-floor` reward) is at least `p`. A high mean reward over a config
+that fails most of its runs is not deployable (τ-bench), so the gate demotes it
+out of the recommendation and `report.md` says why. `0.0` (the default) leaves
+the gate off — pre-056 behaviour. Pick `p` for the lane: a reflex reviewer
+posting on every PR needs a higher floor than an advisory one; record the choice
+and why. `loop.json` carries `reliability_floor`, `recommendable`, and
+`reliability_demoted`.
 
 Committed evidence lives under `runs/<exp-id>/`: `trials.jsonl`,
 `summary.json`, `report.md`, `pareto.json`, `lineage.md`, compositions, and
