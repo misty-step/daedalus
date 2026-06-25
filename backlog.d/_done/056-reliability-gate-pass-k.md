@@ -1,6 +1,6 @@
 # Gate the recommendation on deployable reliability (pass^k)
 
-Priority: P0 · Status: delivered (merge-ready, branch `feat/056-reliability-gate`) · Estimate: M
+Priority: P0 · Status: done (merged to master 2026-06-25, commit 5b5b2ca) · Estimate: M
 
 Child of [[054]]. Retro gap #3.
 
