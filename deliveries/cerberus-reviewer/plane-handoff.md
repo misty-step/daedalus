@@ -16,7 +16,7 @@ Lab evidence is not launch approval. This packet is import guidance for humans a
 | provider/model | `openrouter/moonshotai/kimi-k2.7-code` |
 | thinking | `medium` |
 | tools | `read, bash, edit, write` |
-| prompt packet | `/Users/phaedrus/Development/daedalus/runs/20260623T183514Z-search-cerberus-reviewer/packets/seed-trace-callers.md` |
+| prompt packet | `runs/20260623T183514Z-search-cerberus-reviewer/packets/seed-trace-callers.md` |
 | output contract | `findings.json: {findings: [{file, line, category, description}]} with categories from the fixed taxonomy (see arena instruction.md)` |
 | trigger intent | `Daedalus research loop (operator-run); the certified contract is exported to Cerberus, which owns the production trigger.` |
 | budget | `$0.5` and `600s` per run |

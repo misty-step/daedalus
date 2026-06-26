@@ -88,9 +88,9 @@ Cerberus validation receipt, 2026-06-19:
 
 - `cargo run --quiet --bin daedalus -- export-cerberus deliveries/pr-review --spec specs/pr-review/taskspec.toml --out deliveries/pr-review/cerberus-reviewer-config.json`
 - From `/Users/phaedrus/Development/cerberus`:
-  `cargo run --locked -q -p cerberus-cli -- validate-reviewer-config /Users/phaedrus/Development/daedalus/deliveries/pr-review/cerberus-reviewer-config.json`
+  `cargo run --locked -q -p cerberus-cli -- validate-reviewer-config deliveries/pr-review/cerberus-reviewer-config.json`
 - From `/Users/phaedrus/Development/cerberus`:
-  `cargo run --locked -q -p cerberus-cli -- import-reviewer-config /Users/phaedrus/Development/daedalus/deliveries/pr-review/cerberus-reviewer-config.json --dry-run --out tmp/daedalus-cerberus-export-2026-06-19/import-report.json`
+  `cargo run --locked -q -p cerberus-cli -- import-reviewer-config deliveries/pr-review/cerberus-reviewer-config.json --dry-run --out tmp/daedalus-cerberus-export-2026-06-19/import-report.json`
 
 The Cerberus dry-run accepts the packet for comparison, rejects production
 import because the packet is sandbox-only and not approved, and leaves Cerberus

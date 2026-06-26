@@ -16,7 +16,7 @@ Lab evidence is not launch approval. This packet is import guidance for humans a
 | provider/model | `openrouter/openai/gpt-5-mini` |
 | thinking | `medium` |
 | tools | `read, bash, edit, write` |
-| prompt packet | `/Users/phaedrus/Development/daedalus/runs/20260613T161359Z-search-pr-review-correctness/packets/seed-spec-first.md` |
+| prompt packet | `runs/20260613T161359Z-search-pr-review-correctness/packets/seed-spec-first.md` |
 | output contract | `review-swarm member artifact with lens = correctness and findings in the shared member schema` |
 | trigger intent | `Required member in the review-swarm suite after G3; manual sandbox runs until then` |
 | budget | `$0.5` and `600s` per run |

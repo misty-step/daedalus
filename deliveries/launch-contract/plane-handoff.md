@@ -16,7 +16,7 @@ Lab evidence is not launch approval. This packet is import guidance for humans a
 | provider/model | `openrouter/qwen/qwen3.7-plus` |
 | thinking | `low` |
 | tools | `read, bash` |
-| prompt packet | `/Users/phaedrus/Development/daedalus/runs/20260612T153450Z-search-launch-contract-v0/packets/g1a-seed2-glm-4-7-flash-spec-first.md` |
+| prompt packet | `runs/20260612T153450Z-search-launch-contract-v0/packets/g1a-seed2-glm-4-7-flash-spec-first.md` |
 | output contract | `findings.json: {findings: [{file, line, category, description}]} with categories: approval-gate, evidence, permissions, observability, portability` |
 | trigger intent | `Manual launch-contract review before G3/G4/G5 approval` |
 | budget | `$0.35` and `420s` per run |

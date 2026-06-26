@@ -16,7 +16,7 @@ Lab evidence is not launch approval. This packet is import guidance for humans a
 | provider/model | `openrouter/moonshotai/kimi-k2.6` |
 | thinking | `medium` |
 | tools | `read, bash` |
-| prompt packet | `/Users/phaedrus/Development/daedalus/runs/20260613T153751Z-search-pr-review-security/packets/seed-checklist.md` |
+| prompt packet | `runs/20260613T153751Z-search-pr-review-security/packets/seed-checklist.md` |
 | output contract | `review-swarm member artifact with lens = security and findings in the shared member schema` |
 | trigger intent | `Required member in the review-swarm suite after G3; manual sandbox runs until then` |
 | budget | `$0.5` and `600s` per run |

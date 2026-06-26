@@ -14,7 +14,7 @@ provider = "openrouter"
 model = "moonshotai/kimi-k2.7-code"
 thinking = "medium"
 tools = ["read", "bash", "edit", "write"]
-prompt_packet = "/Users/phaedrus/Development/daedalus/runs/20260623T183514Z-search-cerberus-reviewer/packets/seed-trace-callers.md"
+prompt_packet = "runs/20260623T183514Z-search-cerberus-reviewer/packets/seed-trace-callers.md"
 system_prompt_mode = "append"
 timeout_sec = 600
 

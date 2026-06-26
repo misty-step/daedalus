@@ -16,7 +16,7 @@ Lab evidence is not launch approval. This packet is import guidance for humans a
 | provider/model | `openrouter/qwen/qwen3.7-plus` |
 | thinking | `off` |
 | tools | `read, bash` |
-| prompt packet | `/Users/phaedrus/Development/daedalus/runs/20260612T220412Z-search-pr-review-master/packets/seed-spec-first.md` |
+| prompt packet | `runs/20260612T220412Z-search-pr-review-master/packets/seed-spec-first.md` |
 | output contract | `findings.json: {findings: [{file, line, category, severity, description}]} plus optional summary fields ignored by deterministic scorer` |
 | trigger intent | `Master synthesis stage after specialist artifacts exist` |
 | budget | `$0.5` and `600s` per run |

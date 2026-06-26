@@ -14,7 +14,7 @@ provider = "openrouter"
 model = "moonshotai/kimi-k2.6"
 thinking = "medium"
 tools = ["read", "bash"]
-prompt_packet = "/Users/phaedrus/Development/daedalus/runs/20260613T153751Z-search-pr-review-security/packets/seed-checklist.md"
+prompt_packet = "runs/20260613T153751Z-search-pr-review-security/packets/seed-checklist.md"
 system_prompt_mode = "append"
 timeout_sec = 600
 

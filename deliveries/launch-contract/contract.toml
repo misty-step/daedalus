@@ -14,7 +14,7 @@ provider = "openrouter"
 model = "qwen/qwen3.7-plus"
 thinking = "low"
 tools = ["read", "bash"]
-prompt_packet = "/Users/phaedrus/Development/daedalus/runs/20260612T153450Z-search-launch-contract-v0/packets/g1a-seed2-glm-4-7-flash-spec-first.md"
+prompt_packet = "runs/20260612T153450Z-search-launch-contract-v0/packets/g1a-seed2-glm-4-7-flash-spec-first.md"
 system_prompt_mode = "append"
 timeout_sec = 420
 

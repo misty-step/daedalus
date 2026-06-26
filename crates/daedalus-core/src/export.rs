@@ -403,6 +403,7 @@ the launch contract can carry evidence pointers"
         .get("prompt_packet")
         .and_then(|v| v.as_str())
         .unwrap_or("");
+    let prompt_packet_ref = repo_relative(prompt_packet, cwd, repo_root);
     let system_prompt_mode = candidate
         .get("system_prompt_mode")
         .and_then(|v| v.as_str())
@@ -492,7 +493,7 @@ note = \"Do not deploy as a primary reviewer until G3 is signed by a human; unsi
         model_s = toml_str(model),
         thinking_s = toml_str(thinking),
         tools = tools,
-        prompt_packet_s = toml_str(prompt_packet),
+        prompt_packet_s = toml_str(&prompt_packet_ref),
         spm_s = toml_str(system_prompt_mode),
         timeout_sec = timeout_sec,
         trigger_s = toml_str(trigger),
@@ -1079,6 +1080,49 @@ tools = [\"read\", \"bash\"]\ntimeout_sec = 600\n",
         assert!(handoff.contains(&format!("composition hash | `{hash}`")));
         assert!(handoff.contains("prompt_ref: deliveries/"));
         assert!(handoff.contains("Lab evidence is not launch approval"));
+
+        let _ = std::fs::remove_dir_all(&d);
+    }
+
+    #[test]
+    fn render_contract_relativizes_repo_local_prompt_packet() {
+        let d = tmpdir("relative-prompt-packet");
+        let packet = d
+            .join("runs")
+            .join("20260611T000000Z-demo")
+            .join("packets")
+            .join("packet.md");
+        std::fs::create_dir_all(packet.parent().unwrap()).unwrap();
+        std::fs::write(&packet, "Review with evidence. Cite file and line. Stop.\n").unwrap();
+
+        let candidate = json!({
+            "id": "demo-agent",
+            "_hash": "abc123",
+            "kind": "pi",
+            "provider_name": "openrouter",
+            "model": "z-ai/glm-5",
+            "thinking": "medium",
+            "tools": ["read", "bash"],
+            "prompt_packet": packet.to_str().unwrap(),
+            "system_prompt_mode": "append",
+            "timeout_sec": 600
+        });
+        let spec: serde_json::Value = serde_json::from_str(SPEC_JSON).unwrap();
+        let text = render_contract(
+            candidate.as_object().unwrap(),
+            &spec,
+            "9.9.9",
+            Some("2026-06-10T00:00:00Z"),
+            &d,
+            &d,
+            &d,
+        )
+        .unwrap();
+        let contract: toml::Value = toml::from_str(&text).unwrap();
+        assert_eq!(
+            contract["composition"]["prompt_packet"].as_str(),
+            Some("runs/20260611T000000Z-demo/packets/packet.md")
+        );
 
         let _ = std::fs::remove_dir_all(&d);
     }

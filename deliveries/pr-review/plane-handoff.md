@@ -20,7 +20,7 @@ historical import shape for this delivery.
 | provider/model | `openrouter/qwen/qwen3.7-plus` |
 | thinking | `low` |
 | tools | `read, bash, edit, write` |
-| prompt packet | `/Users/phaedrus/Development/daedalus/runs/20260611T173632Z-search-pr-review-v0/packets/seed-checklist.md` |
+| prompt packet | `runs/20260611T173632Z-search-pr-review-v0/packets/seed-checklist.md` |
 | output contract | `findings.json: {findings: [{file, line, category, description}]} with categories from the fixed taxonomy (see arena instruction.md)` |
 | trigger intent | `GitHub PR webhook (Phase 3); manual runs until then` |
 | budget | `$0.5` and `600s` per run |
