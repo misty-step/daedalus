@@ -1,0 +1,22 @@
+{
+  "composition": 1,
+  "id": "incumbent",
+  "kind": "incumbent",
+  "model": "deepseek/deepseek-v4-pro",
+  "prompt_packet": "/Users/phaedrus/Development/daedalus/packets/reviewer-v1.md",
+  "provider_name": "openrouter",
+  "thinking": "medium",
+  "timeout_sec": 600,
+  "tools": [
+    "read",
+    "bash",
+    "edit",
+    "write"
+  ],
+  "composition_hash": "5c8cde491fe1b6aa",
+  "prompt_packet_text": "You are a precise code-review agent.\n\nFollow the task instructions exactly. Report only real defects introduced by\nthe change under review: bugs, vulnerabilities, leaks, races, lost data.\nNever report style, naming, formatting, performance, or documentation issues.\nNever report issues in pre-existing code the diff does not touch. If the\nchange is sound, say so by reporting zero findings — invented findings are\nworse than silence. Output must follow the requested JSON contract exactly.\n",
+  "skills_texts": [],
+  "agents_md_text": null,
+  "harness_version": null,
+  "runner_version": "0.1.0"
+}

@@ -319,6 +319,21 @@ pub fn partition_certified(
     (certified, underpowered)
 }
 
+/// Pick the certification baseline kind for a candidate set (055): the
+/// incumbent (the deployed config) when one was run, else the null floor.
+/// "Provably beats what we ship" supersedes "provably beats silence" whenever an
+/// incumbent reference is present.
+pub fn certification_baseline_kind(cands: &Map<String, Value>) -> &'static str {
+    if cands
+        .values()
+        .any(|c| c.get("kind").and_then(Value::as_str) == Some("incumbent"))
+    {
+        "incumbent"
+    } else {
+        "null"
+    }
+}
+
 /// Split certified candidates into `(reliable, demoted)` by the reliability
 /// gate (backlog 056): a candidate is **reliable** only when its pass^k at `k`
 /// — estimated at reward floor `consistency_floor` — is defined and at least
@@ -358,7 +373,7 @@ pub fn partition_reliable(
 }
 
 /// Compute the reward-delta CI for every certified candidate against the
-/// reference whose `kind` is `baseline_kind` (e.g. `"null"`, the floor).
+/// reference whose `kind` is `baseline_kind` (e.g. `"null"` or `"incumbent"`).
 ///
 /// Returns `(baseline_id, cis)` where `cis` is sorted by candidate id and skips
 /// the baseline itself and any candidate whose interval is undefined. If no
@@ -400,7 +415,7 @@ pub fn delta_ci_markdown(baseline_id: &str, cis: &[(String, DeltaCi)]) -> String
     }
     let mut s = String::new();
     s.push_str(&format!(
-        "\n## Reward delta vs baseline (95% CI)\n\nCluster-robust 95% CI on (candidate − `{baseline_id}`) mean reward, tasks clustered by source repo, using t_(G−1) critical values — honest with few clusters (a 2-repo arena gives df=1, t=12.7, so it certifies almost nothing). A CI that excludes 0 is an improvement over the floor at 95% confidence. `clstr→95%` is the power note (039 child-5): the number of independent clusters (tasks today, source repos once 040 lands labels) at which the *observed* effect's CI is expected to just reach 0 — compare it to n_clusters. Adding tasks within existing clusters does not shrink the SE; clusters do.\n\n"
+        "\n## Reward delta vs baseline (95% CI)\n\nCluster-robust 95% CI on (candidate − `{baseline_id}`) mean reward, tasks clustered by source repo, using t_(G−1) critical values — honest with few clusters (a 2-repo arena gives df=1, t=12.7, so it certifies almost nothing). A CI that excludes 0 is an improvement over the selected baseline at 95% confidence. `clstr→95%` is the power note (039 child-5): the number of independent clusters (tasks today, source repos once 040 lands labels) at which the *observed* effect's CI is expected to just reach 0 — compare it to n_clusters. Adding tasks within existing clusters does not shrink the SE; clusters do.\n\n"
     ));
     s.push_str("| candidate | Δ reward | 95% CI | n_tasks | n_clusters | clstr→95% | sig |\n");
     s.push_str("|---|---|---|---|---|---|---|\n");
@@ -926,6 +941,76 @@ mod tests {
             partition_reliable(&cands, &certified, 1.0, 5, 0.04).0,
             vec!["seed2".to_string()]
         );
+    }
+
+    #[test]
+    fn certification_baseline_kind_prefers_incumbent_then_null() {
+        let with_inc = cands_map(&[
+            ("null", "null", &[("a", &[0.0])]),
+            ("inc", "incumbent", &[("a", &[0.5])]),
+            ("cand", "pi", &[("a", &[0.7])]),
+        ]);
+        assert_eq!(certification_baseline_kind(&with_inc), "incumbent");
+        let no_inc = cands_map(&[
+            ("null", "null", &[("a", &[0.0])]),
+            ("cand", "pi", &[("a", &[0.7])]),
+        ]);
+        assert_eq!(certification_baseline_kind(&no_inc), "null");
+    }
+
+    #[test]
+    fn certifying_vs_incumbent_rejects_a_beats_null_not_incumbent_candidate() {
+        // null=0, incumbent=0.5, weak=0.5 (ties the incumbent), strong=0.9.
+        let cands = cands_map(&[
+            (
+                "null",
+                "null",
+                &[("a", &[0.0]), ("b", &[0.0]), ("c", &[0.0])],
+            ),
+            (
+                "inc",
+                "incumbent",
+                &[("a", &[0.5]), ("b", &[0.5]), ("c", &[0.5])],
+            ),
+            ("weak", "pi", &[("a", &[0.5]), ("b", &[0.5]), ("c", &[0.5])]),
+            (
+                "strong",
+                "pi",
+                &[("a", &[0.9]), ("b", &[0.9]), ("c", &[0.9])],
+            ),
+        ]);
+        let trial: HashSet<String> = ["weak".to_string(), "strong".to_string()]
+            .into_iter()
+            .collect();
+        // vs the incumbent: only `strong` (+0.4, consistent) certifies; `weak`
+        // ties the incumbent and is rejected — it beats silence, not what we ship.
+        let (cert_inc, _) = partition_certified(&cands, &trial, "incumbent", &singleton, 0.0);
+        assert_eq!(cert_inc, vec!["strong".to_string()]);
+        // vs the null floor both clear — the old, weaker bar 055 replaces.
+        let (cert_null, _) = partition_certified(&cands, &trial, "null", &singleton, 0.0);
+        assert_eq!(cert_null, vec!["strong".to_string(), "weak".to_string()]);
+    }
+
+    #[test]
+    fn certified_delta_cis_difference_against_the_incumbent() {
+        let cands = cands_map(&[
+            (
+                "inc",
+                "incumbent",
+                &[("a", &[0.5]), ("b", &[0.5]), ("c", &[0.5])],
+            ),
+            (
+                "strong",
+                "pi",
+                &[("a", &[0.9]), ("b", &[0.9]), ("c", &[0.9])],
+            ),
+        ]);
+        let certified: HashSet<String> = ["strong".to_string()].into_iter().collect();
+        let (base, cis) = certified_delta_cis(&cands, &certified, "incumbent", &singleton);
+        assert_eq!(base.as_deref(), Some("inc"));
+        assert_eq!(cis.len(), 1);
+        assert_eq!(cis[0].0, "strong");
+        assert_eq!(cis[0].1.point, 0.4); // 0.9 − 0.5, the win over the incumbent
     }
 
     #[test]

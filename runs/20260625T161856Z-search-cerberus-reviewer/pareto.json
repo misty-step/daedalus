@@ -1,0 +1,119 @@
+[
+  {
+    "candidate_id": "seed2-kimi-k2-7-code-trace-callers",
+    "composition_hash": "8f66a041352d3385",
+    "reward_mean": 0.7578,
+    "cost_usd_total": 0.4834,
+    "cost_usd_per_trial": 0.016113,
+    "wall_mean_s": 157.5,
+    "trials": 30,
+    "certified": false,
+    "recommended": false,
+    "reward_delta_ci": {
+      "baseline": "incumbent",
+      "point": 0.0711,
+      "se": 0.07624,
+      "lo": -0.1249,
+      "hi": 0.2671,
+      "ci": 0.95,
+      "n_tasks": 6,
+      "n_clusters": 6,
+      "excludes_zero": false,
+      "min_clusters_95": 29
+    }
+  },
+  {
+    "candidate_id": "g1b-seed2-kimi-k2-7-code-trace-callers",
+    "composition_hash": "9ec001c6793125fc",
+    "reward_mean": 0.7156,
+    "cost_usd_total": 0.4499,
+    "cost_usd_per_trial": 0.014997,
+    "wall_mean_s": 34.9,
+    "trials": 30,
+    "certified": false,
+    "recommended": false,
+    "reward_delta_ci": {
+      "baseline": "incumbent",
+      "point": 0.0289,
+      "se": 0.066259,
+      "lo": -0.1415,
+      "hi": 0.1992,
+      "ci": 0.95,
+      "n_tasks": 6,
+      "n_clusters": 6,
+      "excludes_zero": false,
+      "min_clusters_95": 124
+    }
+  },
+  {
+    "candidate_id": "seed3-gpt-5-4-mini-test-runner",
+    "composition_hash": "41bcc61fe7f92478",
+    "reward_mean": 0.5844,
+    "cost_usd_total": 0.2346,
+    "cost_usd_per_trial": 0.00782,
+    "wall_mean_s": 17.1,
+    "trials": 30,
+    "certified": false,
+    "recommended": false,
+    "reward_delta_ci": {
+      "baseline": "incumbent",
+      "point": -0.1022,
+      "se": 0.068478,
+      "lo": -0.2783,
+      "hi": 0.0738,
+      "ci": 0.95,
+      "n_tasks": 6,
+      "n_clusters": 6,
+      "excludes_zero": false,
+      "min_clusters_95": null
+    }
+  },
+  {
+    "candidate_id": "seed1-glm-5-2-spec-first",
+    "composition_hash": "04e2a155e7f1dd2d",
+    "reward_mean": 0.5756,
+    "cost_usd_total": 0.0894,
+    "cost_usd_per_trial": 0.00596,
+    "wall_mean_s": 47.9,
+    "trials": 15,
+    "certified": false,
+    "recommended": false,
+    "reward_delta_ci": null
+  },
+  {
+    "candidate_id": "seed5-deepseek-v4-pro-trace-callers",
+    "composition_hash": "ae486ad3b306c97d",
+    "reward_mean": 0.5617,
+    "cost_usd_total": 0.0908,
+    "cost_usd_per_trial": 0.00454,
+    "wall_mean_s": 47.5,
+    "trials": 20,
+    "certified": false,
+    "recommended": false,
+    "reward_delta_ci": null
+  },
+  {
+    "candidate_id": "g1a-seed1-glm-5-2-spec-first",
+    "composition_hash": "08a2da249906fa86",
+    "reward_mean": 0.52,
+    "cost_usd_total": 0.0814,
+    "cost_usd_per_trial": 0.005427,
+    "wall_mean_s": 39.0,
+    "trials": 15,
+    "certified": false,
+    "recommended": false,
+    "reward_delta_ci": null
+  },
+  {
+    "candidate_id": "seed4-deepseek-v4-flash-spec-first",
+    "composition_hash": "cb2039b025d207ee",
+    "reward_mean": 0.3967,
+    "cost_usd_total": 0.0449,
+    "cost_usd_per_trial": 0.002245,
+    "wall_mean_s": 48.8,
+    "trials": 20,
+    "certified": false,
+    "recommended": false,
+    "reward_delta_ci": null
+  }
+]

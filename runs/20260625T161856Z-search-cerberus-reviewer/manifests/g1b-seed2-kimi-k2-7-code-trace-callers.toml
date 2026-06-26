@@ -1,0 +1,9 @@
+composition = 1
+kind = "pi"
+model = "openai/gpt-5.4-mini"
+prompt_packet = "/Users/phaedrus/Development/daedalus/runs/20260625T161856Z-search-cerberus-reviewer/packets/seed-trace-callers.md"
+provider_name = "openrouter"
+thinking = "medium"
+timeout_sec = 600
+tools = ["read", "bash", "edit", "write"]
+id = "g1b-seed2-kimi-k2-7-code-trace-callers"

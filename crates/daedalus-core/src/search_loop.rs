@@ -15,7 +15,9 @@ use crate::pycompat::round_half_even;
 use crate::pyrandom::PyRandom;
 
 const REFERENCE_IDS: &[&str] = &["null", "oracle"];
-const REFERENCE_KINDS: &[&str] = &["null", "oracle", "oneshot"];
+// "incumbent" (055) is the deployed-config baseline: it runs real trials like a
+// candidate but is never recommended, mutated, or placed on the Pareto front.
+const REFERENCE_KINDS: &[&str] = &["null", "oracle", "oneshot", "incumbent"];
 const COST_SENSITIVE_MODES: &[&str] = &["threshold-then-cheap", "pareto"];
 const LATENCY_SENSITIVE_MODES: &[&str] = &["fast-enough", "pareto"];
 

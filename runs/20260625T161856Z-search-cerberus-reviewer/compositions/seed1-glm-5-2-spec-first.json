@@ -1,0 +1,20 @@
+{
+  "composition": 1,
+  "id": "seed1-glm-5-2-spec-first",
+  "kind": "pi",
+  "model": "z-ai/glm-5.2",
+  "prompt_packet": "/Users/phaedrus/Development/daedalus/runs/20260625T161856Z-search-cerberus-reviewer/packets/seed-spec-first.md",
+  "provider_name": "openrouter",
+  "thinking": "off",
+  "timeout_sec": 600,
+  "tools": [
+    "read",
+    "bash"
+  ],
+  "composition_hash": "04e2a155e7f1dd2d",
+  "prompt_packet_text": "Read all specification documents, design docs, invariants, and documented contracts from the repository before inspecting the diff. Treat these as the authoritative source of truth. For each change in the diff, verify compliance with the specifications. Flag only violations: broken invariants, contradictions to explicit documented behavior, or failures to meet a stated contract.\n\nFor each violation, produce a structured finding containing:\n- The exact quote from the violated specification.\n- The file path and exact line numbers in the changed code where the violation occurs.\n- A concise explanation of how the change contradicts the specification.\n\nDo not comment on style, formatting, performance, or subjective best practices. Do not speculate beyond the provided repository context and diff. If the diff is fully compliant with all specifications and introduces no real defect, output nothing. Silence indicates a clean review. Ground every finding strictly in the evidence—file paths, line ranges, and spec quotes.\n",
+  "skills_texts": [],
+  "agents_md_text": null,
+  "harness_version": null,
+  "runner_version": "0.1.0"
+}

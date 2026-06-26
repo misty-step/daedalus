@@ -15,7 +15,9 @@ use serde_json::{Map, Value};
 
 use crate::pycompat::round_half_even;
 
-const REFERENCE_KINDS: &[&str] = &["null", "oracle", "oneshot"];
+// "incumbent" (055): a real-trial reference (the deployed config), excluded
+// from the Pareto front and recommendation like the other references.
+const REFERENCE_KINDS: &[&str] = &["null", "oracle", "oneshot", "incumbent"];
 const COSTLESS_KINDS: &[&str] = &["null", "oracle"];
 
 pub fn is_reference_kind(kind: Option<&str>) -> bool {
@@ -554,16 +556,29 @@ to the cheapest candidate per trial.",
             ));
         }
         None => {
-            lines.push("No non-reference candidates to recommend.".to_string());
+            lines.push("No certified recommendation.".to_string());
         }
     }
     lines.push("".to_string());
-    lines.push(
-        "_References are excluded from Pareto and recommendation: oracle/null \
+    if cands
+        .values()
+        .any(|c| c.get("kind").and_then(Value::as_str) == Some("incumbent"))
+    {
+        lines.push(
+            "_References are excluded from Pareto and recommendation: oracle/null \
+bound the verifier; the one-shot probe only detects arena saturation; the \
+incumbent is the baseline-to-beat. Every recommendable candidate is an agent \
+composition._"
+                .to_string(),
+        );
+    } else {
+        lines.push(
+            "_References are excluded from Pareto and recommendation: oracle/null \
 bound the verifier; the one-shot probe only detects arena saturation. \
 Every recommendable candidate is an agent composition._"
-            .to_string(),
-    );
+                .to_string(),
+        );
+    }
 
     lines.join("\n") + "\n"
 }

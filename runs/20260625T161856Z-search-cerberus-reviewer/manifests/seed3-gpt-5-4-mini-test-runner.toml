@@ -1,0 +1,9 @@
+composition = 1
+id = "seed3-gpt-5-4-mini-test-runner"
+kind = "pi"
+provider_name = "openrouter"
+model = "openai/gpt-5.4-mini"
+prompt_packet = "/Users/phaedrus/Development/daedalus/runs/20260625T161856Z-search-cerberus-reviewer/packets/seed-test-runner.md"
+thinking = "low"
+tools = ["read", "edit", "write"]
+timeout_sec = 600

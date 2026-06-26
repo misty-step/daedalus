@@ -36,6 +36,15 @@ pub(super) fn header_section(
         .and_then(Value::as_str)
         .unwrap_or("—");
     let mode = loop_json.get("mode").and_then(Value::as_str).unwrap_or("—");
+    let baseline = loop_json
+        .get("reward_delta_baseline")
+        .and_then(Value::as_str)
+        .unwrap_or("null");
+    let baseline_label = if baseline == "null" {
+        "the null floor".to_string()
+    } else {
+        format!("the {baseline}")
+    };
 
     let (hero_num, hero_unit, hero_note) = match recommended.and_then(|r| cands.get(r)) {
         Some(c) => {
@@ -49,7 +58,7 @@ pub(super) fn header_section(
         None => (
             "—".to_string(),
             "no certified pick".to_string(),
-            "no candidate is provably better than the floor".to_string(),
+            format!("no candidate is provably better than {baseline_label}"),
         ),
     };
 
@@ -401,7 +410,7 @@ fn forest_block(baseline_id: &str, ci_rows: &[(String, Ci)]) -> String {
     let mut s = String::new();
     let _ = write!(
         s,
-        "  <p class=\"ae-chrome\" style=\"margin-bottom:0.6em\">Δ reward vs <span class=\"ae-num\">{}</span> · cluster-robust 95% CI from the run's record · the zero line is the floor</p>\n  <div class=\"rep-forest\">\n",
+        "  <p class=\"ae-chrome\" style=\"margin-bottom:0.6em\">Δ reward vs <span class=\"ae-num\">{}</span> · cluster-robust 95% CI from the run's record · the zero line is the baseline</p>\n  <div class=\"rep-forest\">\n",
         esc(baseline_id),
     );
     for (cid, ci) in ci_rows {
@@ -597,6 +606,12 @@ pub(super) fn heatmap_section(
     }
     foot.push_str("        <td></td>\n");
 
+    let recommended_legend = if recommended.is_some() {
+        "    <span class=\"lg\" style=\"color:var(--ae-accent)\">recommended column accented</span>\n"
+    } else {
+        ""
+    };
+
     format!(
         r#"<section style="margin-bottom:1.8em">
   <p class="ae-plate-cap">COVERAGE · task × candidate · reward 0–100 · click a cell for its transcript</p>
@@ -614,7 +629,7 @@ pub(super) fn heatmap_section(
     <span class="lg">{ok} pass</span>
     <span class="lg">{warn} partial</span>
     <span class="lg">{err} miss</span>
-    <span class="lg" style="color:var(--ae-accent)">recommended column accented</span>
+{recommended_legend}
     <span class="lg"><span style="color:var(--ae-warn)">!</span> n &lt; 5 · thin</span>
   </div>
 </section>
@@ -622,6 +637,7 @@ pub(super) fn heatmap_section(
         ok = icon("i-check", "ae-ok"),
         warn = icon("i-minus", "ae-warn"),
         err = icon("i-x", "ae-err"),
+        recommended_legend = recommended_legend,
     )
 }
 
@@ -768,7 +784,7 @@ pub(super) fn footer_section(loop_json: &Value) -> String {
         .unwrap_or("null");
     format!(
         r#"<footer style="margin-top:2em;border-top:1px solid var(--ae-line);padding-top:1.2em">
-  <p class="ae-plate-note" style="border:0;padding:0">References (oracle / null / one-shot probe) bound the verifier and are excluded from the leaderboard ranking, Pareto set, and recommendation: oracle and null fix the ceiling and floor; the one-shot probe only detects arena saturation. Every recommendable candidate is an agent composition, certified only when its reward-delta 95% CI clears the floor (<span class="ae-num">{baseline}</span>). Generated from <span class="ae-num">trials.jsonl</span> + <span class="ae-num">loop.json</span> — a derived view, never the source of truth.</p>
+  <p class="ae-plate-note" style="border:0;padding:0">References (oracle / null / one-shot probe / incumbent when declared) bound the verifier and are excluded from the leaderboard ranking, Pareto set, and recommendation: oracle and null fix the ceiling and floor; the one-shot probe only detects arena saturation; the incumbent is the baseline-to-beat. Every recommendable candidate is an agent composition, certified only when its reward-delta 95% CI clears the selected baseline (<span class="ae-num">{baseline}</span>). Generated from <span class="ae-num">trials.jsonl</span> + <span class="ae-num">loop.json</span> — a derived view, never the source of truth.</p>
 </footer>
 "#,
         baseline = esc(baseline),

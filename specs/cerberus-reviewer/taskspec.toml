@@ -30,6 +30,19 @@ contract = "findings.json: {findings: [{file, line, category, description}]} wit
 type = "deterministic"
 description = "Seeded-defect answer keys; reward = max(0, recall - 0.2 * false_positives) per the Rust scorer (crates/daedalus-core/src/score.rs). The grader is gospel."
 
+# The incumbent: the config we would otherwise ship, so certification means
+# "beats what we deploy today," not "beats silence" (055). Bitterblossom's
+# storm-correctness reviewer ships deepseek-v4-pro on the default reviewer
+# harness; that is the baseline a candidate must provably clear to certify.
+# Run as a kind="incumbent" reference (never recommended, never mutated). When
+# present it replaces the null floor as the reward-delta baseline. Whether
+# *outfitting* this raw model with skills/MCPs beats it is 052's question.
+[incumbent]
+model = "deepseek/deepseek-v4-pro"
+thinking = "medium"
+tools = ["read", "bash", "edit", "write"]
+prompt_packet = "packets/reviewer-v1.md"
+
 [risk]
 class = "low"
 notes = "Offline synthetic fixtures only; no live repos, secrets, or write actions. Candidates never read tests/ or solution/."

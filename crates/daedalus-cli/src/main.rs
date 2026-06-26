@@ -231,8 +231,8 @@ enum Cmd {
         #[arg(long, default_value_t = 5)]
         certify_trials: u32,
         /// Minimum detectable effect for certification: a candidate certifies
-        /// only when its (candidate − null) reward-delta 95% CI lower bound
-        /// exceeds this. 0.0 = "provably better than the floor."
+        /// only when its reward-delta 95% CI lower bound against the selected
+        /// baseline exceeds this. 0.0 = "provably better than baseline."
         #[arg(long, default_value_t = 0.0)]
         min_effect: f64,
         /// Reward a trial must reach to count as a "pass" for the reliability
@@ -1578,6 +1578,88 @@ fn cmd_port_harbor(
 // run (the search)
 // ---------------------------------------------------------------------------
 
+/// Materialize the incumbent reference manifest (055) from the taskspec
+/// `[incumbent]` table. The incumbent is the config we would otherwise deploy;
+/// it executes as a `pi` agent but is tagged `kind = "incumbent"` so it is
+/// excluded from the Pareto front, recommendation, and mutation, and becomes the
+/// certification baseline in place of the null floor. `prompt_packet` resolves to
+/// an absolute path under `repo` (falling back to the taskspec `base_packet`).
+fn write_incumbent_manifest(
+    inc: &Map<String, Value>,
+    base_packet: Option<&str>,
+    timeout_sec: i64,
+    repo: &std::path::Path,
+    out_dir: &std::path::Path,
+) -> Result<PathBuf, String> {
+    let model = inc
+        .get("model")
+        .and_then(Value::as_str)
+        .ok_or("[incumbent] requires a `model`")?;
+    let packet_rel = inc
+        .get("prompt_packet")
+        .and_then(Value::as_str)
+        .or(base_packet)
+        .ok_or("[incumbent] needs a `prompt_packet` (or the taskspec a `search.base_packet`)")?;
+    let packet_abs = repo.join(packet_rel);
+    if !packet_abs.exists() {
+        return Err(format!(
+            "[incumbent] prompt_packet not found: {}",
+            packet_abs.display()
+        ));
+    }
+
+    let mut m: Map<String, Value> = Map::new();
+    m.insert("composition".into(), Value::Number(1.into()));
+    m.insert("id".into(), Value::String("incumbent".into()));
+    m.insert("kind".into(), Value::String("incumbent".into()));
+    m.insert("provider_name".into(), Value::String("openrouter".into()));
+    m.insert("model".into(), Value::String(model.to_string()));
+    m.insert(
+        "prompt_packet".into(),
+        Value::String(packet_abs.to_string_lossy().into_owned()),
+    );
+    m.insert(
+        "thinking".into(),
+        Value::String(
+            inc.get("thinking")
+                .and_then(Value::as_str)
+                .unwrap_or("medium")
+                .to_string(),
+        ),
+    );
+    let tools: Vec<Value> = inc
+        .get("tools")
+        .and_then(Value::as_array)
+        .map(|a| {
+            a.iter()
+                .filter_map(|t| t.as_str().map(|s| Value::String(s.to_string())))
+                .collect()
+        })
+        .unwrap_or_else(|| {
+            ["read", "bash", "edit", "write"]
+                .iter()
+                .map(|s| Value::String(s.to_string()))
+                .collect()
+        });
+    m.insert("tools".into(), Value::Array(tools));
+    m.insert("timeout_sec".into(), Value::Number(timeout_sec.into()));
+    // Optional passthroughs, matching the seed manifest shape.
+    if let Some(spm) = inc.get("system_prompt_mode").and_then(Value::as_str) {
+        if spm != "append" {
+            m.insert("system_prompt_mode".into(), Value::String(spm.to_string()));
+        }
+    }
+    if let Some(skills) = inc.get("skills").and_then(Value::as_array) {
+        m.insert("skills".into(), Value::Array(skills.clone()));
+    }
+    if let Some(a) = inc.get("agents_md").and_then(Value::as_str) {
+        m.insert("agents_md".into(), Value::String(a.to_string()));
+    }
+
+    daedalus_core::mutate::write_manifest(&m, &out_dir.join("incumbent.toml"))
+        .map_err(|e| format!("write incumbent manifest: {e}"))
+}
+
 #[allow(clippy::too_many_arguments)]
 fn cmd_run(
     taskspec_path: &std::path::Path,
@@ -1602,11 +1684,11 @@ fn cmd_run(
 
     // A minimum detectable effect is a non-negative reward delta; the is_nan
     // arm also rejects garbage. A negative MDE would certify candidates provably
-    // *worse* than the floor — the opposite of what certification means.
+    // *worse* than baseline — the opposite of what certification means.
     if min_effect < 0.0 || min_effect.is_nan() {
         eprintln!(
             "error: --min-effect must be >= 0 (got {min_effect}); it is the minimum reward \
-             delta a candidate must provably beat the null floor by to certify."
+             delta a candidate must provably beat the selected baseline by to certify."
         );
         return ExitCode::FAILURE;
     }
@@ -1723,6 +1805,7 @@ fn cmd_run(
             .get("budget")
             .and_then(|b| b.get("max_cost_per_trial_usd"))
             .and_then(Value::as_f64);
+        let has_incumbent = spec.get("incumbent").and_then(Value::as_object).is_some();
         let inputs = daedalus_core::forecast::ForecastInputs {
             max_candidates,
             reference_kinds: REFERENCE_KINDS,
@@ -1731,6 +1814,7 @@ fn cmd_run(
             certify_top,
             n_holdout: holdout_ids.len(),
             certify_trials,
+            has_incumbent,
             max_cost_per_trial_usd,
         };
         let f = daedalus_core::forecast::forecast(&inputs);
@@ -1754,6 +1838,13 @@ fn cmd_run(
              = {} trials",
             f.certify_trials_total,
         );
+        if has_incumbent {
+            println!(
+                "  incumbent:     1 × {} all tasks × {certify_trials} trials = {} trials (055 baseline)",
+                n_tasks + n_holdout,
+                f.incumbent_trials,
+            );
+        }
         // "up to" — the plateau/budget stops can end the search early, so this is
         // an upper bound, not a definite count.
         println!("  total:         up to {} trials", f.total_trials);
@@ -1980,6 +2071,32 @@ fn cmd_run(
             }
         }
         ProbeVerdict::Unsaturated => {}
+    }
+
+    // ── Stage 1c: incumbent baseline (055) ──────────────────────────────────
+    // If the taskspec declares an [incumbent], run the deployed config as a
+    // kind="incumbent" reference on every task. Certification then differences
+    // candidates against it instead of the null floor — "beats what we ship,"
+    // not "beats silence." Run after the saturation check so a dead arena never
+    // pays for it.
+    if let Some(inc) = spec.get("incumbent").and_then(Value::as_object) {
+        println!("== stage 1c: incumbent baseline (055)");
+        let base_packet = spec
+            .get("search")
+            .and_then(|s| s.get("base_packet"))
+            .and_then(Value::as_str);
+        let inc_timeout = spec
+            .get("budget")
+            .and_then(|b| b.get("max_wall_per_trial_sec"))
+            .and_then(Value::as_i64)
+            .unwrap_or(600);
+        match write_incumbent_manifest(inc, base_packet, inc_timeout, &repo, &exp_dir) {
+            Ok(path) => run_candidate_split(&path, "all", certify_trials, true, None),
+            Err(e) => {
+                eprintln!("incumbent baseline: {e}");
+                return ExitCode::FAILURE;
+            }
+        }
     }
 
     // ── Stage 2: seed population ────────────────────────────────────────────
@@ -2606,7 +2723,9 @@ fn cmd_run(
         .iter()
         .filter(|(cid, c)| {
             let kind = c.get("kind").and_then(Value::as_str).unwrap_or("");
-            !["null", "oracle", "oneshot"].contains(&kind)
+            // References (null/oracle/oneshot/incumbent) are never certified
+            // candidates; the incumbent in particular is the baseline, not a win.
+            !daedalus_core::report::is_reference_kind(Some(kind))
                 && !search_tasks.is_empty()
                 && search_tasks.iter().all(|tid| {
                     final_records
@@ -2622,11 +2741,10 @@ fn cmd_run(
         .map(|(cid, _)| cid.clone())
         .collect();
 
-    // Backlog 039 child-1 + child-2: a cluster-robust 95% CI on (candidate −
-    // null floor), and certification gated on it. A candidate certifies only if
-    // it clears the trial count AND its CI lower bound exceeds the minimum
-    // detectable effect — the foundry can *prove* it beats the floor, not merely
-    // rank it.
+    // Backlog 039 child-1 + child-2: a cluster-robust 95% CI on reward delta,
+    // and certification gated on it. A candidate certifies only if it clears the
+    // trial count AND its CI lower bound exceeds the minimum detectable effect —
+    // the foundry can *prove* it beats the selected baseline, not merely rank it.
     //
     // Backlog 040: cluster tasks by their declared `source_repo` (tasks from the
     // same upstream repo share variance, so the clustered SE must pool them);
@@ -2641,10 +2759,42 @@ fn cmd_run(
         })
         .collect();
     let cluster_of = |t: &str| repo_of.get(t).cloned().unwrap_or_else(|| t.to_string());
+    // Backlog 055: certify against the incumbent (the deployed config) when one
+    // was run, else the null floor. "Provably beats what we ship" > "beats
+    // silence." The CI table and certified note name whichever baseline is used.
+    let baseline_kind = daedalus_core::stats::certification_baseline_kind(&cands2);
+    // 055: a declared incumbent that errored every trial (provider down, all
+    // context overflow) yields no usable rewards; certification then differences
+    // against an empty baseline and bounds nothing. It fails safe — never a false
+    // certification — but the operator should know rather than read a silent
+    // "nothing certified" as a verdict about the candidates.
+    if baseline_kind == "incumbent" {
+        let incumbent_has_rewards = cands2
+            .values()
+            .find(|c| c.get("kind").and_then(Value::as_str) == Some("incumbent"))
+            .and_then(|c| c.get("tasks").and_then(Value::as_object))
+            .is_some_and(|tasks| {
+                tasks
+                    .values()
+                    .any(|v| v.as_array().is_some_and(|a| !a.is_empty()))
+            });
+        if !incumbent_has_rewards {
+            eprintln!(
+                "warning: the incumbent baseline produced no usable rewards (every trial may \
+                 have errored); certification differences against it but may bound nothing. \
+                 Inspect the incumbent's trials before trusting an empty certified set."
+            );
+        }
+    }
+    let baseline_label = if baseline_kind == "incumbent" {
+        "the incumbent"
+    } else {
+        "the null floor"
+    };
     let (certified_vec, underpowered) = daedalus_core::stats::partition_certified(
         &cands2,
         &trial_certified,
-        "null",
+        baseline_kind,
         &cluster_of,
         min_effect,
     );
@@ -2672,8 +2822,12 @@ fn cmd_run(
 
     // CI table covers every trial-complete candidate; the sig column (CI
     // excludes the MDE) is what distinguishes certified from underpowered.
-    let (baseline_id, delta_cis) =
-        daedalus_core::stats::certified_delta_cis(&cands2, &trial_certified, "null", &cluster_of);
+    let (baseline_id, delta_cis) = daedalus_core::stats::certified_delta_cis(
+        &cands2,
+        &trial_certified,
+        baseline_kind,
+        &cluster_of,
+    );
     let baseline_id_str = baseline_id.clone().unwrap_or_else(|| "null".to_string());
     let mut ci_values: Map<String, Value> = Map::new();
     for (cid, ci) in &delta_cis {
@@ -2722,6 +2876,9 @@ fn cmd_run(
         .collect();
 
     for task in &clean_tasks {
+        // Only "pi" candidates count for the FP-trap alarm — it asks whether the
+        // arena discriminates *candidate* false-positive discipline. The incumbent
+        // (kind="incumbent") and other references are deliberately excluded.
         let agent_trials: Vec<&Map<String, Value>> = final_records
             .iter()
             .filter(|r| {
@@ -2777,7 +2934,7 @@ fn cmd_run(
             " Recommendation restricted to certified candidates.".to_string()
         };
         report_text.push_str(&format!(
-            "\n_Certified (≥{certify_trials} trials per search task AND 95% CI lower bound > {min_effect:+.4} vs the null floor): {}.{gate_note}_\n",
+            "\n_Certified (≥{certify_trials} trials per search task AND 95% CI lower bound > {min_effect:+.4} vs {baseline_label}): {}.{gate_note}_\n",
             sorted_cert.join(", ")
         ));
     }
@@ -2785,7 +2942,7 @@ fn cmd_run(
         let mut demoted = demoted_unreliable.clone();
         demoted.sort();
         report_text.push_str(&format!(
-            "\n> **Demoted by the reliability gate (056):** {}. Certified — provably beats the floor — but pass^{certify_trials} < {reliability_floor:.2}, so not deployable (a high mean over a config that fails most of its runs; τ-bench). Excluded from the recommendation.\n",
+            "\n> **Demoted by the reliability gate (056):** {}. Certified — provably beats {baseline_label} — but pass^{certify_trials} < {reliability_floor:.2}, so not deployable (a high mean over a config that fails most of its runs; τ-bench). Excluded from the recommendation.\n",
             demoted.join(", ")
         ));
     }
@@ -2796,18 +2953,18 @@ fn cmd_run(
     }
     if !underpowered.is_empty() {
         report_text.push_str(&format!(
-            "\n_Trial-complete but NOT certified ({} trials, but the reward-delta CI spans the {min_effect:+.4} minimum effect — no provable win over the floor): {}. See the CI table; raise --certify-trials or task count, or widen the arena (040)._\n",
+            "\n_Trial-complete but NOT certified ({} trials, but the reward-delta CI spans the {min_effect:+.4} minimum effect — no provable win over {baseline_label}): {}. See the CI table; raise --certify-trials or task count, or widen the arena (040)._\n",
             certify_trials,
             underpowered.join(", ")
         ));
     }
     if certified.is_empty() && !trial_certified.is_empty() {
-        report_text.push_str(
-            "\n> **No candidate is provably better than the null floor.** Every trial-complete \
+        report_text.push_str(&format!(
+            "\n> **No candidate is provably better than {baseline_label}.** Every trial-complete \
              candidate's 95% reward-delta CI spans the minimum detectable effect — the tournament \
              is underpowered, not necessarily the candidates. Add trials/tasks (see the power note) \
              or accept a wider MDE before trusting a ranking.\n",
-        );
+        ));
     }
     report_text.push_str(&daedalus_core::stats::delta_ci_markdown(
         &baseline_id_str,

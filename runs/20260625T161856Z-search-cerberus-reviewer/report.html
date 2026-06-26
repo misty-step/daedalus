@@ -1,0 +1,4360 @@
+<!doctype html>
+<html lang="en" class="rep">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Daedalus — pr-review-v0 · 20260625T161856Z-search-cerberus-reviewer</title>
+<style>
+/* ═══════════════════════════════════════════════════════════════════
+   aesthetic v2.6.0
+   The Misty Step design system. https://github.com/misty-step/aesthetic
+
+   The law:
+   · One size. Exactly one font size on every surface; the headline is
+     heavier and blacker, never larger.
+   · Three inks by three weights (400 / 550 / 800): nine registers.
+   · The accent is yours. Define your scheme and use it with judgment;
+     identity comes from ink, hairlines, type, and motion — never from
+     a color-counting rule. Color earns its place; it is not ambient.
+   · Status rides the glyph: danger, success, and warning color the
+     icon (✕ ✓ !), never the sentence, never a filled pill.
+   · Every view fits the viewport. 100dvh screens, no page scrolling;
+     when content exceeds one screen, a quiet nav swaps views.
+   · Motion is feedback, never decoration: small, brief, eased, and
+     gone when the user prefers reduced motion. State resolutions are
+     gentler (--ae-gentle) and resolve once — success persists, it is
+     never rewound. Nothing changes size while it animates.
+   · Buttons are not links: contained ink shapes. Links navigate,
+     buttons act.
+   · Light and dark, defaulting to the system, with a user toggle.
+
+   Steering: every token is a CSS custom property; downstream projects
+   steer the scheme — --ae-accent / --ae-accent-dark, and the status
+   triplet when their domain needs different hues. Everything else is
+   the shared identity.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── tokens ───────────────────────────────────────────────────────── */
+
+:root {
+  --ae-surface: #fcfcfc;
+  --ae-wash: #f3f3f3;
+  --ae-ink: #151515;
+  --ae-ink-muted: #737373;
+  --ae-ink-faint: #a3a3a3;
+  --ae-line: #e9e9e9;
+  --ae-accent: #2643d0;
+
+  /* status inks: hue rides the glyph, words stay ink */
+  --ae-ok: #15714b;
+  --ae-warn: #8a5f32;
+  --ae-err: #a84138;
+
+  /* dark counterparts, resolved by the mode blocks below */
+  --ae-surface-dark: #121212;
+  --ae-wash-dark: #1b1b1b;
+  --ae-ink-dark: #ededed;
+  --ae-ink-muted-dark: #8f8f8f;
+  --ae-ink-faint-dark: #5c5c5c;
+  --ae-line-dark: #262626;
+  --ae-accent-dark: #8c9eff;
+  --ae-ok-dark: #6fd2a8;
+  --ae-warn-dark: #c49d72;
+  --ae-err-dark: #e58379;
+
+  --ae-font: 'Geist', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --ae-font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --ae-w-regular: 400;
+  --ae-w-medium: 550;
+  --ae-w-black: 800;
+
+  --ae-measure: 38rem; /* rem: bars in the 13px chrome register must not shrink the measure */
+  --ae-measure-wide: 68rem;
+  --ae-radius: 0;
+
+  /* the spacing scale: consumers use these instead of ad-hoc em values.
+     The token-guard (015) will enforce them. Off-scale internal values
+     are left as literals — the scale is the vocabulary going forward. */
+  --ae-space-0: 0.1em; /* micro — tag padding, chrome adjustments */
+  --ae-space-1: 0.25em; /* tight — icon gaps, control insets */
+  --ae-space-2: 0.5em; /* small — button padding, small gaps */
+  --ae-space-3: 0.75em; /* medium — control padding, row gaps */
+  --ae-space-4: 1em; /* base — group padding, standard gap */
+  --ae-space-5: 1.5em; /* comfortable — section internals */
+  --ae-space-6: 2em; /* spacious — section gaps, stage padding */
+  --ae-space-7: 2.5em; /* large — document section spacing */
+  --ae-space-8: 3em; /* section — top-level margins */
+
+  /* z-index scale: named layers so consumers don't guess at magic numbers */
+  --ae-z-tip: 10; /* tooltips, hover whispers */
+  --ae-z-toast: 100; /* toasts, persistent notifications */
+
+  /* motion: feedback, never decoration */
+  --ae-ease: cubic-bezier(0.23, 1, 0.32, 1);
+  --ae-quick: 160ms;
+  --ae-soft: 240ms;
+  --ae-gentle: 480ms; /* state resolutions: slower than feedback, never abrupt */
+
+  color-scheme: light dark;
+}
+
+/* auto dark: follows the OS unless the page pins a mode */
+@media (prefers-color-scheme: dark) {
+  :root:not(.light):not([data-ae-mode='light']) {
+    --ae-surface: var(--ae-surface-dark);
+    --ae-wash: var(--ae-wash-dark);
+    --ae-ink: var(--ae-ink-dark);
+    --ae-ink-muted: var(--ae-ink-muted-dark);
+    --ae-ink-faint: var(--ae-ink-faint-dark);
+    --ae-line: var(--ae-line-dark);
+    --ae-accent: var(--ae-accent-dark);
+    --ae-ok: var(--ae-ok-dark);
+    --ae-warn: var(--ae-warn-dark);
+    --ae-err: var(--ae-err-dark);
+  }
+}
+
+/* pinned modes narrow color-scheme so UA widgets (scrollbars, form
+   controls) match the pinned mode instead of following the OS */
+.light,
+[data-ae-mode='light'] {
+  color-scheme: light;
+}
+
+/* pinned dark: class or attribute set by the site's mode toggle */
+.dark,
+[data-ae-mode='dark'] {
+  color-scheme: dark;
+  --ae-surface: var(--ae-surface-dark);
+  --ae-wash: var(--ae-wash-dark);
+  --ae-ink: var(--ae-ink-dark);
+  --ae-ink-muted: var(--ae-ink-muted-dark);
+  --ae-ink-faint: var(--ae-ink-faint-dark);
+  --ae-line: var(--ae-line-dark);
+  --ae-accent: var(--ae-accent-dark);
+  --ae-ok: var(--ae-ok-dark);
+  --ae-warn: var(--ae-warn-dark);
+  --ae-err: var(--ae-err-dark);
+}
+
+/* ── base ─────────────────────────────────────────────────────────── */
+
+html {
+  scroll-behavior: auto;
+}
+
+body {
+  margin: 0;
+  background: var(--ae-surface);
+  color: var(--ae-ink);
+  font-family: var(--ae-font);
+  font-size: 16px;
+  font-weight: var(--ae-w-regular);
+  line-height: 1.8;
+  cursor: default; /* no I-beam on static text; pointer/text are earned */
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* one size: nothing earns scale, only ink and weight */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+li,
+dt,
+dd,
+blockquote,
+figcaption,
+label,
+input,
+textarea,
+button,
+table {
+  font-size: 1em;
+  font-family: inherit;
+  line-height: inherit;
+  margin: 0;
+}
+
+code,
+kbd,
+pre,
+samp {
+  font-family: var(--ae-font-mono);
+  font-size: 0.92em;
+}
+
+::selection {
+  background: var(--ae-wash);
+  color: var(--ae-ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--ae-ink);
+  outline-offset: 3px;
+}
+
+/* links: ink at rest, warm to accent on hover (the locked treatment).
+   Approved alternates, documented for easy change, live in the README:
+   marker sweep and draw-on-hover. */
+a {
+  color: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  text-decoration-color: var(--ae-ink-faint);
+  padding-block: 0.35em;
+  margin-block: -0.35em;
+  transition:
+    color var(--ae-quick) var(--ae-ease),
+    text-decoration-color var(--ae-quick) var(--ae-ease);
+}
+
+a:hover {
+  color: var(--ae-accent);
+  text-decoration-color: currentColor;
+}
+
+/* list rows: the whole row is the link, so the cursor never crosses a
+   dead band between rows */
+.ae-row-link {
+  display: block;
+  text-decoration: none;
+  padding: 0.42em 0;
+  margin-block: 0;
+  color: inherit;
+}
+
+.ae-row-link:hover {
+  color: inherit;
+}
+
+.ae-row-link .ae-item {
+  transition: color var(--ae-quick) var(--ae-ease);
+}
+
+.ae-row-link:hover .ae-item {
+  color: var(--ae-accent);
+}
+
+/* ── screens: every view fits the viewport ────────────────────────── */
+
+/* the screen: one viewport, no page scroll */
+.ae-screen {
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* a bar: quiet chrome at the top or bottom of a screen */
+.ae-bar {
+  flex: none;
+  width: min(var(--ae-measure), 100% - 5rem);
+  margin-inline: auto;
+  padding: 1.4em 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.4em 1.5em;
+}
+
+/* the stage: the screen's content, vertically centered; a view that
+   cannot fit scrolls inside the stage, never the page */
+.ae-stage {
+  flex: 1;
+  min-height: 0;
+  width: min(var(--ae-measure), 100% - 5rem);
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.ae-stage > * {
+  margin-block: auto;
+  padding-block: var(--ae-space-5);
+}
+
+/* long documents: top-aligned instead of centered */
+.ae-stage-scroll > * {
+  margin-block: 0;
+  padding-block: var(--ae-space-6);
+}
+
+/* a wide screen: catalog, specimen, and dashboard shapes that cannot
+   live in 38rem. One decision per screen — set it on .ae-screen. */
+.ae-wide .ae-bar,
+.ae-wide .ae-stage {
+  width: min(var(--ae-measure-wide), 100% - 5rem);
+}
+
+/* a view: one screenful of content; remount to replay the entrance */
+.ae-view {
+  animation: ae-enter var(--ae-soft) var(--ae-ease) both;
+}
+
+/* hash-routed views: one mounts at a time; the display toggle remounts
+   the view and replays its entrance (behavior: recipes/views.js) */
+[data-route] {
+  display: none;
+}
+
+[data-route].is-on {
+  display: block;
+}
+
+@keyframes ae-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+/* the nav: quiet words with a sliding ink underline. The site positions
+   .ae-nav-ind under the active item (left/width) on view change.
+   .ae-tabs is the same instrument pointed at panels instead of views:
+   role="tablist" buttons, aria-selected marks the open one. */
+.ae-nav,
+.ae-tabs {
+  position: relative;
+  display: flex;
+  gap: var(--ae-space-6);
+}
+
+.ae-nav a,
+.ae-nav button,
+.ae-tabs a,
+.ae-tabs button {
+  background: transparent;
+  border: 0;
+  padding: 0 0 0.6em;
+  margin-block: 0;
+  cursor: pointer;
+  color: var(--ae-ink-muted);
+  font-weight: var(--ae-w-medium);
+  text-decoration: none;
+  transition: color var(--ae-quick) var(--ae-ease);
+}
+
+.ae-nav a:hover,
+.ae-nav button:hover,
+.ae-tabs a:hover,
+.ae-tabs button:hover {
+  color: var(--ae-ink);
+}
+
+.ae-nav [aria-current],
+.ae-nav .is-active,
+.ae-tabs [aria-selected='true'],
+.ae-tabs .is-active {
+  color: var(--ae-ink);
+}
+
+.ae-nav-ind {
+  position: absolute;
+  bottom: 0;
+  height: 2px;
+  background: var(--ae-ink);
+  transition:
+    left var(--ae-soft) var(--ae-ease),
+    width var(--ae-soft) var(--ae-ease);
+}
+
+/* chrome: the one sanctioned second size. Content gets 16px; chrome
+   (footers, utility links, metadata) gets 13px and muted ink. */
+.ae-chrome {
+  font-size: 13px;
+  color: var(--ae-ink-muted);
+}
+
+.ae-chrome a {
+  color: var(--ae-ink-muted);
+  text-decoration: none;
+}
+
+.ae-chrome a:hover {
+  color: var(--ae-ink);
+}
+
+/* the footer: hairline-topped, two ends, chrome register */
+.ae-foot {
+  font-size: 13px;
+  color: var(--ae-ink-muted);
+  border-top: 1px solid var(--ae-line);
+  padding-top: var(--ae-space-4);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--ae-space-4) var(--ae-space-6);
+  flex-wrap: wrap;
+}
+
+.ae-foot a {
+  color: var(--ae-ink-muted);
+  text-decoration: none;
+}
+
+.ae-foot a:hover {
+  color: var(--ae-ink);
+}
+
+.ae-foot-links {
+  display: inline-flex;
+  gap: var(--ae-space-5);
+  align-items: center;
+}
+
+/* icons: Lucide (ISC), inlined as SVG symbols. 1.5px stroke, round
+   caps, sized to ride alongside text. */
+.ae-icon {
+  width: 1.2em;
+  height: 1.2em;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+  vertical-align: -0.2em;
+}
+
+/* the mode toggle: an icon button; sun and moon rotate-crossfade.
+   Markup: button.ae-mode > svg.ae-icon.ae-sun + svg.ae-icon.ae-moon */
+.ae-mode {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.2em;
+  height: 2.2em;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  color: var(--ae-ink-muted);
+  transition: color var(--ae-quick) var(--ae-ease);
+}
+
+/* the icons are absolutely stacked, so the button has no in-flow text;
+   this zero-width space gives it a real baseline so bars can
+   baseline-align it with neighboring links */
+.ae-mode::before {
+  content: '\200b';
+}
+
+.ae-mode:hover {
+  color: var(--ae-ink);
+}
+
+.ae-mode .ae-icon {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 1.25em;
+  height: 1.25em;
+  transition:
+    opacity var(--ae-soft) var(--ae-ease),
+    transform var(--ae-soft) var(--ae-ease);
+}
+
+.ae-mode .ae-sun {
+  opacity: 1;
+  transform: rotate(0) scale(1);
+}
+
+.ae-mode .ae-moon {
+  opacity: 0;
+  transform: rotate(-90deg) scale(0.6);
+}
+
+.dark .ae-mode .ae-sun,
+[data-ae-mode='dark'] .ae-mode .ae-sun {
+  opacity: 0;
+  transform: rotate(90deg) scale(0.6);
+}
+
+.dark .ae-mode .ae-moon,
+[data-ae-mode='dark'] .ae-mode .ae-moon {
+  opacity: 1;
+  transform: rotate(0) scale(1);
+}
+
+/* a panel: soft depth for dense content (forms). Radius stays 0. */
+.ae-panel {
+  background: var(--ae-surface);
+  padding: var(--ae-space-6);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 8px 28px rgba(0, 0, 0, 0.06);
+}
+
+.dark .ae-panel,
+[data-ae-mode='dark'] .ae-panel {
+  background: var(--ae-wash);
+  box-shadow: none;
+}
+
+/* auto dark (no pinned mode): panel and mode icon follow the OS */
+@media (prefers-color-scheme: dark) {
+  :root:not(.light):not([data-ae-mode='light']) .ae-panel {
+    background: var(--ae-wash);
+    box-shadow: none;
+  }
+
+  :root:not(.light):not([data-ae-mode='light']) .ae-mode .ae-sun {
+    opacity: 0;
+    transform: rotate(90deg) scale(0.6);
+  }
+
+  :root:not(.light):not([data-ae-mode='light']) .ae-mode .ae-moon {
+    opacity: 1;
+    transform: rotate(0) scale(1);
+  }
+
+  :root:not(.light):not([data-ae-mode='light']) dialog.ae-dialog {
+    background: var(--ae-wash);
+    box-shadow: none;
+  }
+
+  :root:not(.light):not([data-ae-mode='light']) dialog.ae-dialog::backdrop {
+    background: rgba(18, 18, 18, 0.4);
+  }
+
+  :root:not(.light):not([data-ae-mode='light']) .ae-pop,
+  :root:not(.light):not([data-ae-mode='light']) .ae-toast {
+    background: var(--ae-wash);
+    box-shadow: none;
+  }
+
+  :root:not(.light):not([data-ae-mode='light']) [data-ae-tip]::after {
+    background: var(--ae-wash);
+  }
+}
+
+/* the dialog: the panel costume in the top layer. A decision is asked
+   in a soft-depth panel over a whisper of paper dim; Escape and the
+   quiet button decline it. Pair with <dialog> + showModal(). */
+dialog.ae-dialog {
+  border: 0;
+  border-radius: var(--ae-radius);
+  background: var(--ae-surface);
+  color: var(--ae-ink);
+  width: min(26em, calc(100vw - 3em));
+  box-sizing: border-box;
+  padding: var(--ae-space-6);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.05),
+    0 12px 36px rgba(0, 0, 0, 0.09);
+}
+
+dialog.ae-dialog[open] {
+  animation: ae-enter var(--ae-soft) var(--ae-ease) both;
+}
+
+dialog.ae-dialog::backdrop {
+  background: rgba(252, 252, 252, 0.4);
+}
+
+.dark dialog.ae-dialog,
+[data-ae-mode='dark'] dialog.ae-dialog {
+  background: var(--ae-wash);
+  box-shadow: none;
+}
+
+.dark dialog.ae-dialog::backdrop,
+[data-ae-mode='dark'] dialog.ae-dialog::backdrop {
+  background: rgba(18, 18, 18, 0.4);
+}
+
+/* the dialog's title and action row */
+.ae-dialog-title {
+  font-weight: var(--ae-w-black);
+  margin-bottom: var(--ae-space-2);
+}
+
+.ae-dialog-acts {
+  display: flex;
+  gap: var(--ae-space-4);
+  justify-content: flex-end;
+  margin-top: 1.8em;
+}
+
+/* the popover: a slip of surface anchored to its invoker — hairline
+   frame, soft depth, no dim. Pair with the native popover attribute
+   (or popovertarget); the recipe places it by the anchor. */
+.ae-pop {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  border: 1px solid var(--ae-line);
+  background: var(--ae-surface);
+  color: var(--ae-ink);
+  width: max-content;
+  max-width: 22em;
+  padding: 1em 1.2em;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 8px 28px rgba(0, 0, 0, 0.06);
+}
+
+.ae-pop:popover-open {
+  animation: ae-enter var(--ae-quick) var(--ae-ease) both;
+}
+
+.ae-pop::backdrop {
+  background: transparent;
+}
+
+/* a popover holding only a menu drops the padding; the menu's own
+   inset carries it */
+.ae-pop > .ae-menu:only-child {
+  margin: -1em -1.2em;
+  border: 0;
+}
+
+.dark .ae-pop,
+[data-ae-mode='dark'] .ae-pop {
+  background: var(--ae-wash);
+  box-shadow: none;
+}
+
+/* the tip: a whisper that answers hover — chrome-register words in a
+   hairline slip. Patience built in: it waits a beat on hover, answers
+   focus at once. Set the words in data-ae-tip; keep them short. */
+[data-ae-tip] {
+  position: relative;
+}
+
+[data-ae-tip]::after {
+  content: attr(data-ae-tip);
+  position: absolute;
+  bottom: calc(100% + 0.6em);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--ae-surface);
+  color: var(--ae-ink-muted);
+  border: 1px solid var(--ae-line);
+  font-family: var(--ae-font);
+  font-size: 13px;
+  font-weight: var(--ae-w-regular);
+  letter-spacing: normal;
+  line-height: 1.5;
+  padding: 0.25em 0.7em;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  z-index: var(--ae-z-tip);
+  transition: opacity var(--ae-quick) var(--ae-ease);
+}
+[data-ae-tip]:hover::after {
+  opacity: 1;
+  transition-delay: 450ms;
+}
+
+[data-ae-tip]:focus-visible::after {
+  opacity: 1;
+}
+
+.dark [data-ae-tip]::after,
+[data-ae-mode='dark'] [data-ae-tip]::after {
+  background: var(--ae-wash);
+}
+
+/* the toast: news arrives at the edge and waits to be read. The tray
+   stacks bottom-right; each toast is a slip with the status on its
+   glyph. It persists until dismissed or replaced — never an anxious
+   timer by default. Behavior glue: recipes (aeToast). */
+.ae-toasts {
+  position: fixed;
+  right: 1.4em;
+  bottom: 1.4em;
+  z-index: var(--ae-z-toast);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.6em;
+}
+
+.ae-toast {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6em;
+  background: var(--ae-surface);
+  border: 1px solid var(--ae-line);
+  color: var(--ae-ink);
+  font-size: 13px;
+  line-height: 1.6;
+  padding: 0.7em 1.1em;
+  max-width: 26em;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 8px 28px rgba(0, 0, 0, 0.06);
+  animation: ae-enter var(--ae-soft) var(--ae-ease) both;
+}
+
+.ae-toast.is-leaving {
+  opacity: 0;
+  transition: opacity var(--ae-quick) var(--ae-ease);
+}
+
+.ae-toast-x {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  margin-left: 0.4em;
+  font-size: 13px;
+  line-height: inherit;
+  color: var(--ae-ink-faint);
+  cursor: pointer;
+  transition: color var(--ae-quick) var(--ae-ease);
+}
+
+.ae-toast-x:hover {
+  color: var(--ae-ink);
+}
+
+.dark .ae-toast,
+[data-ae-mode='dark'] .ae-toast {
+  background: var(--ae-wash);
+  box-shadow: none;
+}
+
+/* ── registers ────────────────────────────────────────────────────── */
+
+/* the name: heavy and spaced, never large */
+.ae-name {
+  font-weight: var(--ae-w-black);
+  letter-spacing: 0.38em;
+}
+
+a.ae-name {
+  text-decoration: none;
+}
+
+/* the lede: the page's whole argument, plainly */
+.ae-lede {
+  max-width: 34em;
+  text-wrap: pretty;
+}
+
+/* a group: whitespace is the only divider */
+.ae-group {
+  margin-bottom: 2.6em;
+}
+
+.ae-group:last-child {
+  margin-bottom: 0;
+}
+
+.ae-group p {
+  margin-bottom: 0.15em;
+}
+
+/* a group heading: muted, spaced, medium */
+.ae-h {
+  font-weight: var(--ae-w-medium);
+  color: var(--ae-ink-muted);
+  letter-spacing: 0.18em;
+  margin-bottom: 0.7em;
+}
+
+/* an item that matters: medium ink */
+.ae-item {
+  font-weight: var(--ae-w-medium);
+}
+
+/* supporting matter: muted ink */
+.ae-dim {
+  color: var(--ae-ink-muted);
+}
+
+/* the accent: yours to define and spend with judgment */
+.ae-accent {
+  color: var(--ae-accent);
+  font-weight: var(--ae-w-medium);
+  text-decoration: underline;
+  text-decoration-color: currentColor;
+  text-underline-offset: 0.2em;
+}
+
+/* status inks: put these on the glyph (svg.ae-icon), never the
+   sentence — the word stays ink, the icon carries the hue */
+.ae-ok {
+  color: var(--ae-ok);
+}
+
+.ae-warn {
+  color: var(--ae-warn);
+}
+
+.ae-err {
+  color: var(--ae-err);
+}
+
+/* the tag: a word in the plate-caption voice — mono, spaced, hairline
+   at most. This is the badge, refused: no fill, no pill; status comes
+   as a glyph beside the word, never as a colored box. */
+.ae-tag {
+  display: inline-block;
+  font-family: var(--ae-font-mono);
+  font-size: 11px;
+  line-height: 1.6;
+  letter-spacing: 0.14em;
+  color: var(--ae-ink-muted);
+  border: 1px solid var(--ae-line);
+  padding: 0.1em 0.6em;
+  vertical-align: 0.1em;
+}
+
+.ae-tag-bare {
+  border: 0;
+  padding: 0;
+}
+
+/* the keycap: a quiet square of wash around the key's name */
+kbd {
+  background: var(--ae-wash);
+  border: 1px solid var(--ae-line);
+  padding: 0.08em 0.5em;
+}
+
+/* ── forms: a line, not a box ─────────────────────────────────────── */
+
+.ae-label {
+  display: block;
+  font-weight: var(--ae-w-medium);
+  margin-bottom: var(--ae-space-0);
+}
+
+.ae-input {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  background: transparent;
+  color: var(--ae-ink);
+  cursor: text;
+  border: 0;
+  border-bottom: 1px solid var(--ae-line);
+  border-radius: var(--ae-radius);
+  padding: 0.4em 0;
+  transition: border-color var(--ae-quick) var(--ae-ease);
+}
+
+.ae-input::placeholder {
+  color: var(--ae-ink-faint);
+}
+
+.ae-input:focus-visible {
+  outline: none;
+  border-bottom-color: var(--ae-ink);
+}
+
+textarea.ae-input {
+  resize: none;
+  min-height: 5.5em;
+}
+
+/* field validation: the line confesses, the glyph carries the hue,
+   the sentence stays ink. Set aria-invalid on the field; put the
+   message in a field note with a status icon. */
+.ae-input[aria-invalid='true'] {
+  border-bottom-color: var(--ae-err);
+}
+
+.ae-field-note {
+  display: flex;
+  align-items: baseline;
+  gap: 0.45em;
+  font-size: 13px;
+  color: var(--ae-ink-muted);
+  margin-top: 0.4em;
+}
+
+/* buttons are not links: contained shape, ink, never resizing.
+   Primary is solid ink by default; .ae-button-quiet is the hairline
+   secondary. Spend the accent on a button when the project's scheme calls
+   for it — where the accent goes is the consumer's judgment, not a rule. */
+.ae-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ae-space-2);
+  background: var(--ae-ink);
+  border: 1px solid var(--ae-ink);
+  border-radius: var(--ae-radius);
+  color: var(--ae-surface);
+  font-weight: var(--ae-w-medium);
+  padding: 0.55em 1.5em;
+  min-height: 44px;
+  cursor: pointer;
+  transition:
+    opacity var(--ae-quick) var(--ae-ease),
+    background-color var(--ae-quick) var(--ae-ease),
+    transform var(--ae-quick) var(--ae-ease);
+}
+
+.ae-button:hover {
+  opacity: 0.9;
+}
+
+.ae-button:active {
+  transform: translateY(1px) scale(0.99);
+}
+
+.ae-button:disabled {
+  cursor: default;
+  opacity: 0.7;
+  transform: none;
+}
+
+.ae-button-quiet {
+  background: transparent;
+  color: var(--ae-ink);
+}
+
+.ae-button-quiet:hover {
+  background: var(--ae-wash);
+  opacity: 1;
+}
+
+/* the compact scale: a button living in the 13px chrome register —
+   toolbars, table rows, rails. Same shapes, smaller breath. */
+.ae-button-compact {
+  font-size: 13px;
+  padding: 0.35em 1em;
+  min-height: 32px;
+}
+
+/* the send moment: the label gives way to the resolved state, gently,
+   once. Success persists — disable the button instead of resetting it.
+   Markup: <button class="ae-button ae-send">
+             <span class="ae-send-label">Send message</span>
+             <span class="ae-send-done" aria-hidden="true">Sent
+               <svg class="ae-icon">…check…</svg></span>
+           </button>
+   Add .is-sent to resolve. The status icon sits AFTER the word.
+   The button never changes size: the resting label defines the box and
+   the resolved layer is absolutely stacked over it. */
+.ae-send {
+  position: relative;
+  overflow: hidden;
+}
+
+.ae-send .ae-send-label,
+.ae-send .ae-send-done {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ae-space-2);
+  transition:
+    opacity var(--ae-gentle) var(--ae-ease),
+    transform var(--ae-gentle) var(--ae-ease);
+}
+
+.ae-send .ae-send-done {
+  position: absolute;
+  inset: 0;
+  justify-content: center;
+  opacity: 0;
+  transform: translateY(45%);
+}
+
+.ae-send.is-sent .ae-send-label {
+  opacity: 0;
+  transform: translateY(-55%);
+}
+
+.ae-send.is-sent .ae-send-done {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.ae-send.is-sent,
+.ae-send.is-sent:disabled {
+  opacity: 1;
+}
+
+/* ── choice marks: squares, since radius is 0 everywhere ──────────── */
+
+/* a choice row: the mark and its words share a line and one cursor */
+.ae-choice {
+  display: flex;
+  align-items: center;
+  gap: 0.65em;
+  cursor: pointer;
+}
+
+.ae-choice + .ae-choice {
+  margin-top: 0.3em;
+}
+
+/* the checkbox: a pen-stroke square that fills with ink; the check is
+   drawn in surface. The radio is the same square holding an ink core —
+   a circle would be the only curve in the system, so there isn't one. */
+input.ae-check,
+input.ae-radio {
+  appearance: none;
+  width: 1em;
+  height: 1em;
+  flex: none;
+  margin: 0;
+  display: inline-grid;
+  place-content: center;
+  background: transparent;
+  border: 1px solid var(--ae-ink-muted);
+  border-radius: var(--ae-radius);
+  cursor: pointer;
+  vertical-align: -0.12em;
+  transition:
+    border-color var(--ae-quick) var(--ae-ease),
+    background-color var(--ae-quick) var(--ae-ease);
+}
+
+input.ae-check:hover,
+input.ae-radio:hover,
+.ae-choice:hover input.ae-check,
+.ae-choice:hover input.ae-radio {
+  border-color: var(--ae-ink);
+}
+
+input.ae-check::before {
+  content: '';
+  width: 0.55em;
+  height: 0.3em;
+  margin-top: -0.12em;
+  border-left: 2px solid var(--ae-surface);
+  border-bottom: 2px solid var(--ae-surface);
+  transform: rotate(-45deg);
+  opacity: 0;
+  transition: opacity var(--ae-quick) var(--ae-ease);
+}
+
+input.ae-check:checked {
+  background: var(--ae-ink);
+  border-color: var(--ae-ink);
+}
+
+input.ae-check:checked::before {
+  opacity: 1;
+}
+
+input.ae-radio::before {
+  content: '';
+  width: 0.42em;
+  height: 0.42em;
+  background: var(--ae-ink);
+  opacity: 0;
+  transition: opacity var(--ae-quick) var(--ae-ease);
+}
+
+input.ae-radio:checked {
+  border-color: var(--ae-ink);
+}
+
+input.ae-radio:checked::before {
+  opacity: 1;
+}
+
+input.ae-check:disabled,
+input.ae-radio:disabled,
+input.ae-switch:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* the switch: a hairline channel and an ink slide — state reads from
+   position and fill, never from a green pill. The slide is the
+   feedback; it resolves once per flip. */
+input.ae-switch {
+  appearance: none;
+  position: relative;
+  width: 2.1em;
+  height: 1.15em;
+  flex: none;
+  margin: 0;
+  background: transparent;
+  border: 1px solid var(--ae-ink-muted);
+  border-radius: var(--ae-radius);
+  cursor: pointer;
+  vertical-align: -0.18em;
+  transition: border-color var(--ae-quick) var(--ae-ease);
+}
+
+input.ae-switch::before {
+  content: '';
+  position: absolute;
+  top: 0.14em;
+  bottom: 0.14em;
+  left: 0.14em;
+  width: 0.68em;
+  background: var(--ae-ink-muted);
+  transition:
+    left var(--ae-quick) var(--ae-ease),
+    background-color var(--ae-quick) var(--ae-ease);
+}
+
+input.ae-switch:hover {
+  border-color: var(--ae-ink);
+}
+
+input.ae-switch:checked {
+  border-color: var(--ae-ink);
+}
+
+input.ae-switch:checked::before {
+  left: calc(100% - 0.82em);
+  background: var(--ae-ink);
+}
+
+/* ── data: the table is an instrument, framed as a plate ──────────── */
+
+/* the table: terminal density — 13px mono, lowercase headers on a
+   wash band, hairline row rules. A column header shares its column's
+   alignment: put .num on the th AND its tds. */
+.ae-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--ae-font-mono);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.ae-table th {
+  text-align: left;
+  font-weight: var(--ae-w-regular);
+  letter-spacing: 0.08em;
+  color: var(--ae-ink-muted);
+  background: var(--ae-wash);
+  padding: 0.45em 1.4em 0.45em 0.7em;
+}
+
+.ae-table td {
+  border-top: 1px solid var(--ae-line);
+  padding: 0.42em 1.4em 0.42em 0.7em;
+}
+
+.ae-table tbody tr:first-child td {
+  border-top: 0;
+}
+
+.ae-table .num {
+  text-align: right;
+}
+
+.ae-table .ae-item {
+  font-weight: var(--ae-w-medium);
+}
+
+/* the plate: a numbered figure frame around a table or specimen —
+   mono caption above, hairline frame, footnote rule below */
+.ae-plate {
+  border: 1px solid var(--ae-line);
+  padding: 1.4em 1.6em 1.2em;
+}
+
+.ae-plate-cap {
+  font-family: var(--ae-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--ae-ink-muted);
+  margin-bottom: var(--ae-space-4);
+}
+
+.ae-plate-note {
+  font-size: 13px;
+  color: var(--ae-ink-faint);
+  border-top: 1px solid var(--ae-line);
+  padding-top: 0.8em;
+  margin-top: 1.1em;
+}
+
+/* ── instruments: ink on a ruled line ─────────────────────────────── */
+
+/* the meter: a wash channel and an ink fill — a ruled line, never a
+   glowing pill. The fill takes a status ink only when the level IS
+   the signal (thresholds); ticks are hairline marks. Width changes
+   are state resolutions: gentle, once. */
+.ae-meter {
+  position: relative;
+  height: 4px;
+  background: var(--ae-wash);
+  border: 1px solid var(--ae-line);
+}
+
+.ae-meter-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--ae-ink);
+  transition: width var(--ae-gentle) var(--ae-ease);
+}
+
+.ae-meter-fill.ae-ok {
+  background: var(--ae-ok);
+}
+
+.ae-meter-fill.ae-warn {
+  background: var(--ae-warn);
+}
+
+.ae-meter-fill.ae-err {
+  background: var(--ae-err);
+}
+
+.ae-meter-mark {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 1px;
+  background: var(--ae-ink-muted);
+}
+
+/* figures: tabular numerals that tick without jitter. Compose with the
+   weights — a hero figure is 800 and isolated, never larger. */
+.ae-num {
+  font-family: var(--ae-font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* the strong register: the one loud thing, by weight alone */
+.ae-strong {
+  font-weight: var(--ae-w-black);
+}
+
+/* a delta: the arrow carries the hue, the figure stays ink */
+.ae-delta {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35em;
+}
+
+/* the spark: a pen-stroke trend — no axes, no area fill. Inline SVG:
+   <svg class="ae-spark" viewBox="0 0 100 24" preserveAspectRatio="none">
+     <polyline points="0,18 20,14 40,16 60,9 80,11 100,4" /></svg> */
+.ae-spark {
+  width: 7em;
+  height: 1.1em;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+  vertical-align: -0.15em;
+}
+
+/* the interval: the meter with a spread. A ruled track carrying a
+   [lo,hi] range band and a mean tick, so a score reads as a level AND
+   its confidence — and where two bands share a column, the lead is
+   inside the spread (the certification read). Marks are positioned by
+   inline left/width %, exactly like the meter. Every mark is a
+   rectangle, so radius 0 holds (round marks are the scatter's pen). */
+.ae-ci {
+  position: relative;
+  height: 1.6em;
+}
+
+.ae-ci::before {
+  /* the shared baseline rule the interval sits on */
+  content: '';
+  position: absolute;
+  inset: 50% 0 auto;
+  height: 1px;
+  background: var(--ae-line);
+}
+
+/* the [lo,hi] range band: a bounded mass with a hairline edge — never a
+   filled status pill. It draws in once from the mean (the meter's
+   width-as-resolution), gentle and only on first render. */
+.ae-ci-band {
+  position: absolute;
+  top: 50%;
+  height: 10px;
+  transform: translateY(-50%);
+  transform-origin: center;
+  background: color-mix(in oklab, var(--ae-ink) 9%, var(--ae-surface));
+  border: 1px solid var(--ae-ink-faint);
+  animation: ae-ci-draw var(--ae-soft) var(--ae-ease) both;
+}
+
+@keyframes ae-ci-draw {
+  from {
+    transform: translateY(-50%) scaleX(0.04);
+  }
+}
+
+/* the mean: a single ink tick, like .ae-meter-mark. is-lead spends the
+   accent on it — one accent role per view, the consumer's to assign. */
+.ae-ci-mean {
+  position: absolute;
+  top: 50%;
+  width: 2px;
+  height: 1.15em;
+  transform: translate(-50%, -50%);
+  background: var(--ae-ink);
+}
+
+.ae-ci.is-lead .ae-ci-mean {
+  background: var(--ae-accent);
+}
+
+/* the no-fill variant: a thin lo→hi rule with square end caps, for a
+   field that should read as points rather than mass */
+.ae-ci-whisker {
+  position: absolute;
+  top: 50%;
+  height: 1px;
+  transform: translateY(-50%);
+  background: var(--ae-ink-muted);
+}
+
+.ae-ci-cap {
+  position: absolute;
+  top: 50%;
+  width: 1px;
+  height: 0.8em;
+  transform: translate(-50%, -50%);
+  background: var(--ae-ink-muted);
+}
+
+/* hover (or keyboard focus) reveals the exact figures at the track's
+   right edge — surface-backed so it rides over the baseline rule with
+   no layout shift. The mark carries the field; the numbers stay exact
+   on inspection. */
+.ae-ci-detail {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--ae-space-2);
+  padding: 0.1em 0.2em 0.1em 0.7em;
+  background: var(--ae-surface);
+  font-family: var(--ae-font-mono);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ae-ink);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--ae-quick) var(--ae-ease);
+}
+
+.ae-ci-detail .ae-ci-bound {
+  color: var(--ae-ink-faint);
+}
+
+.ae-ci:hover .ae-ci-detail,
+.ae-ci:focus-within .ae-ci-detail {
+  opacity: 1;
+}
+
+/* touch has no hover: show the exact figures by default there, so the
+   precise read is never pointer-only. Screen readers get them from the
+   element's aria-label (role="img"). */
+@media (hover: none) {
+  .ae-ci-detail {
+    opacity: 1;
+  }
+}
+
+/* the plane: an XY field — cost against quality — with a Pareto
+   frontier. Like .ae-spark, the kit dresses a consumer-authored <svg>
+   (the consumer owns the data and the projection); round dots are the
+   pen (SVG <circle>, never a CSS radius), the frame/axes/ticks stay
+   radius 0. Default composition = frontier: a dashed guide threads the
+   non-dominated points, the pick is the lone accent dot, the rest drop
+   to faint. */
+.ae-plot {
+  display: block;
+  width: 100%;
+  height: auto;
+  font-family: var(--ae-font-mono);
+}
+.ae-plot-axis {
+  fill: none;
+  stroke: var(--ae-line);
+  stroke-width: 1;
+}
+.ae-plot-tick {
+  stroke: var(--ae-line);
+  stroke-width: 1;
+}
+.ae-plot-ticklabel {
+  fill: var(--ae-ink-faint);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+.ae-plot-axislabel {
+  fill: var(--ae-ink-muted);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+}
+.ae-plot-frontier {
+  fill: none;
+  stroke: var(--ae-ink);
+  stroke-width: 1.5;
+  stroke-dasharray: 5 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.ae-plot-crosshair {
+  stroke: var(--ae-ink-faint);
+  stroke-width: 1;
+  stroke-dasharray: 2 3;
+}
+.ae-plot-dot {
+  fill: var(--ae-ink);
+  transition: fill var(--ae-soft) var(--ae-ease);
+}
+.ae-plot-dot.is-dominated {
+  fill: var(--ae-ink-faint);
+}
+.ae-plot-dot.is-chosen {
+  fill: var(--ae-accent);
+}
+.ae-plot-ring {
+  fill: none;
+  stroke: var(--ae-ink-muted);
+  stroke-width: 1.5;
+}
+.ae-plot-label {
+  fill: var(--ae-ink-muted);
+  font-size: 11px;
+  letter-spacing: 0.02em;
+}
+.ae-plot-label.is-dominated {
+  fill: var(--ae-ink-faint);
+}
+.ae-plot-label.is-chosen {
+  fill: var(--ae-accent);
+}
+
+/* a gate-failed datum is a colored mark where its dot would sit —
+   status rides the glyph; compose with .ae-ok / .ae-warn / .ae-err */
+.ae-plot-glyph {
+  fill: none;
+  stroke: var(--ae-ink);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+.ae-plot-glyph.ae-ok {
+  stroke: var(--ae-ok);
+}
+.ae-plot-glyph.ae-warn {
+  stroke: var(--ae-warn);
+}
+.ae-plot-glyph.ae-err {
+  stroke: var(--ae-err);
+}
+
+/* the flow: a pipeline as a diagram — hairline-framed nodes (hard
+   corners, radius 0) joined by orthogonal ink wires. Like the plot, the
+   kit dresses a consumer-authored <svg> so node and wire geometry share
+   one coordinate space; non-scaling strokes keep hairlines 1px at any
+   fit. State rides the frame and a glyph (✓ done, ✗ failed), the running
+   stage takes the accent, locked stages go dashed-faint. The default is
+   the spine: a row of stages, the gate/lineage backbone. */
+.ae-flow {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.ae-node {
+  fill: var(--ae-surface);
+  stroke: var(--ae-line);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.ae-node.is-done {
+  stroke: var(--ae-ink-muted);
+}
+.ae-node.is-active {
+  stroke: var(--ae-accent);
+  stroke-width: 1.5;
+}
+.ae-node.is-locked {
+  fill: var(--ae-wash);
+  stroke: var(--ae-ink-faint);
+  stroke-dasharray: 3 3;
+}
+.ae-node.is-failed {
+  stroke: var(--ae-err);
+}
+
+/* the node label — the 13px instrument register, ink. State lives in the
+   frame and the glyph; only the running stage spends the accent. */
+.ae-node-label {
+  fill: var(--ae-ink);
+  font-family: var(--ae-font);
+  font-size: 13px;
+  font-weight: var(--ae-w-medium);
+}
+.ae-node-label.is-active {
+  fill: var(--ae-accent);
+  font-weight: var(--ae-w-black);
+}
+.ae-node-label.is-locked {
+  fill: var(--ae-ink-faint);
+  font-weight: var(--ae-w-regular);
+}
+
+/* a mono ordinal above the label, and mono in/out port labels at the
+   node's edges (a node's typed interface) */
+.ae-node-kicker {
+  fill: var(--ae-ink-faint);
+  font-family: var(--ae-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+}
+.ae-node-port {
+  fill: var(--ae-ink-muted);
+  font-family: var(--ae-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+.ae-node-port.is-locked {
+  fill: var(--ae-ink-faint);
+}
+.ae-node-stub {
+  stroke: var(--ae-line);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+/* the wire: an orthogonal ink connector (H/V segments only), colored by
+   the stage it feeds. A round junction marks a split or merge — the one
+   round mark, like the spark's caps; the frames stay square. */
+.ae-wire {
+  fill: none;
+  stroke: var(--ae-line);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.ae-wire.is-reached {
+  stroke: var(--ae-ink-muted);
+}
+.ae-wire.is-active {
+  stroke: var(--ae-accent);
+}
+.ae-wire.is-locked {
+  stroke: var(--ae-ink-faint);
+  stroke-dasharray: 3 3;
+}
+.ae-wire-junction {
+  fill: var(--ae-ink-muted);
+}
+.ae-wire-junction.is-active {
+  fill: var(--ae-accent);
+}
+
+/* ── choice controls: rows that open ──────────────────────────────── */
+
+/* a setting is a quiet hairline row — label left, current value right
+   in muted ink; activating it opens a chooser beneath. Progressive
+   disclosure: the form rests as a column of lines. */
+.ae-settings {
+  border-bottom: 1px solid var(--ae-line);
+}
+
+.ae-setting {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--ae-space-5);
+  background: transparent;
+  border: 0;
+  border-top: 1px solid var(--ae-line);
+  border-radius: var(--ae-radius);
+  padding: 0.8em 0;
+  margin: 0;
+  font: inherit;
+  line-height: inherit;
+  color: var(--ae-ink);
+  font-weight: var(--ae-w-medium);
+  text-align: left;
+  cursor: pointer;
+}
+
+.ae-setting-val {
+  color: var(--ae-ink-muted);
+  font-weight: var(--ae-w-regular);
+  transition: color var(--ae-quick) var(--ae-ease);
+}
+
+.ae-setting:hover .ae-setting-val {
+  color: var(--ae-ink);
+}
+
+/* the chooser: folds open under its row — the smooth expand is
+   feedback to the activation, once per action */
+.ae-setting-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--ae-soft) var(--ae-ease);
+}
+
+.ae-setting-panel.is-open {
+  grid-template-rows: 1fr;
+}
+
+.ae-setting-panel > * {
+  overflow: hidden;
+  min-height: 0;
+
+  /* the child's border and padding outlive a 0fr row; stop painting
+     them once the fold completes */
+  visibility: hidden;
+  transition: visibility 0s var(--ae-soft);
+}
+
+.ae-setting-panel.is-open > * {
+  visibility: visible;
+  transition: visibility 0s;
+}
+
+/* the menu: a quiet option list (also the long-select answer) */
+.ae-menu {
+  margin: 0 0 0.9em;
+  padding: 0.3em 0;
+  border: 1px solid var(--ae-line);
+  background: var(--ae-surface);
+  max-height: 14em;
+  overflow-y: auto;
+}
+
+.ae-menu button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-radius: var(--ae-radius);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--ae-ink-muted);
+  padding: 0.4em 1.1em;
+  cursor: pointer;
+  transition:
+    color var(--ae-quick) var(--ae-ease),
+    background-color var(--ae-quick) var(--ae-ease);
+}
+
+.ae-menu button:hover {
+  background: var(--ae-wash);
+  color: var(--ae-ink);
+}
+
+.ae-menu button.is-sel {
+  color: var(--ae-ink);
+  font-weight: var(--ae-w-medium);
+}
+
+/* the fold: disclosure as a hairline row — native details in the
+   settings costume. The marker is a mono plus that turns into a
+   close; the quarter-turn is the feedback, once per action. */
+details.ae-fold {
+  border-top: 1px solid var(--ae-line);
+}
+
+details.ae-fold:last-of-type {
+  border-bottom: 1px solid var(--ae-line);
+}
+
+.ae-fold summary {
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--ae-space-5);
+  padding: 0.8em 0;
+  font-weight: var(--ae-w-medium);
+  cursor: pointer;
+}
+
+.ae-fold summary::marker {
+  content: '';
+}
+
+.ae-fold summary::after {
+  content: '+';
+  font-family: var(--ae-font-mono);
+  font-weight: var(--ae-w-regular);
+  color: var(--ae-ink-muted);
+  transition: rotate var(--ae-soft) var(--ae-ease);
+}
+
+.ae-fold[open] summary::after {
+  rotate: 45deg;
+}
+
+.ae-fold > :not(summary) {
+  padding-bottom: var(--ae-space-4);
+}
+
+/* ── structure: paths, waiting, and absence ───────────────────────── */
+
+/* the breadcrumb: a chrome-register path — here is ink, the way back
+   is muted, the separators are faint */
+.ae-crumbs {
+  font-size: 13px;
+  color: var(--ae-ink-muted);
+}
+
+.ae-crumbs ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6em;
+}
+
+.ae-crumbs li {
+  display: flex;
+  gap: 0.6em;
+}
+
+.ae-crumbs li + li::before {
+  content: '/';
+  color: var(--ae-ink-faint);
+}
+
+.ae-crumbs a {
+  color: var(--ae-ink-muted);
+  text-decoration: none;
+}
+
+.ae-crumbs a:hover {
+  color: var(--ae-ink);
+}
+
+.ae-crumbs [aria-current] {
+  color: var(--ae-ink);
+  font-weight: var(--ae-w-medium);
+}
+
+/* waiting: still wash, never a shimmer. The skeleton holds the layout
+   in quiet blocks; motion is feedback and waiting is not an action —
+   the view's entrance acknowledges arrival. Give the words to a
+   chrome-register status line (role="status"), not to an animation. */
+.ae-skeleton {
+  display: block;
+  background: var(--ae-wash);
+  color: transparent;
+  pointer-events: none;
+  user-select: none;
+}
+
+.ae-skeleton * {
+  visibility: hidden;
+}
+
+/* absence: an honest sentence where the content will be — muted words,
+   one quiet action, no illustration party */
+.ae-empty {
+  padding: 2.4em 0;
+  border-block: 1px solid var(--ae-line);
+}
+
+.ae-empty > p {
+  margin-bottom: 0.15em;
+}
+
+.ae-empty .ae-button {
+  margin-top: 1.2em;
+}
+
+/* opt-in via data-ae-anticipate on the form; the recipe drives
+   --ae-intent (0–0.6) on the nearest field's label and input.
+   Color only — nothing moves; focus snaps to the committed state;
+   off for touch, keyboards, and reduced motion. */
+[data-ae-anticipate] .ae-label {
+  color: color-mix(
+    in srgb,
+    var(--ae-ink) calc(var(--ae-intent, 0) * 100%),
+    var(--ae-ink-muted)
+  );
+  transition: color 120ms ease-out;
+}
+
+[data-ae-anticipate] .ae-input {
+  border-bottom-color: color-mix(
+    in srgb,
+    var(--ae-ink) calc(var(--ae-intent, 0) * 100%),
+    var(--ae-line)
+  );
+  transition: border-color 120ms ease-out;
+}
+
+[data-ae-anticipate] .ae-label:has(+ .ae-input:focus-visible) {
+  color: var(--ae-ink);
+}
+
+[data-ae-anticipate] .ae-input:focus-visible {
+  border-bottom-color: var(--ae-ink);
+}
+
+/* ── the mode change: one soft breath ─────────────────────────────── */
+
+/* the recipe wraps the flip in document.startViewTransition and sets
+   .ae-vt-mode on the root for the duration (700ms, the house ease) */
+.ae-vt-mode::view-transition-old(root),
+.ae-vt-mode::view-transition-new(root) {
+  animation-duration: 700ms;
+  animation-timing-function: var(--ae-ease);
+}
+
+/* fallback where view transitions are unsupported: every surface
+   eases its colors together for one gentle beat */
+.ae-mode-easing,
+.ae-mode-easing *,
+.ae-mode-easing *::before,
+.ae-mode-easing *::after {
+  transition:
+    background-color var(--ae-gentle) var(--ae-ease),
+    color var(--ae-gentle) var(--ae-ease),
+    border-color var(--ae-gentle) var(--ae-ease),
+    fill var(--ae-gentle) var(--ae-ease),
+    stroke var(--ae-gentle) var(--ae-ease) !important;
+}
+
+/* ── the app shell: a chrome rail beside the working desk ─────────── */
+
+/* the second archetype. One viewport, hairline-divided: a 13px rail
+   for places, a desk for work. The screen law holds — the desk
+   scrolls inside itself, the page never moves. */
+.ae-shell {
+  height: 100dvh;
+  display: grid;
+  grid-template-columns: 14rem minmax(0, 1fr);
+  overflow: hidden;
+}
+
+.ae-rail {
+  border-right: 1px solid var(--ae-line);
+  padding: 1.6em 1.4em;
+  font-size: 13px;
+  color: var(--ae-ink-muted);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.ae-rail .ae-h {
+  margin-top: 1.8em;
+}
+
+.ae-rail .ae-h:first-child {
+  margin-top: 0;
+}
+
+.ae-rail a,
+.ae-rail button:not(.ae-mode) {
+  display: block;
+  width: 100%;
+  background: transparent;
+  border: 0;
+  font: inherit;
+  line-height: inherit;
+  text-align: left;
+  text-decoration: none;
+  color: var(--ae-ink-muted);
+  padding: 0.3em 0;
+  margin-block: 0;
+  cursor: pointer;
+  transition: color var(--ae-quick) var(--ae-ease);
+}
+
+.ae-rail a:hover,
+.ae-rail button:hover {
+  color: var(--ae-ink);
+}
+
+.ae-rail [aria-current],
+.ae-rail .is-active {
+  color: var(--ae-ink);
+  font-weight: var(--ae-w-medium);
+}
+
+/* the rail's foot pins to the bottom: version, account, the mode */
+.ae-rail-foot {
+  margin-top: auto;
+  padding-top: 1.6em;
+}
+
+.ae-desk {
+  min-width: 0;
+  overflow-y: auto;
+  padding: 2.2em 2.8em;
+}
+
+/* ── the document: long-form prose, unclassed inside ──────────────── */
+
+/* the third archetype: rendered markdown drops in bare. Headings are
+   weight, never size; rules are hairlines; quotes are inset. Put the
+   article in a scrolling stage (.ae-stage-scroll) or a desk. */
+.ae-doc h1,
+.ae-doc h2 {
+  font-weight: var(--ae-w-black);
+  margin: 2.2em 0 0.6em;
+}
+
+.ae-doc h3,
+.ae-doc h4 {
+  font-weight: var(--ae-w-medium);
+  margin: 1.8em 0 0.4em;
+}
+
+.ae-doc h5,
+.ae-doc h6 {
+  font-weight: var(--ae-w-medium);
+  color: var(--ae-ink-muted);
+  margin: 1.8em 0 0.4em;
+}
+
+.ae-doc h1:first-child,
+.ae-doc h2:first-child,
+.ae-doc h3:first-child {
+  margin-top: 0;
+}
+
+.ae-doc p,
+.ae-doc ul,
+.ae-doc ol {
+  margin-bottom: 0.9em;
+}
+
+.ae-doc ul,
+.ae-doc ol {
+  padding-left: 1.4em;
+}
+
+.ae-doc li {
+  margin-bottom: 0.2em;
+}
+
+.ae-doc hr {
+  border: 0;
+  border-top: 1px solid var(--ae-line);
+  margin: 2.4em 0;
+}
+
+.ae-doc blockquote {
+  border-left: 1px solid var(--ae-line);
+  padding-left: 1.4em;
+  color: var(--ae-ink-muted);
+  margin: 1.2em 0;
+}
+
+.ae-doc pre {
+  background: var(--ae-wash);
+  font-size: 13px;
+  line-height: 1.75;
+  padding: 1.2em 1.4em;
+  margin: 1.2em 0;
+  overflow-x: auto;
+}
+
+.ae-doc :not(pre) > code {
+  background: var(--ae-wash);
+  padding: 0.1em 0.35em;
+}
+
+.ae-doc img {
+  max-width: 100%;
+}
+
+/* ── report sub-registers: opt-in, for a generated document that is read
+   and shared. Weight + space + hairlines + the 11px mono caption
+   register only — never a new type size, never a serif. The plain
+   .ae-doc above stays the default. ──────────────────────────────────── */
+
+/* numbered figures: a <figure> in a doc auto-numbers and its <figcaption>
+   drops to the mono caption register, prefixed FIG n. Pairs with
+   .ae-plate for the figure body. */
+.ae-doc {
+  counter-reset: ae-fig;
+}
+
+.ae-doc figure {
+  counter-increment: ae-fig;
+  margin: 1.8em 0;
+}
+
+.ae-doc figcaption {
+  margin-bottom: 0.7em;
+  font-family: var(--ae-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--ae-ink-muted);
+}
+
+.ae-doc figcaption::before {
+  content: 'FIG ' counter(ae-fig) ' · ';
+  color: var(--ae-ink);
+  font-weight: var(--ae-w-medium);
+}
+
+/* the lede / standfirst: the opening paragraph lifts to medium weight
+   with a hairline rule beneath — a way in, the conclusion up front. */
+.ae-doc .ae-lede {
+  margin-bottom: 1.6em;
+  padding-bottom: 1.4em;
+  border-bottom: 1px solid var(--ae-line);
+  font-weight: var(--ae-w-medium);
+}
+
+/* the findings box: a hairline frame (never a filled card) summarizing
+   the conclusion. The called-out result is weight; the recommendation
+   takes the one accent rule the report spends. */
+.ae-findings {
+  margin: 1.8em 0;
+  padding: 1.4em 1.6em 1.3em;
+  border: 1px solid var(--ae-line);
+}
+
+.ae-findings-title {
+  margin-bottom: var(--ae-space-4);
+  font-family: var(--ae-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--ae-ink-muted);
+}
+
+.ae-rec {
+  margin-top: 1.1em;
+  padding-left: 1.1em;
+  border-left: 2px solid var(--ae-accent);
+}
+
+/* the pull-quote: a sentence lifted forward by weight + space + a
+   hairline rule. Never a larger size, never an italic serif — the
+   closest call to the one-size law, held on the right side of it. */
+.ae-pull {
+  margin: 1.8em 0;
+  padding-left: 1.4em;
+  border-left: 1px solid var(--ae-line);
+  font-weight: var(--ae-w-medium);
+  line-height: 1.7;
+}
+
+.ae-pull-by {
+  display: block;
+  margin-top: 0.6em;
+  font-family: var(--ae-font-mono);
+  font-size: 11px;
+  font-weight: var(--ae-w-regular);
+  letter-spacing: 0.14em;
+  color: var(--ae-ink-faint);
+}
+
+/* ── utilities ────────────────────────────────────────────────────── */
+
+/* present to assistive tech, invisible on paper — live regions and
+   labels the layout has no room to speak */
+.ae-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  clip-path: inset(50%);
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+/* ── small screens ────────────────────────────────────────────────── */
+
+@media (max-width: 640px) {
+  .ae-bar,
+  .ae-stage {
+    width: calc(100% - 2.4rem);
+  }
+
+  .ae-group {
+    margin-bottom: var(--ae-space-6);
+  }
+
+  /* the shell folds to one column; compose a bar for the places the
+     rail held — the rail itself steps aside */
+  .ae-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .ae-rail {
+    display: none;
+  }
+
+  .ae-desk {
+    padding: 1.6em 1.2rem;
+  }
+}
+
+/* ── reduced motion: everything is instant ────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   lab.css — Daedalus instrument extensions to misty-step / aesthetic
+
+   The base system speaks in one dimension: the spark (a trend), the
+   meter (a level), the figure (a number + its delta). A measurement
+   foundry needs two: the cost×quality plane where candidates compete,
+   and the candidate×task grid where coverage lives. This file proposes
+   that second dimension in the house idiom — ink on ruled lines, hard
+   axes, mono ticks, exactly one accent for the chosen candidate, status
+   only on the glyph. Round marks are the pen (cf. the spark's round
+   caps, the engraving's stipple); radius-0 still governs every
+   rectangular surface. Everything here is a candidate for upstream.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Daedalus spends its one accent on a deep ledger ultramarine. */
+:root {
+  --ae-accent: #2a4bd0;
+  --ae-accent-dark: #93a6ff;
+  --lab-grid: color-mix(in srgb, var(--ae-line) 60%, var(--ae-surface));
+}
+
+/* ── the desk, at instrument density ──────────────────────────────────
+   The density dial, turned up: a lab desk earns its ink, so the working
+   area runs edge-to-edge and a touch tighter than the editorial 2.8em. */
+.lab-desk {
+  padding: 1.8em 2.2em 2.6em;
+}
+
+.lab-deskhead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1em 2em;
+  flex-wrap: wrap;
+  margin-bottom: 1.6em;
+}
+
+.lab-deskhead .ae-lede {
+  max-width: 46em;
+  color: var(--ae-ink-muted);
+  margin-top: 0.2em;
+}
+
+/* the one loud thing: a hero figure stands alone, 800 by weight. Pair a
+   verdict line (item) above and the supporting figures beside it. */
+.lab-hero {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5em;
+  line-height: 1;
+}
+
+/* the law holds: the hero figure is loud by WEIGHT (800) and ISOLATION,
+   never by scale. One size per surface — the figure reads as the focal
+   point because it is black, alone on its line, and ringed by muted
+   context, exactly as the gauntlet's figures do. */
+.lab-hero .lab-hero-num {
+  font-family: var(--ae-font-mono);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--ae-w-black);
+  letter-spacing: 0.01em;
+}
+
+.lab-hero .lab-hero-unit {
+  color: var(--ae-ink-muted);
+}
+
+/* a rule of figures: KPIs on a single ruled shelf, divided by hairlines,
+   never by boxes */
+.lab-figrow {
+  display: flex;
+  flex-wrap: wrap;
+  border-top: 1px solid var(--ae-line);
+  border-bottom: 1px solid var(--ae-line);
+}
+
+.lab-fig {
+  flex: 1 1 0;
+  min-width: 9em;
+  padding: 1em 1.4em 1.1em;
+  border-left: 1px solid var(--ae-line);
+}
+
+.lab-fig:first-child {
+  border-left: 0;
+  padding-left: 0;
+}
+
+.lab-fig-k {
+  font-size: 13px;
+  color: var(--ae-ink-muted);
+  margin-bottom: 0.3em;
+}
+
+.lab-fig-v {
+  font-family: var(--ae-font-mono);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--ae-w-medium);
+}
+
+.lab-fig-v.is-loud {
+  font-weight: var(--ae-w-black);
+}
+
+/* ── the scatter: the cost×quality plane, with the frontier ──────────
+   Candidates are stipple. The efficient frontier is a hairline stair.
+   The chosen candidate is the accent; the incumbent is an open ring;
+   the dominated recede to faint. Axes are two hairlines, ticks are
+   mono. No gridlines unless asked (.is-ruled). */
+.ae-scatter {
+  position: relative;
+  font-size: 13px;
+  color: var(--ae-ink-muted);
+}
+
+.ae-scatter-plot {
+  position: relative;
+  height: clamp(15em, 38vh, 22em);
+  margin: 0.4em 0 2.4em 3.2em;
+  border-left: 1px solid var(--ae-line);
+  border-bottom: 1px solid var(--ae-line);
+}
+
+/* opt-in faint gridlines for reading exact positions */
+.ae-scatter-plot.is-ruled {
+  background-image:
+    repeating-linear-gradient(to right, transparent 0 calc(25% - 1px), var(--lab-grid) calc(25% - 1px) 25%),
+    repeating-linear-gradient(to top, transparent 0 calc(25% - 1px), var(--lab-grid) calc(25% - 1px) 25%);
+}
+
+/* the frontier: a hairline guide laid over the plane */
+.ae-scatter-line {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.ae-scatter-line polyline {
+  fill: none;
+  stroke: var(--ae-ink-muted);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+  vector-effect: non-scaling-stroke;
+}
+
+/* a plotted candidate: pen stipple. Positioned by left/bottom %. */
+.ae-dot {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--ae-ink);
+  transform: translate(-50%, 50%);
+  cursor: pointer;
+  transition:
+    transform var(--ae-quick) var(--ae-ease),
+    background-color var(--ae-quick) var(--ae-ease);
+}
+
+.ae-dot::after {
+  /* the label rides above-right, mono, revealed on hover/selection */
+  content: attr(data-label);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 4px);
+  transform: translateX(-50%);
+  font-family: var(--ae-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  color: var(--ae-ink-muted);
+  opacity: 0;
+  transition: opacity var(--ae-quick) var(--ae-ease);
+  pointer-events: none;
+}
+
+.ae-dot:hover::after,
+.ae-dot.is-named::after,
+.ae-dot.is-chosen::after {
+  opacity: 1;
+}
+
+.ae-dot:hover {
+  transform: translate(-50%, 50%) scale(1.25);
+}
+
+/* dominated: present but receding */
+.ae-dot.is-dominated {
+  width: 7px;
+  height: 7px;
+  background: var(--ae-ink-faint);
+}
+
+/* incumbent: a reference, not a candidate — an open ink ring */
+.ae-dot.is-incumbent {
+  background: var(--ae-surface);
+  border: 1.5px solid var(--ae-ink); /* a crisp open ring, not a shadow */
+  box-sizing: border-box;
+}
+
+/* the chosen candidate: the one accent, ringed so it reads as selected.
+   The ring is a hard outline (no blur, no shadow) offset from the mark. */
+.ae-dot.is-chosen {
+  background: var(--ae-accent);
+  outline: 1.5px solid var(--ae-accent);
+  outline-offset: 2px;
+}
+
+.ae-dot.is-chosen::after {
+  color: var(--ae-accent);
+  font-weight: var(--ae-w-medium);
+}
+
+/* axis furniture: titles and ticks in the chrome register */
+.ae-scatter-yt,
+.ae-scatter-xt {
+  font-family: var(--ae-font-mono);
+  font-size: 11px;
+  color: var(--ae-ink-faint);
+  position: absolute;
+}
+
+.ae-axis-title {
+  font-size: 13px;
+  color: var(--ae-ink-muted);
+}
+
+.ae-axis-title.is-y {
+  position: absolute;
+  left: -3.2em;
+  top: 45%;
+  transform: rotate(-90deg);
+  transform-origin: left center;
+  white-space: nowrap;
+}
+
+.ae-axis-title.is-x {
+  display: block;
+  text-align: center;
+  margin-top: -1.4em;
+}
+
+/* ── the legend: ink marks beside mono words, never a key of pills ──── */
+.ae-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4em 1.6em;
+  font-size: 13px;
+  color: var(--ae-ink-muted);
+}
+
+.ae-legend > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+}
+
+.ae-legend i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--ae-ink);
+  flex: none;
+}
+
+.ae-legend i.is-chosen {
+  background: var(--ae-accent);
+}
+.ae-legend i.is-incumbent {
+  background: var(--ae-surface);
+  border: 1.5px solid var(--ae-ink);
+  box-sizing: border-box;
+}
+.ae-legend i.is-dominated {
+  background: var(--ae-ink-faint);
+  width: 7px;
+  height: 7px;
+}
+
+/* ── the matrix: candidate × task, the lawful eval grid ───────────────
+   Adopted from the design system's own exploration, state A
+   (aesthetic/prototypes/flex-3-instrument-matrix.html). A coverage grid
+   needs two facts per cell — an outcome and a magnitude. A colored tile
+   makes color BE the data and stops being misty-step; this is the lawful
+   answer instead: a status GLYPH carries the hue (and only it), a
+   tabular FIGURE carries the score in ink, and a ruled INTENSITY bar
+   (.ibar, the meter idiom) carries the magnitude as a length of ink. The
+   "heatmap" is the field of bar lengths. These should graduate upstream
+   into aesthetic.css as .ae-matrix / .ae-ibar. */
+.mx-scroll {
+  overflow: auto;
+  border: 1px solid var(--ae-line);
+  max-height: min(58vh, 32em);
+  scrollbar-width: thin;
+}
+
+.matrix {
+  border-collapse: separate;
+  border-spacing: 0;
+  font-family: var(--ae-font-mono);
+  font-size: 13px;
+  line-height: 1.55;
+  width: max-content;
+  min-width: 100%;
+}
+
+.matrix th,
+.matrix td {
+  padding: 0.5em 0.8em;
+  border-bottom: 1px solid var(--ae-line);
+  border-right: 1px solid var(--ae-line);
+  background: var(--ae-surface);
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.matrix thead th:not(.mx-corner),
+.matrix tbody td {
+  min-width: 5.4rem;
+  text-align: right; /* numerals form a clean column; headers match (flex-3b) */
+}
+
+.matrix tr td:last-child,
+.matrix tr th:last-child {
+  border-right: 0;
+}
+
+.matrix tfoot td,
+.matrix tfoot th {
+  border-bottom: 0;
+}
+
+/* candidate column headers: lowercase mono on a wash band, sticky top */
+.matrix thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--ae-wash);
+  color: var(--ae-ink-muted);
+  font-weight: var(--ae-w-regular);
+  letter-spacing: 0.08em;
+  text-align: right;
+}
+
+.matrix thead th .cand-meta {
+  display: block;
+  color: var(--ae-ink-faint);
+  letter-spacing: 0.04em;
+}
+
+/* the task column: frozen to the left so a row never loses its name */
+.mx-task {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  width: 13rem;
+  min-width: 13rem;
+  max-width: 13rem;
+  text-align: left;
+  white-space: normal;
+  box-shadow: 1px 0 0 0 var(--ae-line);
+}
+
+.matrix tbody th.mx-task {
+  font-weight: var(--ae-w-medium);
+  color: var(--ae-ink);
+}
+
+.mx-task .mx-task-id {
+  display: block;
+  font-weight: var(--ae-w-regular);
+  color: var(--ae-ink-faint);
+  letter-spacing: 0.06em;
+}
+
+.mx-corner {
+  position: sticky;
+  left: 0;
+  top: 0;
+  z-index: 3;
+  background: var(--ae-wash);
+  text-align: left;
+  color: var(--ae-ink-faint);
+  letter-spacing: 0.08em;
+  box-shadow: 1px 0 0 0 var(--ae-line);
+}
+
+/* the cell · flex-3b NUMERALS + WINNER (the locked encoding, 013):
+   a leading status glyph carries the hue, an exact mono figure carries the
+   score, the per-task winner is heavy (800) by weight alone, low scores
+   lighten to faint. No databar — rejected as too noisy. The figures
+   right-align into a clean numeric column. */
+.cell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.4em;
+  min-width: 3em;
+}
+
+.cell-head {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  line-height: 1;
+}
+
+.cell .ae-icon {
+  width: 0.92em;
+  height: 0.92em;
+  vertical-align: 0;
+  flex: none;
+}
+
+.cell-fig {
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--ae-w-regular);
+  color: var(--ae-ink);
+  letter-spacing: 0.02em;
+}
+
+/* the winner: best candidate on this task, loud by weight alone.
+   .is-mark exposes the optional accent-marks-the-winner treatment. */
+.cell.is-best .cell-fig {
+  font-weight: var(--ae-w-black);
+}
+
+.cell.is-best.is-mark .cell-fig {
+  color: var(--ae-accent);
+}
+
+/* a missed trial: the figure recedes to faint — the ✗ carries the verdict */
+.cell.is-fail .cell-fig {
+  color: var(--ae-ink-faint);
+}
+
+/* an empty trial: a candidate that never ran this task — an honest dash */
+.cell.is-none {
+  color: var(--ae-ink-faint);
+}
+
+/* daedalus additions on top of the adopted bones:
+   the chosen candidate's column is marked by the accent on its header —
+   one structural spend, not an ambient label. Reference columns
+   (oracle / null) recede; the summary footer is loud. */
+.matrix th.mx-pick,
+.matrix th.mx-pick .cand-meta {
+  color: var(--ae-accent);
+}
+
+.matrix .mx-ref {
+  color: var(--ae-ink-faint);
+}
+
+.matrix tfoot th.mx-task,
+.matrix tfoot td {
+  border-top: 1px solid var(--ae-line);
+  color: var(--ae-ink);
+  font-weight: var(--ae-w-medium);
+}
+
+/* the matrix legend: reads the cell vocabulary back, mono chrome */
+.mx-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5em 1.6em;
+  font-family: var(--ae-font-mono);
+  font-size: 13px;
+  color: var(--ae-ink-muted);
+  margin-top: 1.1em;
+}
+
+.mx-legend .lg {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
+}
+
+.mx-legend .ae-icon {
+  width: 0.92em;
+  height: 0.92em;
+  vertical-align: 0;
+}
+
+.mx-legend .ae-strong {
+  font-weight: var(--ae-w-black);
+}
+
+/* ── the interval: mean ± spread across n trials ─────────────────────
+   A meter that carries a band, not just a fill — answers "is this score
+   solid or noisy" in one ruled line. Tall enough that the band reads. */
+.ae-ci {
+  position: relative;
+  height: 7px;
+  background: var(--ae-wash);
+  border: 1px solid var(--ae-line);
+}
+
+.ae-ci-band {
+  position: absolute;
+  top: -1px;
+  bottom: -1px;
+  background: color-mix(in srgb, var(--ae-ink) 26%, var(--ae-surface));
+}
+
+.ae-ci-mean {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 2px;
+  background: var(--ae-ink);
+}
+
+/* ── the gate spine: G1…G5 as a ruled progression ────────────────────
+   Launch is a contract, not a button. The gates read left-to-right as a
+   hairline spine; each carries its status on the glyph and its state in
+   muted words. The reached edge is ink, the locked tail is faint. */
+.lab-gates {
+  display: flex;
+  align-items: stretch;
+  border: 1px solid var(--ae-line);
+}
+
+.lab-gate {
+  flex: 1 1 0;
+  padding: 0.9em 1em 1em;
+  border-left: 1px solid var(--ae-line);
+}
+
+.lab-gate:first-child {
+  border-left: 0;
+}
+
+.lab-gate-id {
+  display: flex;
+  align-items: center;
+  gap: 0.45em;
+  font-family: var(--ae-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--ae-ink-muted);
+  margin-bottom: 0.35em;
+}
+
+.lab-gate.is-locked {
+  background: var(--ae-wash);
+}
+
+.lab-gate.is-locked .lab-gate-id,
+.lab-gate.is-locked .lab-gate-name {
+  color: var(--ae-ink-faint);
+}
+
+.lab-gate-name {
+  font-weight: var(--ae-w-medium);
+}
+
+.lab-gate-sub {
+  font-size: 13px;
+  color: var(--ae-ink-muted);
+}
+
+/* ── the lineage spine: aggregate → trial → finding → scorer ─────────
+   The drill path is a first-class object. A ruled vertical spine with a
+   mono timestamp gutter; each stop is one claim. (Generalizes the
+   dashboard timeline into a named primitive.) */
+.lab-spine {
+  display: grid;
+  grid-template-columns: 7.5em minmax(0, 1fr);
+}
+
+.lab-spine > * {
+  padding: 0.9em 0 0.9em 1.4em;
+  border-top: 1px solid var(--ae-line);
+}
+
+.lab-spine > .lab-when {
+  padding-left: 0;
+  border-top: 1px solid var(--ae-line);
+  font-family: var(--ae-font-mono);
+  font-size: 13px;
+  color: var(--ae-ink-muted);
+}
+
+.lab-spine > .lab-step {
+  position: relative;
+  border-left: 1px solid var(--ae-line);
+}
+
+/* the node on the spine: a small ink tessera (square — it is structure,
+   not a datum) sitting on the rule */
+.lab-spine > .lab-step::before {
+  content: '';
+  position: absolute;
+  left: -3px;
+  top: 1.25em;
+  width: 5px;
+  height: 5px;
+  background: var(--ae-ink);
+}
+
+.lab-spine > .lab-step.is-flag::before {
+  background: var(--ae-err);
+}
+
+.lab-step-h {
+  font-weight: var(--ae-w-medium);
+  margin-bottom: 0.1em;
+}
+
+.lab-step-h .ae-icon {
+  vertical-align: -0.18em;
+}
+
+/* ── side-by-side plates: candidate output vs answer key ─────────────── */
+.lab-versus {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.4em;
+}
+
+@media (max-width: 720px) {
+  .lab-versus {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* a code block that stays in its lane */
+.lab-code {
+  font-family: var(--ae-font-mono);
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--ae-ink);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.lab-code .k {
+  color: var(--ae-ink-muted);
+}
+.lab-code .a {
+  color: var(--ae-accent);
+}
+
+/* ── small shared utilities ──────────────────────────────────────────── */
+.lab-cols {
+  display: grid;
+  gap: 1.8em 2.4em;
+}
+
+.lab-cols.is-2 {
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+}
+
+.lab-cols.is-2-even {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 880px) {
+  .lab-cols.is-2,
+  .lab-cols.is-2-even {
+    grid-template-columns: 1fr;
+  }
+}
+
+.lab-spread {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1em;
+}
+
+/* status words: the lab names a few non-glyph states in muted mono.
+   Never a filled pill — a word in the caption voice, the glyph carries
+   any hue. */
+.lab-state {
+  font-family: var(--ae-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: var(--ae-ink-muted);
+  text-transform: lowercase;
+}
+
+/* a definition plate: hairline-ruled label · value rows — contracts, specs,
+   handoffs. Structure from rules, never boxes. */
+.lab-defs > div {
+  display: grid;
+  grid-template-columns: minmax(7em, 28%) minmax(0, 1fr);
+  gap: 0.4em 1.4em;
+  padding: 0.7em 0;
+  border-top: 1px solid var(--ae-line);
+}
+
+.lab-defs > div:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.lab-defs .k {
+  color: var(--ae-ink-muted);
+}
+
+.lab-defs .v .ae-num {
+  overflow-wrap: anywhere;
+}
+
+/* a thin top toolbar inside the desk: tabs left, actions right */
+.lab-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1em 1.6em;
+  flex-wrap: wrap;
+  padding-bottom: 1.2em;
+  margin-bottom: 1.6em;
+  border-bottom: 1px solid var(--ae-line);
+}
+
+
+html.rep, html.rep body { height: auto; min-height: 100%; overflow-y: auto; }
+html.rep body { display: block; }
+.rep-desk { max-width: 72rem; margin: 0 auto; }
+.rep-board { border-collapse: separate; border-spacing: 0; width: 100%; font-family: var(--ae-font-mono); font-size: 13px; }
+.rep-board th, .rep-board td { padding: 0.5em 0.8em; border-bottom: 1px solid var(--ae-line); text-align: left; white-space: nowrap; }
+.rep-board thead th { background: var(--ae-wash); color: var(--ae-ink-muted); font-weight: var(--ae-w-regular); letter-spacing: 0.06em; position: sticky; top: 0; }
+.rep-board .rep-num { text-align: right; font-variant-numeric: tabular-nums; }
+.rep-board .rep-cand { color: var(--ae-ink); font-weight: var(--ae-w-medium); }
+.rep-board .rep-model { display: block; color: var(--ae-ink-faint); font-weight: var(--ae-w-regular); letter-spacing: 0.04em; }
+.rep-board tr.rep-rec th, .rep-board tr.rep-rec .rep-best { color: var(--ae-accent); font-weight: var(--ae-w-black); }
+.rep-board tr.mx-ref, .rep-board tr.mx-ref .rep-cand { color: var(--ae-ink-faint); }
+.cell { text-decoration: none; }
+a.cell:hover .cell-fig { color: var(--ae-accent); }
+.rep-forest { display: grid; grid-template-columns: minmax(12em, 18em) minmax(0, 1fr); gap: 0.5em 1.2em; align-items: center; }
+.rep-forest-label { font-size: 13px; }
+.rep-forest-track { position: relative; display: flex; align-items: center; gap: 0.8em; }
+.rep-forest-track .ae-ci { flex: 1 1 auto; }
+.rep-forest-ci { flex: none; font-size: 11px; }
+.rep-zero { position: absolute; top: -2px; bottom: -2px; width: 1px; background: var(--ae-ink-faint); z-index: 1; }
+.rep-trial { border-top: 1px solid var(--ae-line); padding: 0.6em 0; }
+.rep-trial summary { cursor: pointer; font-size: 14px; }
+.rep-trial summary::marker { color: var(--ae-ink-faint); }
+.rep-trial-h { font-weight: var(--ae-w-medium); }
+.rep-trial .lab-code { background: var(--ae-wash); padding: 0.8em 1em; margin: 0.5em 0; border: 1px solid var(--ae-line); }
+
+</style>
+</head>
+<body>
+<svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5" /></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></symbol>
+  <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14" /></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" /><path d="M12 9v4" /><path d="M12 17h.01" /></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" /></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" /></symbol>
+</svg>
+<main class="ae-desk lab-desk rep-desk">
+<div style="display:flex;justify-content:flex-end;margin-bottom:0.4em">
+  <button class="ae-mode" aria-label="toggle color mode"><svg class="ae-icon ae-sun"><use href="#i-sun" /></svg><svg class="ae-icon ae-moon"><use href="#i-moon" /></svg></button>
+</div>
+<header>
+  <div class="lab-bar">
+    <div><h1 style="display:inline">Run report</h1> <span class="ae-dim">— pr-review-v0 v0.3.0</span></div>
+    <div class="ae-chrome" style="font-family:var(--ae-font-mono)">20260625T161856Z-search-cerberus-reviewer</div>
+  </div>
+  <div class="lab-hero" style="margin:0.2em 0 0.1em">
+    <span class="lab-hero-num">—</span>
+    <span class="lab-hero-unit">no certified pick</span>
+  </div>
+  <p class="ae-chrome" style="margin:0 0 1.2em">no candidate is provably better than the incumbent</p>
+  <div class="lab-figrow" style="margin-bottom:1.8em">
+    <div class="lab-fig"><p class="lab-fig-k">candidates</p><p class="lab-fig-v">10 <span class="ae-dim">/ 12 incl. ref</span></p></div>
+    <div class="lab-fig"><p class="lab-fig-k">tasks</p><p class="lab-fig-v">6</p></div>
+    <div class="lab-fig"><p class="lab-fig-k">trials</p><p class="lab-fig-v">239</p></div>
+    <div class="lab-fig"><p class="lab-fig-k">known spend</p><p class="lab-fig-v">$2.0969</p></div>
+    <div class="lab-fig"><p class="lab-fig-k">stop · mode</p><p class="lab-fig-v">plateau <span class="ae-dim">threshold-then-cheap</span></p></div>
+  </div>
+</header>
+<section id="rig" style="margin-bottom:1.8em">
+  <p class="ae-plate-cap">RIG · is this ranking trustworthy?</p>
+  <div class="lab-figrow">
+    <div class="lab-fig"><p class="lab-fig-k">oracle ceiling</p><p class="lab-fig-v">1.00</p></div>
+    <div class="lab-fig"><p class="lab-fig-k">null floor</p><p class="lab-fig-v">0.17</p></div>
+    <div class="lab-fig"><p class="lab-fig-k">probe</p><p class="lab-fig-v">0.77</p></div>
+  </div>
+  <p class="ae-chrome" style="margin-top:0.7em"><svg class="ae-icon ae-ok"><use href="#i-check" /></svg> clear — probe 0.77 sits below the oracle ceiling 1.00</p>
+</section>
+<section id="sanity" style="margin-bottom:1.8em">
+  <p class="ae-plate-cap">ARENA SANITY · is this arena sound enough to rank on?</p>
+  <div class="lab-figrow">
+    <div class="lab-fig"><p class="lab-fig-k">contamination</p><p class="lab-fig-v">resistant</p></div>
+    <div class="lab-fig"><p class="lab-fig-k">wide spans</p><p class="lab-fig-v">0 <span class="ae-dim">/ 9 keys</span></p></div>
+    <div class="lab-fig"><p class="lab-fig-k">threshold</p><p class="lab-fig-v">&gt;8</p></div>
+  </div>
+  <p class="ae-chrome" style="margin-top:0.7em"><svg class="ae-icon ae-ok"><use href="#i-check" /></svg> <span class="ae-h">CONTAMINATION</span> contamination-resistant — synthetic/private sources, so a config cannot inflate its score from training-data familiarity</p>
+  <p class="ae-plate-note" style="border:0;padding:0;margin-top:0.4em">Synthetic, author-written; not derived from any public repo. Per-task
+`source_repo` records the (distinct) synthetic source of each scenario. Serves
+ticket 043 — the contamination-resistant pr-review holdout.</p>
+  <p class="ae-chrome" style="margin-top:0.5em"><svg class="ae-icon ae-ok"><use href="#i-check" /></svg> <span class="ae-h">REDTEAM SPAN AUDIT</span> 0 of 9 answer-key defects carry a wide span (&gt; 8 lines): the line constraint demands real localization</p>
+  
+</section>
+<section style="margin-bottom:1.8em">
+  <p class="ae-plate-cap">LEADERBOARD · candidates by mean reward</p>
+  <div class="mx-scroll">
+    <table class="rep-board">
+      <thead><tr>
+        <th scope="col">candidate</th><th scope="col" class="rep-num">reward</th>
+        <th scope="col" class="rep-num">$/trial</th><th scope="col" class="rep-num">$ total</th>
+        <th scope="col" class="rep-num">wall</th><th scope="col" class="rep-num">trials</th>
+        <th scope="col" class="rep-num">voided</th><th scope="col">status</th>
+      </tr></thead>
+      <tbody>
+<tr>
+  <th scope="row" class="rep-cand">seed2-kimi-k2-7-code-trace-callers<span class="rep-model">moonshotai/kimi-k2.7-code</span></th>
+  <td class="rep-num">0.76</td>
+  <td class="rep-num">$0.0161</td>
+  <td class="rep-num">$0.4834</td>
+  <td class="rep-num">157.5s</td>
+  <td class="rep-num">30</td>
+  <td class="rep-num"><span style="color:var(--ae-warn)">2</span></td>
+  <td><span class="lab-state">trial</span></td>
+</tr>
+<tr>
+  <th scope="row" class="rep-cand">g1b-seed2-kimi-k2-7-code-trace-callers<span class="rep-model">openai/gpt-5.4-mini</span></th>
+  <td class="rep-num">0.72</td>
+  <td class="rep-num">$0.0150</td>
+  <td class="rep-num">$0.4499</td>
+  <td class="rep-num">34.9s</td>
+  <td class="rep-num">30</td>
+  <td class="rep-num">0</td>
+  <td><span class="lab-state">trial</span></td>
+</tr>
+<tr>
+  <th scope="row" class="rep-cand">g2a-seed2-kimi-k2-7-code-trace-callers<span class="rep-model">moonshotai/kimi-k2.7-code</span></th>
+  <td class="rep-num">0.65</td>
+  <td class="rep-num">$0.0153</td>
+  <td class="rep-num">$0.1682</td>
+  <td class="rep-num">157.8s</td>
+  <td class="rep-num">11</td>
+  <td class="rep-num"><span style="color:var(--ae-warn)">1</span></td>
+  <td><span class="lab-state">trial</span></td>
+</tr>
+<tr>
+  <th scope="row" class="rep-cand">seed3-gpt-5-4-mini-test-runner<span class="rep-model">openai/gpt-5.4-mini</span></th>
+  <td class="rep-num">0.58</td>
+  <td class="rep-num">$0.0078</td>
+  <td class="rep-num">$0.2346</td>
+  <td class="rep-num">17.1s</td>
+  <td class="rep-num">30</td>
+  <td class="rep-num">0</td>
+  <td><span class="lab-state">trial</span></td>
+</tr>
+<tr>
+  <th scope="row" class="rep-cand">seed1-glm-5-2-spec-first<span class="rep-model">z-ai/glm-5.2</span></th>
+  <td class="rep-num">0.58</td>
+  <td class="rep-num">$0.0060</td>
+  <td class="rep-num">$0.0894</td>
+  <td class="rep-num">47.9s</td>
+  <td class="rep-num">15</td>
+  <td class="rep-num">0</td>
+  <td><span class="lab-state">trial</span></td>
+</tr>
+<tr>
+  <th scope="row" class="rep-cand">seed5-deepseek-v4-pro-trace-callers<span class="rep-model">deepseek/deepseek-v4-pro</span></th>
+  <td class="rep-num">0.56</td>
+  <td class="rep-num">$0.0045</td>
+  <td class="rep-num">$0.0908</td>
+  <td class="rep-num">47.5s</td>
+  <td class="rep-num">20</td>
+  <td class="rep-num">0</td>
+  <td><span class="lab-state">trial</span></td>
+</tr>
+<tr>
+  <th scope="row" class="rep-cand">g1a-seed1-glm-5-2-spec-first<span class="rep-model">z-ai/glm-5.2</span></th>
+  <td class="rep-num">0.52</td>
+  <td class="rep-num">$0.0054</td>
+  <td class="rep-num">$0.0814</td>
+  <td class="rep-num">39.0s</td>
+  <td class="rep-num">15</td>
+  <td class="rep-num">0</td>
+  <td><span class="lab-state">trial</span></td>
+</tr>
+<tr>
+  <th scope="row" class="rep-cand">seed6-glm-5-2-test-runner<span class="rep-model">z-ai/glm-5.2</span></th>
+  <td class="rep-num">0.49</td>
+  <td class="rep-num">$0.0090</td>
+  <td class="rep-num">$0.1807</td>
+  <td class="rep-num">58.4s</td>
+  <td class="rep-num">20</td>
+  <td class="rep-num">0</td>
+  <td><span class="lab-state">trial</span></td>
+</tr>
+<tr>
+  <th scope="row" class="rep-cand">g2b-g1a-seed1-glm-5-2-spec-first<span class="rep-model">z-ai/glm-5.2</span></th>
+  <td class="rep-num">0.44</td>
+  <td class="rep-num">$0.0063</td>
+  <td class="rep-num">$0.0947</td>
+  <td class="rep-num">43.2s</td>
+  <td class="rep-num">15</td>
+  <td class="rep-num">0</td>
+  <td><span class="lab-state">trial</span></td>
+</tr>
+<tr>
+  <th scope="row" class="rep-cand">seed4-deepseek-v4-flash-spec-first<span class="rep-model">deepseek/deepseek-v4-flash</span></th>
+  <td class="rep-num">0.40</td>
+  <td class="rep-num">$0.0022</td>
+  <td class="rep-num">$0.0449</td>
+  <td class="rep-num">48.8s</td>
+  <td class="rep-num">20</td>
+  <td class="rep-num">0</td>
+  <td><span class="lab-state">trial</span></td>
+</tr>
+<tr class="mx-ref">
+  <th scope="row" class="rep-cand">probe-oneshot<span class="rep-model">deepseek/deepseek-v4-pro</span></th>
+  <td class="rep-num">0.77</td>
+  <td class="rep-num">$0.0077</td>
+  <td class="rep-num">$0.0231</td>
+  <td class="rep-num">32.4s</td>
+  <td class="rep-num">3</td>
+  <td class="rep-num">0</td>
+  <td><span class="lab-state">reference</span></td>
+</tr>
+<tr class="mx-ref">
+  <th scope="row" class="rep-cand">incumbent<span class="rep-model">deepseek/deepseek-v4-pro</span></th>
+  <td class="rep-num">0.69</td>
+  <td class="rep-num">$0.0038</td>
+  <td class="rep-num">$0.1151</td>
+  <td class="rep-num">50.1s</td>
+  <td class="rep-num">30</td>
+  <td class="rep-num">0</td>
+  <td><span class="lab-state">reference</span></td>
+</tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+<section style="margin-bottom:1.8em">
+  <p class="ae-plate-cap">STATISTICS · is a win real? · the 95% CI even commercial eval tools omit</p>
+  <p class="ae-chrome" style="margin-bottom:0.6em">Δ reward vs <span class="ae-num">incumbent</span> · cluster-robust 95% CI from the run's record · the zero line is the baseline</p>
+  <div class="rep-forest">
+    <div class="rep-forest-label"><span class="ae-item">g1b-seed2-kimi-k2-7-code-trace-callers</span> <span class="ae-num ae-dim">+0.029</span> <svg class="ae-icon ae-warn"><use href="#i-minus" /></svg></div>
+    <div class="rep-forest-track">
+      <span class="rep-zero" style="left:50.89%"></span>
+      <span class="ae-ci"><span class="ae-ci-band" style="left:28.52%;right:17.63%"></span><span class="ae-ci-mean" style="left:55.45%"></span></span>
+      <span class="rep-forest-ci ae-num ae-dim">[-0.141, +0.199]</span>
+    </div>
+    <div class="rep-forest-label"><span class="ae-item">seed2-kimi-k2-7-code-trace-callers</span> <span class="ae-num ae-dim">+0.071</span> <svg class="ae-icon ae-warn"><use href="#i-minus" /></svg></div>
+    <div class="rep-forest-track">
+      <span class="rep-zero" style="left:50.89%"></span>
+      <span class="ae-ci"><span class="ae-ci-band" style="left:31.14%;right:6.90%"></span><span class="ae-ci-mean" style="left:62.12%"></span></span>
+      <span class="rep-forest-ci ae-num ae-dim">[-0.125, +0.267]</span>
+    </div>
+    <div class="rep-forest-label"><span class="ae-item">seed3-gpt-5-4-mini-test-runner</span> <span class="ae-num ae-dim">-0.102</span> <svg class="ae-icon ae-warn"><use href="#i-minus" /></svg></div>
+    <div class="rep-forest-track">
+      <span class="rep-zero" style="left:50.89%"></span>
+      <span class="ae-ci"><span class="ae-ci-band" style="left:6.90%;right:37.45%"></span><span class="ae-ci-mean" style="left:34.73%"></span></span>
+      <span class="rep-forest-ci ae-num ae-dim">[-0.278, +0.074]</span>
+    </div>
+  </div>
+  <div class="mx-scroll" style="margin-top:1.2em">
+    <table class="rep-board">
+      <thead><tr>
+        <th scope="col">candidate</th><th scope="col" class="rep-num">Δ reward</th>
+        <th scope="col" class="rep-num">95% CI</th><th scope="col" class="rep-num">tasks</th>
+        <th scope="col" class="rep-num">clusters</th><th scope="col" class="rep-num">clstr→95%</th>
+        <th scope="col" class="rep-num">pass rate</th><th scope="col" class="rep-num">pass^k</th>
+        <th scope="col">sig</th>
+      </tr></thead>
+      <tbody>
+        <tr><th scope="row" class="rep-cand">seed2-kimi-k2-7-code-trace-callers</th><td class="rep-num">+0.0711</td><td class="rep-num">[-0.1249, +0.2671]</td><td class="rep-num">6</td><td class="rep-num">6</td><td class="rep-num">29</td><td class="rep-num">0.67</td><td class="rep-num">0.11</td><td><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg></td></tr>
+        <tr><th scope="row" class="rep-cand">g1b-seed2-kimi-k2-7-code-trace-callers</th><td class="rep-num">+0.0289</td><td class="rep-num">[-0.1415, +0.1992]</td><td class="rep-num">6</td><td class="rep-num">6</td><td class="rep-num">124</td><td class="rep-num">0.50</td><td class="rep-num">0.02</td><td><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg></td></tr>
+        <tr><th scope="row" class="rep-cand">g2a-seed2-kimi-k2-7-code-trace-callers</th><td class="rep-num">—</td><td class="rep-num">—</td><td class="rep-num">—</td><td class="rep-num">—</td><td class="rep-num">—</td><td class="rep-num">—</td><td class="rep-num">—</td><td><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg></td></tr>
+        <tr><th scope="row" class="rep-cand">seed3-gpt-5-4-mini-test-runner</th><td class="rep-num">-0.1022</td><td class="rep-num">[-0.2783, +0.0738]</td><td class="rep-num">6</td><td class="rep-num">6</td><td class="rep-num">—</td><td class="rep-num">0.47</td><td class="rep-num">0.01</td><td><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg></td></tr>
+        <tr><th scope="row" class="rep-cand">seed1-glm-5-2-spec-first</th><td class="rep-num">—</td><td class="rep-num">—</td><td class="rep-num">—</td><td class="rep-num">—</td><td class="rep-num">—</td><td class="rep-num">—</td><td class="rep-num">—</td><td><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg></td></tr>
+        <tr><th scope="row" class="rep-cand">seed5-deepseek-v4-pro-trace-callers</th><td class="rep-num">—</td><td class="rep-num">—</td><td class="rep-num">—</td><td class="rep-num">—</td><td class="rep-num">—</td><td class="rep-num">—</td><td class="rep-num">—</td><td><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg></td></tr>
+        <tr><th scope="row" class="rep-cand">g1a-seed1-glm-5-2-spec-first</th><td class="rep-num">—</td><td class="rep-num">—</td><td class="rep-num">—</td><td class="rep-num">—</td><td class="rep-num">—</td><td class="rep-num">—</td><td class="rep-num">—</td><td><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg></td></tr>
+        <tr><th scope="row" class="rep-cand">seed6-glm-5-2-test-runner</th><td class="rep-num">—</td><td class="rep-num">—</td><td class="rep-num">—</td><td class="rep-num">—</td><td class="rep-num">—</td><td class="rep-num">—</td><td class="rep-num">—</td><td><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg></td></tr>
+        <tr><th scope="row" class="rep-cand">g2b-g1a-seed1-glm-5-2-spec-first</th><td class="rep-num">—</td><td class="rep-num">—</td><td class="rep-num">—</td><td class="rep-num">—</td><td class="rep-num">—</td><td class="rep-num">—</td><td class="rep-num">—</td><td><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg></td></tr>
+        <tr><th scope="row" class="rep-cand">seed4-deepseek-v4-flash-spec-first</th><td class="rep-num">—</td><td class="rep-num">—</td><td class="rep-num">—</td><td class="rep-num">—</td><td class="rep-num">—</td><td class="rep-num">—</td><td class="rep-num">—</td><td><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="ae-plate-note" style="border:0;padding:0;margin-top:0.8em"><span class="ae-num">clstr→95%</span> is the power note: the cluster count at which the observed effect would just reach significance — adding trials inside existing clusters does not shrink the interval, clusters do. The <span class="ae-num">!</span> flag marks intervals too thin to bound (n&lt;2).</p>
+</section>
+<section style="margin-bottom:1.8em">
+  <p class="ae-plate-cap">COVERAGE · task × candidate · reward 0–100 · click a cell for its transcript</p>
+  <div class="mx-scroll">
+    <table class="matrix">
+      <thead><tr>
+        <th class="mx-corner" scope="col">task</th>
+        <th scope="col">seed2-kimi-k2-7-code-trace-callers<span class="cand-meta">kimi-k2.7-code</span></th>
+        <th scope="col">g1b-seed2-kimi-k2-7-code-trace-callers<span class="cand-meta">gpt-5.4-mini</span></th>
+        <th scope="col">g2a-seed2-kimi-k2-7-code-trace-callers<span class="cand-meta">kimi-k2.7-code</span></th>
+        <th scope="col">seed3-gpt-5-4-mini-test-runner<span class="cand-meta">gpt-5.4-mini</span></th>
+        <th scope="col">seed1-glm-5-2-spec-first<span class="cand-meta">glm-5.2</span></th>
+        <th scope="col">seed5-deepseek-v4-pro-trace-callers<span class="cand-meta">deepseek-v4-pro</span></th>
+        <th scope="col">g1a-seed1-glm-5-2-spec-first<span class="cand-meta">glm-5.2</span></th>
+        <th scope="col">seed6-glm-5-2-test-runner<span class="cand-meta">glm-5.2</span></th>
+        <th scope="col">g2b-g1a-seed1-glm-5-2-spec-first<span class="cand-meta">glm-5.2</span></th>
+        <th scope="col">seed4-deepseek-v4-flash-spec-first<span class="cand-meta">deepseek-v4-flash</span></th>
+        <th scope="col" class="mx-ref">probe-oneshot<span class="cand-meta">deepseek-v4-pro</span></th>
+        <th scope="col" class="mx-ref">incumbent<span class="cand-meta">deepseek-v4-pro</span></th>
+        <th scope="col">n</th>
+      </tr></thead>
+      <tbody>
+      <tr>
+        <th class="mx-task" scope="row">js-cart-total</th>
+        <td><a class="cell " href="#trial-c0-t0"><span class="cell-head"><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg><span class="cell-fig">96</span></span></a></td>
+        <td><a class="cell " href="#trial-c1-t0"><span class="cell-head"><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg><span class="cell-fig">80</span></span></a></td>
+        <td><a class="cell " href="#trial-c2-t0"><span class="cell-head"><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg><span class="cell-fig">67</span></span></a></td>
+        <td><a class="cell  is-best" href="#trial-c3-t0"><span class="cell-head"><svg class="ae-icon ae-ok"><use href="#i-check" /></svg><span class="cell-fig">100</span></span></a></td>
+        <td><a class="cell is-fail" href="#trial-c4-t0"><span class="cell-head"><svg class="ae-icon ae-err"><use href="#i-x" /></svg><span class="cell-fig">0</span></span></a></td>
+        <td><a class="cell " href="#trial-c5-t0"><span class="cell-head"><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg><span class="cell-fig">67</span></span></a></td>
+        <td><a class="cell is-fail" href="#trial-c6-t0"><span class="cell-head"><svg class="ae-icon ae-err"><use href="#i-x" /></svg><span class="cell-fig">0</span></span></a></td>
+        <td><a class="cell " href="#trial-c7-t0"><span class="cell-head"><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg><span class="cell-fig">33</span></span></a></td>
+        <td><a class="cell is-fail" href="#trial-c8-t0"><span class="cell-head"><svg class="ae-icon ae-err"><use href="#i-x" /></svg><span class="cell-fig">0</span></span></a></td>
+        <td><a class="cell  is-best" href="#trial-c9-t0"><span class="cell-head"><svg class="ae-icon ae-ok"><use href="#i-check" /></svg><span class="cell-fig">100</span></span></a></td>
+        <td><span class="cell is-none">—</span></td>
+        <td><span class="cell "><span class="cell-head"><svg class="ae-icon ae-dim"><use href="#i-x" /></svg><span class="cell-fig">96</span></span></span></td>
+        <td>5</td>
+      </tr>
+      <tr>
+        <th class="mx-task" scope="row">js-clean-rename</th>
+        <td><a class="cell  is-best" href="#trial-c0-t1"><span class="cell-head"><svg class="ae-icon ae-ok"><use href="#i-check" /></svg><span class="cell-fig">100</span></span></a></td>
+        <td><a class="cell  is-best" href="#trial-c1-t1"><span class="cell-head"><svg class="ae-icon ae-ok"><use href="#i-check" /></svg><span class="cell-fig">100</span></span></a></td>
+        <td><a class="cell  is-best" href="#trial-c2-t1"><span class="cell-head"><svg class="ae-icon ae-ok"><use href="#i-check" /></svg><span class="cell-fig">100</span></span></a></td>
+        <td><a class="cell " href="#trial-c3-t1"><span class="cell-head"><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg><span class="cell-fig">80</span></span></a></td>
+        <td><a class="cell  is-best" href="#trial-c4-t1"><span class="cell-head"><svg class="ae-icon ae-ok"><use href="#i-check" /></svg><span class="cell-fig">100</span></span></a></td>
+        <td><a class="cell  is-best" href="#trial-c5-t1"><span class="cell-head"><svg class="ae-icon ae-ok"><use href="#i-check" /></svg><span class="cell-fig">100</span></span></a></td>
+        <td><a class="cell  is-best" href="#trial-c6-t1"><span class="cell-head"><svg class="ae-icon ae-ok"><use href="#i-check" /></svg><span class="cell-fig">100</span></span></a></td>
+        <td><a class="cell  is-best" href="#trial-c7-t1"><span class="cell-head"><svg class="ae-icon ae-ok"><use href="#i-check" /></svg><span class="cell-fig">100</span></span></a></td>
+        <td><a class="cell  is-best" href="#trial-c8-t1"><span class="cell-head"><svg class="ae-icon ae-ok"><use href="#i-check" /></svg><span class="cell-fig">100</span></span></a></td>
+        <td><a class="cell is-fail" href="#trial-c9-t1"><span class="cell-head"><svg class="ae-icon ae-err"><use href="#i-x" /></svg><span class="cell-fig">0</span></span></a></td>
+        <td><span class="cell is-none">—</span></td>
+        <td><span class="cell "><span class="cell-head"><svg class="ae-icon ae-dim"><use href="#i-check" /></svg><span class="cell-fig">100</span></span></span></td>
+        <td>5</td>
+      </tr>
+      <tr>
+        <th class="mx-task" scope="row">py-auth-sqli</th>
+        <td><a class="cell  is-best" href="#trial-c0-t2"><span class="cell-head"><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg><span class="cell-fig">80</span></span></a></td>
+        <td><a class="cell " href="#trial-c1-t2"><span class="cell-head"><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg><span class="cell-fig">50</span></span></a></td>
+        <td><a class="cell " href="#trial-c2-t2"><span class="cell-head"><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg><span class="cell-fig">67</span></span></a></td>
+        <td><a class="cell " href="#trial-c3-t2"><span class="cell-head"><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg><span class="cell-fig">46</span></span></a></td>
+        <td><a class="cell " href="#trial-c4-t2"><span class="cell-head"><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg><span class="cell-fig">50</span></span></a></td>
+        <td><a class="cell " href="#trial-c5-t2"><span class="cell-head"><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg><span class="cell-fig">43</span></span></a></td>
+        <td><a class="cell " href="#trial-c6-t2"><span class="cell-head"><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg><span class="cell-fig">33</span></span></a></td>
+        <td><a class="cell " href="#trial-c7-t2"><span class="cell-head"><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg><span class="cell-fig">43</span></span></a></td>
+        <td><a class="cell " href="#trial-c8-t2"><span class="cell-head"><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg><span class="cell-fig">50</span></span></a></td>
+        <td><a class="cell " href="#trial-c9-t2"><span class="cell-head"><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg><span class="cell-fig">50</span></span></a></td>
+        <td><span class="cell is-none">—</span></td>
+        <td><span class="cell "><span class="cell-head"><svg class="ae-icon ae-dim"><use href="#i-x" /></svg><span class="cell-fig">50</span></span></span></td>
+        <td>5</td>
+      </tr>
+      <tr>
+        <th class="mx-task" scope="row">py-file-cache</th>
+        <td><a class="cell " href="#trial-c0-t3"><span class="cell-head"><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg><span class="cell-fig">43</span></span></a></td>
+        <td><a class="cell  is-best" href="#trial-c1-t3"><span class="cell-head"><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg><span class="cell-fig">49</span></span></a></td>
+        <td><a class="cell " href="#trial-c2-t3"><span class="cell-head"><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg><span class="cell-fig">7</span></span></a></td>
+        <td><a class="cell " href="#trial-c3-t3"><span class="cell-head"><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg><span class="cell-fig">15</span></span></a></td>
+        <td><a class="cell " href="#trial-c4-t3"><span class="cell-head"><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg><span class="cell-fig">38</span></span></a></td>
+        <td><a class="cell " href="#trial-c5-t3"><span class="cell-head"><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg><span class="cell-fig">4</span></span></a></td>
+        <td><a class="cell " href="#trial-c6-t3"><span class="cell-head"><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg><span class="cell-fig">27</span></span></a></td>
+        <td><a class="cell " href="#trial-c7-t3"><span class="cell-head"><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg><span class="cell-fig">16</span></span></a></td>
+        <td><a class="cell " href="#trial-c8-t3"><span class="cell-head"><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg><span class="cell-fig">4</span></span></a></td>
+        <td><a class="cell " href="#trial-c9-t3"><span class="cell-head"><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg><span class="cell-fig">4</span></span></a></td>
+        <td><span class="cell "><span class="cell-head"><svg class="ae-icon ae-dim"><use href="#i-x" /></svg><span class="cell-fig">80</span></span></span></td>
+        <td><span class="cell "><span class="cell-head"><svg class="ae-icon ae-dim"><use href="#i-x" /></svg><span class="cell-fig">16</span></span></span></td>
+        <td>5</td>
+      </tr>
+      <tr>
+        <th class="mx-task" scope="row">py-pagination</th>
+        <td><a class="cell " href="#trial-c0-t4"><span class="cell-head"><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg><span class="cell-fig">80</span></span></a></td>
+        <td><a class="cell  is-best" href="#trial-c1-t4"><span class="cell-head"><svg class="ae-icon ae-ok"><use href="#i-check" /></svg><span class="cell-fig">100</span></span></a></td>
+        <td><span class="cell is-none">—</span></td>
+        <td><a class="cell  is-best" href="#trial-c3-t4"><span class="cell-head"><svg class="ae-icon ae-ok"><use href="#i-check" /></svg><span class="cell-fig">100</span></span></a></td>
+        <td><a class="cell  is-best" href="#trial-c4-t4"><span class="cell-head"><svg class="ae-icon ae-ok"><use href="#i-check" /></svg><span class="cell-fig">100</span></span></a></td>
+        <td><a class="cell  is-best" href="#trial-c5-t4"><span class="cell-head"><svg class="ae-icon ae-ok"><use href="#i-check" /></svg><span class="cell-fig">100</span></span></a></td>
+        <td><a class="cell  is-best" href="#trial-c6-t4"><span class="cell-head"><svg class="ae-icon ae-ok"><use href="#i-check" /></svg><span class="cell-fig">100</span></span></a></td>
+        <td><a class="cell  is-best" href="#trial-c7-t4"><span class="cell-head"><svg class="ae-icon ae-ok"><use href="#i-check" /></svg><span class="cell-fig">100</span></span></a></td>
+        <td><a class="cell " href="#trial-c8-t4"><span class="cell-head"><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg><span class="cell-fig">67</span></span></a></td>
+        <td><a class="cell " href="#trial-c9-t4"><span class="cell-head"><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg><span class="cell-fig">33</span></span></a></td>
+        <td><span class="cell "><span class="cell-head"><svg class="ae-icon ae-dim"><use href="#i-check" /></svg><span class="cell-fig">100</span></span></span></td>
+        <td><span class="cell "><span class="cell-head"><svg class="ae-icon ae-dim"><use href="#i-check" /></svg><span class="cell-fig">100</span></span></span></td>
+        <td>5</td>
+      </tr>
+      <tr>
+        <th class="mx-task" scope="row">rs-retry-backoff</th>
+        <td><a class="cell  is-best" href="#trial-c0-t5"><span class="cell-head"><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg><span class="cell-fig">56</span></span></a></td>
+        <td><a class="cell " href="#trial-c1-t5"><span class="cell-head"><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg><span class="cell-fig">50</span></span></a></td>
+        <td><span class="cell is-none">—</span></td>
+        <td><a class="cell " href="#trial-c3-t5"><span class="cell-head"><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg><span class="cell-fig">10</span></span></a></td>
+        <td><span class="cell is-none">—</span></td>
+        <td><a class="cell " href="#trial-c5-t5"><span class="cell-head"><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg><span class="cell-fig">36</span></span></a></td>
+        <td><span class="cell is-none">—</span></td>
+        <td><a class="cell " href="#trial-c7-t5"><span class="cell-head"><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg><span class="cell-fig">20</span></span></a></td>
+        <td><span class="cell is-none">—</span></td>
+        <td><a class="cell " href="#trial-c9-t5"><span class="cell-head"><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg><span class="cell-fig">46</span></span></a></td>
+        <td><span class="cell "><span class="cell-head"><svg class="ae-icon ae-dim"><use href="#i-x" /></svg><span class="cell-fig">50</span></span></span></td>
+        <td><span class="cell "><span class="cell-head"><svg class="ae-icon ae-dim"><use href="#i-x" /></svg><span class="cell-fig">50</span></span></span></td>
+        <td>5</td>
+      </tr>
+      </tbody>
+      <tfoot><tr>
+        <th class="mx-task" scope="row">mean · /100</th>
+        <td>76</td>
+        <td>72</td>
+        <td>65</td>
+        <td>58</td>
+        <td>58</td>
+        <td>56</td>
+        <td>52</td>
+        <td>49</td>
+        <td>44</td>
+        <td>40</td>
+        <td class="mx-ref">77</td>
+        <td class="mx-ref">69</td>
+        <td></td>
+      </tr></tfoot>
+    </table>
+  </div>
+  <div class="mx-legend">
+    <span class="lg"><svg class="ae-icon ae-ok"><use href="#i-check" /></svg> pass</span>
+    <span class="lg"><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg> partial</span>
+    <span class="lg"><svg class="ae-icon ae-err"><use href="#i-x" /></svg> miss</span>
+
+    <span class="lg"><span style="color:var(--ae-warn)">!</span> n &lt; 5 · thin</span>
+  </div>
+</section>
+<section>
+  <p class="ae-plate-cap">TRANSCRIPTS · the evidence behind every score</p>
+  <details id="trial-c0-t0" class="rep-trial">
+    <summary><span class="rep-trial-h">seed2-kimi-k2-7-code-trace-callers <span class="ae-dim">×</span> js-cart-total</span> <svg class="ae-icon ae-ok"><use href="#i-check" /></svg> <span class="ae-num">1.00</span> <span class="ae-dim">reward</span></summary>
+    <div class="lab-cols is-2" style="margin-top:1em">
+      <div>
+        <div class="lab-figrow">
+          <div class="lab-fig"><p class="lab-fig-k">recall</p><p class="lab-fig-v">1 / 1 <span class="ae-dim">· 1.00</span></p></div>
+          <div class="lab-fig"><p class="lab-fig-k">false pos</p><p class="lab-fig-v">0</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">cost</p><p class="lab-fig-v">$0.0061</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">wall</p><p class="lab-fig-v">15s</p></div>
+        </div>
+        <p class="ae-h" style="margin-top:1.1em">VERDICT</p>
+        <p><svg class="ae-icon ae-ok"><use href="#i-check" /></svg> matched the keyed defect</p>
+      </div>
+      <div>
+        <p class="ae-h">CANDIDATE FINDINGS · scored vs the hidden key</p>
+        <pre class="lab-code"><span class="k">src/cart.js</span>:3 <span class="ae-dim">correctness · </span>
+applyDiscount mutates the caller&#39;s item objects in place, so calling orderTotal multiple times with the same cart double-applies the discount and corrupts caller-side cart data.</pre>
+      </div>
+    </div>
+  </details>
+  <details id="trial-c0-t1" class="rep-trial">
+    <summary><span class="rep-trial-h">seed2-kimi-k2-7-code-trace-callers <span class="ae-dim">×</span> js-clean-rename</span> <svg class="ae-icon ae-ok"><use href="#i-check" /></svg> <span class="ae-num">1.00</span> <span class="ae-dim">reward</span></summary>
+    <div class="lab-cols is-2" style="margin-top:1em">
+      <div>
+        <div class="lab-figrow">
+          <div class="lab-fig"><p class="lab-fig-k">recall</p><p class="lab-fig-v">0 / 0 <span class="ae-dim">· 1.00</span></p></div>
+          <div class="lab-fig"><p class="lab-fig-k">false pos</p><p class="lab-fig-v">0</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">cost</p><p class="lab-fig-v">$0.0067</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">wall</p><p class="lab-fig-v">20s</p></div>
+        </div>
+        <p class="ae-h" style="margin-top:1.1em">VERDICT</p>
+        <p><svg class="ae-icon ae-ok"><use href="#i-check" /></svg> matched the keyed defect</p>
+      </div>
+      <div>
+        <p class="ae-h">CANDIDATE FINDINGS · scored vs the hidden key</p>
+        <div class="ae-empty" style="border:0;padding:0.8em 0"><p class="ae-item">No findings emitted.</p><p class="ae-dim">The candidate returned <span class="ae-num">[]</span> — a valid, empty result, scored as a clean miss.</p></div>
+      </div>
+    </div>
+  </details>
+  <details id="trial-c0-t2" class="rep-trial">
+    <summary><span class="rep-trial-h">seed2-kimi-k2-7-code-trace-callers <span class="ae-dim">×</span> py-auth-sqli</span> <svg class="ae-icon ae-ok"><use href="#i-check" /></svg> <span class="ae-num">1.00</span> <span class="ae-dim">reward</span></summary>
+    <div class="lab-cols is-2" style="margin-top:1em">
+      <div>
+        <div class="lab-figrow">
+          <div class="lab-fig"><p class="lab-fig-k">recall</p><p class="lab-fig-v">2 / 2 <span class="ae-dim">· 1.00</span></p></div>
+          <div class="lab-fig"><p class="lab-fig-k">false pos</p><p class="lab-fig-v">0</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">cost</p><p class="lab-fig-v">$0.0172</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">wall</p><p class="lab-fig-v">48s</p></div>
+        </div>
+        <p class="ae-h" style="margin-top:1.1em">VERDICT</p>
+        <p><svg class="ae-icon ae-ok"><use href="#i-check" /></svg> matched the keyed defect</p>
+      </div>
+      <div>
+        <p class="ae-h">CANDIDATE FINDINGS · scored vs the hidden key</p>
+        <pre class="lab-code"><span class="k">app/auth.py</span>:10 <span class="ae-dim">security · </span>
+The email value is interpolated directly into the SQL query via an f-string, allowing SQL injection through the login email parameter.</pre><pre class="lab-code"><span class="k">app/auth.py</span>:13 <span class="ae-dim">error-handling · </span>
+The bare except Exception catches all database errors and returns None, so connection failures and invalid queries are silently treated as &#39;user not found&#39; instead of being propagated.</pre>
+      </div>
+    </div>
+  </details>
+  <details id="trial-c0-t3" class="rep-trial">
+    <summary><span class="rep-trial-h">seed2-kimi-k2-7-code-trace-callers <span class="ae-dim">×</span> py-file-cache</span> <svg class="ae-icon ae-err"><use href="#i-x" /></svg> <span class="ae-num">0.00</span> <span class="ae-dim">reward</span></summary>
+    <div class="lab-cols is-2" style="margin-top:1em">
+      <div>
+        <div class="lab-figrow">
+          <div class="lab-fig"><p class="lab-fig-k">recall</p><p class="lab-fig-v">1 / 3 <span class="ae-dim">· 0.33</span></p></div>
+          <div class="lab-fig"><p class="lab-fig-k">false pos</p><p class="lab-fig-v">2</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">cost</p><p class="lab-fig-v">$0.0107</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">wall</p><p class="lab-fig-v">29s</p></div>
+        </div>
+        <p class="ae-h" style="margin-top:1.1em">VERDICT</p>
+        <p><svg class="ae-icon ae-err"><use href="#i-x" /></svg> false positives, no keyed match — noise, not signal</p>
+      </div>
+      <div>
+        <p class="ae-h">CANDIDATE FINDINGS · scored vs the hidden key</p>
+        <pre class="lab-code"><span class="k">cache.py</span>:10 <span class="ae-dim">security · </span>
+_path() concatenates the raw key into a filesystem path without sanitizing directory separators or &#39;..&#39; components. Since app.py builds the key directly from user_id as f&quot;profile-{user_id}&quot;, a caller can pass a user_id like &quot;../../../etc/passwd&quot; to read or write cache files outside CACHE_DIR.</pre><pre class="lab-code"><span class="k">cache.py</span>:15 <span class="ae-dim">resource-leak · </span>
+get() opens the file and only calls f.close() after json.load() returns. If json.load() raises (e.g., malformed JSON), control leaves the function without closing the file handle, leaking the descriptor until garbage collection.</pre><pre class="lab-code"><span class="k">cache.py</span>:13 <span class="ae-dim">concurrency · </span>
+get() checks os.path.exists(path) before open(path), creating a time-of-check/time-of-use race. Another process can remove the file between the check and the open, causing a FileNotFoundError that the caller does not expect on a cache miss.</pre>
+      </div>
+    </div>
+  </details>
+  <details id="trial-c0-t4" class="rep-trial">
+    <summary><span class="rep-trial-h">seed2-kimi-k2-7-code-trace-callers <span class="ae-dim">×</span> py-pagination</span> <svg class="ae-icon ae-ok"><use href="#i-check" /></svg> <span class="ae-num">1.00</span> <span class="ae-dim">reward</span></summary>
+    <div class="lab-cols is-2" style="margin-top:1em">
+      <div>
+        <div class="lab-figrow">
+          <div class="lab-fig"><p class="lab-fig-k">recall</p><p class="lab-fig-v">1 / 1 <span class="ae-dim">· 1.00</span></p></div>
+          <div class="lab-fig"><p class="lab-fig-k">false pos</p><p class="lab-fig-v">0</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">cost</p><p class="lab-fig-v">$0.0044</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">wall</p><p class="lab-fig-v">17s</p></div>
+        </div>
+        <p class="ae-h" style="margin-top:1.1em">VERDICT</p>
+        <p><svg class="ae-icon ae-ok"><use href="#i-check" /></svg> matched the keyed defect</p>
+      </div>
+      <div>
+        <p class="ae-h">CANDIDATE FINDINGS · scored vs the hidden key</p>
+        <pre class="lab-code"><span class="k">pagination.py</span>:7 <span class="ae-dim">correctness · </span>
+The start offset for a 1-indexed page is computed as `page * page_size`, so page 1 skips the first `page_size` items. It should be `(page - 1) * page_size` so that page 1 returns items[0:page_size].</pre>
+      </div>
+    </div>
+  </details>
+  <details id="trial-c0-t5" class="rep-trial">
+    <summary><span class="rep-trial-h">seed2-kimi-k2-7-code-trace-callers <span class="ae-dim">×</span> rs-retry-backoff</span> <svg class="ae-icon ae-err"><use href="#i-x" /></svg> <span class="ae-num">0.00</span> <span class="ae-dim">reward</span></summary>
+    <div class="lab-cols is-2" style="margin-top:1em">
+      <div>
+        <div class="lab-figrow">
+          <div class="lab-fig"><p class="lab-fig-k">recall</p><p class="lab-fig-v">0 / 2 <span class="ae-dim">· 0.00</span></p></div>
+          <div class="lab-fig"><p class="lab-fig-k">false pos</p><p class="lab-fig-v">1</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">cost</p><p class="lab-fig-v">$0.0406</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">wall</p><p class="lab-fig-v">379s</p></div>
+        </div>
+        <p class="ae-h" style="margin-top:1.1em">VERDICT</p>
+        <p><svg class="ae-icon ae-err"><use href="#i-x" /></svg> false positives, no keyed match — noise, not signal</p>
+      </div>
+      <div>
+        <p class="ae-h">CANDIDATE FINDINGS · scored vs the hidden key</p>
+        <pre class="lab-code"><span class="k">src/retry.rs</span>:18 <span class="ae-dim">error-handling · </span>
+For `max_attempts &gt;= 64`, the backoff calculation `2u64.pow(attempt)` overflows; in the failure path the helper panics instead of returning `Err`, violating its own error contract.</pre>
+      </div>
+    </div>
+  </details>
+  <details id="trial-c1-t0" class="rep-trial">
+    <summary><span class="rep-trial-h">g1b-seed2-kimi-k2-7-code-trace-callers <span class="ae-dim">×</span> js-cart-total</span> <svg class="ae-icon ae-err"><use href="#i-x" /></svg> <span class="ae-num">0.00</span> <span class="ae-dim">reward</span></summary>
+    <div class="lab-cols is-2" style="margin-top:1em">
+      <div>
+        <div class="lab-figrow">
+          <div class="lab-fig"><p class="lab-fig-k">recall</p><p class="lab-fig-v">0 / 1 <span class="ae-dim">· 0.00</span></p></div>
+          <div class="lab-fig"><p class="lab-fig-k">false pos</p><p class="lab-fig-v">1</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">cost</p><p class="lab-fig-v">$0.0112</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">wall</p><p class="lab-fig-v">30s</p></div>
+        </div>
+        <p class="ae-h" style="margin-top:1.1em">VERDICT</p>
+        <p><svg class="ae-icon ae-err"><use href="#i-x" /></svg> false positives, no keyed match — noise, not signal</p>
+      </div>
+      <div>
+        <p class="ae-h">CANDIDATE FINDINGS · scored vs the hidden key</p>
+        <pre class="lab-code"><span class="k">src/cart.js</span>:10 <span class="ae-dim">correctness · </span>
+orderTotal now calls applyDiscount on the original items array, and applyDiscount mutates each item&#39;s price in place. If the same cart is totaled more than once, the discount is applied repeatedly and the caller&#39;s input data is permanently changed, so later totals are too low.</pre>
+      </div>
+    </div>
+  </details>
+  <details id="trial-c1-t1" class="rep-trial">
+    <summary><span class="rep-trial-h">g1b-seed2-kimi-k2-7-code-trace-callers <span class="ae-dim">×</span> js-clean-rename</span> <svg class="ae-icon ae-ok"><use href="#i-check" /></svg> <span class="ae-num">1.00</span> <span class="ae-dim">reward</span></summary>
+    <div class="lab-cols is-2" style="margin-top:1em">
+      <div>
+        <div class="lab-figrow">
+          <div class="lab-fig"><p class="lab-fig-k">recall</p><p class="lab-fig-v">0 / 0 <span class="ae-dim">· 1.00</span></p></div>
+          <div class="lab-fig"><p class="lab-fig-k">false pos</p><p class="lab-fig-v">0</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">cost</p><p class="lab-fig-v">$0.0068</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">wall</p><p class="lab-fig-v">13s</p></div>
+        </div>
+        <p class="ae-h" style="margin-top:1.1em">VERDICT</p>
+        <p><svg class="ae-icon ae-ok"><use href="#i-check" /></svg> matched the keyed defect</p>
+      </div>
+      <div>
+        <p class="ae-h">CANDIDATE FINDINGS · scored vs the hidden key</p>
+        <div class="ae-empty" style="border:0;padding:0.8em 0"><p class="ae-item">No findings emitted.</p><p class="ae-dim">The candidate returned <span class="ae-num">[]</span> — a valid, empty result, scored as a clean miss.</p></div>
+      </div>
+    </div>
+  </details>
+  <details id="trial-c1-t2" class="rep-trial">
+    <summary><span class="rep-trial-h">g1b-seed2-kimi-k2-7-code-trace-callers <span class="ae-dim">×</span> py-auth-sqli</span> <svg class="ae-icon ae-warn"><use href="#i-minus" /></svg> <span class="ae-num">0.50</span> <span class="ae-dim">reward</span></summary>
+    <div class="lab-cols is-2" style="margin-top:1em">
+      <div>
+        <div class="lab-figrow">
+          <div class="lab-fig"><p class="lab-fig-k">recall</p><p class="lab-fig-v">1 / 2 <span class="ae-dim">· 0.50</span></p></div>
+          <div class="lab-fig"><p class="lab-fig-k">false pos</p><p class="lab-fig-v">0</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">cost</p><p class="lab-fig-v">$0.0156</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">wall</p><p class="lab-fig-v">39s</p></div>
+        </div>
+        <p class="ae-h" style="margin-top:1.1em">VERDICT</p>
+        <p><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg> partial — some defects matched, others missed or false-flagged</p>
+      </div>
+      <div>
+        <p class="ae-h">CANDIDATE FINDINGS · scored vs the hidden key</p>
+        <pre class="lab-code"><span class="k">app/auth.py</span>:10 <span class="ae-dim">security · </span>
+The email is interpolated directly into SQL, so a crafted email like `x&#39; UNION SELECT ...` can change the result set. Because the returned `password_hash` is fed into `verify_password`, an attacker can inject a row with a hash they precomputed for a chosen password and log in as an arbitrary user.</pre>
+      </div>
+    </div>
+  </details>
+  <details id="trial-c1-t3" class="rep-trial">
+    <summary><span class="rep-trial-h">g1b-seed2-kimi-k2-7-code-trace-callers <span class="ae-dim">×</span> py-file-cache</span> <svg class="ae-icon ae-warn"><use href="#i-minus" /></svg> <span class="ae-num">0.67</span> <span class="ae-dim">reward</span></summary>
+    <div class="lab-cols is-2" style="margin-top:1em">
+      <div>
+        <div class="lab-figrow">
+          <div class="lab-fig"><p class="lab-fig-k">recall</p><p class="lab-fig-v">2 / 3 <span class="ae-dim">· 0.67</span></p></div>
+          <div class="lab-fig"><p class="lab-fig-k">false pos</p><p class="lab-fig-v">0</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">cost</p><p class="lab-fig-v">$0.0200</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">wall</p><p class="lab-fig-v">44s</p></div>
+        </div>
+        <p class="ae-h" style="margin-top:1.1em">VERDICT</p>
+        <p><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg> partial — some defects matched, others missed or false-flagged</p>
+      </div>
+      <div>
+        <p class="ae-h">CANDIDATE FINDINGS · scored vs the hidden key</p>
+        <pre class="lab-code"><span class="k">cache.py</span>:8 <span class="ae-dim">security · </span>
+The cache path is built directly from the untrusted `user_id` via `profile-{user_id}` in `app.py:7`, so a value containing `../` or path separators escapes `~/.app-cache`. That lets a caller read or overwrite files outside the cache directory when `fetch_profile()` hits `cache.get()`/`cache.set()`.</pre><pre class="lab-code"><span class="k">cache.py</span>:23 <span class="ae-dim">concurrency · </span>
+`cache.set()` uses a fixed `&#39;&lt;key&gt;.tmp&#39;` filename and then `os.rename()` with no locking. Two concurrent `fetch_profile()` calls for the same user (`app.py:14`) can clobber each other&#39;s temp file or make one rename fail with `FileNotFoundError`, turning a successful profile fetch into a cache write race.</pre>
+      </div>
+    </div>
+  </details>
+  <details id="trial-c1-t4" class="rep-trial">
+    <summary><span class="rep-trial-h">g1b-seed2-kimi-k2-7-code-trace-callers <span class="ae-dim">×</span> py-pagination</span> <svg class="ae-icon ae-ok"><use href="#i-check" /></svg> <span class="ae-num">1.00</span> <span class="ae-dim">reward</span></summary>
+    <div class="lab-cols is-2" style="margin-top:1em">
+      <div>
+        <div class="lab-figrow">
+          <div class="lab-fig"><p class="lab-fig-k">recall</p><p class="lab-fig-v">1 / 1 <span class="ae-dim">· 1.00</span></p></div>
+          <div class="lab-fig"><p class="lab-fig-k">false pos</p><p class="lab-fig-v">0</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">cost</p><p class="lab-fig-v">$0.0040</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">wall</p><p class="lab-fig-v">7s</p></div>
+        </div>
+        <p class="ae-h" style="margin-top:1.1em">VERDICT</p>
+        <p><svg class="ae-icon ae-ok"><use href="#i-check" /></svg> matched the keyed defect</p>
+      </div>
+      <div>
+        <p class="ae-h">CANDIDATE FINDINGS · scored vs the hidden key</p>
+        <pre class="lab-code"><span class="k">pagination.py</span>:7 <span class="ae-dim">correctness · </span>
+The helper claims to paginate a 1-indexed page, but `start = page * page_size` makes page 1 begin at offset `page_size` instead of 0. This skips the first page of results and returns the wrong slice for every page.</pre>
+      </div>
+    </div>
+  </details>
+  <details id="trial-c1-t5" class="rep-trial">
+    <summary><span class="rep-trial-h">g1b-seed2-kimi-k2-7-code-trace-callers <span class="ae-dim">×</span> rs-retry-backoff</span> <svg class="ae-icon ae-err"><use href="#i-alert" /></svg> <span class="ae-num">0.00</span> <span class="ae-dim">reward</span></summary>
+    <div class="lab-cols is-2" style="margin-top:1em">
+      <div>
+        <div class="lab-figrow">
+          <div class="lab-fig"><p class="lab-fig-k">recall</p><p class="lab-fig-v">0 / 2 <span class="ae-dim">· 0.00</span></p></div>
+          <div class="lab-fig"><p class="lab-fig-k">false pos</p><p class="lab-fig-v">0</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">cost</p><p class="lab-fig-v">$0.0293</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">wall</p><p class="lab-fig-v">72s</p></div>
+        </div>
+        <p class="ae-h" style="margin-top:1.1em">VERDICT</p>
+        <p><svg class="ae-icon ae-err"><use href="#i-alert" /></svg> infrastructure error — not a clean score</p>
+      </div>
+      <div>
+        <p class="ae-h">CANDIDATE FINDINGS · scored vs the hidden key</p>
+        <div class="ae-empty" style="border:0;padding:0.8em 0"><p class="ae-item">No findings emitted.</p><p class="ae-dim">The candidate returned <span class="ae-num">[]</span> — a valid, empty result, scored as a clean miss.</p></div>
+      </div>
+    </div>
+  </details>
+  <details id="trial-c2-t0" class="rep-trial">
+    <summary><span class="rep-trial-h">g2a-seed2-kimi-k2-7-code-trace-callers <span class="ae-dim">×</span> js-cart-total</span> <svg class="ae-icon ae-ok"><use href="#i-check" /></svg> <span class="ae-num">1.00</span> <span class="ae-dim">reward</span></summary>
+    <div class="lab-cols is-2" style="margin-top:1em">
+      <div>
+        <div class="lab-figrow">
+          <div class="lab-fig"><p class="lab-fig-k">recall</p><p class="lab-fig-v">1 / 1 <span class="ae-dim">· 1.00</span></p></div>
+          <div class="lab-fig"><p class="lab-fig-k">false pos</p><p class="lab-fig-v">0</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">cost</p><p class="lab-fig-v">$0.0140</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">wall</p><p class="lab-fig-v">73s</p></div>
+        </div>
+        <p class="ae-h" style="margin-top:1.1em">VERDICT</p>
+        <p><svg class="ae-icon ae-ok"><use href="#i-check" /></svg> matched the keyed defect</p>
+      </div>
+      <div>
+        <p class="ae-h">CANDIDATE FINDINGS · scored vs the hidden key</p>
+        <pre class="lab-code"><span class="k">src/cart.js</span>:3 <span class="ae-dim">correctness · </span>
+applyDiscount mutates item.price in place on the caller&#39;s items array, so repeated calls to orderTotal with the same items compound the discount and return incorrect totals.</pre>
+      </div>
+    </div>
+  </details>
+  <details id="trial-c2-t1" class="rep-trial">
+    <summary><span class="rep-trial-h">g2a-seed2-kimi-k2-7-code-trace-callers <span class="ae-dim">×</span> js-clean-rename</span> <svg class="ae-icon ae-ok"><use href="#i-check" /></svg> <span class="ae-num">1.00</span> <span class="ae-dim">reward</span></summary>
+    <div class="lab-cols is-2" style="margin-top:1em">
+      <div>
+        <div class="lab-figrow">
+          <div class="lab-fig"><p class="lab-fig-k">recall</p><p class="lab-fig-v">0 / 0 <span class="ae-dim">· 1.00</span></p></div>
+          <div class="lab-fig"><p class="lab-fig-k">false pos</p><p class="lab-fig-v">0</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">cost</p><p class="lab-fig-v">$0.0066</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">wall</p><p class="lab-fig-v">29s</p></div>
+        </div>
+        <p class="ae-h" style="margin-top:1.1em">VERDICT</p>
+        <p><svg class="ae-icon ae-ok"><use href="#i-check" /></svg> matched the keyed defect</p>
+      </div>
+      <div>
+        <p class="ae-h">CANDIDATE FINDINGS · scored vs the hidden key</p>
+        <div class="ae-empty" style="border:0;padding:0.8em 0"><p class="ae-item">No findings emitted.</p><p class="ae-dim">The candidate returned <span class="ae-num">[]</span> — a valid, empty result, scored as a clean miss.</p></div>
+      </div>
+    </div>
+  </details>
+  <details id="trial-c2-t2" class="rep-trial">
+    <summary><span class="rep-trial-h">g2a-seed2-kimi-k2-7-code-trace-callers <span class="ae-dim">×</span> py-auth-sqli</span> <svg class="ae-icon ae-warn"><use href="#i-minus" /></svg> <span class="ae-num">0.50</span> <span class="ae-dim">reward</span></summary>
+    <div class="lab-cols is-2" style="margin-top:1em">
+      <div>
+        <div class="lab-figrow">
+          <div class="lab-fig"><p class="lab-fig-k">recall</p><p class="lab-fig-v">1 / 2 <span class="ae-dim">· 0.50</span></p></div>
+          <div class="lab-fig"><p class="lab-fig-k">false pos</p><p class="lab-fig-v">0</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">cost</p><p class="lab-fig-v">$0.0120</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">wall</p><p class="lab-fig-v">58s</p></div>
+        </div>
+        <p class="ae-h" style="margin-top:1.1em">VERDICT</p>
+        <p><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg> partial — some defects matched, others missed or false-flagged</p>
+      </div>
+      <div>
+        <p class="ae-h">CANDIDATE FINDINGS · scored vs the hidden key</p>
+        <pre class="lab-code"><span class="k">app/auth.py</span>:10 <span class="ae-dim">security · </span>
+The email parameter is interpolated directly into the SQL query using an f-string, allowing attackers to inject arbitrary SQL. `login(email, password)` forwards untrusted input to `find_user_by_email`, which then runs it unescaped.</pre>
+      </div>
+    </div>
+  </details>
+  <details id="trial-c2-t3" class="rep-trial">
+    <summary><span class="rep-trial-h">g2a-seed2-kimi-k2-7-code-trace-callers <span class="ae-dim">×</span> py-file-cache</span> <svg class="ae-icon ae-warn"><use href="#i-minus" /></svg> <span class="ae-num">0.13</span> <span class="ae-dim">reward</span></summary>
+    <div class="lab-cols is-2" style="margin-top:1em">
+      <div>
+        <div class="lab-figrow">
+          <div class="lab-fig"><p class="lab-fig-k">recall</p><p class="lab-fig-v">1 / 3 <span class="ae-dim">· 0.33</span></p></div>
+          <div class="lab-fig"><p class="lab-fig-k">false pos</p><p class="lab-fig-v">1</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">cost</p><p class="lab-fig-v">$0.0322</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">wall</p><p class="lab-fig-v">365s</p></div>
+        </div>
+        <p class="ae-h" style="margin-top:1.1em">VERDICT</p>
+        <p><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg> partial — some defects matched, others missed or false-flagged</p>
+      </div>
+      <div>
+        <p class="ae-h">CANDIDATE FINDINGS · scored vs the hidden key</p>
+        <pre class="lab-code"><span class="k">cache.py</span>:8 <span class="ae-dim">security · </span>
+_path() joins the unsanitized key directly into CACHE_DIR, so a user_id containing &#39;..&#39; or &#39;/&#39; used to build the key in app.py (line 7) can read or write files outside the cache directory.</pre><pre class="lab-code"><span class="k">cache.py</span>:15 <span class="ae-dim">error-handling · </span>
+cache.get() does not handle failures from open() or json.load(), so a corrupt, empty, or unreadable cache file raises instead of falling back to the API, and the file handle is left unclosed on exception.</pre>
+      </div>
+    </div>
+  </details>
+  <details id="trial-c3-t0" class="rep-trial">
+    <summary><span class="rep-trial-h">seed3-gpt-5-4-mini-test-runner <span class="ae-dim">×</span> js-cart-total</span> <svg class="ae-icon ae-ok"><use href="#i-check" /></svg> <span class="ae-num">1.00</span> <span class="ae-dim">reward</span></summary>
+    <div class="lab-cols is-2" style="margin-top:1em">
+      <div>
+        <div class="lab-figrow">
+          <div class="lab-fig"><p class="lab-fig-k">recall</p><p class="lab-fig-v">1 / 1 <span class="ae-dim">· 1.00</span></p></div>
+          <div class="lab-fig"><p class="lab-fig-k">false pos</p><p class="lab-fig-v">0</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">cost</p><p class="lab-fig-v">$0.0064</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">wall</p><p class="lab-fig-v">16s</p></div>
+        </div>
+        <p class="ae-h" style="margin-top:1.1em">VERDICT</p>
+        <p><svg class="ae-icon ae-ok"><use href="#i-check" /></svg> matched the keyed defect</p>
+      </div>
+      <div>
+        <p class="ae-h">CANDIDATE FINDINGS · scored vs the hidden key</p>
+        <pre class="lab-code"><span class="k">src/cart.js</span>:2 <span class="ae-dim">correctness · </span>
+`applyDiscount` mutates each item in place before `orderTotal` sums it. Callers that reuse the same cart objects will see their prices permanently changed, and a second call to `orderTotal` will apply the discount again on already-discounted prices, producing a lower total than intended.</pre>
+      </div>
+    </div>
+  </details>
+  <details id="trial-c3-t1" class="rep-trial">
+    <summary><span class="rep-trial-h">seed3-gpt-5-4-mini-test-runner <span class="ae-dim">×</span> js-clean-rename</span> <svg class="ae-icon ae-err"><use href="#i-alert" /></svg> <span class="ae-num">0.00</span> <span class="ae-dim">reward</span></summary>
+    <div class="lab-cols is-2" style="margin-top:1em">
+      <div>
+        <div class="lab-figrow">
+          <div class="lab-fig"><p class="lab-fig-k">recall</p><p class="lab-fig-v">0 / 0 <span class="ae-dim">· 0.00</span></p></div>
+          <div class="lab-fig"><p class="lab-fig-k">false pos</p><p class="lab-fig-v">0</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">cost</p><p class="lab-fig-v">$0.0052</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">wall</p><p class="lab-fig-v">11s</p></div>
+        </div>
+        <p class="ae-h" style="margin-top:1.1em">VERDICT</p>
+        <p><svg class="ae-icon ae-err"><use href="#i-alert" /></svg> infrastructure error — not a clean score</p>
+      </div>
+      <div>
+        <p class="ae-h">CANDIDATE FINDINGS · scored vs the hidden key</p>
+        <div class="ae-empty" style="border:0;padding:0.8em 0"><p class="ae-item">No findings emitted.</p><p class="ae-dim">The candidate returned <span class="ae-num">[]</span> — a valid, empty result, scored as a clean miss.</p></div>
+      </div>
+    </div>
+  </details>
+  <details id="trial-c3-t2" class="rep-trial">
+    <summary><span class="rep-trial-h">seed3-gpt-5-4-mini-test-runner <span class="ae-dim">×</span> py-auth-sqli</span> <svg class="ae-icon ae-warn"><use href="#i-minus" /></svg> <span class="ae-num">0.50</span> <span class="ae-dim">reward</span></summary>
+    <div class="lab-cols is-2" style="margin-top:1em">
+      <div>
+        <div class="lab-figrow">
+          <div class="lab-fig"><p class="lab-fig-k">recall</p><p class="lab-fig-v">1 / 2 <span class="ae-dim">· 0.50</span></p></div>
+          <div class="lab-fig"><p class="lab-fig-k">false pos</p><p class="lab-fig-v">0</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">cost</p><p class="lab-fig-v">$0.0057</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">wall</p><p class="lab-fig-v">10s</p></div>
+        </div>
+        <p class="ae-h" style="margin-top:1.1em">VERDICT</p>
+        <p><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg> partial — some defects matched, others missed or false-flagged</p>
+      </div>
+      <div>
+        <p class="ae-h">CANDIDATE FINDINGS · scored vs the hidden key</p>
+        <pre class="lab-code"><span class="k">app/auth.py</span>:8 <span class="ae-dim">security · </span>
+`email` is interpolated directly into the SQL string instead of being passed as a parameter. A crafted email value can inject SQL into the login query, letting an attacker read arbitrary rows or potentially bypass authentication.</pre>
+      </div>
+    </div>
+  </details>
+  <details id="trial-c3-t3" class="rep-trial">
+    <summary><span class="rep-trial-h">seed3-gpt-5-4-mini-test-runner <span class="ae-dim">×</span> py-file-cache</span> <svg class="ae-icon ae-warn"><use href="#i-minus" /></svg> <span class="ae-num">0.33</span> <span class="ae-dim">reward</span></summary>
+    <div class="lab-cols is-2" style="margin-top:1em">
+      <div>
+        <div class="lab-figrow">
+          <div class="lab-fig"><p class="lab-fig-k">recall</p><p class="lab-fig-v">1 / 3 <span class="ae-dim">· 0.33</span></p></div>
+          <div class="lab-fig"><p class="lab-fig-k">false pos</p><p class="lab-fig-v">0</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">cost</p><p class="lab-fig-v">$0.0107</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">wall</p><p class="lab-fig-v">28s</p></div>
+        </div>
+        <p class="ae-h" style="margin-top:1.1em">VERDICT</p>
+        <p><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg> partial — some defects matched, others missed or false-flagged</p>
+      </div>
+      <div>
+        <p class="ae-h">CANDIDATE FINDINGS · scored vs the hidden key</p>
+        <pre class="lab-code"><span class="k">cache.py</span>:7 <span class="ae-dim">security · </span>
+The cache key is interpolated directly into a filesystem path with no validation. A crafted `user_id` containing `../` or an absolute path will make `fetch_profile()` read or overwrite JSON files outside `~/.app-cache`, which is a path-traversal vulnerability.</pre>
+      </div>
+    </div>
+  </details>
+  <details id="trial-c3-t4" class="rep-trial">
+    <summary><span class="rep-trial-h">seed3-gpt-5-4-mini-test-runner <span class="ae-dim">×</span> py-pagination</span> <svg class="ae-icon ae-ok"><use href="#i-check" /></svg> <span class="ae-num">1.00</span> <span class="ae-dim">reward</span></summary>
+    <div class="lab-cols is-2" style="margin-top:1em">
+      <div>
+        <div class="lab-figrow">
+          <div class="lab-fig"><p class="lab-fig-k">recall</p><p class="lab-fig-v">1 / 1 <span class="ae-dim">· 1.00</span></p></div>
+          <div class="lab-fig"><p class="lab-fig-k">false pos</p><p class="lab-fig-v">0</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">cost</p><p class="lab-fig-v">$0.0048</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">wall</p><p class="lab-fig-v">11s</p></div>
+        </div>
+        <p class="ae-h" style="margin-top:1.1em">VERDICT</p>
+        <p><svg class="ae-icon ae-ok"><use href="#i-check" /></svg> matched the keyed defect</p>
+      </div>
+      <div>
+        <p class="ae-h">CANDIDATE FINDINGS · scored vs the hidden key</p>
+        <pre class="lab-code"><span class="k">pagination.py</span>:7 <span class="ae-dim">correctness · </span>
+This computes the slice starting at `page * page_size`, so page 1 skips the first `page_size` items and returns the second page instead. Any caller asking for page 1 will get the wrong results, and the final page can come back empty when it should contain data.</pre>
+      </div>
+    </div>
+  </details>
+  <details id="trial-c3-t5" class="rep-trial">
+    <summary><span class="rep-trial-h">seed3-gpt-5-4-mini-test-runner <span class="ae-dim">×</span> rs-retry-backoff</span> <svg class="ae-icon ae-warn"><use href="#i-minus" /></svg> <span class="ae-num">0.50</span> <span class="ae-dim">reward</span></summary>
+    <div class="lab-cols is-2" style="margin-top:1em">
+      <div>
+        <div class="lab-figrow">
+          <div class="lab-fig"><p class="lab-fig-k">recall</p><p class="lab-fig-v">1 / 2 <span class="ae-dim">· 0.50</span></p></div>
+          <div class="lab-fig"><p class="lab-fig-k">false pos</p><p class="lab-fig-v">0</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">cost</p><p class="lab-fig-v">$0.0072</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">wall</p><p class="lab-fig-v">15s</p></div>
+        </div>
+        <p class="ae-h" style="margin-top:1.1em">VERDICT</p>
+        <p><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg> partial — some defects matched, others missed or false-flagged</p>
+      </div>
+      <div>
+        <p class="ae-h">CANDIDATE FINDINGS · scored vs the hidden key</p>
+        <pre class="lab-code"><span class="k">src/retry.rs</span>:14 <span class="ae-dim">correctness · </span>
+The helper performs one more call than the documented `max_attempts`: it invokes `op()` before checking the limit, so `max_attempts = 1` still allows two total attempts. Callers that rely on the bound for idempotency or side effects will get extra executions.</pre>
+      </div>
+    </div>
+  </details>
+  <details id="trial-c4-t0" class="rep-trial">
+    <summary><span class="rep-trial-h">seed1-glm-5-2-spec-first <span class="ae-dim">×</span> js-cart-total</span> <svg class="ae-icon ae-err"><use href="#i-x" /></svg> <span class="ae-num">0.00</span> <span class="ae-dim">reward</span></summary>
+    <div class="lab-cols is-2" style="margin-top:1em">
+      <div>
+        <div class="lab-figrow">
+          <div class="lab-fig"><p class="lab-fig-k">recall</p><p class="lab-fig-v">0 / 1 <span class="ae-dim">· 0.00</span></p></div>
+          <div class="lab-fig"><p class="lab-fig-k">false pos</p><p class="lab-fig-v">1</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">cost</p><p class="lab-fig-v">$0.0088</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">wall</p><p class="lab-fig-v">105s</p></div>
+        </div>
+        <p class="ae-h" style="margin-top:1.1em">VERDICT</p>
+        <p><svg class="ae-icon ae-err"><use href="#i-x" /></svg> false positives, no keyed match — noise, not signal</p>
+      </div>
+      <div>
+        <p class="ae-h">CANDIDATE FINDINGS · scored vs the hidden key</p>
+        <pre class="lab-code"><span class="k">src/cart.js</span>:3 <span class="ae-dim">data-loss · </span>
+applyDiscount mutates each item&#39;s price field in place on the caller&#39;s array, destroying the original price. Callers that reuse the items array (or call orderTotal again) will see permanently altered prices rather than the originals, causing loss of the original item price data.</pre>
+      </div>
+    </div>
+  </details>
+  <details id="trial-c4-t1" class="rep-trial">
+    <summary><span class="rep-trial-h">seed1-glm-5-2-spec-first <span class="ae-dim">×</span> js-clean-rename</span> <svg class="ae-icon ae-ok"><use href="#i-check" /></svg> <span class="ae-num">1.00</span> <span class="ae-dim">reward</span></summary>
+    <div class="lab-cols is-2" style="margin-top:1em">
+      <div>
+        <div class="lab-figrow">
+          <div class="lab-fig"><p class="lab-fig-k">recall</p><p class="lab-fig-v">0 / 0 <span class="ae-dim">· 1.00</span></p></div>
+          <div class="lab-fig"><p class="lab-fig-k">false pos</p><p class="lab-fig-v">0</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">cost</p><p class="lab-fig-v">$0.0038</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">wall</p><p class="lab-fig-v">44s</p></div>
+        </div>
+        <p class="ae-h" style="margin-top:1.1em">VERDICT</p>
+        <p><svg class="ae-icon ae-ok"><use href="#i-check" /></svg> matched the keyed defect</p>
+      </div>
+      <div>
+        <p class="ae-h">CANDIDATE FINDINGS · scored vs the hidden key</p>
+        <div class="ae-empty" style="border:0;padding:0.8em 0"><p class="ae-item">No findings emitted.</p><p class="ae-dim">The candidate returned <span class="ae-num">[]</span> — a valid, empty result, scored as a clean miss.</p></div>
+      </div>
+    </div>
+  </details>
+  <details id="trial-c4-t2" class="rep-trial">
+    <summary><span class="rep-trial-h">seed1-glm-5-2-spec-first <span class="ae-dim">×</span> py-auth-sqli</span> <svg class="ae-icon ae-warn"><use href="#i-minus" /></svg> <span class="ae-num">0.50</span> <span class="ae-dim">reward</span></summary>
+    <div class="lab-cols is-2" style="margin-top:1em">
+      <div>
+        <div class="lab-figrow">
+          <div class="lab-fig"><p class="lab-fig-k">recall</p><p class="lab-fig-v">1 / 2 <span class="ae-dim">· 0.50</span></p></div>
+          <div class="lab-fig"><p class="lab-fig-k">false pos</p><p class="lab-fig-v">0</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">cost</p><p class="lab-fig-v">$0.0051</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">wall</p><p class="lab-fig-v">42s</p></div>
+        </div>
+        <p class="ae-h" style="margin-top:1.1em">VERDICT</p>
+        <p><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg> partial — some defects matched, others missed or false-flagged</p>
+      </div>
+      <div>
+        <p class="ae-h">CANDIDATE FINDINGS · scored vs the hidden key</p>
+        <pre class="lab-code"><span class="k">app/auth.py</span>:10 <span class="ae-dim">security · </span>
+The email value is interpolated directly into the SQL query string via an f-string instead of using a parameterized query (the original code used a &#39;?&#39; placeholder). This introduces a SQL injection vulnerability, allowing an attacker who controls the email argument to execute arbitrary SQL against the database.</pre>
+      </div>
+    </div>
+  </details>
+  <details id="trial-c4-t3" class="rep-trial">
+    <summary><span class="rep-trial-h">seed1-glm-5-2-spec-first <span class="ae-dim">×</span> py-file-cache</span> <svg class="ae-icon ae-warn"><use href="#i-minus" /></svg> <span class="ae-num">0.33</span> <span class="ae-dim">reward</span></summary>
+    <div class="lab-cols is-2" style="margin-top:1em">
+      <div>
+        <div class="lab-figrow">
+          <div class="lab-fig"><p class="lab-fig-k">recall</p><p class="lab-fig-v">1 / 3 <span class="ae-dim">· 0.33</span></p></div>
+          <div class="lab-fig"><p class="lab-fig-k">false pos</p><p class="lab-fig-v">0</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">cost</p><p class="lab-fig-v">$0.0067</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">wall</p><p class="lab-fig-v">44s</p></div>
+        </div>
+        <p class="ae-h" style="margin-top:1.1em">VERDICT</p>
+        <p><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg> partial — some defects matched, others missed or false-flagged</p>
+      </div>
+      <div>
+        <p class="ae-h">CANDIDATE FINDINGS · scored vs the hidden key</p>
+        <pre class="lab-code"><span class="k">cache.py</span>:15 <span class="ae-dim">resource-leak · </span>
+In get(), the file is opened with open(path) and only closed via f.close() on the success path. If json.load(f) raises (e.g., a corrupt or empty cache file), f.close() is never reached, leaking the file descriptor. A with statement or try/finally would ensure the file is closed on error.</pre>
+      </div>
+    </div>
+  </details>
+  <details id="trial-c4-t4" class="rep-trial">
+    <summary><span class="rep-trial-h">seed1-glm-5-2-spec-first <span class="ae-dim">×</span> py-pagination</span> <svg class="ae-icon ae-ok"><use href="#i-check" /></svg> <span class="ae-num">1.00</span> <span class="ae-dim">reward</span></summary>
+    <div class="lab-cols is-2" style="margin-top:1em">
+      <div>
+        <div class="lab-figrow">
+          <div class="lab-fig"><p class="lab-fig-k">recall</p><p class="lab-fig-v">1 / 1 <span class="ae-dim">· 1.00</span></p></div>
+          <div class="lab-fig"><p class="lab-fig-k">false pos</p><p class="lab-fig-v">0</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">cost</p><p class="lab-fig-v">$0.0053</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">wall</p><p class="lab-fig-v">49s</p></div>
+        </div>
+        <p class="ae-h" style="margin-top:1.1em">VERDICT</p>
+        <p><svg class="ae-icon ae-ok"><use href="#i-check" /></svg> matched the keyed defect</p>
+      </div>
+      <div>
+        <p class="ae-h">CANDIDATE FINDINGS · scored vs the hidden key</p>
+        <pre class="lab-code"><span class="k">pagination.py</span>:7 <span class="ae-dim">correctness · </span>
+For a 1-indexed page (per the docstring), the start offset must be (page - 1) * page_size, but the code computes start = page * page_size. This skips the first page_size items and returns the wrong slice for every page (e.g., page 1 returns items[10:20] instead of items[0:10]).</pre>
+      </div>
+    </div>
+  </details>
+  <details id="trial-c5-t0" class="rep-trial">
+    <summary><span class="rep-trial-h">seed5-deepseek-v4-pro-trace-callers <span class="ae-dim">×</span> js-cart-total</span> <svg class="ae-icon ae-ok"><use href="#i-check" /></svg> <span class="ae-num">1.00</span> <span class="ae-dim">reward</span></summary>
+    <div class="lab-cols is-2" style="margin-top:1em">
+      <div>
+        <div class="lab-figrow">
+          <div class="lab-fig"><p class="lab-fig-k">recall</p><p class="lab-fig-v">1 / 1 <span class="ae-dim">· 1.00</span></p></div>
+          <div class="lab-fig"><p class="lab-fig-k">false pos</p><p class="lab-fig-v">0</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">cost</p><p class="lab-fig-v">$0.0021</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">wall</p><p class="lab-fig-v">26s</p></div>
+        </div>
+        <p class="ae-h" style="margin-top:1.1em">VERDICT</p>
+        <p><svg class="ae-icon ae-ok"><use href="#i-check" /></svg> matched the keyed defect</p>
+      </div>
+      <div>
+        <p class="ae-h">CANDIDATE FINDINGS · scored vs the hidden key</p>
+        <pre class="lab-code"><span class="k">src/cart.js</span>:3 <span class="ae-dim">correctness · </span>
+applyDiscount mutates item.price in-place on the original array. Since orderTotal passes its caller&#39;s items array directly, every invocation permanently reduces prices, causing incorrect totals on subsequent calls with the same data.</pre>
+      </div>
+    </div>
+  </details>
+  <details id="trial-c5-t1" class="rep-trial">
+    <summary><span class="rep-trial-h">seed5-deepseek-v4-pro-trace-callers <span class="ae-dim">×</span> js-clean-rename</span> <svg class="ae-icon ae-ok"><use href="#i-check" /></svg> <span class="ae-num">1.00</span> <span class="ae-dim">reward</span></summary>
+    <div class="lab-cols is-2" style="margin-top:1em">
+      <div>
+        <div class="lab-figrow">
+          <div class="lab-fig"><p class="lab-fig-k">recall</p><p class="lab-fig-v">0 / 0 <span class="ae-dim">· 1.00</span></p></div>
+          <div class="lab-fig"><p class="lab-fig-k">false pos</p><p class="lab-fig-v">0</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">cost</p><p class="lab-fig-v">$0.0028</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">wall</p><p class="lab-fig-v">27s</p></div>
+        </div>
+        <p class="ae-h" style="margin-top:1.1em">VERDICT</p>
+        <p><svg class="ae-icon ae-ok"><use href="#i-check" /></svg> matched the keyed defect</p>
+      </div>
+      <div>
+        <p class="ae-h">CANDIDATE FINDINGS · scored vs the hidden key</p>
+        <div class="ae-empty" style="border:0;padding:0.8em 0"><p class="ae-item">No findings emitted.</p><p class="ae-dim">The candidate returned <span class="ae-num">[]</span> — a valid, empty result, scored as a clean miss.</p></div>
+      </div>
+    </div>
+  </details>
+  <details id="trial-c5-t2" class="rep-trial">
+    <summary><span class="rep-trial-h">seed5-deepseek-v4-pro-trace-callers <span class="ae-dim">×</span> py-auth-sqli</span> <svg class="ae-icon ae-warn"><use href="#i-minus" /></svg> <span class="ae-num">0.50</span> <span class="ae-dim">reward</span></summary>
+    <div class="lab-cols is-2" style="margin-top:1em">
+      <div>
+        <div class="lab-figrow">
+          <div class="lab-fig"><p class="lab-fig-k">recall</p><p class="lab-fig-v">1 / 2 <span class="ae-dim">· 0.50</span></p></div>
+          <div class="lab-fig"><p class="lab-fig-k">false pos</p><p class="lab-fig-v">0</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">cost</p><p class="lab-fig-v">$0.0099</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">wall</p><p class="lab-fig-v">56s</p></div>
+        </div>
+        <p class="ae-h" style="margin-top:1.1em">VERDICT</p>
+        <p><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg> partial — some defects matched, others missed or false-flagged</p>
+      </div>
+      <div>
+        <p class="ae-h">CANDIDATE FINDINGS · scored vs the hidden key</p>
+        <pre class="lab-code"><span class="k">app/auth.py</span>:10 <span class="ae-dim">security · </span>
+SQL injection: the email value from user input is interpolated directly into the SQL query via f-string instead of using a parameterized query. The original code correctly used &#39;?&#39; placeholders; the rewrite unsafely constructs the SQL string, allowing an attacker to manipulate the query.</pre>
+      </div>
+    </div>
+  </details>
+  <details id="trial-c5-t3" class="rep-trial">
+    <summary><span class="rep-trial-h">seed5-deepseek-v4-pro-trace-callers <span class="ae-dim">×</span> py-file-cache</span> <svg class="ae-icon ae-warn"><use href="#i-minus" /></svg> <span class="ae-num">0.13</span> <span class="ae-dim">reward</span></summary>
+    <div class="lab-cols is-2" style="margin-top:1em">
+      <div>
+        <div class="lab-figrow">
+          <div class="lab-fig"><p class="lab-fig-k">recall</p><p class="lab-fig-v">1 / 3 <span class="ae-dim">· 0.33</span></p></div>
+          <div class="lab-fig"><p class="lab-fig-k">false pos</p><p class="lab-fig-v">1</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">cost</p><p class="lab-fig-v">$0.0039</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">wall</p><p class="lab-fig-v">45s</p></div>
+        </div>
+        <p class="ae-h" style="margin-top:1.1em">VERDICT</p>
+        <p><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg> partial — some defects matched, others missed or false-flagged</p>
+      </div>
+      <div>
+        <p class="ae-h">CANDIDATE FINDINGS · scored vs the hidden key</p>
+        <pre class="lab-code"><span class="k">cache.py</span>:15 <span class="ae-dim">resource-leak · </span>
+`open(path)` on line 15 is not wrapped in a `with` statement, so if `json.load(f)` on line 16 raises an exception (e.g., corrupt or truncated cache file), the file handle `f` is never closed, leaking the file descriptor.</pre><pre class="lab-code"><span class="k">cache.py</span>:15 <span class="ae-dim">concurrency · </span>
+The `os.path.exists(path)` check on line 13 and `open(path)` on line 15 form a TOCTOU race: a concurrent process can delete the file between the check and the open, causing an unhandled `FileNotFoundError` to propagate to the caller `fetch_profile` in `app.py`.</pre>
+      </div>
+    </div>
+  </details>
+  <details id="trial-c5-t4" class="rep-trial">
+    <summary><span class="rep-trial-h">seed5-deepseek-v4-pro-trace-callers <span class="ae-dim">×</span> py-pagination</span> <svg class="ae-icon ae-ok"><use href="#i-check" /></svg> <span class="ae-num">1.00</span> <span class="ae-dim">reward</span></summary>
+    <div class="lab-cols is-2" style="margin-top:1em">
+      <div>
+        <div class="lab-figrow">
+          <div class="lab-fig"><p class="lab-fig-k">recall</p><p class="lab-fig-v">1 / 1 <span class="ae-dim">· 1.00</span></p></div>
+          <div class="lab-fig"><p class="lab-fig-k">false pos</p><p class="lab-fig-v">0</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">cost</p><p class="lab-fig-v">$0.0026</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">wall</p><p class="lab-fig-v">27s</p></div>
+        </div>
+        <p class="ae-h" style="margin-top:1.1em">VERDICT</p>
+        <p><svg class="ae-icon ae-ok"><use href="#i-check" /></svg> matched the keyed defect</p>
+      </div>
+      <div>
+        <p class="ae-h">CANDIDATE FINDINGS · scored vs the hidden key</p>
+        <pre class="lab-code"><span class="k">pagination.py</span>:7 <span class="ae-dim">correctness · </span>
+start = page * page_size computes the wrong offset for 1-indexed pages. For page=1, it returns items[page_size:2*page_size] instead of items[0:page_size], permanently skipping the first page_size items. Should be (page - 1) * page_size.</pre>
+      </div>
+    </div>
+  </details>
+  <details id="trial-c5-t5" class="rep-trial">
+    <summary><span class="rep-trial-h">seed5-deepseek-v4-pro-trace-callers <span class="ae-dim">×</span> rs-retry-backoff</span> <svg class="ae-icon ae-err"><use href="#i-x" /></svg> <span class="ae-num">0.00</span> <span class="ae-dim">reward</span></summary>
+    <div class="lab-cols is-2" style="margin-top:1em">
+      <div>
+        <div class="lab-figrow">
+          <div class="lab-fig"><p class="lab-fig-k">recall</p><p class="lab-fig-v">0 / 2 <span class="ae-dim">· 0.00</span></p></div>
+          <div class="lab-fig"><p class="lab-fig-k">false pos</p><p class="lab-fig-v">0</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">cost</p><p class="lab-fig-v">$0.0079</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">wall</p><p class="lab-fig-v">98s</p></div>
+        </div>
+        <p class="ae-h" style="margin-top:1.1em">VERDICT</p>
+        <p><svg class="ae-icon ae-err"><use href="#i-x" /></svg> a clean miss — valid empty output, defect left unfound</p>
+      </div>
+      <div>
+        <p class="ae-h">CANDIDATE FINDINGS · scored vs the hidden key</p>
+        <div class="ae-empty" style="border:0;padding:0.8em 0"><p class="ae-item">No findings emitted.</p><p class="ae-dim">The candidate returned <span class="ae-num">[]</span> — a valid, empty result, scored as a clean miss.</p></div>
+      </div>
+    </div>
+  </details>
+  <details id="trial-c6-t0" class="rep-trial">
+    <summary><span class="rep-trial-h">g1a-seed1-glm-5-2-spec-first <span class="ae-dim">×</span> js-cart-total</span> <svg class="ae-icon ae-err"><use href="#i-x" /></svg> <span class="ae-num">0.00</span> <span class="ae-dim">reward</span></summary>
+    <div class="lab-cols is-2" style="margin-top:1em">
+      <div>
+        <div class="lab-figrow">
+          <div class="lab-fig"><p class="lab-fig-k">recall</p><p class="lab-fig-v">0 / 1 <span class="ae-dim">· 0.00</span></p></div>
+          <div class="lab-fig"><p class="lab-fig-k">false pos</p><p class="lab-fig-v">1</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">cost</p><p class="lab-fig-v">$0.0067</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">wall</p><p class="lab-fig-v">65s</p></div>
+        </div>
+        <p class="ae-h" style="margin-top:1.1em">VERDICT</p>
+        <p><svg class="ae-icon ae-err"><use href="#i-x" /></svg> false positives, no keyed match — noise, not signal</p>
+      </div>
+      <div>
+        <p class="ae-h">CANDIDATE FINDINGS · scored vs the hidden key</p>
+        <pre class="lab-code"><span class="k">src/cart.js</span>:3 <span class="ae-dim">data-loss · </span>
+applyDiscount mutates item.price in place on the caller&#39;s item objects, permanently altering the input data. Because orderTotal returns the discounted total but leaves the original items modified, any caller reusing those item objects (e.g., a second orderTotal call, display, or persistence) sees corrupted prices, and repeated calls compound the discount.</pre>
+      </div>
+    </div>
+  </details>
+  <details id="trial-c6-t1" class="rep-trial">
+    <summary><span class="rep-trial-h">g1a-seed1-glm-5-2-spec-first <span class="ae-dim">×</span> js-clean-rename</span> <svg class="ae-icon ae-ok"><use href="#i-check" /></svg> <span class="ae-num">1.00</span> <span class="ae-dim">reward</span></summary>
+    <div class="lab-cols is-2" style="margin-top:1em">
+      <div>
+        <div class="lab-figrow">
+          <div class="lab-fig"><p class="lab-fig-k">recall</p><p class="lab-fig-v">0 / 0 <span class="ae-dim">· 1.00</span></p></div>
+          <div class="lab-fig"><p class="lab-fig-k">false pos</p><p class="lab-fig-v">0</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">cost</p><p class="lab-fig-v">$0.0063</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">wall</p><p class="lab-fig-v">20s</p></div>
+        </div>
+        <p class="ae-h" style="margin-top:1.1em">VERDICT</p>
+        <p><svg class="ae-icon ae-ok"><use href="#i-check" /></svg> matched the keyed defect</p>
+      </div>
+      <div>
+        <p class="ae-h">CANDIDATE FINDINGS · scored vs the hidden key</p>
+        <div class="ae-empty" style="border:0;padding:0.8em 0"><p class="ae-item">No findings emitted.</p><p class="ae-dim">The candidate returned <span class="ae-num">[]</span> — a valid, empty result, scored as a clean miss.</p></div>
+      </div>
+    </div>
+  </details>
+  <details id="trial-c6-t2" class="rep-trial">
+    <summary><span class="rep-trial-h">g1a-seed1-glm-5-2-spec-first <span class="ae-dim">×</span> py-auth-sqli</span> <svg class="ae-icon ae-warn"><use href="#i-minus" /></svg> <span class="ae-num">0.50</span> <span class="ae-dim">reward</span></summary>
+    <div class="lab-cols is-2" style="margin-top:1em">
+      <div>
+        <div class="lab-figrow">
+          <div class="lab-fig"><p class="lab-fig-k">recall</p><p class="lab-fig-v">1 / 2 <span class="ae-dim">· 0.50</span></p></div>
+          <div class="lab-fig"><p class="lab-fig-k">false pos</p><p class="lab-fig-v">0</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">cost</p><p class="lab-fig-v">$0.0050</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">wall</p><p class="lab-fig-v">34s</p></div>
+        </div>
+        <p class="ae-h" style="margin-top:1.1em">VERDICT</p>
+        <p><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg> partial — some defects matched, others missed or false-flagged</p>
+      </div>
+      <div>
+        <p class="ae-h">CANDIDATE FINDINGS · scored vs the hidden key</p>
+        <pre class="lab-code"><span class="k">app/auth.py</span>:10 <span class="ae-dim">security · </span>
+The email value is interpolated directly into the SQL query via an f-string (`f&quot;SELECT id, password_hash FROM users WHERE email = &#39;{email}&#39;&quot;`) instead of using a parameterized query. This introduces a SQL injection vulnerability, as a malicious email input can alter the query. The original code used a safe parameterized placeholder (`?`).</pre>
+      </div>
+    </div>
+  </details>
+  <details id="trial-c6-t3" class="rep-trial">
+    <summary><span class="rep-trial-h">g1a-seed1-glm-5-2-spec-first <span class="ae-dim">×</span> py-file-cache</span> <svg class="ae-icon ae-warn"><use href="#i-minus" /></svg> <span class="ae-num">0.67</span> <span class="ae-dim">reward</span></summary>
+    <div class="lab-cols is-2" style="margin-top:1em">
+      <div>
+        <div class="lab-figrow">
+          <div class="lab-fig"><p class="lab-fig-k">recall</p><p class="lab-fig-v">2 / 3 <span class="ae-dim">· 0.67</span></p></div>
+          <div class="lab-fig"><p class="lab-fig-k">false pos</p><p class="lab-fig-v">0</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">cost</p><p class="lab-fig-v">$0.0090</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">wall</p><p class="lab-fig-v">60s</p></div>
+        </div>
+        <p class="ae-h" style="margin-top:1.1em">VERDICT</p>
+        <p><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg> partial — some defects matched, others missed or false-flagged</p>
+      </div>
+      <div>
+        <p class="ae-h">CANDIDATE FINDINGS · scored vs the hidden key</p>
+        <pre class="lab-code"><span class="k">cache.py</span>:8 <span class="ae-dim">security · </span>
+_path joins the caller-supplied key directly into a filesystem path. fetch_profile builds the key from an unvalidated user_id (f&quot;profile-{user_id}&quot;), so a user_id containing path-traversal sequences (e.g. &quot;../../etc/passwd&quot;) escapes CACHE_DIR and lets cache.get/cache.set read or overwrite arbitrary files.</pre><pre class="lab-code"><span class="k">cache.py</span>:15 <span class="ae-dim">resource-leak · </span>
+get() opens the file at line 15 but defers f.close() to line 17; if json.load(f) raises (e.g. a corrupted or partially-written cache file), close() is never reached and the file descriptor leaks. The write path in set() uses a .tmp file that can be left behind on failure, so a corrupt .json is reachable here.</pre>
+      </div>
+    </div>
+  </details>
+  <details id="trial-c6-t4" class="rep-trial">
+    <summary><span class="rep-trial-h">g1a-seed1-glm-5-2-spec-first <span class="ae-dim">×</span> py-pagination</span> <svg class="ae-icon ae-ok"><use href="#i-check" /></svg> <span class="ae-num">1.00</span> <span class="ae-dim">reward</span></summary>
+    <div class="lab-cols is-2" style="margin-top:1em">
+      <div>
+        <div class="lab-figrow">
+          <div class="lab-fig"><p class="lab-fig-k">recall</p><p class="lab-fig-v">1 / 1 <span class="ae-dim">· 1.00</span></p></div>
+          <div class="lab-fig"><p class="lab-fig-k">false pos</p><p class="lab-fig-v">0</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">cost</p><p class="lab-fig-v">$0.0048</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">wall</p><p class="lab-fig-v">58s</p></div>
+        </div>
+        <p class="ae-h" style="margin-top:1.1em">VERDICT</p>
+        <p><svg class="ae-icon ae-ok"><use href="#i-check" /></svg> matched the keyed defect</p>
+      </div>
+      <div>
+        <p class="ae-h">CANDIDATE FINDINGS · scored vs the hidden key</p>
+        <pre class="lab-code"><span class="k">pagination.py</span>:7 <span class="ae-dim">correctness · </span>
+The start offset is computed as `page * page_size` for a 1-indexed page, but the correct formula is `(page - 1) * page_size`. For page 1 this yields `start = page_size` instead of `0`, so every page is shifted by one full page: page 1 returns the items meant for page 2, and the first `page_size` items are never returned on any page.</pre>
+      </div>
+    </div>
+  </details>
+  <details id="trial-c7-t0" class="rep-trial">
+    <summary><span class="rep-trial-h">seed6-glm-5-2-test-runner <span class="ae-dim">×</span> js-cart-total</span> <svg class="ae-icon ae-err"><use href="#i-x" /></svg> <span class="ae-num">0.00</span> <span class="ae-dim">reward</span></summary>
+    <div class="lab-cols is-2" style="margin-top:1em">
+      <div>
+        <div class="lab-figrow">
+          <div class="lab-fig"><p class="lab-fig-k">recall</p><p class="lab-fig-v">0 / 1 <span class="ae-dim">· 0.00</span></p></div>
+          <div class="lab-fig"><p class="lab-fig-k">false pos</p><p class="lab-fig-v">1</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">cost</p><p class="lab-fig-v">$0.0042</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">wall</p><p class="lab-fig-v">44s</p></div>
+        </div>
+        <p class="ae-h" style="margin-top:1.1em">VERDICT</p>
+        <p><svg class="ae-icon ae-err"><use href="#i-x" /></svg> false positives, no keyed match — noise, not signal</p>
+      </div>
+      <div>
+        <p class="ae-h">CANDIDATE FINDINGS · scored vs the hidden key</p>
+        <pre class="lab-code"><span class="k">src/cart.js</span>:3 <span class="ae-dim">data-loss · </span>
+applyDiscount mutates the caller&#39;s item objects in place (item.price = item.price * (1 - discount)), permanently destroying the original per-unit price. Callers of orderTotal will have their cart items&#39; prices altered as a side effect, so subsequent totals or displays use already-discounted prices.</pre>
+      </div>
+    </div>
+  </details>
+  <details id="trial-c7-t1" class="rep-trial">
+    <summary><span class="rep-trial-h">seed6-glm-5-2-test-runner <span class="ae-dim">×</span> js-clean-rename</span> <svg class="ae-icon ae-ok"><use href="#i-check" /></svg> <span class="ae-num">1.00</span> <span class="ae-dim">reward</span></summary>
+    <div class="lab-cols is-2" style="margin-top:1em">
+      <div>
+        <div class="lab-figrow">
+          <div class="lab-fig"><p class="lab-fig-k">recall</p><p class="lab-fig-v">0 / 0 <span class="ae-dim">· 1.00</span></p></div>
+          <div class="lab-fig"><p class="lab-fig-k">false pos</p><p class="lab-fig-v">0</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">cost</p><p class="lab-fig-v">$0.0035</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">wall</p><p class="lab-fig-v">21s</p></div>
+        </div>
+        <p class="ae-h" style="margin-top:1.1em">VERDICT</p>
+        <p><svg class="ae-icon ae-ok"><use href="#i-check" /></svg> matched the keyed defect</p>
+      </div>
+      <div>
+        <p class="ae-h">CANDIDATE FINDINGS · scored vs the hidden key</p>
+        <div class="ae-empty" style="border:0;padding:0.8em 0"><p class="ae-item">No findings emitted.</p><p class="ae-dim">The candidate returned <span class="ae-num">[]</span> — a valid, empty result, scored as a clean miss.</p></div>
+      </div>
+    </div>
+  </details>
+  <details id="trial-c7-t2" class="rep-trial">
+    <summary><span class="rep-trial-h">seed6-glm-5-2-test-runner <span class="ae-dim">×</span> py-auth-sqli</span> <svg class="ae-icon ae-warn"><use href="#i-minus" /></svg> <span class="ae-num">0.50</span> <span class="ae-dim">reward</span></summary>
+    <div class="lab-cols is-2" style="margin-top:1em">
+      <div>
+        <div class="lab-figrow">
+          <div class="lab-fig"><p class="lab-fig-k">recall</p><p class="lab-fig-v">1 / 2 <span class="ae-dim">· 0.50</span></p></div>
+          <div class="lab-fig"><p class="lab-fig-k">false pos</p><p class="lab-fig-v">0</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">cost</p><p class="lab-fig-v">$0.0028</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">wall</p><p class="lab-fig-v">19s</p></div>
+        </div>
+        <p class="ae-h" style="margin-top:1.1em">VERDICT</p>
+        <p><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg> partial — some defects matched, others missed or false-flagged</p>
+      </div>
+      <div>
+        <p class="ae-h">CANDIDATE FINDINGS · scored vs the hidden key</p>
+        <pre class="lab-code"><span class="k">app/auth.py</span>:11 <span class="ae-dim">security · </span>
+find_user_by_email interpolates the email directly into the SQL query via an f-string (`f&quot;SELECT id, password_hash FROM users WHERE email = &#39;{email}&#39;&quot;`), allowing SQL injection. The previous code used a parameterized query (`WHERE username = ?`); this change regresses to string concatenation, so a malicious email value can break out of the quotes and execute arbitrary SQL.</pre>
+      </div>
+    </div>
+  </details>
+  <details id="trial-c7-t3" class="rep-trial">
+    <summary><span class="rep-trial-h">seed6-glm-5-2-test-runner <span class="ae-dim">×</span> py-file-cache</span> <svg class="ae-icon ae-warn"><use href="#i-minus" /></svg> <span class="ae-num">0.33</span> <span class="ae-dim">reward</span></summary>
+    <div class="lab-cols is-2" style="margin-top:1em">
+      <div>
+        <div class="lab-figrow">
+          <div class="lab-fig"><p class="lab-fig-k">recall</p><p class="lab-fig-v">1 / 3 <span class="ae-dim">· 0.33</span></p></div>
+          <div class="lab-fig"><p class="lab-fig-k">false pos</p><p class="lab-fig-v">0</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">cost</p><p class="lab-fig-v">$0.0043</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">wall</p><p class="lab-fig-v">29s</p></div>
+        </div>
+        <p class="ae-h" style="margin-top:1.1em">VERDICT</p>
+        <p><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg> partial — some defects matched, others missed or false-flagged</p>
+      </div>
+      <div>
+        <p class="ae-h">CANDIDATE FINDINGS · scored vs the hidden key</p>
+        <pre class="lab-code"><span class="k">cache.py</span>:8 <span class="ae-dim">security · </span>
+Cache keys are used directly in file paths via os.path.join(CACHE_DIR, key + &quot;.json&quot;) with no sanitization. In app.py the key is built from user_id (f&quot;profile-{user_id}&quot;); a user_id containing traversal sequences (e.g. &quot;../../etc/passwd&quot;) resolves to a path outside CACHE_DIR, allowing arbitrary file read/write on set and read on get.</pre>
+      </div>
+    </div>
+  </details>
+  <details id="trial-c7-t4" class="rep-trial">
+    <summary><span class="rep-trial-h">seed6-glm-5-2-test-runner <span class="ae-dim">×</span> py-pagination</span> <svg class="ae-icon ae-ok"><use href="#i-check" /></svg> <span class="ae-num">1.00</span> <span class="ae-dim">reward</span></summary>
+    <div class="lab-cols is-2" style="margin-top:1em">
+      <div>
+        <div class="lab-figrow">
+          <div class="lab-fig"><p class="lab-fig-k">recall</p><p class="lab-fig-v">1 / 1 <span class="ae-dim">· 1.00</span></p></div>
+          <div class="lab-fig"><p class="lab-fig-k">false pos</p><p class="lab-fig-v">0</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">cost</p><p class="lab-fig-v">$0.0023</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">wall</p><p class="lab-fig-v">13s</p></div>
+        </div>
+        <p class="ae-h" style="margin-top:1.1em">VERDICT</p>
+        <p><svg class="ae-icon ae-ok"><use href="#i-check" /></svg> matched the keyed defect</p>
+      </div>
+      <div>
+        <p class="ae-h">CANDIDATE FINDINGS · scored vs the hidden key</p>
+        <pre class="lab-code"><span class="k">pagination.py</span>:7 <span class="ae-dim">correctness · </span>
+The pagination slicing is off by one. For a 1-indexed `page`, `start` should be `(page - 1) * page_size`. With `start = page * page_size`, page 1 returns `items[page_size:2*page_size]`, skipping the first `page_size` items entirely and returning an empty slice whenever the list has fewer than `2*page_size` items.</pre>
+      </div>
+    </div>
+  </details>
+  <details id="trial-c7-t5" class="rep-trial">
+    <summary><span class="rep-trial-h">seed6-glm-5-2-test-runner <span class="ae-dim">×</span> rs-retry-backoff</span> <svg class="ae-icon ae-err"><use href="#i-x" /></svg> <span class="ae-num">0.00</span> <span class="ae-dim">reward</span></summary>
+    <div class="lab-cols is-2" style="margin-top:1em">
+      <div>
+        <div class="lab-figrow">
+          <div class="lab-fig"><p class="lab-fig-k">recall</p><p class="lab-fig-v">0 / 2 <span class="ae-dim">· 0.00</span></p></div>
+          <div class="lab-fig"><p class="lab-fig-k">false pos</p><p class="lab-fig-v">1</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">cost</p><p class="lab-fig-v">$0.0138</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">wall</p><p class="lab-fig-v">88s</p></div>
+        </div>
+        <p class="ae-h" style="margin-top:1.1em">VERDICT</p>
+        <p><svg class="ae-icon ae-err"><use href="#i-x" /></svg> false positives, no keyed match — noise, not signal</p>
+      </div>
+      <div>
+        <p class="ae-h">CANDIDATE FINDINGS · scored vs the hidden key</p>
+        <pre class="lab-code"><span class="k">src/retry.rs</span>:12 <span class="ae-dim">correctness · </span>
+Off-by-one in the attempt bound: `op` is invoked `max_attempts + 1` times instead of at most `max_attempts` times. The loop calls `op()` before the first increment and uses `attempt &gt; max_attempts`, so even `max_attempts == 0` results in one call to `op`, contradicting the documented &#39;up to max_attempts times&#39; contract. The check should use `&gt;=` (or `attempt` should start at 1).</pre>
+      </div>
+    </div>
+  </details>
+  <details id="trial-c8-t0" class="rep-trial">
+    <summary><span class="rep-trial-h">g2b-g1a-seed1-glm-5-2-spec-first <span class="ae-dim">×</span> js-cart-total</span> <svg class="ae-icon ae-err"><use href="#i-x" /></svg> <span class="ae-num">0.00</span> <span class="ae-dim">reward</span></summary>
+    <div class="lab-cols is-2" style="margin-top:1em">
+      <div>
+        <div class="lab-figrow">
+          <div class="lab-fig"><p class="lab-fig-k">recall</p><p class="lab-fig-v">0 / 1 <span class="ae-dim">· 0.00</span></p></div>
+          <div class="lab-fig"><p class="lab-fig-k">false pos</p><p class="lab-fig-v">0</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">cost</p><p class="lab-fig-v">$0.0047</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">wall</p><p class="lab-fig-v">39s</p></div>
+        </div>
+        <p class="ae-h" style="margin-top:1.1em">VERDICT</p>
+        <p><svg class="ae-icon ae-err"><use href="#i-x" /></svg> a clean miss — valid empty output, defect left unfound</p>
+      </div>
+      <div>
+        <p class="ae-h">CANDIDATE FINDINGS · scored vs the hidden key</p>
+        <div class="ae-empty" style="border:0;padding:0.8em 0"><p class="ae-item">No findings emitted.</p><p class="ae-dim">The candidate returned <span class="ae-num">[]</span> — a valid, empty result, scored as a clean miss.</p></div>
+      </div>
+    </div>
+  </details>
+  <details id="trial-c8-t1" class="rep-trial">
+    <summary><span class="rep-trial-h">g2b-g1a-seed1-glm-5-2-spec-first <span class="ae-dim">×</span> js-clean-rename</span> <svg class="ae-icon ae-ok"><use href="#i-check" /></svg> <span class="ae-num">1.00</span> <span class="ae-dim">reward</span></summary>
+    <div class="lab-cols is-2" style="margin-top:1em">
+      <div>
+        <div class="lab-figrow">
+          <div class="lab-fig"><p class="lab-fig-k">recall</p><p class="lab-fig-v">0 / 0 <span class="ae-dim">· 1.00</span></p></div>
+          <div class="lab-fig"><p class="lab-fig-k">false pos</p><p class="lab-fig-v">0</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">cost</p><p class="lab-fig-v">$0.0033</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">wall</p><p class="lab-fig-v">16s</p></div>
+        </div>
+        <p class="ae-h" style="margin-top:1.1em">VERDICT</p>
+        <p><svg class="ae-icon ae-ok"><use href="#i-check" /></svg> matched the keyed defect</p>
+      </div>
+      <div>
+        <p class="ae-h">CANDIDATE FINDINGS · scored vs the hidden key</p>
+        <div class="ae-empty" style="border:0;padding:0.8em 0"><p class="ae-item">No findings emitted.</p><p class="ae-dim">The candidate returned <span class="ae-num">[]</span> — a valid, empty result, scored as a clean miss.</p></div>
+      </div>
+    </div>
+  </details>
+  <details id="trial-c8-t2" class="rep-trial">
+    <summary><span class="rep-trial-h">g2b-g1a-seed1-glm-5-2-spec-first <span class="ae-dim">×</span> py-auth-sqli</span> <svg class="ae-icon ae-warn"><use href="#i-minus" /></svg> <span class="ae-num">0.50</span> <span class="ae-dim">reward</span></summary>
+    <div class="lab-cols is-2" style="margin-top:1em">
+      <div>
+        <div class="lab-figrow">
+          <div class="lab-fig"><p class="lab-fig-k">recall</p><p class="lab-fig-v">1 / 2 <span class="ae-dim">· 0.50</span></p></div>
+          <div class="lab-fig"><p class="lab-fig-k">false pos</p><p class="lab-fig-v">0</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">cost</p><p class="lab-fig-v">$0.0080</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">wall</p><p class="lab-fig-v">58s</p></div>
+        </div>
+        <p class="ae-h" style="margin-top:1.1em">VERDICT</p>
+        <p><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg> partial — some defects matched, others missed or false-flagged</p>
+      </div>
+      <div>
+        <p class="ae-h">CANDIDATE FINDINGS · scored vs the hidden key</p>
+        <pre class="lab-code"><span class="k">app/auth.py</span>:9 <span class="ae-dim">security · </span>
+The email parameter is interpolated into the SQL query via an f-string (cur.execute(f&quot;SELECT id, password_hash FROM users WHERE email = &#39;{email}&#39;&quot;)) instead of using a parameterized query, enabling SQL injection. The user-supplied email flows directly from login() at line 18 into find_user_by_email() at line 9, so a malicious email value can alter or bypass the query (e.g., returning an arbitrary row and authenticating as another user).</pre>
+      </div>
+    </div>
+  </details>
+  <details id="trial-c8-t3" class="rep-trial">
+    <summary><span class="rep-trial-h">g2b-g1a-seed1-glm-5-2-spec-first <span class="ae-dim">×</span> py-file-cache</span> <svg class="ae-icon ae-err"><use href="#i-x" /></svg> <span class="ae-num">0.00</span> <span class="ae-dim">reward</span></summary>
+    <div class="lab-cols is-2" style="margin-top:1em">
+      <div>
+        <div class="lab-figrow">
+          <div class="lab-fig"><p class="lab-fig-k">recall</p><p class="lab-fig-v">0 / 3 <span class="ae-dim">· 0.00</span></p></div>
+          <div class="lab-fig"><p class="lab-fig-k">false pos</p><p class="lab-fig-v">2</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">cost</p><p class="lab-fig-v">$0.0089</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">wall</p><p class="lab-fig-v">66s</p></div>
+        </div>
+        <p class="ae-h" style="margin-top:1.1em">VERDICT</p>
+        <p><svg class="ae-icon ae-err"><use href="#i-x" /></svg> false positives, no keyed match — noise, not signal</p>
+      </div>
+      <div>
+        <p class="ae-h">CANDIDATE FINDINGS · scored vs the hidden key</p>
+        <pre class="lab-code"><span class="k">cache.py</span>:15 <span class="ae-dim">error-handling · </span>
+cache.get opens the cache file and calls json.load(f) with no exception handling; if a cache file is corrupted or partially written, json.load raises JSONDecodeError which propagates through the caller fetch_profile (app.py:8) and breaks profile lookups even though the network fallback in fetch_profile is available. The cache, once corrupted, makes the function permanently fail instead of re-fetching.</pre><pre class="lab-code"><span class="k">cache.py</span>:13 <span class="ae-dim">resource-leak · </span>
+cache.get uses f = open(path) followed by json.load(f) and f.close() without a try/finally or context manager. If json.load raises (corrupted cache file), f.close() is skipped, leaking the open file descriptor. This path is exercised by fetch_profile at app.py:8.</pre>
+      </div>
+    </div>
+  </details>
+  <details id="trial-c8-t4" class="rep-trial">
+    <summary><span class="rep-trial-h">g2b-g1a-seed1-glm-5-2-spec-first <span class="ae-dim">×</span> py-pagination</span> <svg class="ae-icon ae-err"><use href="#i-x" /></svg> <span class="ae-num">0.00</span> <span class="ae-dim">reward</span></summary>
+    <div class="lab-cols is-2" style="margin-top:1em">
+      <div>
+        <div class="lab-figrow">
+          <div class="lab-fig"><p class="lab-fig-k">recall</p><p class="lab-fig-v">0 / 1 <span class="ae-dim">· 0.00</span></p></div>
+          <div class="lab-fig"><p class="lab-fig-k">false pos</p><p class="lab-fig-v">0</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">cost</p><p class="lab-fig-v">$0.0051</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">wall</p><p class="lab-fig-v">25s</p></div>
+        </div>
+        <p class="ae-h" style="margin-top:1.1em">VERDICT</p>
+        <p><svg class="ae-icon ae-err"><use href="#i-x" /></svg> a clean miss — valid empty output, defect left unfound</p>
+      </div>
+      <div>
+        <p class="ae-h">CANDIDATE FINDINGS · scored vs the hidden key</p>
+        <div class="ae-empty" style="border:0;padding:0.8em 0"><p class="ae-item">No findings emitted.</p><p class="ae-dim">The candidate returned <span class="ae-num">[]</span> — a valid, empty result, scored as a clean miss.</p></div>
+      </div>
+    </div>
+  </details>
+  <details id="trial-c9-t0" class="rep-trial">
+    <summary><span class="rep-trial-h">seed4-deepseek-v4-flash-spec-first <span class="ae-dim">×</span> js-cart-total</span> <svg class="ae-icon ae-ok"><use href="#i-check" /></svg> <span class="ae-num">1.00</span> <span class="ae-dim">reward</span></summary>
+    <div class="lab-cols is-2" style="margin-top:1em">
+      <div>
+        <div class="lab-figrow">
+          <div class="lab-fig"><p class="lab-fig-k">recall</p><p class="lab-fig-v">1 / 1 <span class="ae-dim">· 1.00</span></p></div>
+          <div class="lab-fig"><p class="lab-fig-k">false pos</p><p class="lab-fig-v">0</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">cost</p><p class="lab-fig-v">$0.0012</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">wall</p><p class="lab-fig-v">33s</p></div>
+        </div>
+        <p class="ae-h" style="margin-top:1.1em">VERDICT</p>
+        <p><svg class="ae-icon ae-ok"><use href="#i-check" /></svg> matched the keyed defect</p>
+      </div>
+      <div>
+        <p class="ae-h">CANDIDATE FINDINGS · scored vs the hidden key</p>
+        <pre class="lab-code"><span class="k">src/cart.js</span>:3 <span class="ae-dim">correctness · </span>
+applyDiscount mutates item.price in place on the caller&#39;s original objects. Callers reuse those items later expecting original prices, but prices are silently overwritten.</pre>
+      </div>
+    </div>
+  </details>
+  <details id="trial-c9-t1" class="rep-trial">
+    <summary><span class="rep-trial-h">seed4-deepseek-v4-flash-spec-first <span class="ae-dim">×</span> js-clean-rename</span> <svg class="ae-icon ae-err"><use href="#i-alert" /></svg> <span class="ae-num">0.00</span> <span class="ae-dim">reward</span></summary>
+    <div class="lab-cols is-2" style="margin-top:1em">
+      <div>
+        <div class="lab-figrow">
+          <div class="lab-fig"><p class="lab-fig-k">recall</p><p class="lab-fig-v">0 / 0 <span class="ae-dim">· 0.00</span></p></div>
+          <div class="lab-fig"><p class="lab-fig-k">false pos</p><p class="lab-fig-v">0</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">cost</p><p class="lab-fig-v">$0.0008</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">wall</p><p class="lab-fig-v">24s</p></div>
+        </div>
+        <p class="ae-h" style="margin-top:1.1em">VERDICT</p>
+        <p><svg class="ae-icon ae-err"><use href="#i-alert" /></svg> infrastructure error — not a clean score</p>
+      </div>
+      <div>
+        <p class="ae-h">CANDIDATE FINDINGS · scored vs the hidden key</p>
+        <div class="ae-empty" style="border:0;padding:0.8em 0"><p class="ae-item">No findings emitted.</p><p class="ae-dim">The candidate returned <span class="ae-num">[]</span> — a valid, empty result, scored as a clean miss.</p></div>
+      </div>
+    </div>
+  </details>
+  <details id="trial-c9-t2" class="rep-trial">
+    <summary><span class="rep-trial-h">seed4-deepseek-v4-flash-spec-first <span class="ae-dim">×</span> py-auth-sqli</span> <svg class="ae-icon ae-warn"><use href="#i-minus" /></svg> <span class="ae-num">0.50</span> <span class="ae-dim">reward</span></summary>
+    <div class="lab-cols is-2" style="margin-top:1em">
+      <div>
+        <div class="lab-figrow">
+          <div class="lab-fig"><p class="lab-fig-k">recall</p><p class="lab-fig-v">1 / 2 <span class="ae-dim">· 0.50</span></p></div>
+          <div class="lab-fig"><p class="lab-fig-k">false pos</p><p class="lab-fig-v">0</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">cost</p><p class="lab-fig-v">$0.0011</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">wall</p><p class="lab-fig-v">22s</p></div>
+        </div>
+        <p class="ae-h" style="margin-top:1.1em">VERDICT</p>
+        <p><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg> partial — some defects matched, others missed or false-flagged</p>
+      </div>
+      <div>
+        <p class="ae-h">CANDIDATE FINDINGS · scored vs the hidden key</p>
+        <pre class="lab-code"><span class="k">app/auth.py</span>:10 <span class="ae-dim">security · </span>
+SQL injection vulnerability: user-controlled &#39;email&#39; input is directly interpolated into the SQL query via f-string instead of using a parameterized query, allowing attackers to bypass authentication or exfiltrate data.</pre>
+      </div>
+    </div>
+  </details>
+  <details id="trial-c9-t3" class="rep-trial">
+    <summary><span class="rep-trial-h">seed4-deepseek-v4-flash-spec-first <span class="ae-dim">×</span> py-file-cache</span> <svg class="ae-icon ae-err"><use href="#i-x" /></svg> <span class="ae-num">0.00</span> <span class="ae-dim">reward</span></summary>
+    <div class="lab-cols is-2" style="margin-top:1em">
+      <div>
+        <div class="lab-figrow">
+          <div class="lab-fig"><p class="lab-fig-k">recall</p><p class="lab-fig-v">0 / 3 <span class="ae-dim">· 0.00</span></p></div>
+          <div class="lab-fig"><p class="lab-fig-k">false pos</p><p class="lab-fig-v">2</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">cost</p><p class="lab-fig-v">$0.0056</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">wall</p><p class="lab-fig-v">110s</p></div>
+        </div>
+        <p class="ae-h" style="margin-top:1.1em">VERDICT</p>
+        <p><svg class="ae-icon ae-err"><use href="#i-x" /></svg> false positives, no keyed match — noise, not signal</p>
+      </div>
+      <div>
+        <p class="ae-h">CANDIDATE FINDINGS · scored vs the hidden key</p>
+        <pre class="lab-code"><span class="k">cache.py</span>:13 <span class="ae-dim">resource-leak · </span>
+File opened with open(path) but without a context manager or try/finally; if json.load() raises an exception (e.g., corrupt JSON), f.close() on line 15 is never executed, leaking a file descriptor.</pre><pre class="lab-code"><span class="k">app.py</span>:6 <span class="ae-dim">security · </span>
+Unsanitized user_id parameter is interpolated into a filesystem path via cache._path(); an attacker can supply ../ sequences to read or write files outside the intended ~/.app-cache directory (path traversal).</pre>
+      </div>
+    </div>
+  </details>
+  <details id="trial-c9-t4" class="rep-trial">
+    <summary><span class="rep-trial-h">seed4-deepseek-v4-flash-spec-first <span class="ae-dim">×</span> py-pagination</span> <svg class="ae-icon ae-ok"><use href="#i-check" /></svg> <span class="ae-num">1.00</span> <span class="ae-dim">reward</span></summary>
+    <div class="lab-cols is-2" style="margin-top:1em">
+      <div>
+        <div class="lab-figrow">
+          <div class="lab-fig"><p class="lab-fig-k">recall</p><p class="lab-fig-v">1 / 1 <span class="ae-dim">· 1.00</span></p></div>
+          <div class="lab-fig"><p class="lab-fig-k">false pos</p><p class="lab-fig-v">0</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">cost</p><p class="lab-fig-v">$0.0013</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">wall</p><p class="lab-fig-v">28s</p></div>
+        </div>
+        <p class="ae-h" style="margin-top:1.1em">VERDICT</p>
+        <p><svg class="ae-icon ae-ok"><use href="#i-check" /></svg> matched the keyed defect</p>
+      </div>
+      <div>
+        <p class="ae-h">CANDIDATE FINDINGS · scored vs the hidden key</p>
+        <pre class="lab-code"><span class="k">pagination.py</span>:7 <span class="ae-dim">correctness · </span>
+Off-by-one bug: start = page * page_size skips the first page_size items for page 1. For 1-indexed pagination, the formula should be start = (page - 1) * page_size.</pre>
+      </div>
+    </div>
+  </details>
+  <details id="trial-c9-t5" class="rep-trial">
+    <summary><span class="rep-trial-h">seed4-deepseek-v4-flash-spec-first <span class="ae-dim">×</span> rs-retry-backoff</span> <svg class="ae-icon ae-warn"><use href="#i-minus" /></svg> <span class="ae-num">0.50</span> <span class="ae-dim">reward</span></summary>
+    <div class="lab-cols is-2" style="margin-top:1em">
+      <div>
+        <div class="lab-figrow">
+          <div class="lab-fig"><p class="lab-fig-k">recall</p><p class="lab-fig-v">1 / 2 <span class="ae-dim">· 0.50</span></p></div>
+          <div class="lab-fig"><p class="lab-fig-k">false pos</p><p class="lab-fig-v">0</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">cost</p><p class="lab-fig-v">$0.0033</p></div>
+          <div class="lab-fig"><p class="lab-fig-k">wall</p><p class="lab-fig-v">84s</p></div>
+        </div>
+        <p class="ae-h" style="margin-top:1.1em">VERDICT</p>
+        <p><svg class="ae-icon ae-warn"><use href="#i-minus" /></svg> partial — some defects matched, others missed or false-flagged</p>
+      </div>
+      <div>
+        <p class="ae-h">CANDIDATE FINDINGS · scored vs the hidden key</p>
+        <pre class="lab-code"><span class="k">src/retry.rs</span>:19 <span class="ae-dim">correctness · </span>
+The backoff computation 100 * 2u64.pow(attempt) overflows u64 when attempt &gt;= 63 (the multiplication overflows) or attempt &gt;= 64 (the pow overflows). Since max_attempts is u32, a caller can trigger this. In debug builds this panics; in release builds it silently wraps, producing incorrect sleep durations.</pre>
+      </div>
+    </div>
+  </details>
+</section>
+<footer style="margin-top:2em;border-top:1px solid var(--ae-line);padding-top:1.2em">
+  <p class="ae-plate-note" style="border:0;padding:0">References (oracle / null / one-shot probe / incumbent when declared) bound the verifier and are excluded from the leaderboard ranking, Pareto set, and recommendation: oracle and null fix the ceiling and floor; the one-shot probe only detects arena saturation; the incumbent is the baseline-to-beat. Every recommendable candidate is an agent composition, certified only when its reward-delta 95% CI clears the selected baseline (<span class="ae-num">incumbent</span>). Generated from <span class="ae-num">trials.jsonl</span> + <span class="ae-num">loop.json</span> — a derived view, never the source of truth.</p>
+</footer>
+</main>
+<script>
+(function(){
+  var root = document.documentElement;
+  try { var m = localStorage.getItem('ae-mode'); if (m==='dark'||m==='light'){ root.classList.add(m); root.style.colorScheme=m; } } catch(e){}
+  var btn = document.querySelector('.ae-mode');
+  if (btn) btn.addEventListener('click', function(){
+    var dark = root.classList.contains('dark');
+    root.classList.remove('dark','light');
+    var next = dark ? 'light' : 'dark';
+    root.classList.add(next); root.style.colorScheme = next;
+    try { localStorage.setItem('ae-mode', next); } catch(e){}
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+composition = 1
+id = "incumbent"
+kind = "incumbent"
+provider_name = "openrouter"
+model = "deepseek/deepseek-v4-pro"
+prompt_packet = "/Users/phaedrus/Development/daedalus/packets/reviewer-v1.md"
+thinking = "medium"
+tools = ["read", "bash", "edit", "write"]
+timeout_sec = 600

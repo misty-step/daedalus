@@ -75,3 +75,9 @@ One entry per run: what was tried, what was learned. lineage.md in each run dir 
 - stop: plateau · spend $2.5224 · generations 2
 - recommended: `seed2-kimi-k2-7-code-trace-callers` (hash 1df8c73c5cfbb4db, reward 0.7544, certified=True)
 - full story: 20260623T183514Z-search-cerberus-reviewer/lineage.md
+
+## 20260625T161856Z-search-cerberus-reviewer
+
+- spec `cerberus-reviewer` (mode threshold-then-cheap) on arena `pr-review-v0` v0.3.0
+- stop: plateau · spend $2.0969 · generations 2
+- full story: 20260625T161856Z-search-cerberus-reviewer/lineage.md

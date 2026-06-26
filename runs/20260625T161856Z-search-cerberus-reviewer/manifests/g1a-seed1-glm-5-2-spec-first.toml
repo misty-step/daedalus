@@ -1,0 +1,9 @@
+composition = 1
+kind = "pi"
+model = "z-ai/glm-5.2"
+prompt_packet = "/Users/phaedrus/Development/daedalus/runs/20260625T161856Z-search-cerberus-reviewer/packets/g1a-seed1-glm-5-2-spec-first.md"
+provider_name = "openrouter"
+thinking = "off"
+timeout_sec = 600
+tools = ["read", "bash"]
+id = "g1a-seed1-glm-5-2-spec-first"

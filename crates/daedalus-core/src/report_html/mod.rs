@@ -9,7 +9,7 @@
 //! 1. **Leaderboard** — candidates by mean reward with cost/latency/trials,
 //!    certified and recommended marked, reference rows (oracle/null/oneshot)
 //!    receding.
-//! 2. **CI forest** — each certified candidate's `(candidate − null)`
+//! 2. **CI forest** — each trial-complete candidate's `(candidate − baseline)`
 //!    reward-delta 95% CI drawn as a caterpillar, with the cluster-robust width,
 //!    the `sig` verdict, and the `clstr→95%` power note (backlog 039).
 //! 3. **Coverage heatmap** — the candidate × task grid in the lawful encoding
@@ -126,11 +126,14 @@ pub fn build_html_from(
         .unwrap_or_default()
         .into_iter()
         .collect();
-    let recommended = loop_json
-        .get("recommended")
-        .and_then(Value::as_str)
-        .map(str::to_string)
-        .or_else(|| report::recommend(&cands, &front, None));
+    let recommended = if loop_json.get("recommended").is_some() {
+        loop_json
+            .get("recommended")
+            .and_then(Value::as_str)
+            .map(str::to_string)
+    } else {
+        report::recommend(&cands, &front, None)
+    };
 
     let arena_id = records
         .first()
@@ -645,6 +648,30 @@ mod tests {
         assert!(
             html.contains("recommended"),
             "the certified pick still shows"
+        );
+    }
+
+    #[test]
+    fn explicit_null_recommendation_does_not_recompute_a_pick() {
+        let (records, mut loop_json, rig) = fixture();
+        loop_json["recommended"] = Value::Null;
+        loop_json["certified"] = json!([]);
+        let html = build_html_from(&records, &loop_json, Some(&rig), None, "t");
+        assert!(
+            html.contains("no certified pick"),
+            "explicit null recommendation must be honored"
+        );
+        assert!(
+            html.contains("no candidate is provably better than the null floor"),
+            "header should explain the active baseline"
+        );
+        assert!(
+            !html.contains("recommended · skeptic"),
+            "must not recompute a recommendation from the Pareto front"
+        );
+        assert!(
+            !html.contains("<span class=\"lab-state\">recommended</span>"),
+            "leaderboard must not mark a recommended row"
         );
     }
 

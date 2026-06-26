@@ -2126,7 +2126,10 @@ pub fn run_arena(inputs: ArenaInputs) -> Result<PathBuf, Box<dyn std::error::Err
                         let findings = oracle_findings(task_dir)?;
                         std::fs::write(workdir.join("findings.json"), findings)?;
                     }
-                    "pi" => {
+                    // The incumbent (055) executes as a pi agent; its distinct
+                    // kind only tags it as a reference (excluded from the Pareto
+                    // front, recommendation, and mutation) and the cert baseline.
+                    "pi" | "incumbent" => {
                         run_pi(&candidate, instruction, task_dir, &workdir, &mut record)?;
                     }
                     "oneshot" => {

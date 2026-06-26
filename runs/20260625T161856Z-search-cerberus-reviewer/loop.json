@@ -1,0 +1,177 @@
+{
+  "stop_reason": "plateau",
+  "mode": "threshold-then-cheap",
+  "history": [
+    {
+      "child_id": "g1a-seed1-glm-5-2-spec-first",
+      "parent_id": "seed1-glm-5-2-spec-first",
+      "slot_changed": "prompt_packet",
+      "value_summary": "(new text)",
+      "hypothesis": "The trace-callers strategy from seed2 (top reward 0.876) may correctly identify defects without the mutation false positive that plagued the spec-first approach on glm-5.2, potentially translating high reward to the cheaper model.",
+      "predicted_effect": {
+        "reward": "up",
+        "cost": "hold"
+      },
+      "optimizer_cost_usd": 0.00559728,
+      "donor": "seed2-kimi-k2-7-code-trace-callers",
+      "generation": 1,
+      "attempt": 0,
+      "parent_reward_mean": 0.5756,
+      "reward_mean": 0.52,
+      "mean_task_delta": -0.0556,
+      "parent_cost_per_trial": 0.005961,
+      "child_cost_per_trial": 0.005425,
+      "improved": false
+    },
+    {
+      "child_id": "g1b-seed2-kimi-k2-7-code-trace-callers",
+      "parent_id": "seed2-kimi-k2-7-code-trace-callers",
+      "slot_changed": "model",
+      "value_summary": "openai/gpt-5.4-mini",
+      "hypothesis": "The trace-callers prompt packet (seed2) already achieved 0.8756 reward on kimi-k2.7-code. Switching to gpt-5.4-mini should retain comparable reasoning quality for call-chain analysis while reducing cost, given gpt-5.4-mini's decent performance on other reviewer configurations (0.6644 on test-runner). This is the highest-information model swap because no trial has tested gpt-5.4-mini with this exact prompt.",
+      "predicted_effect": {
+        "reward": "hold",
+        "cost": "down"
+      },
+      "optimizer_cost_usd": 0.0073304595,
+      "generation": 1,
+      "attempt": 1,
+      "parent_reward_mean": 0.8756,
+      "reward_mean": 0.7311,
+      "mean_task_delta": -0.1444,
+      "parent_cost_per_trial": 0.010831,
+      "child_cost_per_trial": 0.013129,
+      "improved": false
+    },
+    {
+      "child_id": "g2a-seed2-kimi-k2-7-code-trace-callers",
+      "parent_id": "seed2-kimi-k2-7-code-trace-callers",
+      "slot_changed": "prompt_packet",
+      "value_summary": "(new text)",
+      "hypothesis": "The current packet produces high-quality findings but suffers from false positives (e.g., TOCTOU/error-handling findings on lines not in the diff, or where the caller trace is incomplete). Adding an explicit verification gate that forces the model to check each finding against the actual diff and caller evidence before writing should reduce fabricated or ungrounded defects, raising reward by cutting the false-positive penalty.",
+      "predicted_effect": {
+        "reward": "up",
+        "cost": "hold"
+      },
+      "optimizer_cost_usd": 0.00912282,
+      "generation": 2,
+      "attempt": 0,
+      "parent_reward_mean": 0.8756,
+      "reward_mean": 0.6485,
+      "mean_task_delta": -0.2444,
+      "parent_cost_per_trial": 0.010831,
+      "child_cost_per_trial": 0.015291,
+      "improved": false
+    },
+    {
+      "child_id": "g2b-g1a-seed1-glm-5-2-spec-first",
+      "parent_id": "g1a-seed1-glm-5-2-spec-first",
+      "slot_changed": "prompt_packet",
+      "value_summary": "(new text)",
+      "hypothesis": "The worst-trial evidence shows GLM-5.2 reports valid defects (e.g., side-effect mutation) but gets zero reward because it fails to demonstrate a concrete caller in the repo that triggers the flaw, causing findings to be scored as false positives. Adding an explicit caller-citation requirement should suppress findings unsupported by repo evidence, raising reward.",
+      "predicted_effect": {
+        "reward": "up",
+        "cost": "hold"
+      },
+      "optimizer_cost_usd": 0.007225872,
+      "generation": 2,
+      "attempt": 1,
+      "parent_reward_mean": 0.52,
+      "reward_mean": 0.4422,
+      "mean_task_delta": -0.0778,
+      "parent_cost_per_trial": 0.005425,
+      "child_cost_per_trial": 0.00631,
+      "improved": false
+    }
+  ],
+  "alarms": [],
+  "generations": 2,
+  "best_id": "seed2-kimi-k2-7-code-trace-callers",
+  "spend_known_usd": 2.0969,
+  "recommended": null,
+  "pareto_front": [
+    "seed2-kimi-k2-7-code-trace-callers",
+    "g1b-seed2-kimi-k2-7-code-trace-callers",
+    "seed3-gpt-5-4-mini-test-runner",
+    "seed1-glm-5-2-spec-first",
+    "seed5-deepseek-v4-pro-trace-callers",
+    "g1a-seed1-glm-5-2-spec-first",
+    "seed4-deepseek-v4-flash-spec-first"
+  ],
+  "certified": [],
+  "reward_delta_baseline": "incumbent",
+  "reward_delta_cis": {
+    "g1b-seed2-kimi-k2-7-code-trace-callers": {
+      "baseline": "incumbent",
+      "point": 0.0289,
+      "se": 0.066259,
+      "lo": -0.1415,
+      "hi": 0.1992,
+      "ci": 0.95,
+      "n_tasks": 6,
+      "n_clusters": 6,
+      "excludes_zero": false,
+      "min_clusters_95": 124
+    },
+    "seed2-kimi-k2-7-code-trace-callers": {
+      "baseline": "incumbent",
+      "point": 0.0711,
+      "se": 0.07624,
+      "lo": -0.1249,
+      "hi": 0.2671,
+      "ci": 0.95,
+      "n_tasks": 6,
+      "n_clusters": 6,
+      "excludes_zero": false,
+      "min_clusters_95": 29
+    },
+    "seed3-gpt-5-4-mini-test-runner": {
+      "baseline": "incumbent",
+      "point": -0.1022,
+      "se": 0.068478,
+      "lo": -0.2783,
+      "hi": 0.0738,
+      "ci": 0.95,
+      "n_tasks": 6,
+      "n_clusters": 6,
+      "excludes_zero": false,
+      "min_clusters_95": null
+    }
+  },
+  "consistency": {
+    "g1b-seed2-kimi-k2-7-code-trace-callers": {
+      "n_trials": 30,
+      "passes": 15,
+      "floor": 1.0,
+      "rate": 0.5,
+      "pass_k_k": 5,
+      "pass_k": 0.0211
+    },
+    "seed2-kimi-k2-7-code-trace-callers": {
+      "n_trials": 30,
+      "passes": 20,
+      "floor": 1.0,
+      "rate": 0.6667,
+      "pass_k_k": 5,
+      "pass_k": 0.1088
+    },
+    "seed3-gpt-5-4-mini-test-runner": {
+      "n_trials": 30,
+      "passes": 14,
+      "floor": 1.0,
+      "rate": 0.4667,
+      "pass_k_k": 5,
+      "pass_k": 0.014
+    }
+  },
+  "consistency_floor": 1.0,
+  "min_effect": 0.0,
+  "reliability_floor": 0.0,
+  "recommendable": [],
+  "reliability_demoted": [],
+  "trial_complete": [
+    "g1b-seed2-kimi-k2-7-code-trace-callers",
+    "seed2-kimi-k2-7-code-trace-callers",
+    "seed3-gpt-5-4-mini-test-runner"
+  ]
+}

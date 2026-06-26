@@ -1,0 +1,22 @@
+{
+  "composition": 1,
+  "id": "g2a-seed2-kimi-k2-7-code-trace-callers",
+  "kind": "pi",
+  "model": "moonshotai/kimi-k2.7-code",
+  "prompt_packet": "/Users/phaedrus/Development/daedalus/runs/20260625T161856Z-search-cerberus-reviewer/packets/g2a-seed2-kimi-k2-7-code-trace-callers.md",
+  "provider_name": "openrouter",
+  "thinking": "medium",
+  "timeout_sec": 600,
+  "tools": [
+    "read",
+    "bash",
+    "edit",
+    "write"
+  ],
+  "composition_hash": "1d2daccb35a6d10f",
+  "prompt_packet_text": "Review the pull request diff against the full repository context. For every function added, modified, or deleted, trace all direct and indirect callers and callees across files. Analyze how the change alters dataflow, state, control flow, and error handling along those call chains. Identify real defects the change introduces—broken contracts, unsafe data propagation, resource mismanagement, unreachable code, or invariant violations. For each defect, output a concise description and the exact file paths with line numbers that evidence the issue, referencing both the changed code and the traced caller/callee lines. Do not note style, formatting, or performance opinions. If no defect is detected, produce no output. Ground every statement strictly in the diff and repository evidence.\n\nCRITICAL: Before writing findings, verify each candidate defect against the actual diff and the traced callers. If the diff does not contain the code you claim is at that line, or if the traced caller does not actually supply the untrusted input you assert, discard the finding. Every finding must cite a line that is genuinely in the diff (not assumed or inferred) and a caller that demonstrably passes the dangerous value. Produce at most one finding per defect category per file. Never fabricate a defect that the evidence does not support.\n",
+  "skills_texts": [],
+  "agents_md_text": null,
+  "harness_version": null,
+  "runner_version": "0.1.0"
+}

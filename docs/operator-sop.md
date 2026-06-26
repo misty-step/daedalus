@@ -95,6 +95,20 @@ posting on every PR needs a higher floor than an advisory one; record the choice
 and why. `loop.json` carries `reliability_floor`, `recommendable`, and
 `reliability_demoted`.
 
+When the taskspec declares an `[incumbent]` block (055) — the config you would
+otherwise deploy — the search runs it as a `kind="incumbent"` reference and
+**certification differences candidates against it instead of the null floor**:
+"provably beats what we ship," not "provably beats silence." A candidate that
+clears the null floor but not the incumbent shows as *not certified*, and the CI
+table / certified note name the incumbent as the baseline. The incumbent is
+never recommended or mutated; it runs `--certify-trials` deep on every task, so
+budget for it (`--estimate` projects its trials). Omit the block to keep the
+null-floor baseline. The incumbent does touch the holdout tasks (it runs every
+task as a fixed reference), but — like the null/oracle references and unlike a
+search candidate — that exposure is deliberately excluded from the holdout burn
+ledger: the baseline is never *selected* on holdout performance, so it cannot
+overfit it.
+
 Committed evidence lives under `runs/<exp-id>/`: `trials.jsonl`,
 `summary.json`, `report.md`, `pareto.json`, `lineage.md`, compositions, and
 artifact indexes. Raw `artifacts/` are local retained evidence and stay

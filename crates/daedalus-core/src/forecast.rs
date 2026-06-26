@@ -30,6 +30,11 @@ pub struct ForecastInputs {
     pub n_holdout: usize,
     /// `--certify-trials`: trials per (certified candidate × holdout task).
     pub certify_trials: u32,
+    /// Whether the taskspec declares an `[incumbent]` (055). When set, the
+    /// incumbent reference runs `certify_trials` deep on every task (search +
+    /// holdout), so its trials are projected separately from the single-shot
+    /// references.
+    pub has_incumbent: bool,
     /// `[budget].max_cost_per_trial_usd` from the taskspec, when declared.
     pub max_cost_per_trial_usd: Option<f64>,
 }
@@ -51,6 +56,10 @@ pub struct Forecast {
     /// Trials spent certifying the top candidates on the holdout.
     /// `certify_top × n_holdout × certify_trials`.
     pub certify_trials_total: u64,
+    /// Trials spent on the incumbent baseline (055): `certify_trials ×
+    /// (n_search_tasks + n_holdout)` when declared, else 0. The incumbent runs
+    /// every task `certify_trials`-deep, unlike the single-shot references.
+    pub incumbent_trials: u64,
     /// Total projected trials.
     pub total_trials: u64,
     /// Worst-case cost ceiling = `total_trials × max_cost_per_trial_usd`, or
@@ -73,7 +82,13 @@ pub fn forecast(inputs: &ForecastInputs) -> Forecast {
     let search_trials = candidate_trials + reference_trials;
     let certify_trials_total =
         inputs.certify_top as u64 * inputs.n_holdout as u64 * inputs.certify_trials as u64;
-    let total_trials = search_trials + certify_trials_total;
+    // The incumbent (055) runs every task (search + holdout) `certify_trials`-deep.
+    let incumbent_trials = if inputs.has_incumbent {
+        inputs.certify_trials as u64 * (inputs.n_search_tasks as u64 + inputs.n_holdout as u64)
+    } else {
+        0
+    };
+    let total_trials = search_trials + certify_trials_total + incumbent_trials;
     let max_cost_usd = inputs
         .max_cost_per_trial_usd
         .map(|ceiling| total_trials as f64 * ceiling);
@@ -82,6 +97,7 @@ pub fn forecast(inputs: &ForecastInputs) -> Forecast {
         reference_trials,
         search_trials,
         certify_trials_total,
+        incumbent_trials,
         total_trials,
         max_cost_usd,
     }
@@ -102,6 +118,7 @@ mod tests {
             certify_top: 3,
             n_holdout: 4,
             certify_trials: 5,
+            has_incumbent: false,
             max_cost_per_trial_usd: Some(0.50),
         }
     }
@@ -137,6 +154,20 @@ mod tests {
         // Trial count is still projectable; cost is honestly unknown — never 0.
         assert_eq!(f.total_trials, 186);
         assert_eq!(f.max_cost_usd, None);
+    }
+
+    #[test]
+    fn incumbent_adds_certify_deep_trials_on_every_task() {
+        let mut inputs = cerberus_like();
+        inputs.has_incumbent = true;
+        let f = forecast(&inputs);
+        // The incumbent runs certify_trials (5) deep on every task: 5 × (6 + 4) = 50.
+        assert_eq!(f.incumbent_trials, 50);
+        // Folded into the total: 186 + 50 = 236, and the cost ceiling tracks it.
+        assert_eq!(f.total_trials, 236);
+        assert_eq!(f.max_cost_usd, Some(118.0));
+        // Off by default — no incumbent declared.
+        assert_eq!(forecast(&cerberus_like()).incumbent_trials, 0);
     }
 
     #[test]
