@@ -1,124 +1,151 @@
-# Daedalus — Vision
+# Daedalus Vision
 
-Daedalus is the foundry where a task becomes a *certified* agent. An operator
-states a task and its risk boundary; Daedalus freezes an arena, searches focused
-agent compositions against it, **proves** which one is better (not merely ranks
-them), and emits a signed, sandbox-aware **launch contract**. The product is
-never the model call — it is the evidence-backed contract that says why this
-agent should exist, what it may do, and what remains unproven.
+Daedalus exists to discover, optimize, and certify agent configurations.
 
-It is the long-lived certification engine for the misty-step constellation.
-Cerberus, Olympus, and Bitter Blossom import Daedalus contracts and own
-production trust — triggers, permissions, posting, rollback. **Daedalus mints;
-the planes deploy.** Without it, those planes ship agents chosen by vibes:
-uncertified, with no headroom check, no cost-bounded Pareto, no audit trail.
-Daedalus is the gate between "an agent ran" and "an agent earned the right to
-run in production."
+Given a task specification and an eval surface, Daedalus searches the large
+configuration space that humans otherwise tune by feel: model, provider,
+reasoning budget, prompt packet, system-prompt mode, skill set, tool policy,
+context briefing, subagent topology, runtime substrate, turn limit, wall-clock
+budget, and cost ceiling. The output is not "an agent ran." The output is an
+evidence-backed composition and launch contract: what was tried, what won, what
+it beat, what it costs, what remains unproven, and what authority it may have.
 
-## Focus — one customer until it hums
+The heart of the project is optimization under evidence. A high-judgment master
+agent should be able to look at failures, propose focused mutations, run
+candidate compositions under comparable constraints, preserve a Pareto frontier,
+and stop when the evidence says the search is saturated, unreliable, too costly,
+or not yet meaningful.
 
-Daedalus has exactly one customer until further notice: the **Cerberus code
-reviewer**. We do not search a second agent, domain, or plane — not the
-Bitter Blossom dispatch pack, not builder/fixer/diagnoser, not a production-trace
-flywheel on a foreign agent — until the Cerberus reviewer loop *hums*: the foundry
-produces a reviewer config we would actually deploy, on evidence we would stake
-the product on. Breadth is how this dies; one certified, trusted, humming reviewer
-is how it earns the next domain. A second family is the reward for finishing the
-first, never a parallel track.
+## The Split With Crucible
 
-"Hums" is a bar, not a vibe. The first certified search (run
-`20260623T183514Z-search-cerberus-reviewer`, 2026-06-23) cleared the *floor* —
-three configs beat an empty submission at 95% CI on a 6-task arena for $2.52 — and
-in doing so exposed how far the floor sits from humming. Five gaps define the
-distance:
+Daedalus is no longer trying to become the general eval-design product.
 
-- **The capability surface was never searched.** Every seed ran with no skills
-  and no MCPs (`skill_set_name: null`), so the central bet — that *outfitting* a
-  reviewer with real reviewing capability beats the raw model — went untested. A
-  reviewer is not certified until the skills/MCP axis is live and shown to move
-  quality-per-dollar.
-- **The baseline was `null`, not the incumbent.** "Beats submitting nothing" is
-  not a deployable verdict. Certification must clear the *deployed* config.
-- **The winner was not deployable.** pass^5 ≈ 0.04 — perfect on a minority of
-  runs. Reliability gates the recommendation; a high mean over an unreliable
-  config does not ship.
-- **It burned its only holdout.** One over-exposed holdout task is not a durable
-  validity asset. Humming needs enough independent clusters and a replaceable,
-  unburned holdout.
-- **It scored recall, not review quality.** Whether a human would act on the
-  finding is unmeasured. Quality must be corroborated beyond recall-minus-FP.
+Crucible is the natural home for defining, designing, running, reviewing, and
+iterating evals: task sets, fixtures, deterministic graders, rubric/model judges,
+human-judgment queues, reports, publications, and the delightful operator UI
+for judging outputs. Project-specific evals may still live with the project that
+cares about them, and Harness Kit may carry portable eval contracts for its
+primitives.
 
-Closing those five *is* the definition of Now. Until they close, there is no Next.
+Daedalus consumes evals and uses them as the measurement surface for search. It
+may run evals, validate eval metadata, and refuse bad or saturated evals, but it
+should not grow into the whole eval workbench or benchmark-publishing product.
+If an eval is the thing being designed, that is Crucible-shaped work. If an
+agent configuration is being optimized against an eval, that is
+Daedalus-shaped work.
 
-## What must stay true
+This split should make both projects sharper:
 
-The load-bearing commitments. `docs/philosophy.md` carries the full principle set.
+- Crucible asks, "Are we measuring the right thing, in the right way?"
+- Daedalus asks, "Given that measurement surface, which agent configuration
+  actually performs best enough to trust?"
 
-- **Agent-vs-agent, never agent-vs-story.** Oracle, null, and one-shot probes
-  calibrate the rig; they are never deliverable candidates. A one-shot that ties
-  the oracle means the *arena* is saturated, not that the baseline won.
-- **Prove better, don't just rank.** A win is a candidate whose reward-delta 95%
-  CI clears the floor under cluster-robust statistics — the certification layer
-  (CIs, pass^k, power) the commercial eval tier omits and Daedalus renders. A
-  higher mean inside the noise is not a win.
-- **Headroom before search.** An arena a one-shot can saturate cannot rank
-  agents. Fix the arena before spending search budget.
-- **Contracts over prose; evidence survives the session.** Specs, arenas, run
-  records, launch contracts, and approvals are the interfaces — durable enough
-  for a future operator or a cold agent to audit without reconstructing the chat.
-- **Human gates are real (G1–G5).** Automation prepares a gate; it never
-  self-approves one.
-- **Cost and latency are quality.** A candidate that scores 3% higher at 10× the
-  cost is wrong for a threshold-then-cheap task.
-- **The plane owns production trust.** Daedalus recommends measured contracts; it
-  does not deploy, schedule, post, or hold live permissions.
+## What Daedalus Searches
 
-## The bet
+A Daedalus candidate is a composition, not a vague agent persona. The useful
+slots are explicit so search can be scientific instead of anecdotal:
 
-That a high-judgment master agent can convert a task specification into a
-cheaper, faster, narrower, better-tested focused agent — and that *statistical
-certification plus signed contracts* are what make agent deployment trustworthy
-at constellation scale. The durable edge is the rigor layer: a foundry that can
-prove a win, draw its confidence interval, and refuse to ship one it cannot
-bound. The clever part is the master agent; the harness stays boring.
+- model and provider;
+- reasoning effort or thinking budget;
+- prompt packet and system-prompt mode;
+- skills, tools, context, and MCP/capability surface;
+- runtime substrate such as Pi, OpenCode, OMP, Codex, or another runner;
+- lead-agent versus specialist-subagent structure;
+- critic topology and synthesis rules;
+- token, wall-clock, and dollar budgets;
+- output contract, escalation rule, and required evidence.
 
-## What excellent looks like
+Daedalus should allow creative candidate proposals, but comparisons must remain
+interpretable. Single-slot mutations, baselines, incumbents, holdouts,
+certification trials, and reliability gates matter because otherwise the project
+learns only that "something changed."
 
-- **Now (the only Now):** the Cerberus reviewer loop hums — see **Focus** above.
-  The five gaps from the first certified search are closed: the capability surface
-  is a live search axis, certification clears the deployed incumbent (not `null`),
-  the recommended config is reliable enough to deploy (pass^k-gated), the arena
-  carries a durable multi-cluster holdout, and review quality is corroborated
-  beyond recall. A certified reviewer ships to Cerberus as a signed contract with
-  its CI, cost envelope, and residual risk *drawn*, not asserted.
-- **Next (only after Now):** a second task family (grooming, ops, the dispatch
-  pack) and the open capability/substrate questions, answered by evidence in the
-  lab — earned by a humming reviewer, never run in parallel with finishing it.
-- **Long horizon:** any plane can import a Daedalus contract and trust it cold;
-  production traces flow back through G5 to sharpen the arenas; the foundry — not
-  the operator's memory — is where agent quality compounds.
+## What Must Stay True
 
-## What this repo refuses
+- **Agent-vs-agent, not agent-vs-story.** The unit under test is a composition
+  that could actually run again, not a prose recommendation.
+- **Eval quality gates search.** If the eval is saturated, leaky, underpowered,
+  too easy, or misaligned with the task, Daedalus stops and sends the problem
+  back to eval design instead of optimizing noise.
+- **Prove better, not merely different.** A higher mean inside the noise floor
+  is not a result. Use baselines, incumbents, confidence intervals, reliability
+  floors, and cost/latency envelopes before recommending a composition.
+- **Cost and latency are quality.** A composition that is slightly better at
+  ten times the price may be wrong. The task mode decides whether to maximize
+  quality, hit a threshold cheaply, minimize latency, or keep a Pareto set.
+- **Contracts over chat.** Task specs, candidate manifests, run records,
+  summaries, reports, launch contracts, approvals, and traces are the durable
+  interfaces. A future operator should be able to audit the decision cold.
+- **Human gates are real.** Automation prepares evidence for G1-G5; it does not
+  self-approve spend, eval trust, deployment, write authority, or production-data
+  re-ingestion.
+- **Planes own production.** Daedalus mints measured compositions and launch
+  contracts. Bitterblossom, Olympus, Cerberus, or another plane owns triggers,
+  runtime permissions, posting, rollback, production observability, and policy.
 
-- Not a universal "make me an agent" button, an agent marketplace, or a
-  production scheduler. The planes own deploy, triggers, permissions, posting,
-  and rollback.
-- No offline winner promotes itself to production; no agent gets runtime
-  authority without a human-readable launch contract.
-- Candidates never read `tests/`, `solution/`, or answer keys; experiments fail
-  closed when a boundary is suspect. A benchmark you can game is a benchmark you
-  will game.
-- LLM-as-judge is never the only oracle; no model default from vibes; no cost or
-  latency claim without recorded usage or an honest "unknown."
-- The experiment loop never silently mutates global skills, shared provider
-  state, or production triggers.
+## Why This Exists
 
-## Where the depth lives
+The motivating problem is that agent configuration is becoming too high
+dimensional for vibes. Changing the model, the prompt, the skills, the tools,
+the context, the reasoning budget, or the subagent structure can matter more
+than the application code around it. A master orchestrator with the right search
+discipline should be able to discover better configurations than a human
+hand-tuning one prompt in one chat window.
 
-- `docs/philosophy.md` — operating principles and the review-swarm shape.
-- `DESIGN.md` — the six-stage pipeline and the file contracts that are the real
-  interfaces (Daedalus owns Specify→Lab→Contract; planes own Deploy→Observe).
-- `ROADMAP.md` — phases, gated by evidence, not dates.
-- `AGENTS.md` — the standing repo contracts and gates.
-- `README.md` — the original research framing and external inspirations
-  (Karpathy autoresearch, Inspect AI, GEPA, SWE-bench).
+Daedalus is the optimizer for that world. It is how Misty Step can ask,
+"What should this agent actually be?" and get back measured evidence rather
+than a plausible answer.
+
+The first concrete proving ground remains agentic code review and Cerberus-like
+reviewer configurations, because review has real stakes, measurable artifacts,
+clear downstream consumers, and enough failure modes to expose bad science.
+That focus should not become a cage. Once the search loop is trustworthy,
+Daedalus should optimize other agent families against credible eval surfaces
+designed in Crucible, owned by their projects, or carried by Harness Kit.
+
+## Ideal Form
+
+In the mature version, an operator can point Daedalus at a task specification
+and an eval package, set risk and budget boundaries, and let the system search
+the configuration space with scientific discipline.
+
+An ideal Daedalus run produces:
+
+- a frozen task/eval reference and the reason it is trusted enough to search;
+- baseline and incumbent measurements;
+- candidate compositions with mechanical hashes and provenance;
+- comparable run records with cost, latency, artifacts, and failures;
+- a report that shows not just the winner, but why the winner is reliable;
+- a launch contract that downstream planes can import without guessing;
+- residual risks, unsigned gates, and follow-up eval needs.
+
+The long-term ambition is not a marketplace of agents. It is a lab-grade
+optimizer for building trustworthy, task-specific agent configurations.
+
+## What This Repo Refuses
+
+- It is not the general eval authoring product. That is Crucible-shaped.
+- It is not a benchmark leaderboard or public score factory.
+- It is not a production scheduler, event plane, or permission broker.
+- It does not silently mutate global Harness Kit primitives, provider defaults,
+  production triggers, or downstream repos.
+- It does not promote an offline winner without a human-readable launch
+  contract and unsigned-gate disclosure.
+- It does not treat model-judge output as the only oracle or cost-free truth.
+- It does not continue optimizing when the eval is the bottleneck.
+
+## Where The Depth Lives
+
+- `AGENTS.md` is the repo contract and gate map.
+- `DESIGN.md` defines the existing file contracts, pipeline, run records,
+  launch contracts, and human gates.
+- `docs/operator-sop.md` is the cold-start path for specifying, freezing,
+  searching, exporting, and closing a task family.
+- `docs/vocabulary.md` names the searched pieces of an agent composition.
+- `docs/philosophy.md` carries the older foundry principles that still matter:
+  headroom before search, contracts over prose, and human gates.
+- `ROADMAP.md` preserves historical phase evidence and should be revised when
+  the Daedalus/Crucible split changes active milestones.
+- `backlog.d/` holds shaped work. The old "rename Daedalus to Crucible" ticket
+  is superseded by this split: Daedalus stays the optimizer; Crucible becomes
+  the eval workbench.
