@@ -73,8 +73,10 @@ learns only that "something changed."
   is not a result. Use baselines, incumbents, confidence intervals, reliability
   floors, and cost/latency envelopes before recommending a composition.
 - **Cost and latency are quality.** A composition that is slightly better at
-  ten times the price may be wrong. The task mode decides whether to maximize
-  quality, hit a threshold cheaply, minimize latency, or keep a Pareto set.
+  ten times the price may be wrong. The default output is a Pareto frontier
+  across quality, cost, latency, reliability, and authority. A single launch
+  winner is chosen only when the task contract supplies a scalar objective,
+  threshold, or deployment constraint.
 - **Contracts over chat.** Task specs, candidate manifests, run records,
   summaries, reports, launch contracts, approvals, and traces are the durable
   interfaces. A future operator should be able to audit the decision cold.
@@ -117,7 +119,8 @@ An ideal Daedalus run produces:
 - baseline and incumbent measurements;
 - candidate compositions with mechanical hashes and provenance;
 - comparable run records with cost, latency, artifacts, and failures;
-- a report that shows not just the winner, but why the winner is reliable;
+- a report that shows the Pareto frontier, dominated candidates, recommended
+  launch choice when one is justified, and why that choice is reliable;
 - a launch contract that downstream planes can import without guessing;
 - residual risks, unsigned gates, and follow-up eval needs.
 
