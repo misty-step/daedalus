@@ -10,11 +10,11 @@ budget, and cost ceiling. The output is not "an agent ran." The output is an
 evidence-backed composition and launch contract: what was tried, what won, what
 it beat, what it costs, what remains unproven, and what authority it may have.
 
-The heart of the project is optimization under evidence. A high-judgment master
-agent should be able to look at failures, propose focused mutations, run
-candidate compositions under comparable constraints, preserve a Pareto frontier,
-and stop when the evidence says the search is saturated, unreliable, too costly,
-or not yet meaningful.
+The heart of the project is a Carpathia-style auto-research loop under evidence.
+A high-judgment master agent should be able to look at failures, propose focused
+mutations, run candidate compositions under comparable constraints, preserve a
+Pareto frontier, and stop when the evidence says the search is saturated,
+unreliable, too costly, or not yet meaningful.
 
 ## The Split With Crucible
 
@@ -53,6 +53,8 @@ slots are explicit so search can be scientific instead of anecdotal:
 - lead-agent versus specialist-subagent structure;
 - critic topology and synthesis rules;
 - token, wall-clock, and dollar budgets;
+- hard constraints such as "maximize score under $5 per run" or "hit the
+  threshold with the cheapest reliable composition";
 - output contract, escalation rule, and required evidence.
 
 Daedalus should allow creative candidate proposals, but comparisons must remain
