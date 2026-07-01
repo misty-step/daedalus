@@ -549,9 +549,10 @@ fn build_headroom_probe(
     let oracle_point = oracle.and_then(|s| s.point);
     let null_point = null.and_then(|s| s.point);
     let probe_point = probe.and_then(|s| s.point);
-    let saturated = matches!((oracle_point, probe_point), (Some(o), Some(p)) if p >= o - 0.1);
     let oracle_pass = oracle_point.is_some_and(|p| (p - 1.0).abs() < 1e-9);
     let null_pass = null_point.is_some_and(|p| p <= 0.000_001);
+    let saturated =
+        oracle_pass && matches!((oracle_point, probe_point), (Some(o), Some(p)) if p >= o - 0.1);
     let ranks = oracle_point.is_some()
         && null_point.is_some()
         && probe_point.is_some()
@@ -1308,6 +1309,58 @@ mod tests {
         })
         .unwrap();
         assert_eq!(result.verdict, "saturated");
+    }
+
+    #[test]
+    fn broken_oracle_near_probe_returns_needs_review_not_saturated() {
+        let root = fresh_tmp("broken-oracle");
+        let eval_dir = root.join("evals");
+        let run_dir = root.join("runs");
+        std::fs::create_dir_all(&eval_dir).unwrap();
+        std::fs::create_dir_all(&run_dir).unwrap();
+        let trials = run_dir.join("trials.jsonl");
+        std::fs::write(
+            &trials,
+            [
+                TrialRow::new("oracle", "oracle", "t1", 2, &["a"]).to_jsonl(),
+                TrialRow::new("null", "null", "t1", 2, &[]).to_jsonl(),
+                TrialRow::new("probe-oneshot", "oneshot", "t1", 2, &["a"]).to_jsonl(),
+            ]
+            .join("\n")
+                + "\n",
+        )
+        .unwrap();
+        let eval = eval_dir.join("eval.json");
+        std::fs::write(
+            &eval,
+            json!({
+                "schema_version": CRUCIBLE_EVAL_SCHEMA,
+                "id": "eval",
+                "baselines": ["null", "oracle"],
+                "runner": {"kind": "key_recall", "corpus": {
+                    "trials_jsonl": "../runs/trials.jsonl",
+                    "candidate_id": "probe-oneshot",
+                    "tasks": ["t1"]
+                }}
+            })
+            .to_string(),
+        )
+        .unwrap();
+        let result = run_headroom_probe(&HeadroomProbeOptions {
+            eval_spec: eval,
+            out_dir: root.join("out"),
+            budget_usd: 5.0,
+            bb_config: None,
+            bb_task: "correctness".to_string(),
+            bb_bin: PathBuf::from("bb"),
+            bb_repo: "misty-step/threshold".to_string(),
+            bb_rev: Some("abc123".to_string()),
+            bb_change: Some("threshold-optimizer-061".to_string()),
+            bb_submission: None,
+            dispatch_bitterblossom: false,
+        })
+        .unwrap();
+        assert_eq!(result.verdict, "needs-review");
     }
 
     fn fresh_tmp(label: &str) -> PathBuf {
