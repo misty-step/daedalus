@@ -24,6 +24,7 @@ const OPTIMIZER_LOOP_SCHEMA: &str = "threshold.optimizer_loop.v1";
 const ASHA_SCHEMA: &str = "threshold.asha.v1";
 const PARETO_SCHEMA: &str = "threshold.pareto_frontier.v1";
 const CERTIFICATION_SCHEMA: &str = "threshold.heldout_certification.v1";
+const SPRITE_TRIAL_MAX_COST_USD: f64 = 0.60;
 
 #[derive(Debug, Clone)]
 pub struct OptimizationTargetError(pub String);
@@ -327,7 +328,14 @@ pub fn run_optimizer_loop(
     let mut history = Vec::new();
     let mut validation_trials = Vec::new();
     let mut receipts = Vec::new();
+    let mut authorized_spend_usd = 0.0_f64;
     for candidate in &optimizer_candidates {
+        reserve_optimizer_dispatch_budget(
+            &mut authorized_spend_usd,
+            options,
+            candidate,
+            "validation",
+        )?;
         let trial = run_sprite_optimizer_trial(
             &eval_info,
             options,
@@ -359,6 +367,12 @@ pub fn run_optimizer_loop(
         let Some(candidate) = optimizer_candidates.iter().find(|c| c.id == candidate_id) else {
             continue;
         };
+        reserve_optimizer_dispatch_budget(
+            &mut authorized_spend_usd,
+            options,
+            candidate,
+            "heldout",
+        )?;
         let trial = run_sprite_optimizer_trial(
             &eval_info,
             options,
@@ -421,6 +435,27 @@ pub fn run_optimizer_loop(
         frontier: frontier.len(),
         spend_known_usd: known_receipt_spend(&receipts),
     })
+}
+
+fn reserve_optimizer_dispatch_budget(
+    authorized_spend_usd: &mut f64,
+    options: &OptimizerLoopOptions,
+    candidate: &OptimizerCandidate,
+    split_name: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
+    if !options.dispatch_bitterblossom {
+        return Ok(());
+    }
+    let next_authorized = *authorized_spend_usd + SPRITE_TRIAL_MAX_COST_USD;
+    if next_authorized > options.budget_usd {
+        return Err(OptimizationTargetError(format!(
+            "optimizer budget cap would be exceeded before dispatching {} {split_name}: authorized ${:.2} + trial max ${:.2} > cap ${:.2}",
+            candidate.id, *authorized_spend_usd, SPRITE_TRIAL_MAX_COST_USD, options.budget_usd
+        ))
+        .into());
+    }
+    *authorized_spend_usd = next_authorized;
+    Ok(())
 }
 
 fn load_eval_info(eval_spec: &Path) -> Result<EvalInfo, Box<dyn std::error::Error>> {
@@ -1219,7 +1254,7 @@ fn build_optimizer_sprite_request(
         "secret_names": ["OPENROUTER_API_KEY", "GH_TOKEN"],
         "env_allowlist": ["OPENROUTER_API_KEY", "GH_TOKEN"],
         "budget": {
-            "max_cost_usd": 0.60,
+            "max_cost_usd": SPRITE_TRIAL_MAX_COST_USD,
             "timeout_seconds": 2700
         },
         "threshold": {
@@ -1836,7 +1871,7 @@ fn build_sprite_request(
         "secret_names": ["OPENROUTER_API_KEY", "GH_TOKEN"],
         "env_allowlist": ["OPENROUTER_API_KEY", "GH_TOKEN"],
         "budget": {
-            "max_cost_usd": 0.60,
+            "max_cost_usd": SPRITE_TRIAL_MAX_COST_USD,
             "timeout_seconds": 2700
         },
         "threshold": {
@@ -2594,7 +2629,7 @@ mod tests {
         )
         .unwrap();
         let result = run_optimizer_loop(&OptimizerLoopOptions {
-            eval_spec: eval,
+            eval_spec: eval.clone(),
             out_dir: root.join("out"),
             budget_usd: 5.0,
             bb_config: None,
@@ -2630,6 +2665,24 @@ mod tests {
         let guardrails: Value =
             serde_json::from_str(&std::fs::read_to_string(result.guardrails).unwrap()).unwrap();
         assert_eq!(guardrails["overfitting"]["holdout_feedback_blocked"], true);
+
+        let err = run_optimizer_loop(&OptimizerLoopOptions {
+            eval_spec: eval,
+            out_dir: root.join("budget-block"),
+            budget_usd: 0.5,
+            bb_config: None,
+            bb_tasks: vec!["correctness".to_string()],
+            bb_bin: PathBuf::from("bb-that-should-not-run"),
+            bb_repo: "misty-step/threshold".to_string(),
+            bb_rev: Some("abc123".to_string()),
+            bb_change: Some("threshold-optimizer-061".to_string()),
+            dispatch_bitterblossom: true,
+            certify_top: 1,
+            rng_seed: Some(7),
+        })
+        .unwrap_err()
+        .to_string();
+        assert!(err.contains("budget cap would be exceeded"));
     }
 
     #[test]
