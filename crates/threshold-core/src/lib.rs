@@ -18,6 +18,7 @@ pub mod judge;
 pub mod launch;
 pub mod lineage;
 pub mod mutate;
+pub mod optimization_target;
 pub mod port_harbor;
 pub mod prompt_packet;
 pub mod pycompat;

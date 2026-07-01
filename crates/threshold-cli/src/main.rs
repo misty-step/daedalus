@@ -254,6 +254,40 @@ enum Cmd {
         #[arg(long)]
         estimate: bool,
     },
+    /// Import a Crucible key-recall eval as a Threshold optimization target and
+    /// run the bounded headroom probe before paid search.
+    OptimizeHeadroom {
+        /// Crucible `crucible.eval_spec.v1` JSON file.
+        #[arg(long)]
+        eval: PathBuf,
+        /// Output run directory. Default: `runs/<stamp>-optimize-<eval-id>`.
+        #[arg(long)]
+        out_dir: Option<PathBuf>,
+        /// Budget cap recorded on the headroom probe.
+        #[arg(long, default_value_t = 5.0)]
+        budget_usd: f64,
+        /// Bitterblossom plane config for the Sprites runner seam.
+        #[arg(long)]
+        bb_config: Option<PathBuf>,
+        /// Bitterblossom task id to dispatch.
+        #[arg(long, default_value = "correctness")]
+        bb_task: String,
+        /// Bitterblossom CLI binary.
+        #[arg(long, default_value = "bb")]
+        bb_bin: PathBuf,
+        /// GitHub repo passed to the Bitterblossom task event.
+        #[arg(long, default_value = "misty-step/threshold")]
+        bb_repo: String,
+        /// Git revision passed to Bitterblossom. Defaults to local HEAD.
+        #[arg(long)]
+        bb_rev: Option<String>,
+        /// Git branch/change name passed to Bitterblossom. Defaults to current branch.
+        #[arg(long)]
+        bb_change: Option<String>,
+        /// Actually call `bb run`; without this, write a not_dispatched receipt.
+        #[arg(long)]
+        dispatch_bitterblossom: bool,
+    },
     /// Offline two-run delta: compare two existing run directories' pareto.json +
     /// loop.json without spending. Per-candidate reward/rank/cost deltas, plus
     /// spend and stop-reason deltas, so cross-run comparison is mechanical.
@@ -461,6 +495,29 @@ fn main() -> ExitCode {
             max_errors_per_candidate,
             estimate,
         ),
+        Cmd::OptimizeHeadroom {
+            eval,
+            out_dir,
+            budget_usd,
+            bb_config,
+            bb_task,
+            bb_bin,
+            bb_repo,
+            bb_rev,
+            bb_change,
+            dispatch_bitterblossom,
+        } => cmd_optimize_headroom(OptimizeHeadroomCommand {
+            eval,
+            out_dir,
+            budget_usd,
+            bb_config,
+            bb_task,
+            bb_bin,
+            bb_repo,
+            bb_rev,
+            bb_change,
+            dispatch_bitterblossom,
+        }),
         Cmd::Compare { run_a, run_b } => cmd_compare(&run_a, &run_b),
     }
 }
@@ -809,6 +866,94 @@ fn cmd_compare(run_a: &std::path::Path, run_b: &std::path::Path) -> ExitCode {
         cmp.stop_reason_b.as_deref().unwrap_or("unknown"),
     );
     ExitCode::SUCCESS
+}
+
+// ---------------------------------------------------------------------------
+// optimize-headroom (061): Crucible eval target import + bounded probe
+// ---------------------------------------------------------------------------
+
+struct OptimizeHeadroomCommand {
+    eval: PathBuf,
+    out_dir: Option<PathBuf>,
+    budget_usd: f64,
+    bb_config: Option<PathBuf>,
+    bb_task: String,
+    bb_bin: PathBuf,
+    bb_repo: String,
+    bb_rev: Option<String>,
+    bb_change: Option<String>,
+    dispatch_bitterblossom: bool,
+}
+
+fn cmd_optimize_headroom(cmd: OptimizeHeadroomCommand) -> ExitCode {
+    let computed_out = cmd.out_dir.unwrap_or_else(|| {
+        let stamp = threshold_core::run::utc_stamp();
+        let eval_id = cmd
+            .eval
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .map(safe_slug)
+            .unwrap_or_else(|| "crucible-eval".to_string());
+        PathBuf::from("runs").join(format!("{stamp}-optimize-{eval_id}"))
+    });
+    let options = threshold_core::optimization_target::HeadroomProbeOptions {
+        eval_spec: cmd.eval,
+        out_dir: computed_out,
+        budget_usd: cmd.budget_usd,
+        bb_config: cmd.bb_config,
+        bb_task: cmd.bb_task,
+        bb_bin: cmd.bb_bin,
+        bb_repo: cmd.bb_repo,
+        bb_rev: cmd.bb_rev.or_else(|| git_output(&["rev-parse", "HEAD"])),
+        bb_change: cmd
+            .bb_change
+            .or_else(|| git_output(&["branch", "--show-current"]))
+            .or_else(|| git_output(&["rev-parse", "--short", "HEAD"])),
+        dispatch_bitterblossom: cmd.dispatch_bitterblossom,
+    };
+    match threshold_core::optimization_target::run_headroom_probe(&options) {
+        Ok(result) => {
+            println!("out-dir: {}", result.out_dir.display());
+            println!("target: {}", result.target.display());
+            println!("rig: {}", result.rig.display());
+            println!("headroom_probe: {}", result.headroom_probe.display());
+            println!("guardrails: {}", result.guardrails.display());
+            println!("trials: {}", result.trials.display());
+            println!("sprite_request: {}", result.sprite_request.display());
+            println!("sprite_receipt: {}", result.sprite_receipt.display());
+            println!("report: {}", result.report.display());
+            println!("verdict: {}", result.verdict);
+            if let Some(point) = result.probe_point {
+                println!("probe_key_recall: {point:.4}");
+            }
+            ExitCode::SUCCESS
+        }
+        Err(err) => {
+            eprintln!("optimize-headroom failed: {err}");
+            ExitCode::FAILURE
+        }
+    }
+}
+
+fn safe_slug(s: &str) -> String {
+    let mut out = String::new();
+    for ch in s.chars() {
+        if ch.is_ascii_alphanumeric() || ch == '-' || ch == '_' {
+            out.push(ch);
+        } else if !out.ends_with('-') {
+            out.push('-');
+        }
+    }
+    out.trim_matches('-').to_string()
+}
+
+fn git_output(args: &[&str]) -> Option<String> {
+    let output = std::process::Command::new("git").args(args).output().ok()?;
+    if !output.status.success() {
+        return None;
+    }
+    let text = String::from_utf8_lossy(&output.stdout).trim().to_string();
+    (!text.is_empty()).then_some(text)
 }
 
 // ---------------------------------------------------------------------------
