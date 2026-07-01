@@ -2,16 +2,16 @@
 
 ## PRD Summary
 
-- User: the Daedalus operator deciding what Cerberus should run next.
+- User: the Threshold operator deciding what Cerberus should run next.
 - Problem: Cerberus now has a real Rust review runner, OpenCode default,
   OMP fallback, fixture verification, and PR/git-range request builders, but
-  Daedalus still mainly measures Pi compositions and cannot compare Cerberus
+  Threshold still mainly measures Pi compositions and cannot compare Cerberus
   review substrates as first-class experimental candidates.
-- Goal: make Daedalus able to compare Cerberus autonomous review
+- Goal: make Threshold able to compare Cerberus autonomous review
   configurations by validated artifacts, cost, latency, context truth, and
   failure mode, then recommend a sandbox-only Cerberus configuration.
 - Why now: Cerberus `master` now includes the PR request-builder surface
-  (`99c4b21 Add Cerberus PR request builder (#463)`), so Daedalus can start
+  (`99c4b21 Add Cerberus PR request builder (#463)`), so Threshold can start
   from real `ReviewRequest.v1` and `ReviewArtifact.v1` boundaries instead of
   shaping around hypothetical acquisition.
 - UX enabled: the operator can inspect a lab workbench, choose controlled
@@ -20,17 +20,17 @@
 - Deliverable type: harness primitive plus research report, with a shaped
   operator workbench model and no production posting authority.
 - Success signal: one Cerberus fixture artifact and one live OpenCode-vs-OMP
-  comparison enter a Daedalus run/report shape without weakening freeze,
+  comparison enter a Threshold run/report shape without weakening freeze,
   scorer, gate, or approval contracts.
 
 ## Product Requirements
 
 - P0: score or import a validated Cerberus `ReviewArtifact.v1` against a
-  Daedalus PR-review arena without live model spend.
+  Threshold PR-review arena without live model spend.
 - P0: compare at least OpenCode and OMP Cerberus runs for the same request,
   preserving substrate, model, context tier, lifecycle state, latency, cost or
   `null`, transcript/receipt path, and artifact validity.
-- P0: keep Daedalus as the lab and Cerberus as the review runner; Daedalus
+- P0: keep Threshold as the lab and Cerberus as the review runner; Threshold
   does not post PR comments, mutate Cerberus defaults, self-approve G1-G5, or
   own runtime eventing.
 - P0: stop before any real-repo recommendation if freeze validation remains
@@ -53,7 +53,7 @@
   authoring any new paid search space.
 - Cerberus owns `ReviewRequest.v1 -> ReviewArtifact.v1`, artifact validation,
   context-capability truth, and harness receipts.
-- Daedalus owns arenas, frozen evals, candidate/run records, analysis,
+- Threshold owns arenas, frozen evals, candidate/run records, analysis,
   Pareto/reporting, and sandbox-only promotion logic.
 - Bitterblossom and Olympus remain control-plane consumers/comparators.
 
@@ -61,7 +61,7 @@
 
 - `AGENTS.md`: gate, grader, model-pool, candidate-hidden-path, run-record,
   approval, and backlog contracts.
-- `DESIGN.md`: Daedalus pipeline, candidate manifest, run records, launch
+- `DESIGN.md`: Threshold pipeline, candidate manifest, run records, launch
   contract, and Cerberus handoff boundary.
 - `docs/premises/2026-06-19-coding-agent-substrates.md`: OpenCode-first
   substrate premise and Cerberus artifact evaluation axis.
@@ -71,7 +71,7 @@
   disagreement commands.
 - `docs/review-autoresearch-loop.md`: controlled hypothesis loop and plateau
   postmortem discipline.
-- `docs/daedalus-ui-lab/round-2/console.html`: existing instrument-panel UI
+- `docs/threshold-ui-lab/round-2/console.html`: existing instrument-panel UI
   direction for candidate comparison, headroom, gates, cost, and task grids.
 - `backlog.d/047-replace-real-repo-saturation-probe.md`: current freeze
   blocker for real-repo arenas.
@@ -84,7 +84,7 @@
 
 ## Delete-First Check
 
-- Requirement questioned: does Daedalus need a general lab product now, or only
+- Requirement questioned: does Threshold need a general lab product now, or only
   a Cerberus-first proof that the lab boundary works?
 - Deleted or simplified: defer generic lab framework, hosted UI, posting,
   event loops, new model roster, and arbitrary adapters.
@@ -95,18 +95,18 @@
 
 | Option | Why It Helps | Failure Mode | Verdict |
 |---|---|---|---|
-| Manual report over Cerberus artifacts | Fastest and code-light | Produces prose without Daedalus run records, no repeatable scorer path, no promotion-quality evidence | Reject as final shape; allow only as a scouting note |
-| Continue Pi-only Daedalus review search | Uses current runner | Optimizes the old harness axis and does not answer whether Cerberus should run OpenCode or OMP | Reject as strategic default |
-| Switch Cerberus to OpenCode globally | Matches the premise | Replaces one unmeasured default with another; no Daedalus comparison or rollback evidence | Reject |
+| Manual report over Cerberus artifacts | Fastest and code-light | Produces prose without Threshold run records, no repeatable scorer path, no promotion-quality evidence | Reject as final shape; allow only as a scouting note |
+| Continue Pi-only Threshold review search | Uses current runner | Optimizes the old harness axis and does not answer whether Cerberus should run OpenCode or OMP | Reject as strategic default |
+| Switch Cerberus to OpenCode globally | Matches the premise | Replaces one unmeasured default with another; no Threshold comparison or rollback evidence | Reject |
 | Generic external-agent lab framework | Long-term attractive | Broad abstraction before one consumer succeeds; likely shallow seams and unearned CLI surface | Defer |
-| Cerberus-first lab adapter and workbench | Uses live Cerberus contracts, keeps Daedalus as foundry, produces comparable evidence | Requires careful artifact mapping and may expose arena-freeze blockers | Choose |
+| Cerberus-first lab adapter and workbench | Uses live Cerberus contracts, keeps Threshold as foundry, produces comparable evidence | Requires careful artifact mapping and may expose arena-freeze blockers | Choose |
 
 ## Design
 
 ### Product Shape
 
 The lab is an operator workbench, not a marketing dashboard and not a
-production control plane. It should feel like the existing Daedalus UI lab's
+production control plane. It should feel like the existing Threshold UI lab's
 instrument direction: dense, quiet, ruled, evidence-first, with one loud
 decision surface at a time.
 
@@ -125,27 +125,27 @@ The first-viewport lab contract has five surfaces:
 
 ### Levers and Dials
 
-The exposed dials must map to a real Cerberus or Daedalus decision:
+The exposed dials must map to a real Cerberus or Threshold decision:
 
 | Dial Group | Dials | Owner | Notes |
 |---|---|---|---|
-| Task | arena id/version, task family, split, clean-trap mix, context tier | Daedalus | Changing fixtures/keys/scorer constants bumps arena version |
-| Candidate | substrate (`opencode`, `omp`, `pi`), model, prompt packet, system prompt stance, dynamic-lane permission | Daedalus measures, Cerberus runs | Model ids come only from refreshed primitives |
-| Context | `diff_only`, `repo_head`, `repo_base_and_head`, local runtime, external research policy | Cerberus records, Daedalus scores | Overstated context is a scored failure |
-| Safety | env allowlist, network/secrets policy, timeout, sandbox profile, degraded-run permission | Cerberus harness, Daedalus risk metadata | Sensitive or adversarial runs use Harbor/Docker or stop |
-| Analysis | reward metric, artifact-validity gate, false-positive penalty, cost objective, latency objective, clustered CI, holdout burn | Daedalus | Do not average across arena versions |
-| Promotion | sandbox-only export, threshold, waiver, rollback, G2-G5 gate state | Daedalus emits, human approves | No self-approval |
+| Task | arena id/version, task family, split, clean-trap mix, context tier | Threshold | Changing fixtures/keys/scorer constants bumps arena version |
+| Candidate | substrate (`opencode`, `omp`, `pi`), model, prompt packet, system prompt stance, dynamic-lane permission | Threshold measures, Cerberus runs | Model ids come only from refreshed primitives |
+| Context | `diff_only`, `repo_head`, `repo_base_and_head`, local runtime, external research policy | Cerberus records, Threshold scores | Overstated context is a scored failure |
+| Safety | env allowlist, network/secrets policy, timeout, sandbox profile, degraded-run permission | Cerberus harness, Threshold risk metadata | Sensitive or adversarial runs use Harbor/Docker or stop |
+| Analysis | reward metric, artifact-validity gate, false-positive penalty, cost objective, latency objective, clustered CI, holdout burn | Threshold | Do not average across arena versions |
+| Promotion | sandbox-only export, threshold, waiver, rollback, G2-G5 gate state | Threshold emits, human approves | No self-approval |
 
 ### Minimum Technical Surface
 
 The first implementation should be a narrow Cerberus lab adapter, not a
 general external-agent framework. It can be implemented as a new focused
-Daedalus path that:
+Threshold path that:
 
 - reads a Cerberus `ReviewRequest.v1` and `ReviewArtifact.v1`;
 - validates the artifact through Cerberus or a schema-compatible parser before
   scoring;
-- maps Cerberus findings/comments into the existing Daedalus PR-review finding
+- maps Cerberus findings/comments into the existing Threshold PR-review finding
   shape where possible;
 - records substrate, model, context capabilities, lifecycle state, latency,
   cost, receipt path, and artifact validity in run evidence;
@@ -159,13 +159,13 @@ Cerberus path proves useful.
 
 ## CLI Surface
 
-- Command tree: `daedalus cerberus-lab import`
-- Purpose: import and compare Cerberus review artifacts under a Daedalus arena.
+- Command tree: `threshold cerberus-lab import`
+- Purpose: import and compare Cerberus review artifacts under a Threshold arena.
 - Primary user: human operator and scripts.
 - Inputs: arena path, Cerberus request JSON, Cerberus artifact JSON,
   optional transcript/receipt path, candidate id, substrate/model metadata,
   output run dir.
-- Outputs: Daedalus evidence directory with score/report JSON, Markdown
+- Outputs: Threshold evidence directory with score/report JSON, Markdown
   comparison report, and artifact index; diagnostics to stderr.
 - Interactivity: no prompts; all command paths must be scriptable.
 - Safety: no production posting, no Cerberus default mutation, no model spend
@@ -177,10 +177,10 @@ Cerberus path proves useful.
 Happy-path sketch:
 
 ```sh
-cargo run --quiet --bin daedalus -- doctor
-cargo run --quiet --bin daedalus -- arena-validate arenas/pr-review-correctness-v0 \
+cargo run --quiet --bin threshold -- doctor
+cargo run --quiet --bin threshold -- arena-validate arenas/pr-review-correctness-v0 \
   --probe-run runs/<freeze-dir> --report runs/<freeze-dir>/freeze-report.md
-cargo run --quiet --bin daedalus -- cerberus-lab import \
+cargo run --quiet --bin threshold -- cerberus-lab import \
   --arena arenas/pr-review-correctness-v0 \
   --request /Users/phaedrus/Development/cerberus/target/cerberus/request.json \
   --artifact /Users/phaedrus/Development/cerberus/target/cerberus/artifact.json \
@@ -201,26 +201,26 @@ Failure examples:
 Commands that must exit 0 after implementation:
 
 ```sh
-# Daedalus structural gate.
+# Threshold structural gate.
 bin/gate
 
-# Daedalus readiness stays current and model-roster checks do not regress.
-cargo run --quiet --bin daedalus -- doctor
+# Threshold readiness stays current and model-roster checks do not regress.
+cargo run --quiet --bin threshold -- doctor
 
 # Freeze/validate the target arena before paid search or recommendation.
-cargo run --quiet --bin daedalus -- arena-freeze arenas/pr-review-correctness-v0 \
+cargo run --quiet --bin threshold -- arena-freeze arenas/pr-review-correctness-v0 \
   --out-dir runs/cerberus-lab-freeze-smoke \
   --report runs/cerberus-lab-freeze-smoke/freeze-report.md
-cargo run --quiet --bin daedalus -- arena-validate arenas/pr-review-correctness-v0 \
+cargo run --quiet --bin threshold -- arena-validate arenas/pr-review-correctness-v0 \
   --probe-run runs/cerberus-lab-freeze-smoke \
   --report runs/cerberus-lab-freeze-smoke/validate-report.md
 
 # Cerberus still proves its request/artifact path.
 cd /Users/phaedrus/Development/cerberus && ./scripts/verify.sh
 
-# The new Daedalus Cerberus lab path imports at least one fixture artifact and
+# The new Threshold Cerberus lab path imports at least one fixture artifact and
 # writes an inspectable report without live model spend.
-cargo run --quiet --bin daedalus -- cerberus-lab import \
+cargo run --quiet --bin threshold -- cerberus-lab import \
   --arena arenas/pr-review-correctness-v0 \
   --request /Users/phaedrus/Development/cerberus/target/cerberus/git-range-request.json \
   --artifact /Users/phaedrus/Development/cerberus/target/cerberus/git-range-artifact.json \
@@ -240,19 +240,19 @@ Observable outcomes:
 
 ## Verification System
 
-- Claim: Daedalus can compare Cerberus autonomous review substrates credibly
+- Claim: Threshold can compare Cerberus autonomous review substrates credibly
   enough to recommend what Cerberus should run next in sandbox mode.
-- Falsifier: Daedalus accepts invalid Cerberus artifacts, confuses substrate
+- Falsifier: Threshold accepts invalid Cerberus artifacts, confuses substrate
   execution failure with model quality, hides unknown cost, recommends from an
   inconclusive/saturated arena, or emits a production-looking handoff before
   human gates.
 - Driver: Cerberus fixture run, Cerberus OpenCode/OMP runs or imported
-  receipts, Daedalus import/scoring/report generation, `arena-freeze`,
+  receipts, Threshold import/scoring/report generation, `arena-freeze`,
   `arena-validate`, and `bin/gate`.
 - Grader: `ReviewArtifact.v1` validation, hidden-key score where mappable,
   artifact-validity status, context-overclaim checks, cost/latency/lifecycle
   fields, clustered CI or explicit low-sample waiver, and G2/G3/G4/G5 state.
-- Evidence packet: Cerberus request/artifact/transcript, Daedalus run
+- Evidence packet: Cerberus request/artifact/transcript, Threshold run
   directory, `report.md`, substrate comparison table, freeze/validate reports,
   and critic receipt.
 - Cadence: fixture import before live spend; freeze before recommendation;
@@ -292,7 +292,7 @@ Observable outcomes:
 
 Read only this packet, the linked HTML plan, and the implementation diff.
 Return `BLOCKING: yes` or `BLOCKING: no`. Focus on failures that would make a
-Daedalus recommendation embarrassing in production: invalid artifact acceptance,
+Threshold recommendation embarrassing in production: invalid artifact acceptance,
 wrong ownership boundary, overbroad lab framework, inconclusive arena treated as
 quality evidence, hidden cost/latency/failure states, or unclear operator
 workflow. Ignore naming and style nits.

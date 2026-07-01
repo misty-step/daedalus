@@ -173,36 +173,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "daedalus-cli"
-version = "0.1.0"
-dependencies = [
- "clap",
- "daedalus-core",
- "serde_json",
- "toml",
-]
-
-[[package]]
-name = "daedalus-core"
-version = "0.1.0"
-dependencies = [
- "regex",
- "serde",
- "serde_json",
- "sha2",
- "toml",
- "ureq",
-]
-
-[[package]]
-name = "daedalus-score"
-version = "0.1.0"
-dependencies = [
- "daedalus-core",
- "serde_json",
-]
-
-[[package]]
 name = "digest"
 version = "0.10.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -689,6 +659,36 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "threshold-cli"
+version = "0.1.0"
+dependencies = [
+ "clap",
+ "serde_json",
+ "threshold-core",
+ "toml",
+]
+
+[[package]]
+name = "threshold-core"
+version = "0.1.0"
+dependencies = [
+ "regex",
+ "serde",
+ "serde_json",
+ "sha2",
+ "toml",
+ "ureq",
+]
+
+[[package]]
+name = "threshold-score"
+version = "0.1.0"
+dependencies = [
+ "serde_json",
+ "threshold-core",
 ]
 
 [[package]]

@@ -1,4 +1,4 @@
-# Daedalus task specification: PR-review product-intent specialist.
+# Threshold task specification: PR-review product-intent specialist.
 # Gate G1 approval required before paid search: approvals/G1-pr-review-suite.md
 
 id = "pr-review-product"

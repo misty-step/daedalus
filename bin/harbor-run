@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-# Run a Daedalus arena under Harbor's Docker isolation (real sandbox, parallel
+# Run a Threshold arena under Harbor's Docker isolation (real sandbox, parallel
 # trials). Ports the arena to Harbor format using the Rust CLI (no Python),
 # then runs one task or the whole dataset with the built-in pi or oracle agent.
 # See docs/adr-001.
@@ -23,11 +23,11 @@ while [ $# -gt 0 ]; do
 done
 
 # Build the static musl scorer binary (no ring, fast after first build).
-SCORER_BIN="target/x86_64-unknown-linux-musl/release/daedalus-score"
-cargo build --release --target x86_64-unknown-linux-musl -p daedalus-score
+SCORER_BIN="target/x86_64-unknown-linux-musl/release/threshold-score"
+cargo build --release --target x86_64-unknown-linux-musl -p threshold-score
 
 # Port the arena using the Rust CLI.
-cargo run --release -p daedalus-cli -- port-harbor "$ARENA" --scorer-bin "$SCORER_BIN"
+cargo run --release -p threshold-cli -- port-harbor "$ARENA" --scorer-bin "$SCORER_BIN"
 
 # Extract arena id from arena.toml using the Rust score CLI (toml reader).
 # Simpler: parse with grep/sed — arena.toml always has id = "..." on its own line.

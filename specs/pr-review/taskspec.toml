@@ -1,4 +1,4 @@
-# Daedalus task specification: focused PR-review agent.
+# Threshold task specification: focused PR-review agent.
 # Schema: DESIGN.md "Task specification". Gate G1 approval: approvals/G1-pr-review.md
 
 id = "pr-review-v0"

@@ -19,7 +19,7 @@ trials per task.
       defect; oracle still 1.0, null still 0.25, probe still 0.0
 - [ ] ≥ 2 additional holdout tasks so the final evaluation is not one
       concurrency task (freeze gate re-run and recorded in provenance.md)
-- [ ] `bin/daedalus` (or delivery procedure) certifies the recommended
+- [ ] `bin/threshold` (or delivery procedure) certifies the recommended
       candidate with n ≥ 5 trials/task before the delivery doc may claim a
       reward number; the claim states mean ± observed range
 - [ ] Arena version bumped to 2.1; prior v2.0 records not mixed into new

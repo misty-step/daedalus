@@ -18,9 +18,9 @@ OMP remains valuable as a local/power-user coding environment and agent-loop
 laboratory. It should not be treated as the default durable organization-wide
 control plane without further evidence.
 
-## Implication for Daedalus
+## Implication for Threshold
 
-Daedalus should evaluate Cerberus reviewer configurations as artifacts from a
+Threshold should evaluate Cerberus reviewer configurations as artifacts from a
 substrate-neutral runner contract, not as a frozen OMP topology. The important
 candidate axis is now:
 
@@ -37,7 +37,7 @@ line anchoring, finding usefulness, degraded-state honesty, and receipt quality.
 
 ## Arena Guidance
 
-When Daedalus builds or refreshes PR-review arenas:
+When Threshold builds or refreshes PR-review arenas:
 
 - include OpenCode and OMP as substrate candidates when current tooling is
   available;
@@ -50,7 +50,7 @@ When Daedalus builds or refreshes PR-review arenas:
 
 ## Non-Goals
 
-- Do not move Cerberus's runtime decisions into Daedalus.
-- Do not make Daedalus responsible for publishing PR comments.
+- Do not move Cerberus's runtime decisions into Threshold.
+- Do not make Threshold responsible for publishing PR comments.
 - Do not assume Cloudflare's seven-reviewer shape generalizes; evaluate whether
   dynamic master-selected lanes outperform simpler runs.

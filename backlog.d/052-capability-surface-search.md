@@ -15,7 +15,7 @@ Priority: P0 · Status: pending · Estimate: L
 > [docs/vocabulary.md](../docs/vocabulary.md).
 
 ## Goal
-Make the capability surface a *fully searchable* axis, so Daedalus can prove how
+Make the capability surface a *fully searchable* axis, so Threshold can prove how
 much outfitting a domain agent with the right capabilities moves
 quality-per-dollar — the operator's core thesis (a reviewer with real reviewing
 skills/MCPs, a red-teamer with real white-hat tooling, beats the raw model).
@@ -73,13 +73,13 @@ lack of search machinery, but for lack of declared capability sets to search ove
 - [ ] The pr-review arena ships a non-empty reviewer skill set + MCP set.
 - [ ] A certified search varies the capability surface and reports a reward-delta
       95% CI for equipped-vs-raw on a fixed model/substrate (spend-gated).
-- [ ] `daedalus export-cerberus` carries the capability loadout into the
+- [ ] `threshold export-cerberus` carries the capability loadout into the
       ReviewerConfigPacket.
 - [ ] `bin/gate` passes.
 
 ## Verification System
 - Claim: outfitting the agent with domain capabilities measurably improves
-  quality-per-dollar (and Daedalus can certify by how much).
+  quality-per-dollar (and Threshold can certify by how much).
 - Falsifier: an equipped composition scores no better than raw within CI (a real,
   publishable negative result — the thesis would be wrong for this domain).
 - Driver: a spend-gated certified search varying skills/MCPs/tools; `arena-validate`

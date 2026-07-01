@@ -16,7 +16,7 @@ review-coordinator surfaces.
 - Changing scorer constants to make provisional tasks pass
 
 ## Oracle
-- [x] A fresh `bin/daedalus run specs/pr-review/taskspec.toml` against
+- [x] A fresh `bin/threshold run specs/pr-review/taskspec.toml` against
       `arenas/pr-review-v2` v0.2.0 commits `report.md`, `pareto.json`,
       `loop.json`, `lineage.md`, `trials.jsonl`, `summary.json`, and
       `artifacts.index`
@@ -68,7 +68,7 @@ review-coordinator surfaces.
 
 ## Closure Decision
 
-Human G2 accepted v0.2.0 on 2026-06-11 for internal Daedalus contract
+Human G2 accepted v0.2.0 on 2026-06-11 for internal Threshold contract
 discovery and plane-handoff work only. The waiver explicitly does not make
 public benchmark-quality claims and does not authorize Bitter Blossom to run
 this packet as a primary reviewer; any pre-G3 use must be sandboxed,
@@ -83,4 +83,4 @@ until spread is established. This is the immediate long pole.
 `review-coordinator` v2 as a pi/OpenRouter Kimi K2.6 review task and the agent
 posts directly through `gh`; Olympus runs `charon` v2 as a pi/OpenRouter Kimi
 AgentSpec with activation gating, strict JSON output, and orchestrator-side
-posting. Neither current review agent was configured from Daedalus evals.
+posting. Neither current review agent was configured from Threshold evals.

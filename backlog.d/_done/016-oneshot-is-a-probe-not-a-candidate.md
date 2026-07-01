@@ -18,7 +18,7 @@ result it actually was.
 - [ ] `REFERENCE` in runner/report.py and runner/loop.py includes the one-shot
       probe; it appears in the report grid but is mechanically excluded from
       Pareto, recommendation, and parent selection (test proves it)
-- [ ] `bin/daedalus` stage 1 runs the probe and flags the arena **saturated**
+- [ ] `bin/threshold` stage 1 runs the probe and flags the arena **saturated**
       when probe mean ≥ oracle − 0.1; a saturated arena aborts the search by
       default (override flag exists, prints a loud warning into report.md)
 - [ ] ROADMAP.md, DESIGN.md, and arenas/pr-review-v1/provenance.md no longer

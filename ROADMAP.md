@@ -1,12 +1,12 @@
-# Daedalus Roadmap
+# Threshold Roadmap
 
 Phases are gated by evidence, not dates. Each phase has an exit criterion a
 human can check. Work items live in `backlog.d/`.
 
 ## MVP milestone (current target)
 
-MVP = an operator can actually use Daedalus, not just demo it:
-`daedalus run <taskspec>` autonomously searches compositions (typed, hashed,
+MVP = an operator can actually use Threshold, not just demo it:
+`threshold run <taskspec>` autonomously searches compositions (typed, hashed,
 single-slot mutations) against an isolated arena whose tasks cannot be
 one-shotted, under fixture splits that prevent benchmark overfitting, and
 emits a comparison report + Pareto archive the operator can act on.
@@ -18,7 +18,7 @@ post-MVP unless evidence promotes them.
 Status (2026-06-09): **MVP reached.** Core machinery 001–009 built, gate-green
 (60 tests), and live-validated end-to-end:
 
-- Historical pre-migration command evidence: `bin/daedalus run` completed the full pipeline unattended (rig → baselines →
+- Historical pre-migration command evidence: `bin/threshold run` completed the full pipeline unattended (rig → baselines →
   reflective single-slot search → holdout/skip → report.md + pareto.json +
   loop.json), demonstrated proposing two prompt-packet mutations with
   hypotheses, running them as hashed child candidates, and plateau-stopping.
@@ -93,7 +93,7 @@ Operator adversarial review → full backlog burn-down. All open tickets shipped
   from artifacts; runs/NOTEBOOK.md accumulates cross-run lessons.
 - **025 proposer evidence + ledger + transplant** — scorer-verdict evidence,
   predicted_effect scored against measurement, donor-slot recombination.
-- **026 control-plane export** — `daedalus export` emits a pinned launch
+- **026 control-plane export** — `threshold export` emits a pinned launch
   contract + Bitter Blossom sprite persona (byte-identical measured packet).
 - **013 retention** — records committed, artifacts indexed + gitignored;
   recovered orphaned MVP run records.
@@ -123,7 +123,7 @@ useful but not triumphant: the only certified recommendation is
 `seed4-qwen3-7-plus-checklist` at 0.5714, while `py-markup-escape`,
 `py-guess-swallow`, and `py-measure-normalize` are promoted in
 `arena-findings.md` for G2 human decision. Human G2 accepted v0.2.0 for
-internal Daedalus contract discovery and plane-handoff work only, with
+internal Threshold contract discovery and plane-handoff work only, with
 sandbox-only waivers recorded in `approvals/G2-pr-review-v2.md`; no public
 benchmark-quality claim or primary-reviewer deployment follows from this.
 Next: Phase 3 launch/observe work remains ticket 029 against Olympus / Bitter
@@ -138,15 +138,15 @@ control-plane import packets. Rust validation remains deferred until two
 accepted task families or an external control-plane runtime dependency.
 
 Update (2026-06-12): ticket 032 made cold-start operation explicit in
-`docs/operator-sop.md` and the historical then-current `bin/daedalus doctor`; current
-checkout commands use `cargo run --quiet --bin daedalus -- ...`. Future phase
+`docs/operator-sop.md` and the historical then-current `bin/threshold doctor`; current
+checkout commands use `cargo run --quiet --bin threshold -- ...`. Future phase
 work should link to that SOP instead of duplicating run/export/approval command
 sequences.
 
 Update (2026-06-12): ticket 030 produced the second task family
 `launch-contract-v0` and a corrected certified run at
 `runs/20260612T153450Z-search-launch-contract-v0`. Human G2 accepted it for
-internal Daedalus second-family benchmarking, contract-discovery, and
+internal Threshold second-family benchmarking, contract-discovery, and
 sandbox-only delivery export. This meets the two-family trigger for reopening
 the Rust validation-kernel decision; it is still not a public benchmark-quality
 claim or deployment approval.

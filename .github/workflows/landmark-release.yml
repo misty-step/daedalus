@@ -1,0 +1,43 @@
+name: release intelligence
+
+on:
+  workflow_run:
+    workflows:
+      - gate
+    types:
+      - completed
+    branches:
+      - master
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  landmark:
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository history
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Run Landmark
+        uses: misty-step/landmark@1379e56f007de6a2b34993e12e5f1d8931f7c157 # v1
+        with:
+          github-token: ${{ secrets.GH_RELEASE_TOKEN }}
+          llm-api-key: ${{ secrets.OPENROUTER_API_KEY }}
+          node-version: "24"
+          synthesis: "true"
+          synthesis-required: "false"

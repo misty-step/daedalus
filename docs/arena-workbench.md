@@ -7,7 +7,7 @@ adjudication decisions.
 ## Scaffold A Task
 
 ```sh
-cargo run --quiet --bin daedalus -- arena-scaffold arenas/<arena-id> <task-id> \
+cargo run --quiet --bin threshold -- arena-scaffold arenas/<arena-id> <task-id> \
   --taskspec specs/<spec-id>/taskspec.toml
 ```
 
@@ -29,10 +29,10 @@ run.
 ## Validate A Freeze Gate
 
 ```sh
-cargo run --quiet --bin daedalus -- arena-freeze arenas/pr-review-v2 \
+cargo run --quiet --bin threshold -- arena-freeze arenas/pr-review-v2 \
   --out-dir runs/<freeze-run>
 
-cargo run --quiet --bin daedalus -- arena-validate arenas/pr-review-v2 \
+cargo run --quiet --bin threshold -- arena-validate arenas/pr-review-v2 \
   --probe-run runs/<freeze-run> \
   --report runs/<freeze-run>/freeze-report.md
 ```
@@ -66,7 +66,7 @@ overflow is not evidence that an arena is unsaturated.
 ## Adjudicate Disputed Findings
 
 ```sh
-cargo run --quiet --bin daedalus -- arena-adjudicate arenas/<arena-id> \
+cargo run --quiet --bin threshold -- arena-adjudicate arenas/<arena-id> \
   --task <task-id> \
   --finding "candidate finding summary" \
   --ruling ACCEPT \
@@ -85,7 +85,7 @@ answer keys for you.
 ## Report Category Or Span Disagreement
 
 ```sh
-cargo run --quiet --bin daedalus -- arena-disagreements \
+cargo run --quiet --bin threshold -- arena-disagreements \
   --findings path/to/findings.json \
   --expected arenas/<arena>/tasks/<task>/tests/expected.json
 ```

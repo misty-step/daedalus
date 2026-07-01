@@ -28,13 +28,13 @@ records that are already committed.
 
 **Mapping (one experiment = one trace; one trial = one span):**
 
-| daedalus | OTel/Langfuse | rationale |
+| threshold | OTel/Langfuse | rationale |
 |---|---|---|
 | experiment dir (`runs/<id>`) | trace | the unit a human debugs end to end |
 | trial (one run record) | span | the unit with a cost, latency, and reward |
 | candidate | span attribute + name prefix | grouping, not a nesting level — keeps the tree flat and queryable |
 | model / tokens / cost | `gen_ai.*` span attributes | GenAI semantic convention, pinned at export |
-| reward / FP / hash / task | `daedalus.*` span attributes | lab-specific, namespaced to avoid colliding with the moving spec |
+| reward / FP / hash / task | `threshold.*` span attributes | lab-specific, namespaced to avoid colliding with the moving spec |
 
 Optimizer/judge LLM calls become sibling spans under the same trace when
 their costs are recorded (future: they currently fold into `optimizer_costs`;
@@ -56,7 +56,7 @@ promote to spans when per-call records exist).
 
 ## Consequences
 
-- Trace emission can be added behind a `--trace` flag or a `DAEDALUS_OTLP_ENDPOINT`
+- Trace emission can be added behind a `--trace` flag or a `THRESHOLD_OTLP_ENDPOINT`
   env var as a post-stage-5 step (Rust trace export -> OTLP exporter) with no
   change to the search loop.
 - Langfuse is the recommended sink (self-hosted, OTLP-native, GenAI-aware,

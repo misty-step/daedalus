@@ -5,11 +5,11 @@ Priority: P0 · Status: done (merged to master 2026-06-25, commit 5b5b2ca) · Es
 Child of [[054]]. Retro gap #3.
 
 ## Implementation Receipt (2026-06-25)
-- `stats::partition_reliable` (new, `crates/daedalus-core/src/stats.rs`): pure
+- `stats::partition_reliable` (new, `crates/threshold-core/src/stats.rs`): pure
   gate splitting certified candidates into (reliable, demoted) by
   `pass^k ≥ reliability_floor`; `floor ≤ 0.0` is inert (pre-056 behaviour);
   undefined pass^k (k > n_trials) fails a positive floor.
-- `--reliability-floor <p>` CLI flag (`daedalus run`), validated to `[0,1]`
+- `--reliability-floor <p>` CLI flag (`threshold run`), validated to `[0,1]`
   before any spend; restricts the recommendation (`pick`) to certified ∩
   reliable. `certified` keeps its pre-056 meaning (significance only).
 - `report.md`: demoted candidates get a "Demoted by the reliability gate" block;

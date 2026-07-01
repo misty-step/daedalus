@@ -1,0 +1,1568 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Threshold · Foundry Report — pr-review-correctness · g1</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;0,6..72,700;1,6..72,400;1,6..72,500;1,6..72,600&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+    />
+    <style>
+      /* ============================================================
+         ATLAS — Threshold Foundry Report
+         "Lab notebook / scientific publication" design language.
+         Distill.pub · Stripe Press · Tufte · arXiv typesetting.
+         ============================================================ */
+
+      :root {
+        /* warm paper palette */
+        --paper: #faf8f3;
+        --paper-edge: #f4f0e6;
+        --ink: #1f1b17;
+        --dim: #6b6258;
+        --faint: #a99f92;
+        --rule: #e6ddcf;
+        --rule-strong: #d8cdb9;
+        --accent: #8c2f2a; /* oxblood */
+        --accent-wash: rgba(140, 47, 42, 0.06);
+        --ok: #3f6f4f;
+        --warn: #9a6a2f;
+        --err: #9e3b30;
+
+        /* measure + rhythm */
+        --measure: 52rem;
+        --wide: 76rem;
+        --serif: "Newsreader", Georgia, "Times New Roman", serif;
+        --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        -webkit-text-size-adjust: 100%;
+      }
+
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font-family: var(--serif);
+        font-size: 19px;
+        line-height: 1.62;
+        font-weight: 400;
+        text-rendering: optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        font-feature-settings: "kern" 1, "liga" 1;
+      }
+
+      /* faint paper grain via layered gradients — subtle, not noisy */
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 0;
+        background: radial-gradient(
+            120% 90% at 50% -10%,
+            rgba(255, 255, 255, 0.5),
+            transparent 60%
+          ),
+          radial-gradient(
+            100% 120% at 100% 110%,
+            rgba(140, 47, 42, 0.018),
+            transparent 55%
+          );
+      }
+
+      .page {
+        position: relative;
+        z-index: 1;
+        max-width: var(--wide);
+        margin: 0 auto;
+        padding: 0 2.5rem 7rem;
+      }
+
+      /* the reading column — centered single measure */
+      .measure {
+        max-width: var(--measure);
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      /* figures + the coverage table break wider, then return */
+      .plate {
+        max-width: var(--wide);
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      /* ----------------------------------------------------------
+         RUNNING HEAD
+         ---------------------------------------------------------- */
+      .runhead {
+        position: relative;
+        z-index: 1;
+        max-width: var(--wide);
+        margin: 0 auto;
+        padding: 1.15rem 2.5rem 0.9rem;
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 1.5rem;
+        font-family: var(--mono);
+        font-size: 11.5px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--dim);
+      }
+      .runhead .rh-left {
+        font-weight: 500;
+      }
+      .runhead .rh-left .mark {
+        color: var(--accent);
+        font-weight: 600;
+      }
+      .runhead .rh-right {
+        color: var(--faint);
+        letter-spacing: 0.12em;
+      }
+      .runhead-rule {
+        max-width: var(--wide);
+        margin: 0 auto;
+        border: 0;
+        border-top: 1px solid var(--ink);
+        height: 0;
+        opacity: 0.85;
+      }
+      /* hairline double-rule flourish under the running head */
+      .runhead-rule + .runhead-rule {
+        margin-top: 2px;
+        border-top: 1px solid var(--rule-strong);
+        opacity: 1;
+      }
+
+      /* ----------------------------------------------------------
+         MASTHEAD / TITLE BLOCK
+         ---------------------------------------------------------- */
+      .masthead {
+        padding-top: 3.4rem;
+      }
+      .eyebrow {
+        font-family: var(--mono);
+        font-size: 12px;
+        letter-spacing: 0.26em;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin: 0 0 1.4rem;
+      }
+      h1.title {
+        font-family: var(--serif);
+        font-weight: 600;
+        font-size: clamp(2.6rem, 4.6vw, 3.75rem);
+        line-height: 1.06;
+        letter-spacing: -0.012em;
+        margin: 0 0 0.5rem;
+        max-width: 30ch;
+      }
+      h1.title em {
+        font-style: italic;
+        color: var(--accent);
+        font-weight: 600;
+      }
+      .subtitle {
+        font-family: var(--serif);
+        font-style: italic;
+        font-weight: 400;
+        font-size: 1.32rem;
+        line-height: 1.4;
+        color: var(--dim);
+        margin: 0.7rem 0 0;
+        max-width: 46ch;
+      }
+
+      .byline {
+        margin: 1.9rem 0 0;
+        padding-top: 1.1rem;
+        border-top: 1px solid var(--rule);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem 2.2rem;
+        font-family: var(--mono);
+        font-size: 12px;
+        letter-spacing: 0.04em;
+        color: var(--dim);
+      }
+      .byline b {
+        color: var(--ink);
+        font-weight: 600;
+      }
+      .byline .sep {
+        color: var(--faint);
+      }
+
+      /* ----------------------------------------------------------
+         LEDE — opening paragraph with drop-style first line
+         ---------------------------------------------------------- */
+      .lede {
+        margin: 2.8rem auto 0;
+        font-size: 1.32rem;
+        line-height: 1.58;
+        color: var(--ink);
+      }
+      .lede .lead-in {
+        font-family: var(--mono);
+        font-size: 0.66em;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--accent);
+        vertical-align: 0.06em;
+        margin-right: 0.55em;
+        font-weight: 600;
+      }
+      .lede strong {
+        font-weight: 600;
+      }
+      .lede .num {
+        font-family: var(--mono);
+        font-size: 0.86em;
+        font-weight: 500;
+      }
+
+      /* section labels — letter-spaced small caps */
+      .section-label {
+        font-family: var(--mono);
+        font-size: 11.5px;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin: 4.4rem 0 0.2rem;
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+      }
+      .section-label::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: linear-gradient(90deg, var(--rule-strong), transparent);
+      }
+      .section-label .sl-num {
+        color: var(--faint);
+        font-weight: 500;
+      }
+      h2.head {
+        font-family: var(--serif);
+        font-weight: 600;
+        font-size: 1.92rem;
+        line-height: 1.16;
+        letter-spacing: -0.008em;
+        margin: 0.55rem 0 1.1rem;
+      }
+      p {
+        margin: 0 0 1.15rem;
+      }
+      p .num,
+      td .num,
+      .num {
+        font-family: var(--mono);
+        font-variant-numeric: tabular-nums;
+      }
+      a.ref {
+        color: var(--accent);
+        text-decoration: none;
+        border-bottom: 1px solid var(--accent-wash);
+      }
+      strong {
+        font-weight: 600;
+      }
+      em {
+        font-style: italic;
+      }
+
+      /* ----------------------------------------------------------
+         FIGURE PLATES
+         ---------------------------------------------------------- */
+      figure {
+        margin: 2.6rem auto 2.2rem;
+      }
+      figure.bleed {
+        max-width: var(--wide);
+      }
+      .plate-frame {
+        background: linear-gradient(180deg, #fffdf8, var(--paper-edge));
+        border: 1px solid var(--rule-strong);
+        border-radius: 2px;
+        padding: 2.2rem 2.4rem 1.8rem;
+        box-shadow: 0 1px 0 rgba(255, 255, 255, 0.7) inset;
+      }
+      figcaption {
+        font-family: var(--serif);
+        font-style: italic;
+        font-size: 1.02rem;
+        line-height: 1.5;
+        color: var(--dim);
+        margin: 1.1rem auto 0;
+        max-width: 58ch;
+      }
+      figcaption .fig-no {
+        font-style: normal;
+        font-family: var(--mono);
+        font-weight: 600;
+        font-size: 0.82em;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--ink);
+        margin-right: 0.5em;
+      }
+      figcaption b {
+        color: var(--ink);
+        font-style: normal;
+        font-weight: 600;
+      }
+      figcaption .accent {
+        color: var(--accent);
+        font-style: normal;
+        font-weight: 600;
+      }
+
+      /* SVG figure typography */
+      .fig svg {
+        display: block;
+        width: 100%;
+        height: auto;
+        overflow: visible;
+      }
+      .fig text {
+        font-family: var(--mono);
+        fill: var(--dim);
+      }
+      .ax-label {
+        font-size: 13px;
+        letter-spacing: 0.02em;
+        fill: var(--dim);
+      }
+      .ax-title {
+        font-size: 12.5px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        fill: var(--ink);
+        font-weight: 600;
+      }
+      .tick {
+        font-size: 12px;
+        fill: var(--faint);
+      }
+      .pt-label {
+        font-size: 13px;
+        fill: var(--ink);
+        font-weight: 500;
+      }
+      .pt-sub {
+        font-size: 11px;
+        fill: var(--dim);
+      }
+      .gridline {
+        stroke: var(--rule);
+        stroke-width: 1;
+      }
+      .axis {
+        stroke: var(--ink);
+        stroke-width: 1.25;
+      }
+      .frontier {
+        stroke: var(--accent);
+        stroke-width: 1.6;
+        stroke-dasharray: 1 5;
+        stroke-linecap: round;
+        fill: none;
+        opacity: 0.85;
+      }
+      .reference-line {
+        stroke: var(--faint);
+        stroke-width: 1;
+        stroke-dasharray: 2 4;
+      }
+      .errbar {
+        stroke: var(--accent);
+        stroke-width: 1.4;
+        opacity: 0.7;
+      }
+      .errbar-cap {
+        stroke: var(--accent);
+        stroke-width: 1.4;
+        opacity: 0.7;
+      }
+
+      /* ----------------------------------------------------------
+         TABLE — "Table 1" specimen
+         ---------------------------------------------------------- */
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-family: var(--mono);
+        font-size: 13.5px;
+        font-variant-numeric: tabular-nums;
+        letter-spacing: 0.01em;
+      }
+      caption {
+        caption-side: top;
+        text-align: left;
+      }
+      thead th {
+        font-weight: 600;
+        text-align: right;
+        padding: 0 0.55rem 0.7rem;
+        color: var(--ink);
+        border-bottom: 1.5px solid var(--ink);
+        white-space: nowrap;
+        vertical-align: bottom;
+        font-size: 12px;
+        letter-spacing: 0.05em;
+      }
+      thead th.lcol {
+        text-align: left;
+      }
+      thead th .unit {
+        display: block;
+        font-weight: 400;
+        color: var(--faint);
+        font-size: 10.5px;
+        letter-spacing: 0.08em;
+        margin-top: 0.15em;
+      }
+      tbody td {
+        text-align: right;
+        padding: 0.62rem 0.55rem;
+        border-bottom: 1px solid var(--rule);
+        color: var(--ink);
+        white-space: nowrap;
+      }
+      tbody td.lcol {
+        text-align: left;
+        white-space: normal;
+      }
+      tbody tr:hover td {
+        background: rgba(31, 27, 23, 0.022);
+      }
+      .cand-name {
+        font-weight: 600;
+        color: var(--ink);
+      }
+      .cand-note {
+        display: block;
+        font-family: var(--serif);
+        font-style: italic;
+        font-size: 12.5px;
+        letter-spacing: 0;
+        color: var(--dim);
+        margin-top: 0.12em;
+        white-space: normal;
+        max-width: 26ch;
+      }
+      .model {
+        color: var(--dim);
+      }
+      .cert {
+        font-size: 11px;
+        letter-spacing: 0.06em;
+      }
+      .cert .dot {
+        display: inline-block;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        margin-right: 0.45em;
+        vertical-align: 0.04em;
+      }
+      .cert-uncert {
+        color: var(--err);
+      }
+      .cert-uncert .dot {
+        background: var(--err);
+      }
+      .cert-pending {
+        color: var(--warn);
+      }
+      .cert-pending .dot {
+        background: var(--warn);
+      }
+      .cert-none {
+        color: var(--faint);
+      }
+      .cert-none .dot {
+        background: var(--faint);
+      }
+
+      /* chosen row — the incumbent to beat, accent treatment */
+      tr.chosen td {
+        background: var(--accent-wash);
+        border-bottom-color: var(--rule-strong);
+      }
+      tr.chosen .cand-name {
+        color: var(--accent);
+      }
+      tr.chosen td.lcol {
+        position: relative;
+      }
+      tr.chosen td.lcol::before {
+        content: "";
+        position: absolute;
+        left: -2.4rem;
+        top: 0;
+        bottom: 0;
+        width: 3px;
+        background: var(--accent);
+      }
+      .chosen-flag {
+        font-family: var(--mono);
+        font-size: 9.5px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--accent);
+        font-weight: 600;
+        display: inline-block;
+        margin-left: 0.6em;
+        padding: 0.12em 0.5em;
+        border: 1px solid var(--accent);
+        border-radius: 2px;
+        vertical-align: 0.12em;
+      }
+
+      /* reference rows (oracle / null) */
+      tr.reference td {
+        color: var(--dim);
+        border-bottom-style: dashed;
+      }
+      tr.reference .cand-name {
+        color: var(--dim);
+        font-weight: 500;
+      }
+      tr.reference--first td {
+        border-top: 1px solid var(--rule-strong);
+        padding-top: 0.78rem;
+      }
+
+      /* coverage heat cells */
+      .cov caption {
+        margin-bottom: 1rem;
+      }
+      .cov td.val {
+        font-weight: 500;
+        position: relative;
+        text-align: center;
+        padding: 0.5rem 0.4rem;
+      }
+      .cov td.taskcol {
+        text-align: left;
+        white-space: normal;
+        font-weight: 600;
+        color: var(--ink);
+        padding-right: 1.2rem;
+      }
+      .cov .task-meta {
+        display: block;
+        font-family: var(--serif);
+        font-style: italic;
+        font-weight: 400;
+        font-size: 12px;
+        color: var(--faint);
+        letter-spacing: 0;
+        margin-top: 0.1em;
+      }
+      .cov thead th {
+        text-align: center;
+        padding-bottom: 0.55rem;
+      }
+      .cov thead th.taskcol {
+        text-align: left;
+      }
+      .cov .v100 {
+        color: var(--ok);
+      }
+      .cov .vmid {
+        color: var(--warn);
+      }
+      .cov .vlow {
+        color: var(--err);
+        font-weight: 600;
+      }
+      .cov .vzero {
+        color: var(--err);
+        font-weight: 700;
+      }
+      .cov .vnull {
+        color: var(--faint);
+      }
+      .cov .voracle {
+        color: var(--ink);
+      }
+      /* subtle bar fill behind each coverage value */
+      .cov .bar {
+        position: absolute;
+        left: 6%;
+        right: 6%;
+        bottom: 5px;
+        height: 2px;
+        background: currentColor;
+        opacity: 0.32;
+        border-radius: 1px;
+      }
+      .cov tr.hole td.taskcol {
+        color: var(--err);
+      }
+      .cov tr.hole {
+        background: rgba(158, 59, 48, 0.035);
+      }
+      .cov .hole-flag {
+        font-family: var(--serif);
+        font-style: italic;
+        color: var(--err);
+        font-size: 12px;
+        margin-left: 0.5em;
+        letter-spacing: 0;
+      }
+      .cov tr.means td {
+        border-top: 1.5px solid var(--ink);
+        border-bottom: none;
+        font-weight: 700;
+        padding-top: 0.7rem;
+        color: var(--ink);
+      }
+      .cov tr.means td.taskcol {
+        font-style: normal;
+      }
+      .cov thead th.chosen-col,
+      .cov tbody td.chosen-col {
+        background: var(--accent-wash);
+      }
+      .cov tbody td.chosen-col.val {
+        color: var(--accent);
+      }
+      .cov thead th.chosen-col {
+        color: var(--accent);
+      }
+
+      .table-note {
+        margin: 1rem auto 0;
+        font-family: var(--serif);
+        font-style: italic;
+        font-size: 13px;
+        line-height: 1.5;
+        color: var(--dim);
+        max-width: 70ch;
+      }
+
+      /* ----------------------------------------------------------
+         FINDINGS + PULL QUOTE
+         ---------------------------------------------------------- */
+      .pullquote {
+        margin: 2.4rem auto;
+        padding: 0 0 0 1.6rem;
+        border-left: 3px solid var(--accent);
+        font-family: var(--serif);
+        font-style: italic;
+        font-weight: 500;
+        font-size: 1.62rem;
+        line-height: 1.34;
+        color: var(--ink);
+        max-width: 40ch;
+      }
+      .pullquote .pq-mark {
+        color: var(--accent);
+      }
+
+      .recommendation {
+        margin: 2.4rem auto 0;
+        background: linear-gradient(180deg, #fffdf8, var(--paper-edge));
+        border: 1px solid var(--rule-strong);
+        border-left: 3px solid var(--accent);
+        border-radius: 2px;
+        padding: 1.6rem 1.9rem;
+      }
+      .recommendation .rec-label {
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--accent);
+        font-weight: 600;
+        margin: 0 0 0.6rem;
+      }
+      .recommendation p {
+        margin: 0;
+        font-size: 1.12rem;
+        line-height: 1.5;
+      }
+      .recommendation .steps {
+        margin: 0.9rem 0 0;
+        padding: 0;
+        list-style: none;
+        counter-reset: step;
+        font-size: 1rem;
+      }
+      .recommendation .steps li {
+        counter-increment: step;
+        padding: 0.32rem 0 0.32rem 2.2rem;
+        position: relative;
+        line-height: 1.45;
+      }
+      .recommendation .steps li::before {
+        content: counter(step);
+        position: absolute;
+        left: 0;
+        top: 0.34rem;
+        font-family: var(--mono);
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--accent);
+        width: 1.5rem;
+        height: 1.5rem;
+        line-height: 1.5rem;
+        text-align: center;
+        border: 1px solid var(--accent);
+        border-radius: 50%;
+      }
+
+      /* ----------------------------------------------------------
+         GATES + HEADROOM — small specimens
+         ---------------------------------------------------------- */
+      .two-col {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2.6rem 3.4rem;
+        margin-top: 2.2rem;
+        align-items: start;
+      }
+      .micro-head {
+        font-family: var(--serif);
+        font-weight: 600;
+        font-size: 1.18rem;
+        margin: 0 0 0.4rem;
+      }
+      .micro-sub {
+        font-family: var(--serif);
+        font-style: italic;
+        font-size: 0.98rem;
+        color: var(--dim);
+        margin: 0 0 1rem;
+      }
+
+      .gates {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        font-family: var(--mono);
+        font-size: 13px;
+      }
+      .gates li {
+        display: grid;
+        grid-template-columns: 2.6rem 1fr auto;
+        align-items: baseline;
+        gap: 0.6rem;
+        padding: 0.55rem 0;
+        border-bottom: 1px solid var(--rule);
+      }
+      .gates li:last-child {
+        border-bottom: none;
+      }
+      .gate-id {
+        font-weight: 600;
+        color: var(--ink);
+        letter-spacing: 0.04em;
+      }
+      .gate-name {
+        font-family: var(--serif);
+        font-size: 14.5px;
+        color: var(--ink);
+        letter-spacing: 0;
+      }
+      .gate-state {
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        font-weight: 500;
+      }
+      .gs-ok {
+        color: var(--ok);
+      }
+      .gs-pending {
+        color: var(--warn);
+      }
+      .gs-locked {
+        color: var(--faint);
+      }
+
+      /* headroom — a horizontal scale specimen */
+      .headroom-fig {
+        margin-top: 0.3rem;
+      }
+      .headroom-fig svg {
+        display: block;
+        width: 100%;
+        height: auto;
+        overflow: visible;
+      }
+      .hr-track {
+        stroke: var(--rule-strong);
+        stroke-width: 6;
+        stroke-linecap: round;
+      }
+      .hr-fill {
+        stroke: var(--accent);
+        stroke-width: 6;
+        stroke-linecap: round;
+        opacity: 0.18;
+      }
+      .hr-tick {
+        stroke: var(--ink);
+        stroke-width: 1.25;
+      }
+      .hr-tick--soft {
+        stroke: var(--faint);
+        stroke-width: 1.25;
+      }
+      .hr-label {
+        font-family: var(--mono);
+        font-size: 11px;
+        fill: var(--ink);
+      }
+      .hr-val {
+        font-family: var(--mono);
+        font-size: 13px;
+        font-weight: 600;
+        fill: var(--ink);
+      }
+      .hr-cap {
+        font-family: var(--serif);
+        font-style: italic;
+        font-size: 11px;
+        fill: var(--dim);
+      }
+
+      .gate-gap-note {
+        font-family: var(--serif);
+        font-style: italic;
+        font-size: 13px;
+        color: var(--dim);
+        margin-top: 1rem;
+        line-height: 1.5;
+      }
+
+      /* ----------------------------------------------------------
+         COLOPHON / FOOTNOTE PROVENANCE
+         ---------------------------------------------------------- */
+      .colophon {
+        margin: 5rem auto 0;
+        padding-top: 1.3rem;
+        border-top: 1px solid var(--ink);
+        font-family: var(--mono);
+        font-size: 11.5px;
+        line-height: 1.8;
+        letter-spacing: 0.03em;
+        color: var(--dim);
+      }
+      .colophon .cx-key {
+        color: var(--faint);
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        font-size: 10.5px;
+      }
+      .colophon .cx-row {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+      }
+      .colophon b {
+        color: var(--ink);
+        font-weight: 600;
+      }
+      .footnote-mark {
+        font-family: var(--mono);
+        font-size: 0.66em;
+        vertical-align: 0.45em;
+        color: var(--accent);
+        font-weight: 600;
+        margin-left: 0.1em;
+      }
+
+      /* margin / side notes — slim left margin on wide viewports */
+      .sidenote {
+        font-family: var(--serif);
+        font-style: italic;
+        font-size: 0.92rem;
+        line-height: 1.45;
+        color: var(--dim);
+      }
+
+      @media (min-width: 1180px) {
+        .with-sidenote {
+          position: relative;
+        }
+        .with-sidenote .sidenote {
+          position: absolute;
+          left: calc(50% - var(--measure) / 2 - 13.5rem);
+          width: 11.5rem;
+          text-align: right;
+          color: var(--faint);
+          border-right: 1px solid var(--rule);
+          padding-right: 1rem;
+        }
+      }
+
+      @media (max-width: 900px) {
+        body {
+          font-size: 18px;
+        }
+        .page {
+          padding: 0 1.4rem 5rem;
+        }
+        .runhead {
+          padding: 1rem 1.4rem 0.8rem;
+          flex-direction: column;
+          gap: 0.3rem;
+        }
+        .runhead-rule {
+          margin: 0 1.4rem;
+        }
+        .two-col {
+          grid-template-columns: 1fr;
+          gap: 2.4rem;
+        }
+        .plate-frame {
+          padding: 1.4rem 1.1rem 1.2rem;
+        }
+        figcaption {
+          font-size: 0.96rem;
+        }
+        table {
+          font-size: 12px;
+        }
+        .with-sidenote .sidenote {
+          position: static;
+          width: auto;
+          text-align: left;
+          border-right: none;
+          border-left: 2px solid var(--rule);
+          padding: 0 0 0 0.9rem;
+          margin: 0 0 1.2rem;
+        }
+      }
+
+      /* allow the wide table to scroll on narrow screens without breaking */
+      .table-scroll {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- ===================== RUNNING HEAD ===================== -->
+    <header class="runhead">
+      <span class="rh-left"
+        ><span class="mark">THRESHOLD</span> · FOUNDRY REPORT — pr-review-correctness
+        · g1</span
+      >
+      <span class="rh-right">arena v0 · low-risk · composition 4a73f1fd</span>
+    </header>
+    <hr class="runhead-rule" />
+    <hr class="runhead-rule" />
+
+    <main class="page">
+      <!-- ===================== MASTHEAD ===================== -->
+      <div class="masthead measure">
+        <p class="eyebrow">Candidate Comparison · Search Round g1</p>
+        <h1 class="title">
+          The quality leader is <em>real</em>, but it is not yet certified — and it
+          cannot see the lock.
+        </h1>
+        <p class="subtitle">
+          Racing four candidate review agents across a frozen eight-task arena, and
+          weighing a faster, cheaper incumbent against a costlier challenger that
+          reviews better.
+        </p>
+
+        <div class="byline">
+          <span><b>Task</b> pr-review-correctness</span>
+          <span class="sep">·</span>
+          <span><b>Arena</b> pr-review-correctness-v0</span>
+          <span class="sep">·</span>
+          <span><b>8</b> tasks</span>
+          <span class="sep">·</span>
+          <span><b>n=10</b> trials / seed</span>
+          <span class="sep">·</span>
+          <span><b>4</b> candidates + 2 references</span>
+        </div>
+      </div>
+
+      <!-- ===================== LEDE ===================== -->
+      <p class="lede measure">
+        <span class="lead-in">Finding</span>Candidate
+        <strong>seed3-qwen-skeptic</strong> reviews pull requests better than
+        anything else in the foundry, scoring <span class="num">0.80</span> against
+        the oracle ceiling. But it buys that lead expensively — roughly
+        <span class="num">2.4×</span> the per-trial cost of the current delivery — its
+        margin over the incumbent sits <em>inside</em> the noise at this sample size,
+        and it scores a flat <span class="num">0</span> on the hardest defect class in
+        the arena. This report lays out the evidence and recommends a mutation, not a
+        launch.
+      </p>
+
+      <!-- ===================== FIGURE 1 ===================== -->
+      <figure class="fig bleed plate">
+        <div class="plate-frame">
+          <svg viewBox="0 0 900 470" role="img" aria-label="Cost versus quality scatter plot with Pareto frontier">
+            <!-- ===== geometry: plot box x:[90,820] y:[60,390] ===== -->
+            <!-- gridlines (horizontal, reward) -->
+            <g>
+              <line class="gridline" x1="90" y1="390" x2="820" y2="390" />
+              <line class="gridline" x1="90" y1="324" x2="820" y2="324" />
+              <line class="gridline" x1="90" y1="258" x2="820" y2="258" />
+              <line class="gridline" x1="90" y1="192" x2="820" y2="192" />
+              <line class="gridline" x1="90" y1="126" x2="820" y2="126" />
+              <line class="gridline" x1="90" y1="60" x2="820" y2="60" />
+            </g>
+
+            <!-- reference lines: oracle ceiling (1.0) + null floor (0.0) -->
+            <line class="reference-line" x1="90" y1="60" x2="820" y2="60" />
+            <text class="tick" x="826" y="64" text-anchor="start">oracle 1.00 — ceiling</text>
+            <line class="reference-line" x1="90" y1="390" x2="820" y2="390" />
+            <text class="tick" x="826" y="394" text-anchor="start">null 0.00 — floor</text>
+
+            <!-- y axis -->
+            <line class="axis" x1="90" y1="56" x2="90" y2="394" />
+            <!-- x axis -->
+            <line class="axis" x1="90" y1="390" x2="824" y2="390" />
+
+            <!-- y ticks (reward 0 -> 1.0) -->
+            <g text-anchor="end">
+              <text class="tick" x="80" y="394">0</text>
+              <text class="tick" x="80" y="328">0.2</text>
+              <text class="tick" x="80" y="262">0.4</text>
+              <text class="tick" x="80" y="196">0.6</text>
+              <text class="tick" x="80" y="130">0.8</text>
+              <text class="tick" x="80" y="64">1.0</text>
+            </g>
+            <text class="ax-title" x="-225" y="30" transform="rotate(-90)" text-anchor="middle">
+              Reward vs. oracle
+            </text>
+
+            <!-- x ticks (cost $0 -> $0.030) : map $0->x90, $0.030->x820 => scale 24333/$ -->
+            <g text-anchor="middle">
+              <text class="tick" x="90" y="412">$0</text>
+              <text class="tick" x="333" y="412">$0.010</text>
+              <text class="tick" x="577" y="412">$0.020</text>
+              <text class="tick" x="820" y="412">$0.030</text>
+            </g>
+            <text class="ax-title" x="455" y="442" text-anchor="middle">
+              Cost per trial (USD)
+            </text>
+
+            <!-- ===== Pareto frontier line: seed1 -> seed4 -> seed3 ===== -->
+            <!-- seed1 (0.005,0.60): x = 90 + 0.005*24333 = 212 ; y = 390 - 0.60*330 = 192 -->
+            <!-- seed4 (0.011,0.68): x = 90 + 0.011*24333 = 358 ; y = 390 - 0.68*330 = 166 -->
+            <!-- seed3 (0.027,0.80): x = 90 + 0.027*24333 = 747 ; y = 390 - 0.80*330 = 126 -->
+            <!-- g1a  (0.029,0.62): x = 90 + 0.029*24333 = 796 ; y = 390 - 0.62*330 = 185 -->
+            <polyline class="frontier" points="212,192 358,166 747,126" />
+            <text class="pt-sub" x="540" y="138" fill="#8c2f2a" text-anchor="middle" style="font-style: italic;">
+              Pareto frontier
+            </text>
+
+            <!-- ===== points ===== -->
+
+            <!-- seed1 — cheapest -->
+            <circle cx="212" cy="192" r="5.5" fill="#faf8f3" stroke="#1f1b17" stroke-width="1.6" />
+            <text class="pt-label" x="212" y="178" text-anchor="middle">seed1</text>
+            <text class="pt-sub" x="212" y="220" text-anchor="middle">$0.005 · 0.60</text>
+
+            <!-- seed4 — chosen / incumbent (accent, filled, error bar) -->
+            <!-- error bar: seed4 CI overlaps seed3. draw vertical whisker ±0.07 -> ±23px -->
+            <line class="errbar" x1="358" y1="143" x2="358" y2="189" />
+            <line class="errbar-cap" x1="351" y1="143" x2="365" y2="143" />
+            <line class="errbar-cap" x1="351" y1="189" x2="365" y2="189" />
+            <circle cx="358" cy="166" r="7.5" fill="#8c2f2a" stroke="#faf8f3" stroke-width="2" />
+            <text class="pt-label" x="358" y="150" text-anchor="middle" fill="#8c2f2a" style="font-weight:600;">seed4</text>
+            <text class="pt-sub" x="358" y="208" text-anchor="middle" fill="#8c2f2a">$0.011 · 0.68 · incumbent</text>
+
+            <!-- seed3 — quality leader (accent ring, error bar overlapping seed4) -->
+            <line class="errbar" x1="747" y1="103" x2="747" y2="149" />
+            <line class="errbar-cap" x1="740" y1="103" x2="754" y2="103" />
+            <line class="errbar-cap" x1="740" y1="149" x2="754" y2="149" />
+            <circle cx="747" cy="126" r="7.5" fill="#faf8f3" stroke="#8c2f2a" stroke-width="2.4" />
+            <text class="pt-label" x="747" y="110" text-anchor="middle">seed3</text>
+            <text class="pt-sub" x="747" y="167" text-anchor="middle">$0.027 · 0.80 · leader</text>
+
+            <!-- g1a — dominated (below frontier) -->
+            <circle cx="796" cy="185" r="5.5" fill="#faf8f3" stroke="#a99f92" stroke-width="1.6" />
+            <text class="pt-label" x="796" y="185" dx="14" dy="4" text-anchor="start" fill="#6b6258">g1a</text>
+            <text class="pt-sub" x="796" y="203" text-anchor="middle">$0.029 · 0.62</text>
+            <text class="pt-sub" x="796" y="217" text-anchor="middle" fill="#9e3b30" style="font-style:italic;">dominated</text>
+
+            <!-- guide: dominance gap between g1a and frontier -->
+            <line x1="796" y1="180" x2="796" y2="131" stroke="#9e3b30" stroke-width="0.8" stroke-dasharray="2 3" opacity="0.5" />
+          </svg>
+        </div>
+        <figcaption>
+          <span class="fig-no">Figure 1</span><b>The cost–quality frontier.</b>
+          <span class="accent">seed3</span> dominates on quality (reward 0.80) but
+          sits far to the right on cost; the incumbent <span class="accent">seed4</span>
+          anchors the knee of the frontier — better value per dollar. <em>g1a</em>, a
+          child of the skeptic line, falls below the frontier: it is strictly
+          dominated, costing more than seed3 for less reward. The whiskers on seed3 and
+          seed4 are 95% intervals at n=10; <b>they overlap</b> — the quality lead is not
+          yet statistically separable.
+        </figcaption>
+      </figure>
+
+      <!-- ===================== TABLE 1 ===================== -->
+      <section class="measure">
+        <p class="section-label"><span class="sl-num">§1</span> The candidates</p>
+        <h2 class="head">Four compositions, one reference frame</h2>
+        <p>
+          Each candidate is a frozen composition raced for ten trials over the same
+          eight tasks. We report reward against the oracle, the dollar cost of a single
+          trial, wall-clock latency, the backing model, and certification status. The
+          <em>oracle</em> and <em>null</em> rows are not candidates — they are the
+          reference ceiling and floor that calibrate every score above.
+        </p>
+      </section>
+
+      <figure class="bleed plate">
+        <div class="table-scroll">
+          <table aria-label="Table 1. Candidate records">
+            <caption class="visually-hidden"></caption>
+            <thead>
+              <tr>
+                <th class="lcol">Candidate</th>
+                <th>Reward<span class="unit">vs. oracle</span></th>
+                <th>Cost<span class="unit">$ / trial</span></th>
+                <th>Wall<span class="unit">seconds</span></th>
+                <th class="lcol">Model</th>
+                <th class="lcol">Certification</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- seed3 — quality leader -->
+              <tr>
+                <td class="lcol">
+                  <span class="cand-name">seed3-qwen-skeptic</span>
+                  <span class="cand-note">quality leader — but misses py-live-lock</span>
+                </td>
+                <td><span class="num">0.80</span></td>
+                <td><span class="num">$0.0270</span></td>
+                <td><span class="num">71</span></td>
+                <td class="lcol model">qwen3.7-plus</td>
+                <td class="lcol">
+                  <span class="cert cert-uncert"><span class="dot"></span>Uncertified</span>
+                </td>
+              </tr>
+
+              <!-- seed4 — chosen / incumbent -->
+              <tr class="chosen">
+                <td class="lcol">
+                  <span class="cand-name">seed4-checklist</span>
+                  <span class="chosen-flag">Current delivery</span>
+                  <span class="cand-note">the incumbent to beat</span>
+                </td>
+                <td><span class="num">0.68</span></td>
+                <td><span class="num">$0.0111</span></td>
+                <td><span class="num">38</span></td>
+                <td class="lcol model">gpt-5-mini</td>
+                <td class="lcol">
+                  <span class="cert cert-pending"><span class="dot"></span>G2-pending</span>
+                </td>
+              </tr>
+
+              <!-- seed1 — cheapest -->
+              <tr>
+                <td class="lcol">
+                  <span class="cand-name">seed1-checklist</span>
+                  <span class="cand-note">cheapest composition on the board</span>
+                </td>
+                <td><span class="num">0.60</span></td>
+                <td><span class="num">$0.0052</span></td>
+                <td><span class="num">29</span></td>
+                <td class="lcol model">deepseek-v4</td>
+                <td class="lcol">
+                  <span class="cert cert-none"><span class="dot"></span>—</span>
+                </td>
+              </tr>
+
+              <!-- g1a — dominated -->
+              <tr>
+                <td class="lcol">
+                  <span class="cand-name">g1a-skeptic</span>
+                  <span class="cand-note">search child — dominated by seed3, costs more</span>
+                </td>
+                <td><span class="num">0.62</span></td>
+                <td><span class="num">$0.0289</span></td>
+                <td><span class="num">88</span></td>
+                <td class="lcol model">qwen3.7-plus</td>
+                <td class="lcol">
+                  <span class="cert cert-none"><span class="dot"></span>—</span>
+                </td>
+              </tr>
+
+              <!-- references -->
+              <tr class="reference reference--first">
+                <td class="lcol">
+                  <span class="cand-name">oracle</span>
+                  <span class="cand-note">reference ceiling — perfect coverage</span>
+                </td>
+                <td><span class="num">1.00</span></td>
+                <td><span class="num">—</span></td>
+                <td><span class="num">—</span></td>
+                <td class="lcol model">reference</td>
+                <td class="lcol"><span class="cert cert-none">ceiling</span></td>
+              </tr>
+              <tr class="reference">
+                <td class="lcol">
+                  <span class="cand-name">null</span>
+                  <span class="cand-note">reference floor — no findings</span>
+                </td>
+                <td><span class="num">0.00</span></td>
+                <td><span class="num">—</span></td>
+                <td><span class="num">—</span></td>
+                <td class="lcol model">reference</td>
+                <td class="lcol"><span class="cert cert-none">floor</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <figcaption>
+          <span class="fig-no">Table 1</span><b>Candidate records.</b> Reward, cost,
+          and latency for every composition in search round g1, with the
+          <span class="accent">current delivery (seed4)</span> highlighted as the
+          incumbent. Reading down the reward column understates the cost story — seed3
+          earns <span class="num">+0.12</span> reward over seed4 while spending
+          <span class="num">2.4×</span> as much per trial and running nearly twice as
+          long.
+        </figcaption>
+      </figure>
+
+      <!-- ===================== TABLE / FIGURE 2 — COVERAGE ===================== -->
+      <section class="measure">
+        <p class="section-label"><span class="sl-num">§2</span> Per-task coverage</p>
+        <h2 class="head">Where each candidate sees — and where they all go blind</h2>
+        <p>
+          Aggregate reward hides structure. Figure 2 decomposes the score task by task
+          (reward&nbsp;×&nbsp;100), splitting the arena into its training, validation,
+          and holdout partitions. Two tasks expose a shared blind spot: every candidate
+          collapses on <em>py-live-lock</em> and <em>formatter-missing-crash</em> — the
+          runtime-defect classes that no current composition reliably detects.
+        </p>
+      </section>
+
+      <figure class="cov bleed plate">
+        <div class="table-scroll">
+          <table aria-label="Table 2. Per-task coverage, reward times 100">
+            <thead>
+              <tr>
+                <th class="taskcol">Task <span class="task-meta">partition</span></th>
+                <th class="chosen-col-skip">seed3</th>
+                <th class="chosen-col">seed4</th>
+                <th>seed1</th>
+                <th>g1a</th>
+                <th class="voracle">oracle</th>
+                <th>null</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="taskcol">progress-speed<span class="task-meta">train</span></td>
+                <td class="val v100"><span class="num">100</span><span class="bar" style="width:88%"></span></td>
+                <td class="val chosen-col v100"><span class="num">100</span><span class="bar" style="width:88%"></span></td>
+                <td class="val v100"><span class="num">100</span><span class="bar" style="width:88%"></span></td>
+                <td class="val v100"><span class="num">100</span><span class="bar" style="width:88%"></span></td>
+                <td class="val voracle"><span class="num">100</span><span class="bar" style="width:88%"></span></td>
+                <td class="val vnull"><span class="num">0</span></td>
+              </tr>
+              <tr>
+                <td class="taskcol">padding-clean<span class="task-meta">train</span></td>
+                <td class="val v100"><span class="num">100</span><span class="bar" style="width:88%"></span></td>
+                <td class="val chosen-col v100"><span class="num">100</span><span class="bar" style="width:88%"></span></td>
+                <td class="val v100"><span class="num">100</span><span class="bar" style="width:88%"></span></td>
+                <td class="val v100"><span class="num">100</span><span class="bar" style="width:88%"></span></td>
+                <td class="val voracle"><span class="num">100</span><span class="bar" style="width:88%"></span></td>
+                <td class="val vnull"><span class="num">0</span></td>
+              </tr>
+              <tr class="hole">
+                <td class="taskcol">
+                  live-lock<span class="task-meta">train</span>
+                  <span class="hole-flag">← the hole</span>
+                </td>
+                <td class="val vzero"><span class="num">0</span></td>
+                <td class="val chosen-col vmid"><span class="num">50</span><span class="bar" style="width:44%"></span></td>
+                <td class="val vzero"><span class="num">0</span></td>
+                <td class="val vmid"><span class="num">50</span><span class="bar" style="width:44%"></span></td>
+                <td class="val voracle"><span class="num">100</span><span class="bar" style="width:88%"></span></td>
+                <td class="val vnull"><span class="num">0</span></td>
+              </tr>
+              <tr>
+                <td class="taskcol">measure-normalize<span class="task-meta">validation</span></td>
+                <td class="val v100"><span class="num">90</span><span class="bar" style="width:79%"></span></td>
+                <td class="val chosen-col vmid"><span class="num">50</span><span class="bar" style="width:44%"></span></td>
+                <td class="val vmid"><span class="num">50</span><span class="bar" style="width:44%"></span></td>
+                <td class="val vmid"><span class="num">50</span><span class="bar" style="width:44%"></span></td>
+                <td class="val voracle"><span class="num">100</span><span class="bar" style="width:88%"></span></td>
+                <td class="val vnull"><span class="num">0</span></td>
+              </tr>
+              <tr>
+                <td class="taskcol">formatter-clean<span class="task-meta">validation</span></td>
+                <td class="val v100"><span class="num">100</span><span class="bar" style="width:88%"></span></td>
+                <td class="val chosen-col v100"><span class="num">100</span><span class="bar" style="width:88%"></span></td>
+                <td class="val v100"><span class="num">100</span><span class="bar" style="width:88%"></span></td>
+                <td class="val vmid"><span class="num">50</span><span class="bar" style="width:44%"></span></td>
+                <td class="val voracle"><span class="num">100</span><span class="bar" style="width:88%"></span></td>
+                <td class="val vnull"><span class="num">0</span></td>
+              </tr>
+              <tr class="hole">
+                <td class="taskcol">
+                  formatter-missing-crash<span class="task-meta">validation</span>
+                  <span class="hole-flag">← the hole</span>
+                </td>
+                <td class="val vlow"><span class="num">60</span><span class="bar" style="width:53%"></span></td>
+                <td class="val chosen-col vzero"><span class="num">0</span></td>
+                <td class="val vzero"><span class="num">0</span></td>
+                <td class="val vzero"><span class="num">0</span></td>
+                <td class="val voracle"><span class="num">100</span><span class="bar" style="width:88%"></span></td>
+                <td class="val vnull"><span class="num">0</span></td>
+              </tr>
+              <tr>
+                <td class="taskcol">plugin-cache<span class="task-meta">holdout · n=2</span></td>
+                <td class="val v100"><span class="num">90</span><span class="bar" style="width:79%"></span></td>
+                <td class="val chosen-col vmid"><span class="num">50</span><span class="bar" style="width:44%"></span></td>
+                <td class="val vmid"><span class="num">50</span><span class="bar" style="width:44%"></span></td>
+                <td class="val vmid"><span class="num">50</span><span class="bar" style="width:44%"></span></td>
+                <td class="val voracle"><span class="num">100</span><span class="bar" style="width:88%"></span></td>
+                <td class="val vnull"><span class="num">0</span></td>
+              </tr>
+              <tr>
+                <td class="taskcol">export-clear<span class="task-meta">holdout · n=2</span></td>
+                <td class="val v100"><span class="num">100</span><span class="bar" style="width:88%"></span></td>
+                <td class="val chosen-col v100"><span class="num">100</span><span class="bar" style="width:88%"></span></td>
+                <td class="val v100"><span class="num">80</span><span class="bar" style="width:70%"></span></td>
+                <td class="val v100"><span class="num">100</span><span class="bar" style="width:88%"></span></td>
+                <td class="val voracle"><span class="num">100</span><span class="bar" style="width:88%"></span></td>
+                <td class="val vnull"><span class="num">0</span></td>
+              </tr>
+              <tr class="means">
+                <td class="taskcol">candidate means</td>
+                <td class="val"><span class="num">80</span></td>
+                <td class="val chosen-col"><span class="num">68</span></td>
+                <td class="val"><span class="num">60</span></td>
+                <td class="val"><span class="num">62</span></td>
+                <td class="val"><span class="num">100</span></td>
+                <td class="val vnull"><span class="num">0</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <figcaption>
+          <span class="fig-no">Figure 2 · Table 2</span><b>Coverage matrix
+          (reward&nbsp;×&nbsp;100).</b> Read across a row to compare candidates on one
+          task; read down a column for a candidate's profile. The two
+          <span class="accent">holes</span> — <em>live-lock</em> and
+          <em>formatter-missing-crash</em> — are the hard runtime-defect tasks no
+          composition covers; seed3 is the only candidate to register on the crash task
+          at all (60). Holdout tasks (plugin-cache, export-clear) carry only
+          <span class="num">n=2</span> trials — too thin to certify, which needs
+          <span class="num">n≥5</span>.
+        </figcaption>
+      </figure>
+
+      <p class="table-note measure">
+        Cell colour encodes coverage band — full (green), partial (amber), and
+        missed or zero (oxblood). The bar beneath each value repeats the magnitude for
+        a quick scan down a column.
+      </p>
+
+      <!-- ===================== §3 FINDINGS ===================== -->
+      <section class="measure">
+        <p class="section-label"><span class="sl-num">§3</span> Findings</p>
+        <h2 class="head">A better reviewer that is not yet a better bet</h2>
+        <p>
+          Three facts constrain the decision. <strong>First, the lead is real but
+          expensive:</strong> seed3 scores <span class="num">0.80</span> to the
+          incumbent's <span class="num">0.68</span>, a genuine
+          <span class="num">+0.12</span> in review quality — purchased at
+          <span class="num">2.4×</span> the cost per trial
+          (<span class="num">$0.0270</span> vs. <span class="num">$0.0111</span>) and
+          nearly double the wall-clock latency (<span class="num">71s</span> vs.
+          <span class="num">38s</span>).
+        </p>
+
+        <div class="pullquote">
+          <span class="pq-mark">“</span>The lead lies inside the confidence interval.
+          At n=10, seed3 and seed4 are not statistically separable — we cannot yet call
+          the winner.<span class="pq-mark">”</span>
+        </div>
+
+        <p>
+          <strong>Second, the lead is not certified.</strong> The 95% intervals for
+          seed3 (<span class="num">0.80</span>) and seed4 (<span class="num">0.68</span>)
+          overlap at this sample size — the whiskers in Figure 1 make the ambiguity
+          visible. A higher point estimate is not a verdict; promoting seed3 now would
+          ship on noise.
+        </p>
+        <p>
+          <strong>Third, every candidate is blind to a defect class.</strong> seed3
+          scores a flat <span class="num">0</span> on <em>py-live-lock</em> — a
+          concurrency defect the oracle catches every time — and the whole field
+          struggles on <em>formatter-missing-crash</em>. The arena itself is healthy:
+          with an oracle ceiling of <span class="num">1.00</span>, a one-shot
+          saturation probe at <span class="num">0.20</span>, and a null floor of
+          <span class="num">0.00</span>, the <span class="num">0.80</span> spread shows
+          the tasks genuinely discriminate between agents. The blind spot is in the
+          candidates, not the measurement.
+        </p>
+
+        <div class="recommendation">
+          <p class="rec-label">Recommendation · do not request G2 yet</p>
+          <p>
+            seed3 is the right line to develop, not the right candidate to ship. Close
+            the live-lock gap before promoting it past the incumbent.
+          </p>
+          <ol class="steps">
+            <li>
+              <strong>Mutate seed3</strong> to recover <em>py-live-lock</em> recall —
+              the one task separating it from the oracle on the training partition.
+            </li>
+            <li>
+              <strong>Re-certify at n≥5 on holdout</strong> so the lead over seed4
+              clears the confidence interval rather than sitting inside it.
+            </li>
+            <li>
+              <strong>Then request the G2 eval-trust review</strong> — with a
+              separable, certified record and the hole filled.
+            </li>
+          </ol>
+        </div>
+      </section>
+
+      <!-- ===================== §4 HEADROOM + GATES ===================== -->
+      <section class="measure">
+        <p class="section-label">
+          <span class="sl-num">§4</span> Headroom &amp; gate state
+        </p>
+        <h2 class="head">The arena discriminates; the launch path is locked</h2>
+      </section>
+
+      <div class="two-col measure">
+        <!-- Headroom -->
+        <div>
+          <p class="micro-head">Discrimination headroom</p>
+          <p class="micro-sub">
+            Distance from the saturation probe to the oracle ceiling — the room the
+            arena has to tell agents apart.
+          </p>
+          <div class="headroom-fig">
+            <svg viewBox="0 0 380 140" role="img" aria-label="Headroom scale from null floor to oracle ceiling">
+              <!-- track x:[30,350] maps reward 0->1.0 -->
+              <line class="hr-track" x1="30" y1="50" x2="350" y2="50" />
+              <!-- fill 0 -> 0.80 (the candidate spread / gap) : x 30 -> 30+0.80*320=286 -->
+              <line class="hr-fill" x1="30" y1="50" x2="286" y2="50" />
+
+              <!-- null floor @0.0 -->
+              <line class="hr-tick" x1="30" y1="38" x2="30" y2="62" />
+              <text class="hr-val" x="30" y="30" text-anchor="middle">0.00</text>
+              <text class="hr-cap" x="30" y="80" text-anchor="middle">null floor</text>
+
+              <!-- one-shot probe @0.20 : x = 30+0.20*320 = 94 -->
+              <line class="hr-tick--soft" x1="94" y1="40" x2="94" y2="60" />
+              <text class="hr-label" x="94" y="32" text-anchor="middle">0.20</text>
+              <text class="hr-cap" x="94" y="80" text-anchor="middle">one-shot probe</text>
+
+              <!-- oracle ceiling @1.0 : x = 350 -->
+              <line class="hr-tick" x1="350" y1="38" x2="350" y2="62" />
+              <text class="hr-val" x="350" y="30" text-anchor="middle">1.00</text>
+              <text class="hr-cap" x="350" y="80" text-anchor="middle">oracle ceiling</text>
+
+              <!-- gap annotation: probe(0.20) -> ceiling(1.0) span -->
+              <line x1="94" y1="104" x2="350" y2="104" stroke="#8c2f2a" stroke-width="1" stroke-dasharray="1 4" opacity="0.7" />
+              <line x1="94" y1="100" x2="94" y2="108" stroke="#8c2f2a" stroke-width="1" />
+              <line x1="350" y1="100" x2="350" y2="108" stroke="#8c2f2a" stroke-width="1" />
+              <text x="222" y="124" text-anchor="middle" style="font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:600; fill:#8c2f2a;">gap 0.80</text>
+            </svg>
+          </div>
+          <p class="gate-gap-note">
+            A one-shot probe saturates at only <span class="num">0.20</span>; the oracle
+            reaches <span class="num">1.00</span>. The
+            <span class="num">0.80</span> gap means the arena has real discriminating
+            power — the scores above are signal, not ceiling-bumping noise.
+          </p>
+        </div>
+
+        <!-- Gates -->
+        <div>
+          <p class="micro-head">Launch gates</p>
+          <p class="micro-sub">
+            The promotion ladder for this composition. Spend is cleared; trust, launch,
+            write, and re-ingest remain ahead.
+          </p>
+          <ul class="gates">
+            <li>
+              <span class="gate-id">G1</span>
+              <span class="gate-name">Spend</span>
+              <span class="gate-state gs-ok">Approved</span>
+            </li>
+            <li>
+              <span class="gate-id">G2</span>
+              <span class="gate-name">Eval-trust</span>
+              <span class="gate-state gs-pending">Pending review</span>
+            </li>
+            <li>
+              <span class="gate-id">G3</span>
+              <span class="gate-name">Launch</span>
+              <span class="gate-state gs-locked">Unsigned</span>
+            </li>
+            <li>
+              <span class="gate-id">G4</span>
+              <span class="gate-name">Write</span>
+              <span class="gate-state gs-locked">Locked</span>
+            </li>
+            <li>
+              <span class="gate-id">G5</span>
+              <span class="gate-name">Re-ingest</span>
+              <span class="gate-state gs-locked">Locked</span>
+            </li>
+          </ul>
+          <p class="gate-gap-note">
+            G2 is the next gate, and the recommendation above holds it deliberately:
+            no eval-trust request until seed3 is mutated, the live-lock hole is closed,
+            and the lead is re-certified to separate from the incumbent.
+          </p>
+        </div>
+      </div>
+
+      <!-- ===================== COLOPHON ===================== -->
+      <footer class="colophon measure">
+        <div class="cx-row">
+          <span class="cx-key">Provenance</span>
+          <span
+            >Threshold foundry · task <b>pr-review-correctness</b> · arena
+            <b>pr-review-correctness-v0</b> (low-risk) · composition
+            <b>4a73f1fd</b> · search round <b>g1</b> · <b>8</b> tasks ·
+            <b>n=10</b> trials/seed (holdout n=2) · references oracle 1.00 / null
+            0.00 / one-shot 0.20<span class="footnote-mark">†</span></span
+          >
+        </div>
+        <div class="cx-row" style="margin-top: 0.5rem">
+          <span class="cx-key">Note †</span>
+          <span
+            >Certification requires n≥5 per task; holdout tasks are reported at n=2 and
+            are not yet certifiable. Reward is scored against the oracle reference and
+            normalised to the null floor. Confidence intervals are 95% at the stated
+            sample size.</span
+          >
+        </div>
+      </footer>
+    </main>
+  </body>
+</html>

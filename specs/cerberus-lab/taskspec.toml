@@ -1,4 +1,4 @@
-# Daedalus task specification: Cerberus lab fixture import.
+# Threshold task specification: Cerberus lab fixture import.
 
 id = "cerberus-lab"
 goal = "Import validated Cerberus ReviewArtifact.v1 outputs and score them against a fixture oracle without live model spend."
@@ -10,11 +10,11 @@ description = "Cerberus ReviewRequest.v1 plus ReviewArtifact.v1"
 fixtures = "arenas/cerberus-fixture-v0"
 
 [output]
-contract = "Daedalus evidence packet: request.json, artifact.json, findings.json, score.json, summary.json, report.md, and artifacts.index"
+contract = "Threshold evidence packet: request.json, artifact.json, findings.json, score.json, summary.json, report.md, and artifacts.index"
 
 [oracle]
 type = "deterministic"
-description = "Validated Cerberus artifacts are mapped into Daedalus findings and scored against fixture answer keys."
+description = "Validated Cerberus artifacts are mapped into Threshold findings and scored against fixture answer keys."
 
 [risk]
 class = "low"

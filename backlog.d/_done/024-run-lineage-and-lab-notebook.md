@@ -21,7 +21,7 @@ so the lab accumulates "what works under what circumstances" across runs.
       retroactively on the capstone run
 - [ ] Per generation: parent, slot changed, hypothesis text, measured delta,
       improved verdict — hypotheses labeled confirmed / not confirmed
-- [ ] `bin/daedalus` writes lineage.md at stage 5 and appends a NOTEBOOK.md
+- [ ] `bin/threshold` writes lineage.md at stage 5 and appends a NOTEBOOK.md
       entry (date, spec, arena+version, spend, stop reason, pick + hash,
       key findings, alarms); NOTEBOOK.md is committed
 - [ ] Offline test renders a fixture experiment dir and asserts hypothesis

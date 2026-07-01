@@ -1,13 +1,13 @@
-# Daedalus task specification: the Cerberus reviewer config search.
+# Threshold task specification: the Cerberus reviewer config search.
 # Schema: DESIGN.md "Task specification". Backlog 036 (constellation reviewer).
 #
 # Purpose: certify the provably most cost-effective, high-quality (model x
 # config) composition for the Cerberus code-review agent, on the
 # contamination-resistant pr-review-v0 arena (synthetic, 6 independent sources,
-# df>=4 -> certification is actually achievable). Daedalus mints the contract;
+# df>=4 -> certification is actually achievable). Threshold mints the contract;
 # Cerberus deploys it (VISION.md: the plane owns production trust).
 #
-# G1 spend authorized under the operator goal directive (2026-06-23): "Daedalus
+# G1 spend authorized under the operator goal directive (2026-06-23): "Threshold
 # running research loops to determine the provably most cost-effective high
 # quality agent and harness config for Cerberus." Budget is bounded per run.
 
@@ -28,7 +28,7 @@ contract = "findings.json: {findings: [{file, line, category, description}]} wit
 
 [oracle]
 type = "deterministic"
-description = "Seeded-defect answer keys; reward = max(0, recall - 0.2 * false_positives) per the Rust scorer (crates/daedalus-core/src/score.rs). The grader is gospel."
+description = "Seeded-defect answer keys; reward = max(0, recall - 0.2 * false_positives) per the Rust scorer (crates/threshold-core/src/score.rs). The grader is gospel."
 
 # The incumbent: the config we would otherwise ship, so certification means
 # "beats what we deploy today," not "beats silence" (055). Bitterblossom's
@@ -52,7 +52,7 @@ max_cost_per_trial_usd = 0.50
 max_wall_per_trial_sec = 600
 
 [trigger]
-intent = "Daedalus research loop (operator-run); the certified contract is exported to Cerberus, which owns the production trigger."
+intent = "Threshold research loop (operator-run); the certified contract is exported to Cerberus, which owns the production trigger."
 
 [boundaries]
 data = "Synthetic fixtures in arenas/pr-review-v0 only. Candidates never read tests/ or solution/."

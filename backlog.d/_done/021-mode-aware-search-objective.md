@@ -24,7 +24,7 @@ plateau, and cost-frontier candidates are eligible parents.
       and does not advance the plateau counter
 - [ ] `parent_pool` includes the cheapest candidate within 0.05 reward of
       the best (cost frontier stays breedable)
-- [ ] `bin/daedalus` passes the taskspec mode into the loop; `bin/gate` green
+- [ ] `bin/threshold` passes the taskspec mode into the loop; `bin/gate` green
 
 ## Notes
 Evidence: capstone loop.json — g1b (the eventual recommendation) recorded

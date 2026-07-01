@@ -1,11 +1,11 @@
-# Build a second task family to pressure-test Daedalus
+# Build a second task family to pressure-test Threshold
 
 Priority: P1
 Status: done
 Estimate: XL
 
 ## Goal
-Prove Daedalus is not a PR-review-only optimizer by running the full
+Prove Threshold is not a PR-review-only optimizer by running the full
 spec-to-delivery loop on a second domain with different artifacts, failure
 modes, and scoring pressure.
 
@@ -18,7 +18,7 @@ modes, and scoring pressure.
       negative examples, data boundaries, and human checkpoints
 - [x] A new `arenas/<id>/` passes oracle/null/probe rig checks and demonstrates
       agent spread before search claims are trusted
-- [x] The run emits the standard Daedalus records, lineage, report, and Pareto
+- [x] The run emits the standard Threshold records, lineage, report, and Pareto
       archive without PR-review-specific special cases
 - [x] Any schema or runner assumptions discovered during the second family are
       either generalized behind file contracts or deliberately rejected in
@@ -61,13 +61,13 @@ modes, and scoring pressure.
   the packets are sandbox-only, non-deployable, and not primary-reviewer
   capable.
 - G2 packet: `approvals/G2-launch-contract-v0.md` (accepted by the operator on
-  2026-06-12 for internal Daedalus second-family benchmarking,
+  2026-06-12 for internal Threshold second-family benchmarking,
   contract-discovery, and sandbox-only delivery export).
 - Rust validation-kernel trigger: now met by two accepted task families,
   `pr-review-v2` and `launch-contract-v0`; `DESIGN.md` and `ROADMAP.md` record
   that the validation-kernel decision is reopened for future implementation.
 
 ## Notes
-**Why:** premise-challenge lane. The README describes Daedalus as a general
+**Why:** premise-challenge lane. The README describes Threshold as a general
 agent-building lab, but all measured evidence currently comes from PR review.
 The next ambitious proof is domain transfer.

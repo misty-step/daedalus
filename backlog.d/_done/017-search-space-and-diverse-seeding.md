@@ -23,12 +23,12 @@ search then exploits.
       spanning the declared space (scalar slots sampled deterministically with
       a recorded seed; packet variants generated as k distinct review stances
       by the optimizer model and saved as versioned packet files)
-- [ ] `bin/daedalus` stage 2 runs all seeds on train and the report shows the
+- [ ] `bin/threshold` stage 2 runs all seeds on train and the report shows the
       landscape: per-seed reward/cost/latency spread, not a two-row table
 - [ ] Budget math is explicit: seeding cost (seeds × tasks × trials) is
       estimated up front against `--budget-usd` and the seeder shrinks
       `seed_count` rather than blowing the budget
-- [ ] No hardcoded `BASELINES` list remains in bin/daedalus; tests cover the
+- [ ] No hardcoded `BASELINES` list remains in bin/threshold; tests cover the
       seeder offline (sampling + manifest materialization, no network)
 
 ## Notes

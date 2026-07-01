@@ -2,8 +2,8 @@
 # The repo gate. Offline, no API keys required. Agents run this before
 # claiming any change is done; CI runs the same command.
 #
-# Daedalus is implemented in Rust: daedalus-core (kernel) + daedalus-cli (the
-# `daedalus` binary) + daedalus-score (static musl scorer for the Harbor
+# Threshold is implemented in Rust: threshold-core (kernel) + threshold-cli (the
+# `threshold` binary) + threshold-score (static musl scorer for the Harbor
 # container). All Python has been eliminated; the harbor-run script uses the
 # Rust CLI exclusively.
 set -eu
