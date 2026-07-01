@@ -40,6 +40,27 @@ This split should make both projects sharper:
 - Threshold asks, "Given that measurement surface, which agent configuration
   actually performs best enough to trust?"
 
+## Current Factory Posture
+
+As of the 2026-07-01 factory groom, Threshold is parked behind Crucible. The
+optimizer remains strategically important to the Weave, but it should not resume
+frontier-making work until the measurement seam is real: sprite candidate
+artifacts must be graded against arena answer keys through a shared
+Crucible/Threshold scorer, remote self-verdict strings must be treated only as
+execution-health signals, and the duplicate optimizer stacks must collapse into
+one typed loop.
+
+The 061 Crucible-backed optimizer run is therefore a plumbing proof, not a
+certified measurement. It proved that a Crucible-shaped target can reach
+Bitter Blossom Sprites and produce Threshold artifacts. It did not prove that
+one candidate is better than another, because the candidate-dependent score was
+not yet grounded in answer-key grading.
+
+Until those reentry criteria are met, Threshold's useful work is backlog,
+cleanup, contract hardening, and preserving the optimization boundary for the
+rest of the factory. Crucible must run and grade benchmarks for real before
+Threshold optimizes against them again.
+
 ## What Threshold Searches
 
 A Threshold candidate is a composition, not a vague agent persona. The useful
@@ -72,6 +93,9 @@ learns only that "something changed."
 - **Prove better, not merely different.** A higher mean inside the noise floor
   is not a result. Use baselines, incumbents, confidence intervals, reliability
   floors, and cost/latency envelopes before recommending a composition.
+- **Answer keys beat self-report.** Candidate output may include useful
+  verdicts, rationales, and health signals, but a candidate's own string label
+  is never the optimization objective. Scoring belongs to the eval's grader.
 - **Cost and latency are quality.** A composition that is slightly better at
   ten times the price may be wrong. The default output is a Pareto frontier
   across quality, cost, latency, reliability, and authority. A single launch
@@ -137,6 +161,7 @@ optimizer for building trustworthy, task-specific agent configurations.
 - It does not promote an offline winner without a human-readable launch
   contract and unsigned-gate disclosure.
 - It does not treat model-judge output as the only oracle or cost-free truth.
+- It does not treat candidate self-report as a scorer.
 - It does not continue optimizing when the eval is the bottleneck.
 
 ## Where The Depth Lives

@@ -1,6 +1,6 @@
 # Build the Crucible-backed optimization loop
 
-Priority: P1 · Status: ready · Estimate: XL
+Priority: P1 · Status: parked · Estimate: XL
 
 ## Goal
 
@@ -85,21 +85,28 @@ recommendation against overfitting, judge gaming, and model/eval drift.
 
 ## Completion Slice
 
-2026-07-01 core factory slice: PR #26 proved the end-to-end path from a
-Crucible eval target to GEPA-style candidates, Bitter Blossom Sprite dispatch,
-Threshold-owned scoring, and a score/cost Pareto frontier. The run packet lives
-at `runs/20260701T182031Z-optimizer-loop-pr-review-key-recall-v0/` and
-intentionally reports held-out certification as `not_certified` because the
-Kimi Sprite arm stayed stale in execution with unknown cost.
+2026-07-01 core factory slice: PR #26 proved the plumbing path from a
+Crucible-shaped eval target to GEPA-style candidates, Bitter Blossom Sprite
+dispatch, and Threshold-owned artifacts. The run packet lives at
+`runs/20260701T182031Z-optimizer-loop-pr-review-key-recall-v0/` and correctly
+reports held-out certification as `not_certified`.
 
-The remaining depth is now split out so this core slice can close without
-pretending the full research loop is complete:
+This slice did **not** prove a real candidate-quality frontier. The recorded
+score formula was `source_split_key_recall * remote_verdict_score`; source
+recall came from the incumbent and the candidate-dependent signal was the
+remote Sprite's own verdict string. Treat the 061 run as plumbing-proof-only
+until [[066]] lands.
+
+The remaining depth is now split out and parked behind [[066]] so this core
+slice can stay honest without pretending the full research loop is complete:
 
 - [[062]] ASHA/Hyperband budget allocation across more candidates.
 - [[063]] deeper GEPA reflective mutation.
 - [[064]] held-out optimizer certification.
 - [[065]] robust stale Bitter Blossom arm handling, dependent on Bitter Blossom
   [[083]].
+- [[066]] real answer-key grading and one optimizer loop before optimization
+  resumes.
 
 ## Notes
 
@@ -111,5 +118,8 @@ pretending the full research loop is complete:
 - Crucible backlog 008 remains a hard caveat: until grade parity is proven,
   Crucible may author/export the eval, but Threshold's Rust scorer remains the
   optimization objective.
+- Per the 2026-07-01 factory decision, Threshold is parked behind Crucible until
+  sprite candidates are graded against answer keys and the duplicate optimizer
+  stacks are collapsed.
 - No child may weaken the scorer, loosen G2, hide unknown cost, or compare
   across eval/model versions without an explicit fresh probe.

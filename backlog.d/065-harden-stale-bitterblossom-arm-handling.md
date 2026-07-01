@@ -1,9 +1,13 @@
 # Harden stale Bitter Blossom arm handling
 
-Priority: P1 · Status: pending · Estimate: M
+Priority: P1 · Status: blocked · Estimate: M
 
 Child of [[061]]. Depends on Bitter Blossom [[083]] for robust stale-running
 Sprite recovery/cancellation semantics.
+
+2026-07-01 factory groom correction: still needed, but parked until Bitter
+Blossom [[083]] supplies recovery/cancellation semantics. It remains a hard
+precondition for [[064]].
 
 ## Goal
 Make stale Bitter Blossom Sprite arms first-class optimizer outcomes with

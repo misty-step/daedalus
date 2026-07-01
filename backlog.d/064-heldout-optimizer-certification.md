@@ -1,10 +1,14 @@
 # Run held-out optimizer certification
 
-Priority: P1 · Status: pending · Estimate: M
+Priority: P1 · Status: blocked · Estimate: M
 
 Child of [[061]]. The first multi-candidate run wrote a held-out certification
 packet, but honestly left it `not_certified` after a stale Sprite arm blocked
 the validation rung.
+
+2026-07-01 factory groom correction: certification is blocked by [[066]] and
+[[065]]. Held-out certification can only resume after validation scores are
+answer-key grounded and stale/unknown-cost arms cannot corrupt promotion.
 
 ## Goal
 Complete the final held-out certification step for a promoted optimizer

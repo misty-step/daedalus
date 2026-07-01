@@ -1,9 +1,15 @@
 # Deepen GEPA reflective mutation
 
-Priority: P1 · Status: pending · Estimate: L
+Priority: P1 · Status: blocked · Estimate: L
 
 Child of [[061]]. Captured after the first optimizer loop used shallow
-GEPA-style mutation descriptors to generate a scored Pareto frontier.
+GEPA-style mutation descriptors to generate a plumbing artifact and provisional
+frontier table.
+
+2026-07-01 factory groom correction: the 061 run produced a plumbing artifact,
+not a trusted scored frontier. This ticket is blocked by [[066]]; mutation depth
+is meaningless until the score is answer-key grounded and there is one optimizer
+loop.
 
 ## Goal
 Replace the first slice's fixed mutation descriptors with an evidence-driven
