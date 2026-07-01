@@ -1,12 +1,16 @@
 # Deepen the search and bound its reproducibility
 
-Priority: P1 · Status: pending · Estimate: M
+Priority: P1 · Status: blocked · Estimate: M
 
 Child of [[054]]. Retro gap — trust the search itself.
 
 2026-07-01 grooming: also child 5 of [[061]]. The multi-seed and
 optimizer-vs-seed-scan checks here are now acceptance criteria for the
 Crucible-backed optimization loop, not a separate science project.
+
+2026-07-01 factory groom correction: this remains necessary, but it is blocked
+by [[066]]. Seed trust is only meaningful after the Sprite-backed score is
+answer-key grounded and the optimizer fork is collapsed.
 
 ## Goal
 Make the search actually search — beat its own seed scan and produce a winner

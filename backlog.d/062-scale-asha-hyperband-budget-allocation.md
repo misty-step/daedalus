@@ -1,10 +1,15 @@
 # Scale ASHA/Hyperband budget allocation across more candidates
 
-Priority: P1 · Status: pending · Estimate: L
+Priority: P1 · Status: blocked · Estimate: L
 
-Child of [[061]]. Captured after the first real optimizer loop proved the
-Crucible eval -> GEPA candidate -> Bitter Blossom Sprite -> Pareto scoring path
-on 2026-07-01.
+Child of [[061]]. Captured after the first 2026-07-01 optimizer plumbing proof
+connected a Crucible-shaped eval target to GEPA-style candidates and Bitter
+Blossom Sprite receipts.
+
+2026-07-01 factory groom correction: the first loop proved plumbing, not Pareto
+scoring. This ticket is blocked by [[066]]; broad budget allocation must not
+resume until Sprite artifacts are scored against answer keys and the duplicate
+optimizer path is collapsed.
 
 ## Goal
 Turn the current small-rung ASHA packet into a real budget allocator that can
@@ -37,5 +42,6 @@ spend.
   changes.
 
 ## Notes
-This is the depth beyond the first proof. The 2026-07-01 slice proves the
-interface and scoring path; it does not yet prove allocator quality at breadth.
+This is the depth beyond the first proof. The 2026-07-01 slice proved the
+interface path, not the scoring path; it does not yet prove allocator quality at
+breadth.
