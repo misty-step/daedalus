@@ -750,6 +750,21 @@ fn dispatch_bitterblossom(
             let stderr = String::from_utf8_lossy(&output.stderr).to_string();
             let stdout_json = serde_json::from_str::<Value>(&stdout).unwrap_or(Value::Null);
             let run_id = extract_bb_run_id(&stdout_json);
+            let bb_run = stdout_json.get("run").unwrap_or(&Value::Null);
+            let last_attempt = stdout_json
+                .get("attempts")
+                .and_then(Value::as_array)
+                .and_then(|a| a.last());
+            let model_served = last_attempt
+                .and_then(|a| a.get("model"))
+                .cloned()
+                .or_else(|| {
+                    request
+                        .get("candidate")
+                        .and_then(|c| c.get("model"))
+                        .cloned()
+                })
+                .unwrap_or(Value::Null);
             let status = if output.status.success() {
                 "ok"
             } else {
@@ -769,11 +784,11 @@ fn dispatch_bitterblossom(
                     "transcript": Value::Null,
                     "bb_stdout": stdout_json
                 },
-                "model_served": request.get("candidate").and_then(|c| c.get("model")).cloned().unwrap_or(Value::Null),
-                "tokens_prompt": Value::Null,
-                "tokens_completion": Value::Null,
-                "cost_usd": Value::Null,
-                "wall_ms": Value::Null,
+                "model_served": model_served,
+                "tokens_prompt": last_attempt.and_then(|a| a.get("tokens_in")).cloned().unwrap_or(Value::Null),
+                "tokens_completion": last_attempt.and_then(|a| a.get("tokens_out")).cloned().unwrap_or(Value::Null),
+                "cost_usd": bb_run.get("cost_usd").cloned().unwrap_or(Value::Null),
+                "wall_ms": bb_run.get("duration_ms").cloned().unwrap_or(Value::Null),
                 "error": if output.status.success() {
                     Value::Null
                 } else {
