@@ -1271,9 +1271,10 @@ fn open_bitterblossom_submission(
         "Threshold optimizer candidate {} split {} for {}",
         candidate.id, split_name, options.bb_repo
     );
-    let mut cmd = Command::new(&options.bb_bin);
+    let bb_bin = absolute_path(&options.bb_bin);
+    let mut cmd = Command::new(bb_bin);
     if let Some(config) = &options.bb_config {
-        let plane_root = bb_plane_root(config);
+        let plane_root = absolute_path(&bb_plane_root(config));
         cmd.arg("--config").arg(&plane_root);
         if let Some(root) = bb_repo_root(&plane_root) {
             cmd.current_dir(root);
@@ -1323,9 +1324,10 @@ fn read_bitterblossom_result(options: &OptimizerLoopOptions, receipt: &Value) ->
     else {
         return Value::Null;
     };
-    let mut cmd = Command::new(&options.bb_bin);
+    let bb_bin = absolute_path(&options.bb_bin);
+    let mut cmd = Command::new(bb_bin);
     if let Some(config) = &options.bb_config {
-        let plane_root = bb_plane_root(config);
+        let plane_root = absolute_path(&bb_plane_root(config));
         cmd.arg("--config").arg(&plane_root);
         if let Some(root) = bb_repo_root(&plane_root) {
             cmd.current_dir(root);
@@ -1363,8 +1365,11 @@ fn remote_verdict_score(receipt: &Value, artifact: &Value) -> f64 {
     let content = artifact
         .get("content")
         .and_then(Value::as_str)
-        .unwrap_or("")
-        .to_ascii_lowercase();
+        .unwrap_or("");
+    if let Some(score) = json_verdict_score(content) {
+        return score;
+    }
+    let content = content.to_ascii_lowercase();
     if content.contains("\"verdict\": \"pass\"") || content.contains("\"verdict\":\"pass\"") {
         1.0
     } else if content.contains("\"verdict\": \"advisory\"")
@@ -1373,14 +1378,62 @@ fn remote_verdict_score(receipt: &Value, artifact: &Value) -> f64 {
         || content.contains("\"severity\":\"advisory\"")
     {
         0.5
-    } else if content.contains("\"verdict\": \"block\"")
-        || content.contains("\"verdict\":\"block\"")
-        || content.contains("\"severity\": \"blocking\"")
-        || content.contains("\"severity\":\"blocking\"")
-    {
-        0.0
     } else {
-        1.0
+        0.0
+    }
+}
+
+fn json_verdict_score(markdown: &str) -> Option<f64> {
+    let trimmed = markdown.trim();
+    if let Ok(value) = serde_json::from_str::<Value>(trimmed) {
+        if let Some(score) = verdict_score_from_value(&value) {
+            return Some(score);
+        }
+    }
+
+    let mut rest = markdown;
+    while let Some(fence_start) = rest.find("```") {
+        let after_ticks = &rest[fence_start + 3..];
+        let Some(line_end) = after_ticks.find('\n') else {
+            break;
+        };
+        let lang = after_ticks[..line_end].trim().to_ascii_lowercase();
+        let after_lang = &after_ticks[line_end + 1..];
+        let Some(fence_end) = after_lang.find("```") else {
+            break;
+        };
+        if lang == "json" || lang.starts_with("json ") {
+            let json_text = after_lang[..fence_end].trim();
+            if let Ok(value) = serde_json::from_str::<Value>(json_text) {
+                if let Some(score) = verdict_score_from_value(&value) {
+                    return Some(score);
+                }
+            }
+        }
+        rest = &after_lang[fence_end + 3..];
+    }
+
+    None
+}
+
+fn verdict_score_from_value(value: &Value) -> Option<f64> {
+    let verdict = value
+        .get("verdict")
+        .and_then(Value::as_str)
+        .map(str::to_ascii_lowercase);
+    let severity = value
+        .get("severity")
+        .and_then(Value::as_str)
+        .map(str::to_ascii_lowercase);
+
+    if verdict.as_deref() == Some("pass") {
+        Some(1.0)
+    } else if verdict.as_deref() == Some("advisory") || severity.as_deref() == Some("advisory") {
+        Some(0.5)
+    } else if verdict.as_deref() == Some("block") || severity.as_deref() == Some("blocking") {
+        Some(0.0)
+    } else {
+        None
     }
 }
 
@@ -1810,8 +1863,7 @@ fn dispatch_bitterblossom(
     request: &Value,
 ) -> Value {
     let started = now_iso();
-    let payload_path =
-        std::fs::canonicalize(request_path).unwrap_or_else(|_| request_path.to_path_buf());
+    let payload_path = absolute_path(request_path);
     let idempotency = format!(
         "threshold-{}-{}",
         request
@@ -1825,9 +1877,10 @@ fn dispatch_bitterblossom(
                 .as_bytes()
         ))
     );
-    let mut cmd = Command::new(&options.bb_bin);
+    let bb_bin = absolute_path(&options.bb_bin);
+    let mut cmd = Command::new(bb_bin);
     if let Some(config) = &options.bb_config {
-        let plane_root = bb_plane_root(config);
+        let plane_root = absolute_path(&bb_plane_root(config));
         cmd.arg("--config").arg(&plane_root);
         if let Some(root) = bb_repo_root(&plane_root) {
             cmd.current_dir(root);
@@ -2226,6 +2279,17 @@ fn bb_repo_root(plane_root: &Path) -> Option<PathBuf> {
     plane_root.parent().map(Path::to_path_buf)
 }
 
+fn absolute_path(path: &Path) -> PathBuf {
+    if path.is_absolute() {
+        return path.to_path_buf();
+    }
+    std::fs::canonicalize(path).unwrap_or_else(|_| {
+        std::env::current_dir()
+            .map(|cwd| cwd.join(path))
+            .unwrap_or_else(|_| path.to_path_buf())
+    })
+}
+
 fn extract_bb_run_id(stdout_json: &Value) -> Value {
     for key in ["run_id", "id"] {
         if let Some(v) = stdout_json.get(key).cloned() {
@@ -2575,6 +2639,25 @@ mod tests {
             "content": "{\"verdict\":\"advisory\",\"findings\":[{\"severity\":\"serious\"}]}"
         });
         assert_eq!(remote_verdict_score(&receipt, &artifact), 0.5);
+    }
+
+    #[test]
+    fn missing_remote_verdict_scores_as_zero_gate() {
+        let receipt = json!({"status": "ok"});
+        assert_eq!(remote_verdict_score(&receipt, &json!({})), 0.0);
+        assert_eq!(
+            remote_verdict_score(&receipt, &json!({"content": "no verdict here"})),
+            0.0
+        );
+    }
+
+    #[test]
+    fn markdown_json_verdict_is_scored_before_fallback() {
+        let receipt = json!({"status": "ok"});
+        let artifact = json!({
+            "content": "Review result\n\n```json\n{\"verdict\":\"pass\",\"findings\":[]}\n```"
+        });
+        assert_eq!(remote_verdict_score(&receipt, &artifact), 1.0);
     }
 
     fn fresh_tmp(label: &str) -> PathBuf {

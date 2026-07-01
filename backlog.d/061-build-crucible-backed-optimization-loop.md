@@ -83,6 +83,24 @@ recommendation against overfitting, judge gaming, and model/eval drift.
    a report that either certifies a Bitter Blossom correctness-lane candidate or
    explains which guard blocked search.
 
+## Completion Slice
+
+2026-07-01 core factory slice: PR #26 proved the end-to-end path from a
+Crucible eval target to GEPA-style candidates, Bitter Blossom Sprite dispatch,
+Threshold-owned scoring, and a score/cost Pareto frontier. The run packet lives
+at `runs/20260701T182031Z-optimizer-loop-pr-review-key-recall-v0/` and
+intentionally reports held-out certification as `not_certified` because the
+Kimi Sprite arm stayed stale in execution with unknown cost.
+
+The remaining depth is now split out so this core slice can close without
+pretending the full research loop is complete:
+
+- [[062]] ASHA/Hyperband budget allocation across more candidates.
+- [[063]] deeper GEPA reflective mutation.
+- [[064]] held-out optimizer certification.
+- [[065]] robust stale Bitter Blossom arm handling, dependent on Bitter Blossom
+  [[083]].
+
 ## Notes
 
 - This epic is the active home for the optimizer-loop work requested after the
