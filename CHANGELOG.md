@@ -1,3 +1,24 @@
+# [1.1.0](https://github.com/misty-step/threshold/compare/v1.0.0...v1.1.0) (2026-07-01)
+
+
+### Bug Fixes
+
+* allow bb submission ids for verdict dispatch ([da039c1](https://github.com/misty-step/threshold/commit/da039c1daa19ad6aec0a8e58ce0d37c48ed9a7a4))
+* enforce optimizer dispatch budget ([6542aa3](https://github.com/misty-step/threshold/commit/6542aa3aeb1e9c18bd7237e1244b49402864944b))
+* fail closed on missing sprite verdicts ([21a120d](https://github.com/misty-step/threshold/commit/21a120d0d26ee9bd907459358418de2619e6f2cc))
+* harden optimizer review findings ([97f744f](https://github.com/misty-step/threshold/commit/97f744fa86e52d0ef065399d1a2b16e0ade766e7))
+* lift bb metering into sprite receipt ([270fd16](https://github.com/misty-step/threshold/commit/270fd162e4a528d0411e243bd9d18e406fe7c300))
+* normalize Bitterblossom plane config path ([3683eb6](https://github.com/misty-step/threshold/commit/3683eb68c6b4540ea7d24b7b885e01b835c062d5))
+* pass absolute payload path to bb run ([0bfa7be](https://github.com/misty-step/threshold/commit/0bfa7be123fa6e0b4d37399e22cdaaa5251d0b47))
+* require oracle ceiling before saturated verdict ([584a287](https://github.com/misty-step/threshold/commit/584a287b6916a6112453748f919f11c9e2a3d7ce))
+* score advisory optimizer verdicts ([687fc01](https://github.com/misty-step/threshold/commit/687fc01c27cb61f20eee119b03cc78da2eaf0aa7))
+
+
+### Features
+
+* add Crucible headroom optimizer probe ([0de7c6c](https://github.com/misty-step/threshold/commit/0de7c6c1b77603514b08794741caf6deb16bb77b))
+* add Crucible optimizer loop ([3a44ee0](https://github.com/misty-step/threshold/commit/3a44ee02410a5583b482e618cf9145320eea3fe3))
+
 # 1.0.0 (2026-07-01)
 
 
