@@ -1,12 +1,20 @@
 # Request Bitterblossom reflex review orchestrator swarm
 
 Priority: P2
-Status: blocked - 048 delivered; now gated behind 054 (Cerberus-first mandate)
+Status: blocked - 048 delivered; gated behind 054; Sprites runner contract scoped
 Estimate: XL
 
 > **GATED 2026-06-24** behind [[054]] — Bitterblossom reflex-review fan-out waits
 > until the Cerberus reviewer loop hums (VISION). 048 is delivered, so this no
 > longer waits on the lab; it waits on the hum bar. Demoted P0→P2.
+
+> **Wiring update 2026-07-01:** use
+> `docs/crucible-eval-optimization-contract.md` as the Threshold-side contract.
+> Reflex-review candidates run on Bitter Blossom/Sprites through
+> `threshold.sprite_trial_request.v1` and return
+> `threshold.sprite_trial_receipt.v1`; Threshold scores and optimizes the
+> artifacts against the Crucible/Harbor target. Bitter Blossom owns triggers,
+> idempotency, budgets, queueing, and receipts.
 
 ## Goal
 
@@ -138,23 +146,35 @@ and the artifact records which member was waived and why.
 1. Align this ticket with `048` so Bitterblossom consumes the Cerberus request,
    artifact, topology, and substrate recommendation instead of forking a
    divergent review system.
-2. Produce a Bitterblossom launch packet that maps the selected Cerberus config
+2. Import the selected Crucible/Harbor eval as
+   `threshold.optimization_target.v1`, preserving eval version, answer-key and
+   scorer digests, split policy, incumbent baseline, and G2 state.
+3. Produce a Bitterblossom launch packet that maps the selected Cerberus config
    into `plane/agents`, `plane/tasks`, cards, payload examples, budget defaults,
    idempotency keys, and status surfaces.
-3. Import or run the Cerberus candidates recommended by `048` under the
+4. Import or run the Cerberus candidates recommended by `048` under the
    review cost and wall-time envelope, preserving artifacts as first-class
    evidence.
-4. Make the master a consolidation task, not a fresh broad reviewer that
+5. Make the master a consolidation task, not a fresh broad reviewer that
    launders weak member output.
-5. Define failure behavior: timed-out member, malformed JSON, budget-blocked
+6. Define failure behavior: timed-out member, malformed JSON, budget-blocked
    member, duplicate finding, stale head SHA, draft PR, closed PR, forked PR.
-6. Produce a sandbox import path for Bitterblossom that can be dogfooded by
+7. Produce a sandbox import path for Bitterblossom that can be dogfooded by
    `bb submit` / `bb gate` before any production webhook posting.
+8. Prove the remote runner seam with one manual `bb run`/Sprites trial before
+   webhook reflex work: the receipt must include run id, task id, candidate
+   composition hash, status, cost/wall fields, artifact refs, and error state.
 
 ## Oracle
 
 - [ ] The packet names the exact Bitterblossom task ids, agent ids, payload
       fields, idempotency keys, artifact paths, and run/gate read commands.
+- [ ] The packet names the `threshold.optimization_target.v1` eval ref,
+      answer-key and scorer digests, incumbent baseline, and holdout policy it
+      optimizes against.
+- [ ] A manual Bitter Blossom/Sprites trial returns
+      `threshold.sprite_trial_receipt.v1`; Threshold scores the artifact and
+      records the trial without exposing `tests/` or `solution/`.
 - [ ] At least one measured Threshold/Cerberus vertical slice covers
       `ReviewRequest.v1`, `ReviewArtifact.v1`, and any selected topology
       rather than assuming a Pi specialist swarm.

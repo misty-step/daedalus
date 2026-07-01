@@ -70,6 +70,18 @@ data limits, `[checkpoints]` gates, `[negative_examples]`. The master agent
 derives missing fields through a clarifying interview before any search spend
 (gate G1).
 
+### Optimization target — `threshold.optimization_target.v1`
+
+When the eval is owned outside Threshold, the search loop consumes it through
+`docs/crucible-eval-optimization-contract.md`. The target wrapper binds a
+Crucible `crucible.eval_spec.v1` bundle to a Harbor task-directory export,
+answer-key/scorer digests, split and holdout policy, baselines, runner choices, and the
+human gates that decide whether search may spend. Threshold owns the search
+objective and reports; Crucible owns eval design and corpus governance. The
+first target is the code-review correctness family. Until Crucible backlog 008
+proves `crucible grade` predicts the Rust reward, `threshold-score` remains the
+authoritative scorer for optimization.
+
 ### Arena — `arenas/<id>/`
 
 `arena.toml` (id, version, taskspec pointer, frozen-surface note) plus
