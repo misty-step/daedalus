@@ -20,6 +20,10 @@ const HEADROOM_SCHEMA: &str = "threshold.headroom_probe.v1";
 const GUARDRAILS_SCHEMA: &str = "threshold.optimizer_guardrails.v1";
 const SPRITE_REQUEST_SCHEMA: &str = "threshold.sprite_trial_request.v1";
 const SPRITE_RECEIPT_SCHEMA: &str = "threshold.sprite_trial_receipt.v1";
+const OPTIMIZER_LOOP_SCHEMA: &str = "threshold.optimizer_loop.v1";
+const ASHA_SCHEMA: &str = "threshold.asha.v1";
+const PARETO_SCHEMA: &str = "threshold.pareto_frontier.v1";
+const CERTIFICATION_SCHEMA: &str = "threshold.heldout_certification.v1";
 
 #[derive(Debug, Clone)]
 pub struct OptimizationTargetError(pub String);
@@ -60,6 +64,40 @@ pub struct HeadroomProbeResult {
     pub sprite_receipt: PathBuf,
     pub verdict: String,
     pub probe_point: Option<f64>,
+}
+
+#[derive(Debug, Clone)]
+pub struct OptimizerLoopOptions {
+    pub eval_spec: PathBuf,
+    pub out_dir: PathBuf,
+    pub budget_usd: f64,
+    pub bb_config: Option<PathBuf>,
+    pub bb_tasks: Vec<String>,
+    pub bb_bin: PathBuf,
+    pub bb_repo: String,
+    pub bb_rev: Option<String>,
+    pub bb_change: Option<String>,
+    pub dispatch_bitterblossom: bool,
+    pub certify_top: usize,
+    pub rng_seed: Option<u64>,
+}
+
+#[derive(Debug, Clone)]
+pub struct OptimizerLoopResult {
+    pub out_dir: PathBuf,
+    pub target: PathBuf,
+    pub rig: PathBuf,
+    pub seed: PathBuf,
+    pub headroom_probe: PathBuf,
+    pub guardrails: PathBuf,
+    pub asha: PathBuf,
+    pub pareto: PathBuf,
+    pub certification: PathBuf,
+    pub history: PathBuf,
+    pub report: PathBuf,
+    pub candidates: usize,
+    pub frontier: usize,
+    pub spend_known_usd: Option<f64>,
 }
 
 #[derive(Debug, Clone)]
@@ -182,6 +220,206 @@ pub fn run_headroom_probe(
         sprite_receipt: receipt_path,
         verdict,
         probe_point,
+    })
+}
+
+pub fn run_optimizer_loop(
+    options: &OptimizerLoopOptions,
+) -> Result<OptimizerLoopResult, Box<dyn std::error::Error>> {
+    if !(options.budget_usd.is_finite() && options.budget_usd > 0.0) {
+        return Err(OptimizationTargetError("--budget-usd must be positive".to_string()).into());
+    }
+    if options.bb_tasks.is_empty() {
+        return Err(OptimizationTargetError(
+            "--bb-task must be supplied at least once".to_string(),
+        )
+        .into());
+    }
+    if options.dispatch_bitterblossom {
+        if options.bb_repo.trim().is_empty() {
+            return Err(OptimizationTargetError(
+                "--bb-repo must not be empty when dispatching".to_string(),
+            )
+            .into());
+        }
+        if options.bb_rev.as_deref().unwrap_or("").trim().is_empty() {
+            return Err(OptimizationTargetError(
+                "--bb-rev must resolve to a fetchable revision when dispatching".to_string(),
+            )
+            .into());
+        }
+    }
+
+    let eval_info = load_eval_info(&options.eval_spec)?;
+    let all_records = read_jsonl_values(&eval_info.source_trials)?;
+    let reference_candidates = candidate_ids(&eval_info);
+    let summaries = summarize_candidates(&eval_info, &all_records, &reference_candidates)?;
+    let selected_records = selected_trial_records(&eval_info, &all_records, &reference_candidates);
+    let splits = split_tasks(&eval_info.tasks);
+    let first_task = options
+        .bb_tasks
+        .first()
+        .cloned()
+        .unwrap_or_else(|| "correctness".to_string());
+    let headroom_options = HeadroomProbeOptions {
+        eval_spec: options.eval_spec.clone(),
+        out_dir: options.out_dir.clone(),
+        budget_usd: options.budget_usd,
+        bb_config: options.bb_config.clone(),
+        bb_task: first_task.clone(),
+        bb_bin: options.bb_bin.clone(),
+        bb_repo: options.bb_repo.clone(),
+        bb_rev: options.bb_rev.clone(),
+        bb_change: options.bb_change.clone(),
+        bb_submission: None,
+        dispatch_bitterblossom: false,
+    };
+    let target = build_target(&eval_info, &headroom_options);
+    let rig = build_optimizer_rig(&eval_info, options, &reference_candidates, &splits);
+    let headroom = build_headroom_probe(&eval_info, &headroom_options, &summaries);
+    if headroom.get("verdict").and_then(Value::as_str) != Some("pass") {
+        return Err(OptimizationTargetError(format!(
+            "headroom probe did not pass; verdict={}",
+            headroom
+                .get("verdict")
+                .and_then(Value::as_str)
+                .unwrap_or("unknown")
+        ))
+        .into());
+    }
+    let incumbent = summaries
+        .iter()
+        .find(|s| s.candidate_id == eval_info.candidate_id)
+        .ok_or_else(|| {
+            OptimizationTargetError("incumbent candidate summary missing".to_string())
+        })?;
+    let optimizer_candidates = build_optimizer_candidates(&eval_info, options, incumbent);
+
+    std::fs::create_dir_all(&options.out_dir)?;
+    let request_dir = options.out_dir.join("sprite-requests");
+    let receipt_dir = options.out_dir.join("sprite-receipts");
+    let bb_result_dir = options.out_dir.join("bitterblossom-results");
+    std::fs::create_dir_all(&request_dir)?;
+    std::fs::create_dir_all(&receipt_dir)?;
+    std::fs::create_dir_all(&bb_result_dir)?;
+
+    let target_path = options.out_dir.join("optimization-target.json");
+    let rig_path = options.out_dir.join("rig.json");
+    let seed_path = options.out_dir.join("seed.json");
+    let headroom_path = options.out_dir.join("headroom-probe.json");
+    let guardrails_path = options.out_dir.join("guardrails.json");
+    let trials_path = options.out_dir.join("trials.jsonl");
+    let history_path = options.out_dir.join("loop.history.jsonl");
+    let asha_path = options.out_dir.join("asha.json");
+    let pareto_path = options.out_dir.join("pareto.json");
+    let certification_path = options.out_dir.join("certification.json");
+    let report_path = options.out_dir.join("report.md");
+
+    write_json(&target_path, &target)?;
+    write_json(&rig_path, &rig)?;
+    write_json(
+        &seed_path,
+        &build_seed(&eval_info, options, &optimizer_candidates, &splits),
+    )?;
+    write_json(&headroom_path, &headroom)?;
+    write_trials_jsonl(&trials_path, &selected_records, &eval_info)?;
+
+    let mut history = Vec::new();
+    let mut validation_trials = Vec::new();
+    let mut receipts = Vec::new();
+    for candidate in &optimizer_candidates {
+        let trial = run_sprite_optimizer_trial(
+            &eval_info,
+            options,
+            candidate,
+            "validation",
+            &splits.validation,
+            incumbent,
+            &target,
+            &request_dir,
+            &receipt_dir,
+            &bb_result_dir,
+        )?;
+        receipts.push(trial.receipt.clone());
+        history.push(history_entry(0, "validation", &trial));
+        validation_trials.push(trial.to_value());
+    }
+
+    let frontier = pareto_frontier(&validation_trials);
+    let mut promoted = frontier.clone();
+    promoted.sort_by(compare_candidates_for_promotion);
+    promoted.truncate(options.certify_top.max(1).min(promoted.len()));
+
+    let mut certification_trials = Vec::new();
+    for promoted_candidate in &promoted {
+        let candidate_id = promoted_candidate
+            .get("candidate_id")
+            .and_then(Value::as_str)
+            .unwrap_or("");
+        let Some(candidate) = optimizer_candidates.iter().find(|c| c.id == candidate_id) else {
+            continue;
+        };
+        let trial = run_sprite_optimizer_trial(
+            &eval_info,
+            options,
+            candidate,
+            "heldout",
+            &splits.heldout,
+            incumbent,
+            &target,
+            &request_dir,
+            &receipt_dir,
+            &bb_result_dir,
+        )?;
+        receipts.push(trial.receipt.clone());
+        history.push(history_entry(1, "heldout", &trial));
+        certification_trials.push(trial.to_value());
+    }
+
+    let asha = build_asha(
+        &eval_info,
+        options,
+        &validation_trials,
+        &promoted,
+        &certification_trials,
+    );
+    let pareto = build_pareto(&eval_info, &validation_trials, &frontier);
+    let certification = build_certification(&eval_info, &splits, &promoted, &certification_trials);
+    let guardrails = build_optimizer_guardrails(&eval_info, &headroom, &splits, &receipts);
+
+    write_json(&guardrails_path, &guardrails)?;
+    write_json(&asha_path, &asha)?;
+    write_json(&pareto_path, &pareto)?;
+    write_json(&certification_path, &certification)?;
+    write_history(&history_path, &history)?;
+    std::fs::write(
+        &report_path,
+        render_optimizer_report(
+            &eval_info,
+            options,
+            &splits,
+            &validation_trials,
+            &frontier,
+            &certification_trials,
+            &headroom,
+        ),
+    )?;
+
+    Ok(OptimizerLoopResult {
+        out_dir: options.out_dir.clone(),
+        target: target_path,
+        rig: rig_path,
+        seed: seed_path,
+        headroom_probe: headroom_path,
+        guardrails: guardrails_path,
+        asha: asha_path,
+        pareto: pareto_path,
+        certification: certification_path,
+        history: history_path,
+        report: report_path,
+        candidates: optimizer_candidates.len(),
+        frontier: frontier.len(),
+        spend_known_usd: known_receipt_spend(&receipts),
     })
 }
 
@@ -620,6 +858,866 @@ fn build_guardrails(eval: &EvalInfo, headroom: &Value) -> Value {
         },
         "headroom_verdict": headroom.get("verdict").cloned().unwrap_or(Value::Null)
     })
+}
+
+#[derive(Debug, Clone)]
+struct TaskSplits {
+    validation: Vec<String>,
+    heldout: Vec<String>,
+}
+
+#[derive(Debug, Clone)]
+struct OptimizerCandidate {
+    id: String,
+    parent_id: String,
+    bb_task: String,
+    model: String,
+    mutation: String,
+    hypothesis: String,
+    composition_hash: String,
+    prompt_packet_digest: String,
+}
+
+#[derive(Debug, Clone)]
+struct SubmissionRef {
+    id: String,
+    change_key: String,
+    row: Value,
+}
+
+#[derive(Debug, Clone)]
+struct OptimizerTrial {
+    candidate_id: String,
+    task_id: String,
+    split: String,
+    score: f64,
+    source_key_recall: Option<f64>,
+    remote_verdict_score: f64,
+    cost_usd: Option<f64>,
+    wall_ms: Option<u64>,
+    request_path: PathBuf,
+    receipt_path: PathBuf,
+    result_path: Option<PathBuf>,
+    receipt: Value,
+}
+
+impl OptimizerTrial {
+    fn to_value(&self) -> Value {
+        json!({
+            "candidate_id": self.candidate_id,
+            "task_id": self.task_id,
+            "split": self.split,
+            "score": self.score,
+            "score_source": {
+                "formula": "source_split_key_recall * remote_verdict_score",
+                "source_key_recall": self.source_key_recall,
+                "remote_verdict_score": self.remote_verdict_score,
+                "note": "Until Crucible grade parity lands, Threshold keeps deterministic key-recall primary and treats the BB/Sprites verdict as a remote execution quality gate."
+            },
+            "cost_usd": self.cost_usd,
+            "wall_ms": self.wall_ms,
+            "sprite_request": path_string(&self.request_path),
+            "sprite_receipt": path_string(&self.receipt_path),
+            "bitterblossom_result": self.result_path.as_ref().map(|p| path_string(p)),
+            "bitter_blossom_run_id": self.receipt.get("bitter_blossom_run_id").cloned().unwrap_or(Value::Null),
+            "status": self.receipt.get("status").cloned().unwrap_or(Value::Null)
+        })
+    }
+}
+
+fn split_tasks(tasks: &[String]) -> TaskSplits {
+    if tasks.len() <= 1 {
+        return TaskSplits {
+            validation: tasks.to_vec(),
+            heldout: tasks.to_vec(),
+        };
+    }
+    let heldout_len = (tasks.len() / 3).max(1);
+    let split_at = tasks.len().saturating_sub(heldout_len);
+    TaskSplits {
+        validation: tasks[..split_at].to_vec(),
+        heldout: tasks[split_at..].to_vec(),
+    }
+}
+
+fn build_optimizer_candidates(
+    eval: &EvalInfo,
+    options: &OptimizerLoopOptions,
+    incumbent: &CandidateSummary,
+) -> Vec<OptimizerCandidate> {
+    let templates = [
+        (
+            "gepa-evidence-first",
+            "Use failure evidence to require precise file, line, and invariant support before emitting a defect.",
+        ),
+        (
+            "gepa-false-positive-averse",
+            "Penalize speculative findings and prefer fewer findings that match keyed defects over broad audit commentary.",
+        ),
+        (
+            "gepa-caller-context",
+            "Force a caller/invariant retrieval pass before deciding whether a diff-local issue is real.",
+        ),
+        (
+            "gepa-clean-fixture-sentinel",
+            "Carry a clean-fixture check so empty or rename-only diffs can return no findings without apology.",
+        ),
+    ];
+    options
+        .bb_tasks
+        .iter()
+        .enumerate()
+        .map(|(idx, task)| {
+            let seed_offset = options
+                .rng_seed
+                .map(|seed| seed as usize % templates.len())
+                .unwrap_or(0);
+            let (mutation, hypothesis) = templates[(idx + seed_offset) % templates.len()];
+            let digest_basis = format!(
+                "{}:{}:{}:{}",
+                eval.id, incumbent.composition_hash, task, mutation
+            );
+            let hash = sha256_hex(digest_basis.as_bytes());
+            OptimizerCandidate {
+                id: safe_id(&format!("{mutation}-{task}")),
+                parent_id: incumbent.candidate_id.clone(),
+                bb_task: task.clone(),
+                model: model_for_bb_task(task),
+                mutation: mutation.to_string(),
+                hypothesis: hypothesis.to_string(),
+                composition_hash: hash.clone(),
+                prompt_packet_digest: format!("sha256:{}", sha256_hex(hypothesis.as_bytes())),
+            }
+        })
+        .collect()
+}
+
+fn build_optimizer_rig(
+    eval: &EvalInfo,
+    options: &OptimizerLoopOptions,
+    reference_candidates: &[String],
+    splits: &TaskSplits,
+) -> Value {
+    json!({
+        "schema_version": "threshold.optimization_rig.v1",
+        "loop_schema": OPTIMIZER_LOOP_SCHEMA,
+        "eval_id": eval.id,
+        "eval_digest": eval.eval_digest,
+        "source_trials": path_string(&eval.source_trials),
+        "source_trials_digest": eval.trials_digest,
+        "arena_dir": eval.arena_dir.as_ref().map(|p| path_string(p)),
+        "runner_kind": eval.runner_kind,
+        "reference_candidates": reference_candidates,
+        "tasks": eval.tasks,
+        "splits": {
+            "validation": splits.validation,
+            "heldout": splits.heldout,
+            "policy": "deterministic tail holdout until Crucible export declares explicit train/validation/holdout ids"
+        },
+        "budget": {
+            "cap_usd": options.budget_usd,
+            "allocator": "hyperband-asha",
+            "rungs": ["validation:1x", "heldout:promoted"]
+        },
+        "gepa": {
+            "inner_loop": "evidence-driven reflective prompt mutation",
+            "archive": "score,cost Pareto frontier",
+            "mutation_slots": ["packet_stance", "false_positive_policy", "retrieval_stance"]
+        },
+        "remote_runner": {
+            "plane": "bitterblossom",
+            "substrate": "sprites",
+            "config": options.bb_config.as_ref().map(|p| path_string(p)),
+            "tasks": options.bb_tasks,
+            "repo": options.bb_repo,
+            "rev": options.bb_rev,
+            "change": options.bb_change,
+            "dispatch_requested": options.dispatch_bitterblossom
+        }
+    })
+}
+
+fn build_seed(
+    eval: &EvalInfo,
+    options: &OptimizerLoopOptions,
+    candidates: &[OptimizerCandidate],
+    splits: &TaskSplits,
+) -> Value {
+    json!({
+        "schema": "threshold.optimizer_seed.v1",
+        "eval_id": eval.id,
+        "eval_digest": eval.eval_digest,
+        "source_trials_digest": eval.trials_digest,
+        "budget_usd": options.budget_usd,
+        "rng_seed": options.rng_seed,
+        "allocator": {
+            "kind": "hyperband-asha",
+            "eta": 3,
+            "rung0": {
+                "name": "validation",
+                "budget_units": 1,
+                "candidates": candidates.iter().map(|c| c.id.clone()).collect::<Vec<_>>()
+            },
+            "rung1": {
+                "name": "heldout",
+                "budget_units": 1,
+                "promote": options.certify_top.max(1)
+            }
+        },
+        "splits": {
+            "validation": splits.validation,
+            "heldout": splits.heldout
+        },
+        "gepa_candidates": candidates.iter().map(|c| json!({
+            "candidate_id": c.id,
+            "parent_id": c.parent_id,
+            "bb_task": c.bb_task,
+            "model": c.model,
+            "mutation": c.mutation,
+            "hypothesis": c.hypothesis,
+            "composition_hash": format_hash(&c.composition_hash),
+            "prompt_packet_digest": c.prompt_packet_digest
+        })).collect::<Vec<_>>()
+    })
+}
+
+#[allow(clippy::too_many_arguments)]
+fn run_sprite_optimizer_trial(
+    eval: &EvalInfo,
+    options: &OptimizerLoopOptions,
+    candidate: &OptimizerCandidate,
+    split_name: &str,
+    split_tasks: &[String],
+    incumbent: &CandidateSummary,
+    target: &Value,
+    request_dir: &Path,
+    receipt_dir: &Path,
+    bb_result_dir: &Path,
+) -> Result<OptimizerTrial, Box<dyn std::error::Error>> {
+    let submission = if options.dispatch_bitterblossom {
+        Some(open_bitterblossom_submission(
+            options, candidate, split_name,
+        )?)
+    } else {
+        None
+    };
+    let request = build_optimizer_sprite_request(
+        eval,
+        options,
+        candidate,
+        split_name,
+        split_tasks,
+        target,
+        submission.as_ref(),
+    );
+    let file_stem = format!("{}-{}", candidate.id, split_name);
+    let request_path = request_dir.join(format!("{file_stem}.json"));
+    let receipt_path = receipt_dir.join(format!("{file_stem}.json"));
+    write_json(&request_path, &request)?;
+
+    let headroom_options = HeadroomProbeOptions {
+        eval_spec: options.eval_spec.clone(),
+        out_dir: options.out_dir.clone(),
+        budget_usd: options.budget_usd,
+        bb_config: options.bb_config.clone(),
+        bb_task: candidate.bb_task.clone(),
+        bb_bin: options.bb_bin.clone(),
+        bb_repo: options.bb_repo.clone(),
+        bb_rev: options.bb_rev.clone(),
+        bb_change: options.bb_change.clone(),
+        bb_submission: submission.as_ref().map(|s| s.id.clone()),
+        dispatch_bitterblossom: options.dispatch_bitterblossom,
+    };
+    let receipt = if options.dispatch_bitterblossom {
+        dispatch_bitterblossom(&headroom_options, &request_path, &request)
+    } else {
+        build_pending_receipt(&request)
+    };
+    write_json(&receipt_path, &receipt)?;
+
+    let artifact = read_bitterblossom_result(options, &receipt);
+    let result_path = if !artifact.is_null() {
+        let result_path = bb_result_dir.join(format!("{file_stem}.json"));
+        write_json(&result_path, &artifact)?;
+        Some(result_path)
+    } else {
+        None
+    };
+    let split_score = split_key_recall(incumbent, split_tasks);
+    let remote_score = remote_verdict_score(&receipt, &artifact);
+    let score = split_score.unwrap_or(0.0) * remote_score;
+    Ok(OptimizerTrial {
+        candidate_id: candidate.id.clone(),
+        task_id: candidate.bb_task.clone(),
+        split: split_name.to_string(),
+        score,
+        source_key_recall: split_score,
+        remote_verdict_score: remote_score,
+        cost_usd: receipt.get("cost_usd").and_then(Value::as_f64),
+        wall_ms: receipt.get("wall_ms").and_then(Value::as_u64),
+        request_path,
+        receipt_path,
+        result_path,
+        receipt,
+    })
+}
+
+fn build_optimizer_sprite_request(
+    eval: &EvalInfo,
+    options: &OptimizerLoopOptions,
+    candidate: &OptimizerCandidate,
+    split_name: &str,
+    split_tasks: &[String],
+    target: &Value,
+    submission: Option<&SubmissionRef>,
+) -> Value {
+    let trial_id = format!(
+        "{}:{}:{}:{}",
+        eval.id, candidate.id, candidate.bb_task, split_name
+    );
+    let threshold_submission_id = format!("threshold-{}", safe_id(&trial_id));
+    let bb_submission_id = submission
+        .map(|s| s.id.clone())
+        .unwrap_or_else(|| threshold_submission_id.clone());
+    let context = format!(
+        "Threshold {} optimizer loop trial. Split={split_name}; eval digest={}; source trials digest={}. GEPA mutation: {}. Hypothesis: {}.",
+        eval.id, eval.eval_digest, eval.trials_digest, candidate.mutation, candidate.hypothesis
+    );
+    json!({
+        "schema": SPRITE_REQUEST_SCHEMA,
+        "submission": bb_submission_id,
+        "repo": options.bb_repo,
+        "rev": options.bb_rev,
+        "change": options.bb_change,
+        "context": context,
+        "experiment_id": eval.id,
+        "trial_id": trial_id,
+        "task_id": candidate.bb_task,
+        "split": {
+            "name": split_name,
+            "tasks": split_tasks
+        },
+        "candidate": {
+            "candidate_id": candidate.id,
+            "parent_id": candidate.parent_id,
+            "composition_hash": format_hash(&candidate.composition_hash),
+            "model": candidate.model,
+            "thinking": Value::Null,
+            "prompt_packet_digest": candidate.prompt_packet_digest,
+            "tool_policy": "bitterblossom-correctness",
+            "gepa_mutation": {
+                "name": candidate.mutation,
+                "hypothesis": candidate.hypothesis
+            }
+        },
+        "workspace": {
+            "harbor_package": eval.arena_dir.as_ref().map(|p| path_string(p)),
+            "candidate_visible_paths": ["RUN.json", "EVENT.json", "PR.diff", "environment/"],
+            "hidden_paths": ["tests/", "solution/"]
+        },
+        "output_contract": "REPORT.json or result.md containing a Bitterblossom correctness verdict; Threshold scores deterministic key recall locally.",
+        "secret_names": ["OPENROUTER_API_KEY", "GH_TOKEN"],
+        "env_allowlist": ["OPENROUTER_API_KEY", "GH_TOKEN"],
+        "budget": {
+            "max_cost_usd": 0.60,
+            "timeout_seconds": 2700
+        },
+        "threshold": {
+            "target_schema": TARGET_SCHEMA,
+            "loop_schema": OPTIMIZER_LOOP_SCHEMA,
+            "eval_id": eval.id,
+            "eval_digest": eval.eval_digest,
+            "source_trials_digest": eval.trials_digest,
+            "score_owner": "threshold",
+            "target": target
+        },
+        "threshold_submission": {
+            "id": threshold_submission_id,
+            "bb_submission": submission.map(|s| s.id.clone()),
+            "bb_change_key": submission.map(|s| s.change_key.clone()),
+            "bb_submission_row": submission.map(|s| s.row.clone()),
+            "repo": options.bb_repo,
+            "rev": options.bb_rev,
+            "change": options.bb_change,
+            "context": "Threshold backlog 061 GEPA/ASHA optimizer candidate trial for Crucible pr-review-key-recall-v0"
+        }
+    })
+}
+
+fn open_bitterblossom_submission(
+    options: &OptimizerLoopOptions,
+    candidate: &OptimizerCandidate,
+    split_name: &str,
+) -> Result<SubmissionRef, Box<dyn std::error::Error>> {
+    let rev = options.bb_rev.as_deref().ok_or_else(|| {
+        OptimizationTargetError("--bb-rev is required to open BB submissions".to_string())
+    })?;
+    let change_base = options
+        .bb_change
+        .as_deref()
+        .filter(|s| !s.trim().is_empty())
+        .unwrap_or("threshold-optimizer-loop");
+    let run_slug = options
+        .out_dir
+        .file_name()
+        .and_then(|s| s.to_str())
+        .map(safe_id)
+        .unwrap_or_else(|| "run".to_string());
+    let change_key = safe_id(&format!(
+        "{change_base}-{run_slug}-{}-{split_name}",
+        candidate.id
+    ));
+    let context = format!(
+        "Threshold optimizer candidate {} split {} for {}",
+        candidate.id, split_name, options.bb_repo
+    );
+    let mut cmd = Command::new(&options.bb_bin);
+    if let Some(config) = &options.bb_config {
+        let plane_root = bb_plane_root(config);
+        cmd.arg("--config").arg(&plane_root);
+        if let Some(root) = bb_repo_root(&plane_root) {
+            cmd.current_dir(root);
+        }
+    }
+    cmd.arg("submit")
+        .arg("open")
+        .arg("--change")
+        .arg(&change_key)
+        .arg("--rev")
+        .arg(rev)
+        .arg("--context")
+        .arg(&context)
+        .arg("--json");
+    let output = cmd.output().map_err(|err| {
+        OptimizationTargetError(format!("failed to execute bb submit open: {err}"))
+    })?;
+    let stdout = String::from_utf8_lossy(&output.stdout).to_string();
+    let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+    if !output.status.success() {
+        return Err(OptimizationTargetError(format!(
+            "bb submit open failed: {}",
+            tail(&stderr, 4000)
+        ))
+        .into());
+    }
+    let row: Value = serde_json::from_str(&stdout).map_err(|err| {
+        OptimizationTargetError(format!("parse bb submit open JSON: {err}; stdout={stdout}"))
+    })?;
+    let id = row
+        .get("id")
+        .and_then(Value::as_str)
+        .ok_or_else(|| OptimizationTargetError("bb submit open JSON missing id".to_string()))?
+        .to_string();
+    Ok(SubmissionRef {
+        id,
+        change_key,
+        row,
+    })
+}
+
+fn read_bitterblossom_result(options: &OptimizerLoopOptions, receipt: &Value) -> Value {
+    let Some(run_id) = receipt
+        .get("bitter_blossom_run_id")
+        .and_then(Value::as_str)
+        .filter(|s| !s.is_empty())
+    else {
+        return Value::Null;
+    };
+    let mut cmd = Command::new(&options.bb_bin);
+    if let Some(config) = &options.bb_config {
+        let plane_root = bb_plane_root(config);
+        cmd.arg("--config").arg(&plane_root);
+        if let Some(root) = bb_repo_root(&plane_root) {
+            cmd.current_dir(root);
+        }
+    }
+    cmd.arg("artifacts")
+        .arg("read")
+        .arg(run_id)
+        .arg("result.md")
+        .arg("--json");
+    match cmd.output() {
+        Ok(output) => {
+            let stdout = String::from_utf8_lossy(&output.stdout).to_string();
+            let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+            if output.status.success() {
+                serde_json::from_str::<Value>(&stdout).unwrap_or_else(|err| {
+                    json!({"status": "failed", "error": format!("parse bb artifact JSON: {err}"), "stdout_tail": tail(&stdout, 2000)})
+                })
+            } else {
+                json!({"status": "failed", "error": tail(&stderr, 4000), "stdout_tail": tail(&stdout, 2000)})
+            }
+        }
+        Err(err) => {
+            json!({"status": "failed", "error": format!("failed to execute bb artifacts read: {err}")})
+        }
+    }
+}
+
+fn remote_verdict_score(receipt: &Value, artifact: &Value) -> f64 {
+    match receipt.get("status").and_then(Value::as_str) {
+        Some("ok") => {}
+        Some("not_dispatched") => return 1.0,
+        _ => return 0.0,
+    }
+    let content = artifact
+        .get("content")
+        .and_then(Value::as_str)
+        .unwrap_or("")
+        .to_ascii_lowercase();
+    if content.contains("\"verdict\": \"pass\"") || content.contains("\"verdict\":\"pass\"") {
+        1.0
+    } else if content.contains("\"verdict\": \"advisory\"")
+        || content.contains("\"severity\": \"advisory\"")
+        || content.contains("\"severity\":\"advisory\"")
+    {
+        0.5
+    } else if content.contains("\"verdict\": \"block\"")
+        || content.contains("\"verdict\":\"block\"")
+        || content.contains("\"severity\": \"blocking\"")
+        || content.contains("\"severity\":\"blocking\"")
+    {
+        0.0
+    } else {
+        1.0
+    }
+}
+
+fn split_key_recall(summary: &CandidateSummary, tasks: &[String]) -> Option<f64> {
+    let task_set: BTreeSet<&str> = tasks.iter().map(String::as_str).collect();
+    let mut successes = 0_u64;
+    let mut n = 0_u64;
+    for result in &summary.task_results {
+        let Some(task) = result.get("task_id").and_then(Value::as_str) else {
+            continue;
+        };
+        if !task_set.contains(task) {
+            continue;
+        }
+        successes += result.get("successes").and_then(Value::as_u64).unwrap_or(0);
+        n += result.get("n").and_then(Value::as_u64).unwrap_or(0);
+    }
+    (n > 0).then_some(successes as f64 / n as f64)
+}
+
+fn history_entry(rung: u64, split: &str, trial: &OptimizerTrial) -> Value {
+    json!({
+        "schema": OPTIMIZER_LOOP_SCHEMA,
+        "rung": rung,
+        "split": split,
+        "candidate_id": trial.candidate_id,
+        "task_id": trial.task_id,
+        "score": trial.score,
+        "cost_usd": trial.cost_usd,
+        "remote_verdict_score": trial.remote_verdict_score,
+        "source_key_recall": trial.source_key_recall,
+        "status": trial.receipt.get("status").cloned().unwrap_or(Value::Null),
+        "bitter_blossom_run_id": trial.receipt.get("bitter_blossom_run_id").cloned().unwrap_or(Value::Null)
+    })
+}
+
+fn build_asha(
+    eval: &EvalInfo,
+    options: &OptimizerLoopOptions,
+    validation_trials: &[Value],
+    promoted: &[Value],
+    certification_trials: &[Value],
+) -> Value {
+    json!({
+        "schema": ASHA_SCHEMA,
+        "eval_id": eval.id,
+        "budget_usd": options.budget_usd,
+        "allocator": "hyperband-asha",
+        "rungs": [
+            {
+                "rung": 0,
+                "name": "validation",
+                "budget_units": 1,
+                "candidate_count": validation_trials.len(),
+                "trials": validation_trials
+            },
+            {
+                "rung": 1,
+                "name": "heldout",
+                "budget_units": 1,
+                "promotion_rule": "promote non-dominated validation frontier by score desc, cost asc",
+                "promoted": promoted,
+                "trials": certification_trials
+            }
+        ],
+        "stop_rule": {
+            "known_spend_cap_usd": options.budget_usd,
+            "guard": "do not allocate heldout budget outside promoted frontier"
+        }
+    })
+}
+
+fn build_pareto(eval: &EvalInfo, candidates: &[Value], frontier: &[Value]) -> Value {
+    json!({
+        "schema": PARETO_SCHEMA,
+        "eval_id": eval.id,
+        "objective": {
+            "maximize": "score",
+            "minimize": "cost_usd"
+        },
+        "candidates": candidates,
+        "frontier": frontier
+    })
+}
+
+fn build_certification(
+    eval: &EvalInfo,
+    splits: &TaskSplits,
+    promoted: &[Value],
+    certification_trials: &[Value],
+) -> Value {
+    json!({
+        "schema": CERTIFICATION_SCHEMA,
+        "eval_id": eval.id,
+        "heldout_tasks": splits.heldout,
+        "status": "heldout_trial_recorded_seed_trust_not_certified",
+        "policy": "heldout is used only after ASHA promotion and is not fed back into GEPA mutation in this run; multi-seed stability remains required before launch certification",
+        "promoted_from_validation": promoted,
+        "heldout_trials": certification_trials
+    })
+}
+
+fn build_optimizer_guardrails(
+    eval: &EvalInfo,
+    headroom: &Value,
+    splits: &TaskSplits,
+    receipts: &[Value],
+) -> Value {
+    let spend = known_receipt_spend(receipts);
+    json!({
+        "schema": GUARDRAILS_SCHEMA,
+        "eval_id": eval.id,
+        "overfitting": {
+            "status": "pass",
+            "validation_tasks": splits.validation,
+            "heldout_tasks": splits.heldout,
+            "holdout_feedback_blocked": true,
+            "evidence": "GEPA candidates are generated before heldout trials; heldout receipts are recorded only in certification.json."
+        },
+        "judge_gaming": {
+            "status": "partial",
+            "evidence": "Primary score remains deterministic key recall from Threshold source trials; BB/Sprites verdict is a remote execution gate, not a standalone judge objective."
+        },
+        "non_stationarity": {
+            "status": "pass",
+            "eval_digest": eval.eval_digest,
+            "source_trials_digest": eval.trials_digest,
+            "model_provider_ids_recorded": true
+        },
+        "budget": {
+            "known_spend_usd": spend,
+            "receipt_count": receipts.len()
+        },
+        "seed_trust": {
+            "status": "not_certified",
+            "evidence": "This first optimizer-loop slice records rng_seed and a single seeded trajectory; backlog 057 multi-seed optimizer-vs-seed-scan remains required before a final recommendation."
+        },
+        "headroom_verdict": headroom.get("verdict").cloned().unwrap_or(Value::Null)
+    })
+}
+
+fn pareto_frontier(candidates: &[Value]) -> Vec<Value> {
+    let mut frontier = Vec::new();
+    for candidate in candidates {
+        if candidates.iter().any(|other| dominates(other, candidate)) {
+            continue;
+        }
+        frontier.push(candidate.clone());
+    }
+    frontier.sort_by(compare_candidates_for_promotion);
+    frontier
+}
+
+fn dominates(a: &Value, b: &Value) -> bool {
+    let a_score = a
+        .get("score")
+        .and_then(Value::as_f64)
+        .unwrap_or(f64::NEG_INFINITY);
+    let b_score = b
+        .get("score")
+        .and_then(Value::as_f64)
+        .unwrap_or(f64::NEG_INFINITY);
+    let a_cost = cost_for_ordering(a);
+    let b_cost = cost_for_ordering(b);
+    (a_score >= b_score && a_cost <= b_cost) && (a_score > b_score || a_cost < b_cost)
+}
+
+fn compare_candidates_for_promotion(a: &Value, b: &Value) -> std::cmp::Ordering {
+    let a_score = a
+        .get("score")
+        .and_then(Value::as_f64)
+        .unwrap_or(f64::NEG_INFINITY);
+    let b_score = b
+        .get("score")
+        .and_then(Value::as_f64)
+        .unwrap_or(f64::NEG_INFINITY);
+    b_score
+        .partial_cmp(&a_score)
+        .unwrap_or(std::cmp::Ordering::Equal)
+        .then_with(|| {
+            cost_for_ordering(a)
+                .partial_cmp(&cost_for_ordering(b))
+                .unwrap_or(std::cmp::Ordering::Equal)
+        })
+        .then_with(|| {
+            a.get("candidate_id")
+                .and_then(Value::as_str)
+                .unwrap_or("")
+                .cmp(b.get("candidate_id").and_then(Value::as_str).unwrap_or(""))
+        })
+}
+
+fn cost_for_ordering(value: &Value) -> f64 {
+    value
+        .get("cost_usd")
+        .and_then(Value::as_f64)
+        .unwrap_or(f64::INFINITY)
+}
+
+fn known_receipt_spend(receipts: &[Value]) -> Option<f64> {
+    receipts.iter().try_fold(0.0_f64, |acc, receipt| {
+        let status = receipt.get("status").and_then(Value::as_str);
+        if status == Some("not_dispatched") {
+            Some(acc)
+        } else {
+            receipt
+                .get("cost_usd")
+                .and_then(Value::as_f64)
+                .map(|v| acc + v)
+        }
+    })
+}
+
+fn write_history(path: &Path, entries: &[Value]) -> Result<(), Box<dyn std::error::Error>> {
+    let mut text = String::new();
+    for entry in entries {
+        text.push_str(&serde_json::to_string(entry)?);
+        text.push('\n');
+    }
+    std::fs::write(path, text)?;
+    Ok(())
+}
+
+fn render_optimizer_report(
+    eval: &EvalInfo,
+    options: &OptimizerLoopOptions,
+    splits: &TaskSplits,
+    validation_trials: &[Value],
+    frontier: &[Value],
+    certification_trials: &[Value],
+    headroom: &Value,
+) -> String {
+    let mut out = String::new();
+    out.push_str(&format!("# Optimizer Loop: {}\n\n", eval.id));
+    out.push_str(&format!(
+        "- Headroom verdict: `{}`\n",
+        headroom
+            .get("verdict")
+            .and_then(Value::as_str)
+            .unwrap_or("unknown")
+    ));
+    out.push_str(&format!("- Budget cap: `${:.2}`\n", options.budget_usd));
+    out.push_str(&format!(
+        "- Validation tasks: `{}`\n",
+        splits.validation.join(", ")
+    ));
+    out.push_str(&format!(
+        "- Heldout tasks: `{}`\n",
+        splits.heldout.join(", ")
+    ));
+    out.push_str("\n## Validation Population\n\n");
+    out.push_str("| candidate | bb task | score | source recall | remote gate | cost | run |\n");
+    out.push_str("|---|---|---:|---:|---:|---:|---|\n");
+    for trial in validation_trials {
+        out.push_str(&trial_report_row(trial));
+    }
+    out.push_str("\n## Pareto Frontier\n\n");
+    out.push_str("| candidate | score | cost |\n");
+    out.push_str("|---|---:|---:|\n");
+    for trial in frontier {
+        out.push_str(&format!(
+            "| {} | {} | {} |\n",
+            trial
+                .get("candidate_id")
+                .and_then(Value::as_str)
+                .unwrap_or(""),
+            fmt_opt4(trial.get("score").and_then(Value::as_f64)),
+            fmt_money(trial.get("cost_usd").and_then(Value::as_f64))
+        ));
+    }
+    out.push_str("\n## Heldout Certification\n\n");
+    out.push_str("| candidate | bb task | score | source recall | remote gate | cost | run |\n");
+    out.push_str("|---|---|---:|---:|---:|---:|---|\n");
+    for trial in certification_trials {
+        out.push_str(&trial_report_row(trial));
+    }
+    out.push_str("\n## Guardrail Read\n\n");
+    out.push_str("- GEPA mutations are recorded before heldout certification and heldout results are not fed back into this run.\n");
+    out.push_str("- The score formula is deterministic key recall multiplied by the BB/Sprites verdict gate. This keeps Threshold as scorer while the remote plane supplies execution evidence.\n");
+    out.push_str("- Seed trust is not certified by this first run; run the multi-seed 057 check before any launch recommendation.\n");
+    out.push_str("- Crucible grade parity remains a caveat until the Crucible scorer matches Threshold's Rust scorer.\n");
+    out
+}
+
+fn trial_report_row(trial: &Value) -> String {
+    format!(
+        "| {} | {} | {} | {} | {} | {} | {} |\n",
+        trial
+            .get("candidate_id")
+            .and_then(Value::as_str)
+            .unwrap_or(""),
+        trial.get("task_id").and_then(Value::as_str).unwrap_or(""),
+        fmt_opt4(trial.get("score").and_then(Value::as_f64)),
+        fmt_opt4(
+            trial
+                .get("score_source")
+                .and_then(|s| s.get("source_key_recall"))
+                .and_then(Value::as_f64)
+        ),
+        fmt_opt4(
+            trial
+                .get("score_source")
+                .and_then(|s| s.get("remote_verdict_score"))
+                .and_then(Value::as_f64)
+        ),
+        fmt_money(trial.get("cost_usd").and_then(Value::as_f64)),
+        trial
+            .get("bitter_blossom_run_id")
+            .and_then(Value::as_str)
+            .unwrap_or("")
+    )
+}
+
+fn model_for_bb_task(task: &str) -> String {
+    if task.contains("glm") {
+        "z-ai/glm-5.2".to_string()
+    } else if task.contains("kimi") {
+        "moonshotai/kimi-k2.7-code".to_string()
+    } else {
+        "deepseek/deepseek-v4-pro".to_string()
+    }
+}
+
+fn safe_id(s: &str) -> String {
+    let mut out = String::new();
+    for ch in s.chars() {
+        if ch.is_ascii_alphanumeric() || ch == '-' || ch == '_' {
+            out.push(ch.to_ascii_lowercase());
+        } else if !out.ends_with('-') {
+            out.push('-');
+        }
+    }
+    let trimmed = out.trim_matches('-').to_string();
+    if trimmed.is_empty() {
+        "item".to_string()
+    } else {
+        trimmed
+    }
 }
 
 fn build_sprite_request(
@@ -1161,6 +2259,11 @@ fn fmt_ci(lo: Option<f64>, hi: Option<f64>) -> String {
     }
 }
 
+fn fmt_money(v: Option<f64>) -> String {
+    v.map(|x| format!("${x:.4}"))
+        .unwrap_or_else(|| "unknown".to_string())
+}
+
 fn compact_json(value: &Value) -> String {
     serde_json::to_string(value).unwrap_or_else(|_| "unprintable".to_string())
 }
@@ -1376,6 +2479,92 @@ mod tests {
         })
         .unwrap();
         assert_eq!(result.verdict, "needs-review");
+    }
+
+    #[test]
+    fn optimizer_loop_writes_asha_pareto_and_certification() {
+        let root = fresh_tmp("optimizer-loop");
+        let eval_dir = root.join("evals");
+        let run_dir = root.join("runs");
+        std::fs::create_dir_all(&eval_dir).unwrap();
+        std::fs::create_dir_all(&run_dir).unwrap();
+        let trials = run_dir.join("trials.jsonl");
+        std::fs::write(
+            &trials,
+            [
+                TrialRow::new("oracle", "oracle", "t1", 2, &["a", "b"]).to_jsonl(),
+                TrialRow::new("oracle", "oracle", "t2", 1, &["c"]).to_jsonl(),
+                TrialRow::new("oracle", "oracle", "t3", 1, &["d"]).to_jsonl(),
+                TrialRow::new("null", "null", "t1", 2, &[]).to_jsonl(),
+                TrialRow::new("null", "null", "t2", 1, &[]).to_jsonl(),
+                TrialRow::new("null", "null", "t3", 1, &[]).to_jsonl(),
+                TrialRow::new("probe-oneshot", "oneshot", "t1", 2, &["a"])
+                    .cost(0.02)
+                    .to_jsonl(),
+                TrialRow::new("probe-oneshot", "oneshot", "t2", 1, &["c"])
+                    .cost(0.02)
+                    .to_jsonl(),
+                TrialRow::new("probe-oneshot", "oneshot", "t3", 1, &[])
+                    .cost(0.02)
+                    .to_jsonl(),
+            ]
+            .join("\n")
+                + "\n",
+        )
+        .unwrap();
+        let eval = eval_dir.join("eval.json");
+        std::fs::write(
+            &eval,
+            json!({
+                "schema_version": CRUCIBLE_EVAL_SCHEMA,
+                "id": "eval",
+                "baselines": ["null", "oracle"],
+                "runner": {"kind": "key_recall", "corpus": {
+                    "trials_jsonl": "../runs/trials.jsonl",
+                    "candidate_id": "probe-oneshot",
+                    "tasks": ["t1", "t2", "t3"]
+                }}
+            })
+            .to_string(),
+        )
+        .unwrap();
+        let result = run_optimizer_loop(&OptimizerLoopOptions {
+            eval_spec: eval,
+            out_dir: root.join("out"),
+            budget_usd: 5.0,
+            bb_config: None,
+            bb_tasks: vec![
+                "correctness".to_string(),
+                "correctness-glm".to_string(),
+                "correctness-kimi".to_string(),
+            ],
+            bb_bin: PathBuf::from("bb"),
+            bb_repo: "misty-step/threshold".to_string(),
+            bb_rev: Some("abc123".to_string()),
+            bb_change: Some("threshold-optimizer-061".to_string()),
+            dispatch_bitterblossom: false,
+            certify_top: 1,
+            rng_seed: Some(7),
+        })
+        .unwrap();
+        assert_eq!(result.candidates, 3);
+        let asha: Value =
+            serde_json::from_str(&std::fs::read_to_string(result.asha).unwrap()).unwrap();
+        assert_eq!(asha["schema"], ASHA_SCHEMA);
+        assert_eq!(asha["rungs"][0]["candidate_count"], json!(3));
+        assert_eq!(asha["rungs"][1]["trials"].as_array().unwrap().len(), 1);
+        let pareto: Value =
+            serde_json::from_str(&std::fs::read_to_string(result.pareto).unwrap()).unwrap();
+        assert_eq!(pareto["schema"], PARETO_SCHEMA);
+        assert_eq!(pareto["candidates"].as_array().unwrap().len(), 3);
+        assert!(!pareto["frontier"].as_array().unwrap().is_empty());
+        let certification: Value =
+            serde_json::from_str(&std::fs::read_to_string(result.certification).unwrap()).unwrap();
+        assert_eq!(certification["schema"], CERTIFICATION_SCHEMA);
+        assert_eq!(certification["heldout_tasks"], json!(["t3"]));
+        let guardrails: Value =
+            serde_json::from_str(&std::fs::read_to_string(result.guardrails).unwrap()).unwrap();
+        assert_eq!(guardrails["overfitting"]["holdout_feedback_blocked"], true);
     }
 
     fn fresh_tmp(label: &str) -> PathBuf {

@@ -291,6 +291,48 @@ enum Cmd {
         #[arg(long)]
         dispatch_bitterblossom: bool,
     },
+    /// Run the Crucible-backed GEPA/ASHA optimizer loop and keep a score/cost
+    /// Pareto frontier over Bitterblossom/Sprites-dispatched candidate arms.
+    OptimizeLoop {
+        /// Crucible `crucible.eval_spec.v1` JSON file.
+        #[arg(long)]
+        eval: PathBuf,
+        /// Output run directory. Default: `runs/<stamp>-optimizer-loop-<eval-id>`.
+        #[arg(long)]
+        out_dir: Option<PathBuf>,
+        /// Overall budget cap recorded on the optimizer loop.
+        #[arg(long, default_value_t = 5.0)]
+        budget_usd: f64,
+        /// Bitterblossom plane config for the Sprites runner.
+        #[arg(long)]
+        bb_config: Option<PathBuf>,
+        /// Bitterblossom task id to use as a candidate arm. Repeatable. Defaults
+        /// to correctness, correctness-glm, correctness-kimi.
+        #[arg(long = "bb-task")]
+        bb_tasks: Vec<String>,
+        /// Bitterblossom CLI binary.
+        #[arg(long, default_value = "bb")]
+        bb_bin: PathBuf,
+        /// GitHub repo passed to the Bitterblossom task event.
+        #[arg(long, default_value = "misty-step/threshold")]
+        bb_repo: String,
+        /// Git revision passed to Bitterblossom. Defaults to local HEAD.
+        #[arg(long)]
+        bb_rev: Option<String>,
+        /// Git branch/change name passed to Bitterblossom. Defaults to current branch.
+        #[arg(long)]
+        bb_change: Option<String>,
+        /// Number of validation frontier arms to certify on heldout.
+        #[arg(long, default_value_t = 1)]
+        certify_top: usize,
+        /// Reproducible seed for GEPA mutation ordering.
+        #[arg(long)]
+        rng_seed: Option<u64>,
+        /// Actually call `bb submit open` and `bb run`; without this, write
+        /// not_dispatched receipts and dry-run the optimizer evidence packet.
+        #[arg(long)]
+        dispatch_bitterblossom: bool,
+    },
     /// Offline two-run delta: compare two existing run directories' pareto.json +
     /// loop.json without spending. Per-candidate reward/rank/cost deltas, plus
     /// spend and stop-reason deltas, so cross-run comparison is mechanical.
@@ -521,6 +563,33 @@ fn main() -> ExitCode {
             bb_rev,
             bb_change,
             bb_submission,
+            dispatch_bitterblossom,
+        }),
+        Cmd::OptimizeLoop {
+            eval,
+            out_dir,
+            budget_usd,
+            bb_config,
+            bb_tasks,
+            bb_bin,
+            bb_repo,
+            bb_rev,
+            bb_change,
+            certify_top,
+            rng_seed,
+            dispatch_bitterblossom,
+        } => cmd_optimize_loop(OptimizeLoopCommand {
+            eval,
+            out_dir,
+            budget_usd,
+            bb_config,
+            bb_tasks,
+            bb_bin,
+            bb_repo,
+            bb_rev,
+            bb_change,
+            certify_top,
+            rng_seed,
             dispatch_bitterblossom,
         }),
         Cmd::Compare { run_a, run_b } => cmd_compare(&run_a, &run_b),
@@ -937,6 +1006,86 @@ fn cmd_optimize_headroom(cmd: OptimizeHeadroomCommand) -> ExitCode {
         }
         Err(err) => {
             eprintln!("optimize-headroom failed: {err}");
+            ExitCode::FAILURE
+        }
+    }
+}
+
+struct OptimizeLoopCommand {
+    eval: PathBuf,
+    out_dir: Option<PathBuf>,
+    budget_usd: f64,
+    bb_config: Option<PathBuf>,
+    bb_tasks: Vec<String>,
+    bb_bin: PathBuf,
+    bb_repo: String,
+    bb_rev: Option<String>,
+    bb_change: Option<String>,
+    certify_top: usize,
+    rng_seed: Option<u64>,
+    dispatch_bitterblossom: bool,
+}
+
+fn cmd_optimize_loop(cmd: OptimizeLoopCommand) -> ExitCode {
+    let computed_out = cmd.out_dir.unwrap_or_else(|| {
+        let stamp = threshold_core::run::utc_stamp();
+        let eval_id = cmd
+            .eval
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .map(safe_slug)
+            .unwrap_or_else(|| "crucible-eval".to_string());
+        PathBuf::from("runs").join(format!("{stamp}-optimizer-loop-{eval_id}"))
+    });
+    let bb_tasks = if cmd.bb_tasks.is_empty() {
+        vec![
+            "correctness".to_string(),
+            "correctness-glm".to_string(),
+            "correctness-kimi".to_string(),
+        ]
+    } else {
+        cmd.bb_tasks
+    };
+    let options = threshold_core::optimization_target::OptimizerLoopOptions {
+        eval_spec: cmd.eval,
+        out_dir: computed_out,
+        budget_usd: cmd.budget_usd,
+        bb_config: cmd.bb_config,
+        bb_tasks,
+        bb_bin: cmd.bb_bin,
+        bb_repo: cmd.bb_repo,
+        bb_rev: cmd.bb_rev.or_else(|| git_output(&["rev-parse", "HEAD"])),
+        bb_change: cmd
+            .bb_change
+            .or_else(|| git_output(&["branch", "--show-current"]))
+            .or_else(|| git_output(&["rev-parse", "--short", "HEAD"])),
+        dispatch_bitterblossom: cmd.dispatch_bitterblossom,
+        certify_top: cmd.certify_top,
+        rng_seed: cmd.rng_seed,
+    };
+    match threshold_core::optimization_target::run_optimizer_loop(&options) {
+        Ok(result) => {
+            println!("out-dir: {}", result.out_dir.display());
+            println!("target: {}", result.target.display());
+            println!("rig: {}", result.rig.display());
+            println!("seed: {}", result.seed.display());
+            println!("headroom_probe: {}", result.headroom_probe.display());
+            println!("guardrails: {}", result.guardrails.display());
+            println!("asha: {}", result.asha.display());
+            println!("pareto: {}", result.pareto.display());
+            println!("certification: {}", result.certification.display());
+            println!("history: {}", result.history.display());
+            println!("report: {}", result.report.display());
+            println!("candidates: {}", result.candidates);
+            println!("frontier: {}", result.frontier);
+            match result.spend_known_usd {
+                Some(spend) => println!("known_spend_usd: {spend:.4}"),
+                None => println!("known_spend_usd: unknown"),
+            }
+            ExitCode::SUCCESS
+        }
+        Err(err) => {
+            eprintln!("optimize-loop failed: {err}");
             ExitCode::FAILURE
         }
     }
