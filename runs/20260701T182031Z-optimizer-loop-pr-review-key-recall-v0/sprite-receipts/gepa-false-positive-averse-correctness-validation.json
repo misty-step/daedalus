@@ -14,7 +14,7 @@
         {
           "agent_name": "storm-correctness",
           "agent_version": 1,
-          "artifact_dir": "/Users/phaedrus/Development/bitterblossom/plane/.bb/runs/eb29971e0725/attempt-1",
+          "artifact_dir": "$BITTERBLOSSOM_REPO/plane/.bb/runs/eb29971e0725/attempt-1",
           "cost_usd": 0.097247469,
           "ended_at": "2026-07-01T18:25:31.376446Z",
           "error": null,
@@ -73,9 +73,9 @@
   "wall_ms": 299559,
   "error": null,
   "command": {
-    "bb_bin": "/Users/phaedrus/Development/bitterblossom/target/debug/bb",
-    "config": "/Users/phaedrus/Development/bitterblossom/plane",
-    "payload_file": "/Users/phaedrus/Development/daedalus/runs/20260701T182031Z-optimizer-loop-pr-review-key-recall-v0/sprite-requests/gepa-false-positive-averse-correctness-validation.json",
+    "bb_bin": "$BITTERBLOSSOM_REPO/target/debug/bb",
+    "config": "$BITTERBLOSSOM_REPO/plane",
+    "payload_file": "$THRESHOLD_REPO/runs/20260701T182031Z-optimizer-loop-pr-review-key-recall-v0/sprite-requests/gepa-false-positive-averse-correctness-validation.json",
     "task": "correctness",
     "idempotency_key": "threshold-pr-review-key-recall-v0-gepa-false-positive-averse-correctness-correctness-validation-c7277f39c7fb"
   },

@@ -7,13 +7,13 @@
   "eval": {
     "schema": "crucible.eval_spec.v1",
     "spec_ref": "pr-review-key-recall-v0",
-    "spec_path": "/Users/phaedrus/Development/crucible-evals/evals/pr-review-key-recall-v0.json",
+    "spec_path": "$CRUCIBLE_EVALS_REPO/evals/pr-review-key-recall-v0.json",
     "digest": "sha256:5cd166a6322dd6be5a06385fffb71ee2958256d9d1c17e5f9c7845c96c7e0cca",
-    "harbor_package": "/Users/phaedrus/Development/daedalus/arenas/pr-review-v0",
+    "harbor_package": "$THRESHOLD_REPO/arenas/pr-review-v0",
     "fixtures_digest": null,
     "answer_key_digest": null,
     "oracle_solution_digest": null,
-    "source_trials_jsonl": "/Users/phaedrus/Development/daedalus/runs/20260623T000000Z-freeze-pr-review-v0/trials.jsonl",
+    "source_trials_jsonl": "$THRESHOLD_REPO/runs/20260623T000000Z-freeze-pr-review-v0/trials.jsonl",
     "source_trials_digest": "sha256:2c9c40bac177b178e40b1b900a8634aab2db649136f3a8bb65272b8bf01166fc",
     "version": null
   },

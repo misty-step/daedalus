@@ -2,9 +2,9 @@
   "schema_version": "threshold.optimization_rig.v1",
   "eval_id": "pr-review-key-recall-v0",
   "eval_digest": "sha256:5cd166a6322dd6be5a06385fffb71ee2958256d9d1c17e5f9c7845c96c7e0cca",
-  "source_trials": "/Users/phaedrus/Development/daedalus/runs/20260623T000000Z-freeze-pr-review-v0/trials.jsonl",
+  "source_trials": "$THRESHOLD_REPO/runs/20260623T000000Z-freeze-pr-review-v0/trials.jsonl",
   "source_trials_digest": "sha256:2c9c40bac177b178e40b1b900a8634aab2db649136f3a8bb65272b8bf01166fc",
-  "arena_dir": "/Users/phaedrus/Development/daedalus/arenas/pr-review-v0",
+  "arena_dir": "$THRESHOLD_REPO/arenas/pr-review-v0",
   "runner_kind": "key_recall",
   "tasks": [
     "js-cart-total",
@@ -23,7 +23,7 @@
   "remote_runner": {
     "plane": "bitterblossom",
     "substrate": "sprites",
-    "config": "/Users/phaedrus/Development/bitterblossom/plane/plane.toml",
+    "config": "$BITTERBLOSSOM_REPO/plane/plane.toml",
     "task": "correctness",
     "repo": "misty-step/threshold",
     "rev": "270fd162e4a528d0411e243bd9d18e406fe7c300",

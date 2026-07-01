@@ -16,7 +16,7 @@
     "tool_policy": "bitterblossom-correctness"
   },
   "workspace": {
-    "harbor_package": "/Users/phaedrus/Development/daedalus/arenas/pr-review-v0",
+    "harbor_package": "$THRESHOLD_REPO/arenas/pr-review-v0",
     "candidate_visible_paths": [
       "RUN.json",
       "EVENT.json",

@@ -236,6 +236,11 @@ pub fn run_optimizer_loop(
         )
         .into());
     }
+    if options.bb_tasks.iter().any(|task| task.trim().is_empty()) {
+        return Err(
+            OptimizationTargetError("--bb-task entries must not be empty".to_string()).into(),
+        );
+    }
     if options.dispatch_bitterblossom {
         if options.bb_repo.trim().is_empty() {
             return Err(OptimizationTargetError(
@@ -858,7 +863,7 @@ fn build_headroom_probe(
             "null_is_floor": null_pass,
             "oneshot_not_saturated": !saturated,
             "reference_spread_exists": ranks,
-            "under_budget": known_spend.is_none_or(|s| s <= options.budget_usd)
+            "under_budget": known_spend.is_some_and(|s| s <= options.budget_usd)
         },
         "candidates": candidate_values
     })
@@ -1274,7 +1279,7 @@ fn build_optimizer_sprite_request(
             "repo": options.bb_repo,
             "rev": options.bb_rev,
             "change": options.bb_change,
-            "context": "Threshold backlog 061 GEPA/ASHA optimizer candidate trial for Crucible pr-review-key-recall-v0"
+            "context": format!("Threshold backlog 061 GEPA/ASHA optimizer candidate trial for Crucible {}", eval.id)
         }
     })
 }
@@ -1887,7 +1892,7 @@ fn build_sprite_request(
             "repo": options.bb_repo,
             "rev": options.bb_rev,
             "change": options.bb_change,
-            "context": "Threshold backlog 061 first Sprites runner seam probe for Crucible pr-review-key-recall-v0"
+            "context": format!("Threshold backlog 061 first Sprites runner seam probe for Crucible {}", eval.id)
         }
     })
 }
@@ -1935,7 +1940,9 @@ fn dispatch_bitterblossom(
         Ok(output) => {
             let stdout = String::from_utf8_lossy(&output.stdout).to_string();
             let stderr = String::from_utf8_lossy(&output.stderr).to_string();
-            let stdout_json = serde_json::from_str::<Value>(&stdout).unwrap_or(Value::Null);
+            let stdout_json = redact_local_paths_in_value(
+                serde_json::from_str::<Value>(&stdout).unwrap_or(Value::Null),
+            );
             let run_id = extract_bb_run_id(&stdout_json);
             let bb_run = stdout_json.get("run").unwrap_or(&Value::Null);
             let last_attempt = stdout_json
@@ -2282,7 +2289,52 @@ fn format_hash(hash: &str) -> String {
 }
 
 fn path_string(path: &Path) -> String {
-    path.to_string_lossy().to_string()
+    redact_local_paths(&path.to_string_lossy())
+}
+
+fn redact_local_paths_in_value(value: Value) -> Value {
+    match value {
+        Value::String(s) => Value::String(redact_local_paths(&s)),
+        Value::Array(items) => {
+            Value::Array(items.into_iter().map(redact_local_paths_in_value).collect())
+        }
+        Value::Object(entries) => Value::Object(
+            entries
+                .into_iter()
+                .map(|(key, value)| (key, redact_local_paths_in_value(value)))
+                .collect(),
+        ),
+        other => other,
+    }
+}
+
+fn redact_local_paths(text: &str) -> String {
+    redact_development_root(
+        &redact_development_root(
+            &redact_development_root(text, "daedalus", "$THRESHOLD_REPO"),
+            "crucible-evals",
+            "$CRUCIBLE_EVALS_REPO",
+        ),
+        "bitterblossom",
+        "$BITTERBLOSSOM_REPO",
+    )
+}
+
+fn redact_development_root(text: &str, repo: &str, replacement: &str) -> String {
+    let marker = format!("/Development/{repo}");
+    let Some(index) = text.find(&marker) else {
+        return text.to_string();
+    };
+    let path_start = text[..index]
+        .rfind(|c: char| c.is_whitespace() || matches!(c, '"' | '\'' | ':' | '='))
+        .map(|i| i + 1)
+        .unwrap_or(0);
+    format!(
+        "{}{}{}",
+        &text[..path_start],
+        replacement,
+        &text[index + marker.len()..]
+    )
 }
 
 fn now_iso() -> String {
@@ -2683,6 +2735,24 @@ mod tests {
         .unwrap_err()
         .to_string();
         assert!(err.contains("budget cap would be exceeded"));
+
+        let err = run_optimizer_loop(&OptimizerLoopOptions {
+            eval_spec: root.join("evals").join("eval.json"),
+            out_dir: root.join("blank-task"),
+            budget_usd: 5.0,
+            bb_config: None,
+            bb_tasks: vec![" ".to_string()],
+            bb_bin: PathBuf::from("bb"),
+            bb_repo: "misty-step/threshold".to_string(),
+            bb_rev: Some("abc123".to_string()),
+            bb_change: Some("threshold-optimizer-061".to_string()),
+            dispatch_bitterblossom: false,
+            certify_top: 1,
+            rng_seed: Some(7),
+        })
+        .unwrap_err()
+        .to_string();
+        assert!(err.contains("--bb-task entries must not be empty"));
     }
 
     #[test]
@@ -2711,6 +2781,22 @@ mod tests {
             "content": "Review result\n\n```json\n{\"verdict\":\"pass\",\"findings\":[]}\n```"
         });
         assert_eq!(remote_verdict_score(&receipt, &artifact), 1.0);
+    }
+
+    #[test]
+    fn development_paths_are_redacted_for_artifacts() {
+        assert_eq!(
+            redact_local_paths("/tmp/Development/daedalus/runs/x"),
+            "$THRESHOLD_REPO/runs/x"
+        );
+        assert_eq!(
+            redact_local_paths("payload=/tmp/Development/bitterblossom/plane"),
+            "payload=$BITTERBLOSSOM_REPO/plane"
+        );
+        assert_eq!(
+            redact_local_paths("/tmp/Development/crucible-evals/evals/x.json"),
+            "$CRUCIBLE_EVALS_REPO/evals/x.json"
+        );
     }
 
     fn fresh_tmp(label: &str) -> PathBuf {
