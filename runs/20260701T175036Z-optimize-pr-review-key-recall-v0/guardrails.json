@@ -1,0 +1,28 @@
+{
+  "schema": "threshold.optimizer_guardrails.v1",
+  "eval_id": "pr-review-key-recall-v0",
+  "overfitting": {
+    "status": "partial",
+    "evidence": "imported key-recall probe uses the Crucible-declared task subset; no GEPA mutation or holdout reuse occurs in this slice",
+    "holdout_feedback_blocked": true
+  },
+  "judge_gaming": {
+    "status": "pass",
+    "evidence": "objective is deterministic key recall from Threshold trial records; no judge-only winner is selected"
+  },
+  "non_stationarity": {
+    "status": "pass",
+    "eval_digest": "sha256:5cd166a6322dd6be5a06385fffb71ee2958256d9d1c17e5f9c7845c96c7e0cca",
+    "source_trials_digest": "sha256:2c9c40bac177b178e40b1b900a8634aab2db649136f3a8bb65272b8bf01166fc",
+    "model_provider_ids_recorded": true
+  },
+  "scorer_parity": {
+    "status": "caveat",
+    "evidence": "Crucible eval points at Threshold freeze evidence; Crucible grade parity remains outside this slice"
+  },
+  "harbor_bundle": {
+    "status": "partial",
+    "evidence": "Crucible key-recall eval declares source trials and arena_dir, but not full answer-key/scorer/oracle digests"
+  },
+  "headroom_verdict": "pass"
+}

@@ -1,0 +1,44 @@
+[
+  {
+    "attempt": 1,
+    "path": "stdout.txt",
+    "size": 1721134,
+    "content_type": "text/plain",
+    "binary": false
+  },
+  {
+    "attempt": 1,
+    "path": "result.md",
+    "size": 2181,
+    "content_type": "text/markdown",
+    "binary": false
+  },
+  {
+    "attempt": 1,
+    "path": "LANE_CARD.md",
+    "size": 3285,
+    "content_type": "text/markdown",
+    "binary": false
+  },
+  {
+    "attempt": 1,
+    "path": "EVENT.json",
+    "size": 2117,
+    "content_type": "application/json",
+    "binary": false
+  },
+  {
+    "attempt": 1,
+    "path": "stderr.txt",
+    "size": 0,
+    "content_type": "text/plain",
+    "binary": false
+  },
+  {
+    "attempt": 1,
+    "path": "RUN.json",
+    "size": 314,
+    "content_type": "application/json",
+    "binary": false
+  }
+]

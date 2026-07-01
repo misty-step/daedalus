@@ -1,0 +1,61 @@
+{
+  "schema": "threshold.optimization_target.v1",
+  "id": "pr-review-key-recall-v0",
+  "source": "crucible",
+  "mode": "threshold-then-cheap",
+  "decision": "Use this benchmark as the first key-recall floor for review-agent/Cerberus quality before Threshold optimizes candidate configurations against richer judged metrics.",
+  "eval": {
+    "schema": "crucible.eval_spec.v1",
+    "spec_ref": "pr-review-key-recall-v0",
+    "spec_path": "/Users/phaedrus/Development/crucible-evals/evals/pr-review-key-recall-v0.json",
+    "digest": "sha256:5cd166a6322dd6be5a06385fffb71ee2958256d9d1c17e5f9c7845c96c7e0cca",
+    "harbor_package": "/Users/phaedrus/Development/daedalus/arenas/pr-review-v0",
+    "fixtures_digest": null,
+    "answer_key_digest": null,
+    "oracle_solution_digest": null,
+    "source_trials_jsonl": "/Users/phaedrus/Development/daedalus/runs/20260623T000000Z-freeze-pr-review-v0/trials.jsonl",
+    "source_trials_digest": "sha256:2c9c40bac177b178e40b1b900a8634aab2db649136f3a8bb65272b8bf01166fc",
+    "version": null
+  },
+  "scorer": {
+    "kind": "threshold-score",
+    "metric": "pr_review_key_recall",
+    "authoritative_until": "crucible-backlog-008-grade-reward-parity",
+    "note": "This first slice imports Crucible key-recall evidence from a frozen Threshold run; full Harbor bundle digests remain a guardrail gap."
+  },
+  "splits": {
+    "train": null,
+    "validation": "runner.corpus.tasks",
+    "holdout": null,
+    "holdout_policy": "not declared by this Crucible key-recall eval"
+  },
+  "baselines": [
+    "null",
+    "oracle"
+  ],
+  "runner": {
+    "default": "key_recall",
+    "remote": "bitter-blossom-sprites",
+    "request_schema": "threshold.sprite_trial_request.v1",
+    "receipt_schema": "threshold.sprite_trial_receipt.v1",
+    "bb_task": "correctness"
+  },
+  "gates": {
+    "g1": {
+      "state": "unsigned",
+      "meaning": "operator approval required before paid search beyond this bounded probe"
+    },
+    "g2": {
+      "state": "unsigned",
+      "meaning": "eval quality/headroom not fully approved; this probe is evidence for that decision"
+    },
+    "g3": {
+      "state": "unsigned",
+      "meaning": "launch approval required before downstream deployment"
+    },
+    "g5": {
+      "state": "not_applicable",
+      "meaning": "authored Crucible eval, not production trace re-ingestion"
+    }
+  }
+}
