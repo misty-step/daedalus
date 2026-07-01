@@ -1,0 +1,294 @@
+{
+  "schema": "threshold.headroom_probe.v1",
+  "eval_id": "pr-review-key-recall-v0",
+  "budget_usd": 5.0,
+  "spend_known_usd": 0.020693714499999998,
+  "metric": "defect_level_key_recall",
+  "uncertainty": {
+    "method": "wilson",
+    "confidence": 0.95
+  },
+  "verdict": "pass",
+  "checks": {
+    "oracle_reaches_ceiling": true,
+    "null_is_floor": true,
+    "oneshot_not_saturated": true,
+    "reference_spread_exists": true,
+    "under_budget": true
+  },
+  "candidates": [
+    {
+      "candidate_id": "null",
+      "candidate_kind": "null",
+      "composition_hash": "40f2f6e05112c409",
+      "model": null,
+      "successes": 0,
+      "n": 9,
+      "point": 0.0,
+      "lower": 0.0,
+      "upper": 0.2991450484195441,
+      "expected_defects": 9,
+      "false_positives": 0,
+      "reward_mean": 0.16666666666666666,
+      "cost_usd_total": 0.0,
+      "wall_ms_total": 0,
+      "trials": 6,
+      "task_results": [
+        {
+          "task_id": "js-cart-total",
+          "successes": 0,
+          "n": 1,
+          "recall": 0.0,
+          "reward_mean": 0.0,
+          "false_positives": 0,
+          "trials": 1,
+          "source_run_ids": [
+            "20260623T173756Z-null-js-cart-total-t1"
+          ]
+        },
+        {
+          "task_id": "js-clean-rename",
+          "successes": 0,
+          "n": 0,
+          "recall": null,
+          "reward_mean": 1.0,
+          "false_positives": 0,
+          "trials": 1,
+          "source_run_ids": [
+            "20260623T173756Z-null-js-clean-rename-t1"
+          ]
+        },
+        {
+          "task_id": "py-auth-sqli",
+          "successes": 0,
+          "n": 2,
+          "recall": 0.0,
+          "reward_mean": 0.0,
+          "false_positives": 0,
+          "trials": 1,
+          "source_run_ids": [
+            "20260623T173756Z-null-py-auth-sqli-t1"
+          ]
+        },
+        {
+          "task_id": "py-file-cache",
+          "successes": 0,
+          "n": 3,
+          "recall": 0.0,
+          "reward_mean": 0.0,
+          "false_positives": 0,
+          "trials": 1,
+          "source_run_ids": [
+            "20260623T173756Z-null-py-file-cache-t1"
+          ]
+        },
+        {
+          "task_id": "py-pagination",
+          "successes": 0,
+          "n": 1,
+          "recall": 0.0,
+          "reward_mean": 0.0,
+          "false_positives": 0,
+          "trials": 1,
+          "source_run_ids": [
+            "20260623T173756Z-null-py-pagination-t1"
+          ]
+        },
+        {
+          "task_id": "rs-retry-backoff",
+          "successes": 0,
+          "n": 2,
+          "recall": 0.0,
+          "reward_mean": 0.0,
+          "false_positives": 0,
+          "trials": 1,
+          "source_run_ids": [
+            "20260623T173756Z-null-rs-retry-backoff-t1"
+          ]
+        }
+      ]
+    },
+    {
+      "candidate_id": "oracle",
+      "candidate_kind": "oracle",
+      "composition_hash": "07d8650e238cd916",
+      "model": null,
+      "successes": 9,
+      "n": 9,
+      "point": 1.0,
+      "lower": 0.7008549515804559,
+      "upper": 1.0,
+      "expected_defects": 9,
+      "false_positives": 0,
+      "reward_mean": 1.0,
+      "cost_usd_total": 0.0,
+      "wall_ms_total": 0,
+      "trials": 6,
+      "task_results": [
+        {
+          "task_id": "js-cart-total",
+          "successes": 1,
+          "n": 1,
+          "recall": 1.0,
+          "reward_mean": 1.0,
+          "false_positives": 0,
+          "trials": 1,
+          "source_run_ids": [
+            "20260623T173756Z-oracle-js-cart-total-t1"
+          ]
+        },
+        {
+          "task_id": "js-clean-rename",
+          "successes": 0,
+          "n": 0,
+          "recall": null,
+          "reward_mean": 1.0,
+          "false_positives": 0,
+          "trials": 1,
+          "source_run_ids": [
+            "20260623T173756Z-oracle-js-clean-rename-t1"
+          ]
+        },
+        {
+          "task_id": "py-auth-sqli",
+          "successes": 2,
+          "n": 2,
+          "recall": 1.0,
+          "reward_mean": 1.0,
+          "false_positives": 0,
+          "trials": 1,
+          "source_run_ids": [
+            "20260623T173756Z-oracle-py-auth-sqli-t1"
+          ]
+        },
+        {
+          "task_id": "py-file-cache",
+          "successes": 3,
+          "n": 3,
+          "recall": 1.0,
+          "reward_mean": 1.0,
+          "false_positives": 0,
+          "trials": 1,
+          "source_run_ids": [
+            "20260623T173756Z-oracle-py-file-cache-t1"
+          ]
+        },
+        {
+          "task_id": "py-pagination",
+          "successes": 1,
+          "n": 1,
+          "recall": 1.0,
+          "reward_mean": 1.0,
+          "false_positives": 0,
+          "trials": 1,
+          "source_run_ids": [
+            "20260623T173756Z-oracle-py-pagination-t1"
+          ]
+        },
+        {
+          "task_id": "rs-retry-backoff",
+          "successes": 2,
+          "n": 2,
+          "recall": 1.0,
+          "reward_mean": 1.0,
+          "false_positives": 0,
+          "trials": 1,
+          "source_run_ids": [
+            "20260623T173756Z-oracle-rs-retry-backoff-t1"
+          ]
+        }
+      ]
+    },
+    {
+      "candidate_id": "probe-oneshot",
+      "candidate_kind": "oneshot",
+      "composition_hash": "8d5c0d7a1188c916",
+      "model": "deepseek/deepseek-v4-pro",
+      "successes": 5,
+      "n": 9,
+      "point": 0.5555555555555556,
+      "lower": 0.26665129349549305,
+      "upper": 0.8112214789023355,
+      "expected_defects": 9,
+      "false_positives": 5,
+      "reward_mean": 0.6,
+      "cost_usd_total": 0.020693714499999998,
+      "wall_ms_total": 141543,
+      "trials": 6,
+      "task_results": [
+        {
+          "task_id": "js-cart-total",
+          "successes": 1,
+          "n": 1,
+          "recall": 1.0,
+          "reward_mean": 1.0,
+          "false_positives": 0,
+          "trials": 1,
+          "source_run_ids": [
+            "20260623T173756Z-probe-oneshot-js-cart-total-t1"
+          ]
+        },
+        {
+          "task_id": "js-clean-rename",
+          "successes": 0,
+          "n": 0,
+          "recall": null,
+          "reward_mean": 1.0,
+          "false_positives": 0,
+          "trials": 1,
+          "source_run_ids": [
+            "20260623T173756Z-probe-oneshot-js-clean-rename-t1"
+          ]
+        },
+        {
+          "task_id": "py-auth-sqli",
+          "successes": 1,
+          "n": 2,
+          "recall": 0.5,
+          "reward_mean": 0.1,
+          "false_positives": 2,
+          "trials": 1,
+          "source_run_ids": [
+            "20260623T173756Z-probe-oneshot-py-auth-sqli-t1"
+          ]
+        },
+        {
+          "task_id": "py-file-cache",
+          "successes": 1,
+          "n": 3,
+          "recall": 0.3333333333333333,
+          "reward_mean": 0.0,
+          "false_positives": 3,
+          "trials": 1,
+          "source_run_ids": [
+            "20260623T173756Z-probe-oneshot-py-file-cache-t1"
+          ]
+        },
+        {
+          "task_id": "py-pagination",
+          "successes": 1,
+          "n": 1,
+          "recall": 1.0,
+          "reward_mean": 1.0,
+          "false_positives": 0,
+          "trials": 1,
+          "source_run_ids": [
+            "20260623T173756Z-probe-oneshot-py-pagination-t1"
+          ]
+        },
+        {
+          "task_id": "rs-retry-backoff",
+          "successes": 1,
+          "n": 2,
+          "recall": 0.5,
+          "reward_mean": 0.5,
+          "false_positives": 0,
+          "trials": 1,
+          "source_run_ids": [
+            "20260623T173756Z-probe-oneshot-rs-retry-backoff-t1"
+          ]
+        }
+      ]
+    }
+  ]
+}

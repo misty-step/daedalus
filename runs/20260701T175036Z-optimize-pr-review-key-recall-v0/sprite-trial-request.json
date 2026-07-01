@@ -1,0 +1,59 @@
+{
+  "schema": "threshold.sprite_trial_request.v1",
+  "submission": "65d56e69433c",
+  "repo": "misty-step/threshold",
+  "rev": "270fd162e4a528d0411e243bd9d18e406fe7c300",
+  "change": "threshold-optimizer-061",
+  "context": "Threshold pr-review-key-recall-v0 headroom/Sprites seam probe. Eval digest: sha256:5cd166a6322dd6be5a06385fffb71ee2958256d9d1c17e5f9c7845c96c7e0cca; source trials digest: sha256:2c9c40bac177b178e40b1b900a8634aab2db649136f3a8bb65272b8bf01166fc. Threshold-specific trial contract is embedded in this EVENT.json under schema=threshold.sprite_trial_request.v1.",
+  "experiment_id": "pr-review-key-recall-v0",
+  "trial_id": "pr-review-key-recall-v0:correctness:headroom-probe:8d5c0d7a1188",
+  "task_id": "correctness",
+  "candidate": {
+    "composition_hash": "sha256:8d5c0d7a1188c916",
+    "model": "deepseek/deepseek-v4-pro",
+    "thinking": null,
+    "prompt_packet_digest": "sha256:5cd166a6322dd6be5a06385fffb71ee2958256d9d1c17e5f9c7845c96c7e0cca",
+    "tool_policy": "bitterblossom-correctness"
+  },
+  "workspace": {
+    "harbor_package": "$THRESHOLD_REPO/arenas/pr-review-v0",
+    "candidate_visible_paths": [
+      "RUN.json",
+      "EVENT.json",
+      "PR.diff",
+      "environment/"
+    ],
+    "hidden_paths": [
+      "tests/",
+      "solution/"
+    ]
+  },
+  "output_contract": "REPORT.json containing the Bitterblossom correctness verdict JSON; Threshold scores returned findings locally when available",
+  "secret_names": [
+    "OPENROUTER_API_KEY",
+    "GH_TOKEN"
+  ],
+  "env_allowlist": [
+    "OPENROUTER_API_KEY",
+    "GH_TOKEN"
+  ],
+  "budget": {
+    "max_cost_usd": 0.6,
+    "timeout_seconds": 2700
+  },
+  "threshold": {
+    "target_schema": "threshold.optimization_target.v1",
+    "eval_id": "pr-review-key-recall-v0",
+    "eval_digest": "sha256:5cd166a6322dd6be5a06385fffb71ee2958256d9d1c17e5f9c7845c96c7e0cca",
+    "source_trials_digest": "sha256:2c9c40bac177b178e40b1b900a8634aab2db649136f3a8bb65272b8bf01166fc",
+    "score_owner": "threshold"
+  },
+  "threshold_submission": {
+    "id": "threshold-pr-review-key-recall-v0:correctness:headroom-probe:8d5c0d7a1188",
+    "bb_submission": "65d56e69433c",
+    "repo": "misty-step/threshold",
+    "rev": "270fd162e4a528d0411e243bd9d18e406fe7c300",
+    "change": "threshold-optimizer-061",
+    "context": "Threshold backlog 061 first Sprites runner seam probe for Crucible pr-review-key-recall-v0"
+  }
+}

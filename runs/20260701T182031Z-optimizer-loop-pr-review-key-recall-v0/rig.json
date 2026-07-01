@@ -1,0 +1,67 @@
+{
+  "schema_version": "threshold.optimization_rig.v1",
+  "loop_schema": "threshold.optimizer_loop.v1",
+  "eval_id": "pr-review-key-recall-v0",
+  "eval_digest": "sha256:5cd166a6322dd6be5a06385fffb71ee2958256d9d1c17e5f9c7845c96c7e0cca",
+  "source_trials": "$THRESHOLD_REPO/runs/20260623T000000Z-freeze-pr-review-v0/trials.jsonl",
+  "source_trials_digest": "sha256:2c9c40bac177b178e40b1b900a8634aab2db649136f3a8bb65272b8bf01166fc",
+  "arena_dir": "$THRESHOLD_REPO/arenas/pr-review-v0",
+  "runner_kind": "key_recall",
+  "reference_candidates": [
+    "null",
+    "oracle",
+    "probe-oneshot"
+  ],
+  "tasks": [
+    "js-cart-total",
+    "js-clean-rename",
+    "py-auth-sqli",
+    "py-file-cache",
+    "py-pagination",
+    "rs-retry-backoff"
+  ],
+  "splits": {
+    "validation": [
+      "js-cart-total",
+      "js-clean-rename",
+      "py-auth-sqli",
+      "py-file-cache"
+    ],
+    "heldout": [
+      "py-pagination",
+      "rs-retry-backoff"
+    ],
+    "policy": "deterministic tail holdout until Crucible export declares explicit train/validation/holdout ids"
+  },
+  "budget": {
+    "cap_usd": 5.0,
+    "allocator": "hyperband-asha",
+    "rungs": [
+      "validation:1x",
+      "heldout:promoted"
+    ]
+  },
+  "gepa": {
+    "inner_loop": "evidence-driven reflective prompt mutation",
+    "archive": "score,cost Pareto frontier",
+    "mutation_slots": [
+      "packet_stance",
+      "false_positive_policy",
+      "retrieval_stance"
+    ]
+  },
+  "remote_runner": {
+    "plane": "bitterblossom",
+    "substrate": "sprites",
+    "config": "$BITTERBLOSSOM_REPO/plane",
+    "tasks": [
+      "correctness",
+      "correctness-glm",
+      "correctness-kimi"
+    ],
+    "repo": "misty-step/threshold",
+    "rev": "3a44ee02410a5583b482e618cf9145320eea3fe3",
+    "change": "threshold-optimizer-061",
+    "dispatch_requested": true
+  }
+}

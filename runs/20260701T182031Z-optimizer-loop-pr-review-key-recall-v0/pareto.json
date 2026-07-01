@@ -1,0 +1,70 @@
+{
+  "schema": "threshold.pareto_frontier.v1",
+  "eval_id": "pr-review-key-recall-v0",
+  "objective": {
+    "maximize": "score",
+    "minimize": "cost_usd"
+  },
+  "score_formula": "source_split_key_recall * remote_verdict_score",
+  "candidates": [
+    {
+      "candidate_id": "gepa-false-positive-averse-correctness",
+      "task_id": "correctness",
+      "split": "validation",
+      "score": 0.25,
+      "score_source": {
+        "source_key_recall": 0.5,
+        "remote_verdict_score": 0.5,
+        "remote_verdict": "advisory"
+      },
+      "cost_usd": 0.097247469,
+      "wall_ms": 299559,
+      "bitter_blossom_run_id": "eb29971e0725",
+      "status": "ok"
+    },
+    {
+      "candidate_id": "gepa-caller-context-correctness-glm",
+      "task_id": "correctness-glm",
+      "split": "validation",
+      "score": 0.5,
+      "score_source": {
+        "source_key_recall": 0.5,
+        "remote_verdict_score": 1.0,
+        "remote_verdict": "pass"
+      },
+      "cost_usd": 0.11389106,
+      "wall_ms": 262140,
+      "bitter_blossom_run_id": "eb33567afcce",
+      "status": "ok"
+    },
+    {
+      "candidate_id": "gepa-clean-fixture-sentinel-correctness-kimi",
+      "task_id": "correctness-kimi",
+      "split": "validation",
+      "score": 0.0,
+      "score_source": {
+        "source_key_recall": 0.5,
+        "remote_verdict_score": 0.0,
+        "remote_verdict": null
+      },
+      "cost_usd": null,
+      "wall_ms": null,
+      "bitter_blossom_run_id": "eb6c403c5ae7",
+      "status": "stale_running"
+    }
+  ],
+  "frontier": [
+    {
+      "candidate_id": "gepa-caller-context-correctness-glm",
+      "score": 0.5,
+      "cost_usd": 0.11389106,
+      "bitter_blossom_run_id": "eb33567afcce"
+    },
+    {
+      "candidate_id": "gepa-false-positive-averse-correctness",
+      "score": 0.25,
+      "cost_usd": 0.097247469,
+      "bitter_blossom_run_id": "eb29971e0725"
+    }
+  ]
+}

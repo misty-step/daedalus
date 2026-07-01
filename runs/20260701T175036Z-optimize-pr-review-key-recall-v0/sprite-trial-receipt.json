@@ -1,0 +1,85 @@
+{
+  "schema": "threshold.sprite_trial_receipt.v1",
+  "trial_id": "pr-review-key-recall-v0:correctness:headroom-probe:8d5c0d7a1188",
+  "task_id": "correctness",
+  "composition_hash": "sha256:8d5c0d7a1188c916",
+  "bitter_blossom_run_id": "ce498a5c64a1",
+  "substrate": "sprites",
+  "status": "ok",
+  "artifact_refs": {
+    "findings": null,
+    "transcript": null,
+    "bb_stdout": {
+      "attempts": [
+        {
+          "agent_name": "storm-correctness",
+          "agent_version": 1,
+          "artifact_dir": "$BITTERBLOSSOM_REPO/plane/.bb/runs/ce498a5c64a1/attempt-1",
+          "cost_usd": 0.045298609,
+          "ended_at": "2026-07-01T17:53:45.653899Z",
+          "error": null,
+          "exit_code": 0,
+          "harness": "pi",
+          "id": 462,
+          "model": "deepseek/deepseek-v4-pro",
+          "n": 1,
+          "outcome": "success",
+          "phase": "released",
+          "run_id": "ce498a5c64a1",
+          "started_at": "2026-07-01T17:50:36.412544Z",
+          "tokens_in": 79635,
+          "tokens_out": 11124,
+          "turns": 17
+        }
+      ],
+      "events": [
+        {
+          "at": "2026-07-01T17:50:36.411637Z",
+          "data": null,
+          "kind": "state:running",
+          "run_id": "ce498a5c64a1"
+        },
+        {
+          "at": "2026-07-01T17:53:45.654612Z",
+          "data": null,
+          "kind": "state:success",
+          "run_id": "ce498a5c64a1"
+        }
+      ],
+      "run": {
+        "agent_name": "storm-correctness",
+        "agent_version": 1,
+        "config_source_ref": null,
+        "config_source_repo": null,
+        "cost_usd": 0.045298609,
+        "created_at": "2026-07-01T17:50:36.40894Z",
+        "duration_ms": 189296,
+        "id": "ce498a5c64a1",
+        "idempotency_key": "threshold-pr-review-key-recall-v0-correctness-headroom-probe-8d5c0d7a1188-81b275fb5f92",
+        "parent_run_id": null,
+        "state": "success",
+        "state_reason": null,
+        "task": "correctness",
+        "trace_id": "9c38dbe8eecf",
+        "trigger_kind": "manual",
+        "updated_at": "2026-07-01T17:53:45.65451Z"
+      }
+    }
+  },
+  "model_served": "deepseek/deepseek-v4-pro",
+  "tokens_prompt": 79635,
+  "tokens_completion": 11124,
+  "cost_usd": 0.045298609,
+  "wall_ms": 189296,
+  "error": null,
+  "command": {
+    "bb_bin": "$BITTERBLOSSOM_REPO/target/debug/bb",
+    "config": "$BITTERBLOSSOM_REPO/plane/plane.toml",
+    "payload_file": "$THRESHOLD_REPO/runs/20260701T175036Z-optimize-pr-review-key-recall-v0/sprite-trial-request.json",
+    "task": "correctness",
+    "idempotency_key": "threshold-pr-review-key-recall-v0-correctness-headroom-probe-8d5c0d7a1188-81b275fb5f92"
+  },
+  "started_at": "2026-07-01T17:50:36+00:00",
+  "ended_at": "2026-07-01T17:53:45+00:00",
+  "receipt_digest": "sha256:23b197520fddee4f072dc7d400ce2901c795fa33cbb1b9c06df038cc9233b6fb"
+}

@@ -1,0 +1,40 @@
+{
+  "schema": "threshold.optimizer_guardrails.v1",
+  "eval_id": "pr-review-key-recall-v0",
+  "overfitting": {
+    "status": "partial",
+    "validation_tasks": [
+      "js-cart-total",
+      "js-clean-rename",
+      "py-auth-sqli",
+      "py-file-cache"
+    ],
+    "heldout_tasks": [
+      "py-pagination",
+      "rs-retry-backoff"
+    ],
+    "holdout_feedback_blocked": true,
+    "evidence": "Heldout was declared but not run in this first live packet; no heldout result fed back into GEPA mutation."
+  },
+  "judge_gaming": {
+    "status": "partial",
+    "evidence": "Primary score remains deterministic key recall from source trials; BB/Sprites verdict is a remote execution gate. The first BB run exposed and fixed compact advisory verdict scoring before final reporting."
+  },
+  "non_stationarity": {
+    "status": "pass",
+    "eval_digest": "sha256:5cd166a6322dd6be5a06385fffb71ee2958256d9d1c17e5f9c7845c96c7e0cca",
+    "source_trials_digest": "sha256:2c9c40bac177b178e40b1b900a8634aab2db649136f3a8bb65272b8bf01166fc",
+    "model_provider_ids_recorded": true
+  },
+  "seed_trust": {
+    "status": "not_certified",
+    "evidence": "Single seeded run only; backlog 057 multi-seed optimizer-vs-seed-scan remains required before launch recommendation."
+  },
+  "budget": {
+    "known_spend_usd": 0.211138529,
+    "unknown_cost_runs": [
+      "eb6c403c5ae7"
+    ]
+  },
+  "headroom_verdict": "pass"
+}
