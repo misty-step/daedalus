@@ -1368,6 +1368,7 @@ fn remote_verdict_score(receipt: &Value, artifact: &Value) -> f64 {
     if content.contains("\"verdict\": \"pass\"") || content.contains("\"verdict\":\"pass\"") {
         1.0
     } else if content.contains("\"verdict\": \"advisory\"")
+        || content.contains("\"verdict\":\"advisory\"")
         || content.contains("\"severity\": \"advisory\"")
         || content.contains("\"severity\":\"advisory\"")
     {
@@ -2565,6 +2566,15 @@ mod tests {
         let guardrails: Value =
             serde_json::from_str(&std::fs::read_to_string(result.guardrails).unwrap()).unwrap();
         assert_eq!(guardrails["overfitting"]["holdout_feedback_blocked"], true);
+    }
+
+    #[test]
+    fn compact_advisory_verdict_scores_as_half_gate() {
+        let receipt = json!({"status": "ok"});
+        let artifact = json!({
+            "content": "{\"verdict\":\"advisory\",\"findings\":[{\"severity\":\"serious\"}]}"
+        });
+        assert_eq!(remote_verdict_score(&receipt, &artifact), 0.5);
     }
 
     fn fresh_tmp(label: &str) -> PathBuf {

@@ -1,0 +1,24 @@
+{
+  "schema": "threshold.heldout_certification.v1",
+  "eval_id": "pr-review-key-recall-v0",
+  "status": "not_certified",
+  "heldout_tasks": [
+    "py-pagination",
+    "rs-retry-backoff"
+  ],
+  "promoted_from_validation": [
+    {
+      "candidate_id": "gepa-caller-context-correctness-glm",
+      "score": 0.5,
+      "cost_usd": 0.11389106,
+      "bitter_blossom_run_id": "eb33567afcce"
+    }
+  ],
+  "heldout_trials": [],
+  "blocker": {
+    "kind": "stale_sprite_trial",
+    "candidate_id": "gepa-clean-fixture-sentinel-correctness-kimi",
+    "bitter_blossom_run_id": "eb6c403c5ae7",
+    "detail": "The first optimizer command was stopped after the Kimi validation run remained in phase=executing without token/cost totals. Certification was not claimed."
+  }
+}

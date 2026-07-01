@@ -1,0 +1,70 @@
+{
+  "schema": "threshold.optimizer_seed.v1",
+  "eval_id": "pr-review-key-recall-v0",
+  "eval_digest": "sha256:5cd166a6322dd6be5a06385fffb71ee2958256d9d1c17e5f9c7845c96c7e0cca",
+  "source_trials_digest": "sha256:2c9c40bac177b178e40b1b900a8634aab2db649136f3a8bb65272b8bf01166fc",
+  "budget_usd": 5.0,
+  "rng_seed": 61,
+  "allocator": {
+    "kind": "hyperband-asha",
+    "eta": 3,
+    "rung0": {
+      "name": "validation",
+      "budget_units": 1,
+      "candidates": [
+        "gepa-false-positive-averse-correctness",
+        "gepa-caller-context-correctness-glm",
+        "gepa-clean-fixture-sentinel-correctness-kimi"
+      ]
+    },
+    "rung1": {
+      "name": "heldout",
+      "budget_units": 1,
+      "promote": 1
+    }
+  },
+  "splits": {
+    "validation": [
+      "js-cart-total",
+      "js-clean-rename",
+      "py-auth-sqli",
+      "py-file-cache"
+    ],
+    "heldout": [
+      "py-pagination",
+      "rs-retry-backoff"
+    ]
+  },
+  "gepa_candidates": [
+    {
+      "candidate_id": "gepa-false-positive-averse-correctness",
+      "parent_id": "probe-oneshot",
+      "bb_task": "correctness",
+      "model": "deepseek/deepseek-v4-pro",
+      "mutation": "gepa-false-positive-averse",
+      "hypothesis": "Penalize speculative findings and prefer fewer findings that match keyed defects over broad audit commentary.",
+      "composition_hash": "sha256:9fefb8de4042594e9a8546013825686e2aab70e297b72a71492bc49dfc6e1ebc",
+      "prompt_packet_digest": "sha256:39ec5105d22b6ed7789bfd092cb7d20b202b8dcf04c5e7efac9831d48a428421"
+    },
+    {
+      "candidate_id": "gepa-caller-context-correctness-glm",
+      "parent_id": "probe-oneshot",
+      "bb_task": "correctness-glm",
+      "model": "z-ai/glm-5.2",
+      "mutation": "gepa-caller-context",
+      "hypothesis": "Force a caller/invariant retrieval pass before deciding whether a diff-local issue is real.",
+      "composition_hash": "sha256:8a215008b3a34451f3b5c151e7563d554d3336a17fc7d7d237c35404b7194a24",
+      "prompt_packet_digest": "sha256:290129af6f9df56283e12197d14448acb39be23b7d2c7d67bf6056300b068588"
+    },
+    {
+      "candidate_id": "gepa-clean-fixture-sentinel-correctness-kimi",
+      "parent_id": "probe-oneshot",
+      "bb_task": "correctness-kimi",
+      "model": "moonshotai/kimi-k2.7-code",
+      "mutation": "gepa-clean-fixture-sentinel",
+      "hypothesis": "Carry a clean-fixture check so empty or rename-only diffs can return no findings without apology.",
+      "composition_hash": "sha256:834e1d36af9fda6f0016f67cddbd2952b606c4cfae1f49a59c6c33f3ebe9b3fc",
+      "prompt_packet_digest": "sha256:0df19ce58d719062213d1e3386772968ce47a731e59cf687e5e1730f0fbe7b9d"
+    }
+  ]
+}

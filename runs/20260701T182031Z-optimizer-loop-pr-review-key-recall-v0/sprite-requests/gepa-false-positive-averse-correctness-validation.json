@@ -1,0 +1,149 @@
+{
+  "schema": "threshold.sprite_trial_request.v1",
+  "submission": "ec77d7ce0022",
+  "repo": "misty-step/threshold",
+  "rev": "3a44ee02410a5583b482e618cf9145320eea3fe3",
+  "change": "threshold-optimizer-061",
+  "context": "Threshold pr-review-key-recall-v0 optimizer loop trial. Split=validation; eval digest=sha256:5cd166a6322dd6be5a06385fffb71ee2958256d9d1c17e5f9c7845c96c7e0cca; source trials digest=sha256:2c9c40bac177b178e40b1b900a8634aab2db649136f3a8bb65272b8bf01166fc. GEPA mutation: gepa-false-positive-averse. Hypothesis: Penalize speculative findings and prefer fewer findings that match keyed defects over broad audit commentary..",
+  "experiment_id": "pr-review-key-recall-v0",
+  "trial_id": "pr-review-key-recall-v0:gepa-false-positive-averse-correctness:correctness:validation",
+  "task_id": "correctness",
+  "split": {
+    "name": "validation",
+    "tasks": [
+      "js-cart-total",
+      "js-clean-rename",
+      "py-auth-sqli",
+      "py-file-cache"
+    ]
+  },
+  "candidate": {
+    "candidate_id": "gepa-false-positive-averse-correctness",
+    "parent_id": "probe-oneshot",
+    "composition_hash": "sha256:9fefb8de4042594e9a8546013825686e2aab70e297b72a71492bc49dfc6e1ebc",
+    "model": "deepseek/deepseek-v4-pro",
+    "thinking": null,
+    "prompt_packet_digest": "sha256:39ec5105d22b6ed7789bfd092cb7d20b202b8dcf04c5e7efac9831d48a428421",
+    "tool_policy": "bitterblossom-correctness",
+    "gepa_mutation": {
+      "name": "gepa-false-positive-averse",
+      "hypothesis": "Penalize speculative findings and prefer fewer findings that match keyed defects over broad audit commentary."
+    }
+  },
+  "workspace": {
+    "harbor_package": "/Users/phaedrus/Development/daedalus/arenas/pr-review-v0",
+    "candidate_visible_paths": [
+      "RUN.json",
+      "EVENT.json",
+      "PR.diff",
+      "environment/"
+    ],
+    "hidden_paths": [
+      "tests/",
+      "solution/"
+    ]
+  },
+  "output_contract": "REPORT.json or result.md containing a Bitterblossom correctness verdict; Threshold scores deterministic key recall locally.",
+  "secret_names": [
+    "OPENROUTER_API_KEY",
+    "GH_TOKEN"
+  ],
+  "env_allowlist": [
+    "OPENROUTER_API_KEY",
+    "GH_TOKEN"
+  ],
+  "budget": {
+    "max_cost_usd": 0.6,
+    "timeout_seconds": 2700
+  },
+  "threshold": {
+    "target_schema": "threshold.optimization_target.v1",
+    "loop_schema": "threshold.optimizer_loop.v1",
+    "eval_id": "pr-review-key-recall-v0",
+    "eval_digest": "sha256:5cd166a6322dd6be5a06385fffb71ee2958256d9d1c17e5f9c7845c96c7e0cca",
+    "source_trials_digest": "sha256:2c9c40bac177b178e40b1b900a8634aab2db649136f3a8bb65272b8bf01166fc",
+    "score_owner": "threshold",
+    "target": {
+      "schema": "threshold.optimization_target.v1",
+      "id": "pr-review-key-recall-v0",
+      "source": "crucible",
+      "mode": "threshold-then-cheap",
+      "decision": "Use this benchmark as the first key-recall floor for review-agent/Cerberus quality before Threshold optimizes candidate configurations against richer judged metrics.",
+      "eval": {
+        "schema": "crucible.eval_spec.v1",
+        "spec_ref": "pr-review-key-recall-v0",
+        "spec_path": "/Users/phaedrus/Development/crucible-evals/evals/pr-review-key-recall-v0.json",
+        "digest": "sha256:5cd166a6322dd6be5a06385fffb71ee2958256d9d1c17e5f9c7845c96c7e0cca",
+        "harbor_package": "/Users/phaedrus/Development/daedalus/arenas/pr-review-v0",
+        "fixtures_digest": null,
+        "answer_key_digest": null,
+        "oracle_solution_digest": null,
+        "source_trials_jsonl": "/Users/phaedrus/Development/daedalus/runs/20260623T000000Z-freeze-pr-review-v0/trials.jsonl",
+        "source_trials_digest": "sha256:2c9c40bac177b178e40b1b900a8634aab2db649136f3a8bb65272b8bf01166fc",
+        "version": null
+      },
+      "scorer": {
+        "kind": "threshold-score",
+        "metric": "pr_review_key_recall",
+        "authoritative_until": "crucible-backlog-008-grade-reward-parity",
+        "note": "This first slice imports Crucible key-recall evidence from a frozen Threshold run; full Harbor bundle digests remain a guardrail gap."
+      },
+      "splits": {
+        "train": null,
+        "validation": "runner.corpus.tasks",
+        "holdout": null,
+        "holdout_policy": "not declared by this Crucible key-recall eval"
+      },
+      "baselines": [
+        "null",
+        "oracle"
+      ],
+      "runner": {
+        "default": "key_recall",
+        "remote": "bitter-blossom-sprites",
+        "request_schema": "threshold.sprite_trial_request.v1",
+        "receipt_schema": "threshold.sprite_trial_receipt.v1",
+        "bb_task": "correctness"
+      },
+      "gates": {
+        "g1": {
+          "state": "unsigned",
+          "meaning": "operator approval required before paid search beyond this bounded probe"
+        },
+        "g2": {
+          "state": "unsigned",
+          "meaning": "eval quality/headroom not fully approved; this probe is evidence for that decision"
+        },
+        "g3": {
+          "state": "unsigned",
+          "meaning": "launch approval required before downstream deployment"
+        },
+        "g5": {
+          "state": "not_applicable",
+          "meaning": "authored Crucible eval, not production trace re-ingestion"
+        }
+      }
+    }
+  },
+  "threshold_submission": {
+    "id": "threshold-pr-review-key-recall-v0-gepa-false-positive-averse-correctness-correctness-validation",
+    "bb_submission": "ec77d7ce0022",
+    "bb_change_key": "threshold-optimizer-061-20260701t182031z-optimizer-loop-pr-review-key-recall-v0-gepa-false-positive-averse-correctness-validation",
+    "bb_submission_row": {
+      "id": "ec77d7ce0022",
+      "change_key": "threshold-optimizer-061-20260701t182031z-optimizer-loop-pr-review-key-recall-v0-gepa-false-positive-averse-correctness-validation",
+      "rev": "3a44ee02410a5583b482e618cf9145320eea3fe3",
+      "round": 1,
+      "state": "open",
+      "context": "Threshold optimizer candidate gepa-false-positive-averse-correctness split validation for misty-step/threshold",
+      "prior_report_json": null,
+      "report_json": null,
+      "created_at": "2026-07-01T18:20:31.800117Z",
+      "updated_at": "2026-07-01T18:20:31.800117Z"
+    },
+    "repo": "misty-step/threshold",
+    "rev": "3a44ee02410a5583b482e618cf9145320eea3fe3",
+    "change": "threshold-optimizer-061",
+    "context": "Threshold backlog 061 GEPA/ASHA optimizer candidate trial for Crucible pr-review-key-recall-v0"
+  }
+}

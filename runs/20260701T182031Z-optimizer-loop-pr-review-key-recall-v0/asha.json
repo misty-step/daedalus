@@ -1,0 +1,38 @@
+{
+  "schema": "threshold.asha.v1",
+  "eval_id": "pr-review-key-recall-v0",
+  "budget_usd": 5.0,
+  "allocator": "hyperband-asha",
+  "known_spend_usd": 0.211138529,
+  "rungs": [
+    {
+      "rung": 0,
+      "name": "validation",
+      "budget_units": 1,
+      "candidate_count": 3,
+      "trials": [
+        "gepa-false-positive-averse-correctness",
+        "gepa-caller-context-correctness-glm",
+        "gepa-clean-fixture-sentinel-correctness-kimi"
+      ],
+      "completed": [
+        "gepa-false-positive-averse-correctness",
+        "gepa-caller-context-correctness-glm"
+      ],
+      "stale": [
+        "gepa-clean-fixture-sentinel-correctness-kimi"
+      ]
+    },
+    {
+      "rung": 1,
+      "name": "heldout",
+      "budget_units": 1,
+      "promotion_rule": "promote non-dominated validation frontier by score desc, cost asc",
+      "promoted": [
+        "gepa-caller-context-correctness-glm"
+      ],
+      "trials": [],
+      "status": "not_run_stale_validation_arm_blocked_certification"
+    }
+  ]
+}
