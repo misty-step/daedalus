@@ -1,13 +1,21 @@
 # Request Bitterblossom ad-hoc dispatch agent pack
 
 Priority: P2
-Status: blocked - gated behind 054 (Cerberus-first mandate); first slice stays shaped
+Status: blocked - gated behind 054 (Cerberus-first mandate); Sprites runner scope defined
 Estimate: L
 
 > **GATED 2026-06-24** behind [[054]] — per [VISION.md](../VISION.md) "one
 > customer until it hums," no second plane (Bitterblossom) is searched until the
 > Cerberus reviewer loop hums. The First Slice below is still shaped and
 > deliver-ready; it resumes the moment 054 closes. Demoted P0→P2.
+
+> **Wiring update 2026-07-01:** this ticket now consumes
+> `docs/crucible-eval-optimization-contract.md`. The immediate bb lane should be
+> pulled as a Crucible/Harbor optimization target, run through Threshold's
+> headroom gate, then executed on Bitter Blossom Sprites only through
+> `threshold.sprite_trial_request.v1` / `threshold.sprite_trial_receipt.v1`.
+> Bitter Blossom remains the runner/ledger plane; Threshold remains the scorer
+> and optimizer.
 
 > **Shaped 2026-06-22 — the immediate `/deliver` is the First Slice below.**
 > The 5-family content beneath it is the broader roadmap. The first slice was
@@ -16,7 +24,7 @@ Estimate: L
 
 ---
 
-## First Slice — measure one bb review lane on the existing arena ($0 dry-run)
+## First Slice — measure one bb review lane on the existing arena (bounded dry-run)
 
 **Reframe.** Don't build a new dispatch-agent arena+scorer. Code review already
 has the whole measurement loop: validated arenas
@@ -29,9 +37,10 @@ lanes), today wired to **hand-picked** models (`storm-correctness` →
 choices with cost/latency/quality evidence, reusing the loop that exists.
 
 ### Goal
-Stand up and rig-validate (at ~$0) a measured search for **one** Bitterblossom
+Stand up and rig-validate a measured search for **one** Bitterblossom
 code-review lane (`storm-correctness`) over bb's candidate models on the existing
-`pr-review-correctness-v0` arena — so the next, paid, G1 search can certify the
+`pr-review-correctness-v0` arena, including a headroom probe capped at about $5
+unless G1 says otherwise — so the next full paid search can certify the
 model/config bb imports instead of the current gut-picked `deepseek-v4-pro`.
 
 ### Non-Goals (this slice)
@@ -68,29 +77,43 @@ model/config bb imports instead of the current gut-picked `deepseek-v4-pro`.
 | **Reuse code-review arena + Cerberus (chosen)** | report-quality nuance not graded (deterministic only) — acceptable, judge later | **chosen** — zero new machinery, serves bb's shipped review storm |
 | Build a new `diagnoser` arena+scorer first | a whole measurement loop (arena, root-cause keys, scorer) before any bb value; weeks of work the code-review loop already provides | rejected (operator steer) — revisit for the diagnoser family later |
 | Go wide (all 5 families' specs+arenas) | spreads spend and scorer-design risk across 5 unbuilt loops before proving one | rejected — verification-system-first on one lane |
-| Paid search immediately | spends before confirming the arena ranks these cheap reflex models (saturation risk) | rejected — `$0` dry-run gates the spend |
+| Paid search immediately | spends before confirming the arena ranks these cheap reflex models (saturation risk) | rejected — bounded rig/headroom dry-run gates the spend |
 
 ### Design (reuse, don't rebuild)
-1. **Refresh `docs/primitives.md`** — verify bb's candidates
+1. **Import the target** — use
+   `docs/crucible-eval-optimization-contract.md` to bind the code-review
+   correctness eval to `threshold.optimization_target.v1`. Transitional source:
+   `specs/pr-review-correctness/taskspec.toml` +
+   `arenas/pr-review-correctness-v0` until Crucible exports the owned Harbor
+   bundle. Authoritative scoring stays `threshold-score` until Crucible backlog
+   008 proves grade parity.
+2. **Refresh `docs/primitives.md`** — verify bb's candidates
    (`moonshotai/kimi-k2.7-code`, `deepseek/deepseek-v4-pro`,
    `deepseek/deepseek-v4-flash`, `z-ai/glm-5.2`) against OpenRouter
-   `/api/v1/models`; confirm `glm-5.2` now catalog-listed (bb confirmed 2026-06-16). $0.
-2. **Author `specs/bb-review-correctness/taskspec.toml`** — copy the
+   `/api/v1/models`; confirm `glm-5.2` now catalog-listed (bb confirmed 2026-06-16).
+3. **Author `specs/bb-review-correctness/taskspec.toml`** — copy the
    pr-review-correctness shape; `[search].models` = bb's candidate set;
    `fixtures = arenas/pr-review-correctness-v0`; lens = correctness;
    `mode = "threshold-then-cheap"` (cheap reflex lane).
-3. **Validate the rig at ~$0** — `threshold doctor` (model-primitives +
-   roster-in-pool); `arena-freeze` + `arena-validate` confirm non-saturable for
-   this model set (oracle 1.0 / null floor / one-shot probe). Oracle/null are
-   costless; the probe is one cheap call. **No paid candidate search.**
-4. **Emit the dry-run packet** — the validated taskspec + the `arena-validate`
+4. **Validate the rig and headroom at <= ~$5** — `threshold doctor`
+   (model-primitives + roster-in-pool); `arena-freeze` + `arena-validate`
+   confirm non-saturable for this model set (oracle 1.0 / null floor / one-shot
+   probe), then run the incumbent plus a few diverse seeds on validation. If the
+   eval cannot rank or the incumbent is already saturated, no paid search.
+5. **Prove the Sprites runner seam** — submit one sandbox trial request to
+   Bitter Blossom using the task's current `substrate = "sprites"` shape and
+   require a `threshold.sprite_trial_receipt.v1` with run id, task id,
+   composition hash, cost/wall fields, artifact refs, and status. Threshold
+   scores the returned `findings.json`; bb does not see hidden keys or pick a
+   winner.
+6. **Emit the dry-run packet** — the validated taskspec + the `arena-validate`
    report (rig holds) + a **paid-search plan** (candidate count, sequential
    budget, expected cluster-robust CIs given the arena's cluster count) + the
    **proposed `storm-correctness.toml` overlay shape** (the `model`/config the
    certified search will fill + the evidence fields it carries). Paid search is a
    separate `/deliver` under an explicit G1 budget.
 
-### Oracle (executable — this $0 slice)
+### Oracle (executable — bounded dry-run slice)
 - [ ] `cargo run -q --bin threshold -- doctor` passes `model-primitives` and
       `roster-in-pool` (every `specs/bb-review-correctness` model is in the pool).
 - [ ] `docs/primitives.md` lists all four bb candidates with current
@@ -99,7 +122,10 @@ model/config bb imports instead of the current gut-picked `deepseek-v4-pro`.
 - [ ] `cargo run -q --bin threshold -- arena-freeze arenas/pr-review-correctness-v0
       --out-dir <tmp>` then `arena-validate … --probe-run <tmp>` exits 0
       (non-saturable) or records a true probe verdict for the bb model set — with
-      **no paid candidate search**.
+      **no paid candidate search beyond the <= ~$5 headroom probe**.
+- [ ] A sandbox Bitter Blossom/Sprites run returns
+      `threshold.sprite_trial_receipt.v1` for one candidate trial, and Threshold
+      scores the returned `findings.json` locally without exposing hidden keys.
 - [ ] A committed dry-run report names the rig (oracle/null/probe), the
       paid-search plan, and the proposed `storm-correctness.toml` `model`/config
       shape + evidence fields. No bb plane file is edited.
@@ -111,20 +137,22 @@ model/config bb imports instead of the current gut-picked `deepseek-v4-pro`.
 - **Falsifier:** a one-shot ties the oracle (saturated) → no paid search until the
   arena is hardened; or a bb candidate is absent from the verified pool.
 - **Driver:** `threshold doctor` + `arena-freeze`/`arena-validate` over the new
-  taskspec ($0).
+  taskspec, then one bounded Sprites runner receipt.
 - **Grader:** `arena-validate` exit 0 / probe verdict; `doctor` green; the report.
-- **Evidence:** committed taskspec + arena-validate report + paid-search plan.
-- **Cadence:** once, as the $0 gate before any paid bb-review search.
+- **Evidence:** committed taskspec + arena-validate report + Sprites receipt +
+  paid-search plan.
+- **Cadence:** once, as the bounded gate before any full paid bb-review search.
 - **Gaps/waiver:** report-quality nuance (judge-rubric) deferred; other
   lenses/lanes/families deferred; bb-side import is a bb step. HTML plan waived —
-  the contestable framing is resolved here; the slice is a fenced $0 rig
-  validation reusing existing machinery.
+  the contestable framing is resolved here; the slice is a fenced rig plus
+  headroom validation reusing existing machinery.
 
 ### Risks + Rollout
 - Refresh finds a bb candidate retired/renamed → swap to the latest per-tier
   (`doctor` enforces).
 - The arena IS saturated for the cheap reflex models → the falsifier fires; harden
-  the arena (040) before paying. The $0 slice exists to catch this *before* spend.
+  the arena (040) before full search spend. The bounded slice exists to catch
+  this before broader candidate spend.
 - Rollout: purely additive (a new taskspec + a report); no code/scorer change;
   trivially revertible.
 - Follow-up (separate G1 `/deliver`): paid search → certified config → proposed bb
@@ -134,7 +162,7 @@ model/config bb imports instead of the current gut-picked `deepseek-v4-pro`.
 `sha256:3753299836dca286a27a53ab7afb0928093c047e03f32619db426b6bbfec9540`
 `~/Development/bitterblossom/backlog.d/_done/061-sdlc-lifecycle-reflex-pack.md`
 (the shipped consumer) + this ticket (036) + the 2026-06-22 shaping interrogation
-(operator: reuse code-review/Cerberus; deterministic findings scorer; $0 dry-run
+(operator: reuse code-review/Cerberus; deterministic findings scorer; bounded dry-run
 first).
 
 ---

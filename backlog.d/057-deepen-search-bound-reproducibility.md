@@ -4,6 +4,10 @@ Priority: P1 · Status: pending · Estimate: M
 
 Child of [[054]]. Retro gap — trust the search itself.
 
+2026-07-01 grooming: also child 5 of [[061]]. The multi-seed and
+optimizer-vs-seed-scan checks here are now acceptance criteria for the
+Crucible-backed optimization loop, not a separate science project.
+
 ## Goal
 Make the search actually search — beat its own seed scan and produce a winner
 stable across seeds — so the recommended config is the best one found, not the
