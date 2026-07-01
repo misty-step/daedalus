@@ -43,6 +43,7 @@ pub struct HeadroomProbeOptions {
     pub bb_repo: String,
     pub bb_rev: Option<String>,
     pub bb_change: Option<String>,
+    pub bb_submission: Option<String>,
     pub dispatch_bitterblossom: bool,
 }
 
@@ -529,6 +530,7 @@ fn build_rig(eval: &EvalInfo, options: &HeadroomProbeOptions, candidates: &[Stri
             "repo": options.bb_repo,
             "rev": options.bb_rev,
             "change": options.bb_change,
+            "submission": options.bb_submission,
             "dispatch_requested": options.dispatch_bitterblossom
         }
     })
@@ -646,14 +648,18 @@ fn build_sprite_request(
         options.bb_task,
         short_hash(&composition_hash)
     );
-    let submission_id = format!("threshold-{trial_id}");
+    let threshold_submission_id = format!("threshold-{trial_id}");
+    let bb_submission_id = options
+        .bb_submission
+        .clone()
+        .unwrap_or_else(|| threshold_submission_id.clone());
     let context = format!(
         "Threshold {} headroom/Sprites seam probe. Eval digest: {}; source trials digest: {}. Threshold-specific trial contract is embedded in this EVENT.json under schema={}.",
         eval.id, eval.eval_digest, eval.trials_digest, SPRITE_REQUEST_SCHEMA
     );
     json!({
         "schema": SPRITE_REQUEST_SCHEMA,
-        "submission": submission_id,
+        "submission": bb_submission_id,
         "repo": options.bb_repo,
         "rev": options.bb_rev,
         "change": options.bb_change,
@@ -688,6 +694,8 @@ fn build_sprite_request(
             "score_owner": "threshold"
         },
         "threshold_submission": {
+            "id": threshold_submission_id,
+            "bb_submission": options.bb_submission,
             "repo": options.bb_repo,
             "rev": options.bb_rev,
             "change": options.bb_change,
@@ -1214,6 +1222,7 @@ mod tests {
             bb_repo: "misty-step/threshold".to_string(),
             bb_rev: Some("abc123".to_string()),
             bb_change: Some("threshold-optimizer-061".to_string()),
+            bb_submission: Some("bb-submission-123".to_string()),
             dispatch_bitterblossom: false,
         })
         .unwrap();
@@ -1234,6 +1243,11 @@ mod tests {
         let request: Value =
             serde_json::from_str(&std::fs::read_to_string(result.sprite_request).unwrap()).unwrap();
         assert_eq!(request["schema"], SPRITE_REQUEST_SCHEMA);
+        assert_eq!(request["submission"], "bb-submission-123");
+        assert_eq!(
+            request["threshold_submission"]["bb_submission"],
+            "bb-submission-123"
+        );
         assert_eq!(request["repo"], "misty-step/threshold");
         assert_eq!(request["rev"], "abc123");
         let receipt: Value =
@@ -1289,6 +1303,7 @@ mod tests {
             bb_repo: "misty-step/threshold".to_string(),
             bb_rev: Some("abc123".to_string()),
             bb_change: Some("threshold-optimizer-061".to_string()),
+            bb_submission: None,
             dispatch_bitterblossom: false,
         })
         .unwrap();

@@ -284,6 +284,9 @@ enum Cmd {
         /// Git branch/change name passed to Bitterblossom. Defaults to current branch.
         #[arg(long)]
         bb_change: Option<String>,
+        /// Existing Bitterblossom submission id for verdict tasks.
+        #[arg(long)]
+        bb_submission: Option<String>,
         /// Actually call `bb run`; without this, write a not_dispatched receipt.
         #[arg(long)]
         dispatch_bitterblossom: bool,
@@ -505,6 +508,7 @@ fn main() -> ExitCode {
             bb_repo,
             bb_rev,
             bb_change,
+            bb_submission,
             dispatch_bitterblossom,
         } => cmd_optimize_headroom(OptimizeHeadroomCommand {
             eval,
@@ -516,6 +520,7 @@ fn main() -> ExitCode {
             bb_repo,
             bb_rev,
             bb_change,
+            bb_submission,
             dispatch_bitterblossom,
         }),
         Cmd::Compare { run_a, run_b } => cmd_compare(&run_a, &run_b),
@@ -882,6 +887,7 @@ struct OptimizeHeadroomCommand {
     bb_repo: String,
     bb_rev: Option<String>,
     bb_change: Option<String>,
+    bb_submission: Option<String>,
     dispatch_bitterblossom: bool,
 }
 
@@ -909,6 +915,7 @@ fn cmd_optimize_headroom(cmd: OptimizeHeadroomCommand) -> ExitCode {
             .bb_change
             .or_else(|| git_output(&["branch", "--show-current"]))
             .or_else(|| git_output(&["rev-parse", "--short", "HEAD"])),
+        bb_submission: cmd.bb_submission,
         dispatch_bitterblossom: cmd.dispatch_bitterblossom,
     };
     match threshold_core::optimization_target::run_headroom_probe(&options) {
