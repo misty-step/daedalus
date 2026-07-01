@@ -2,6 +2,21 @@
 
 Threshold is a laboratory for an agent that builds agents.
 
+## Current Factory Posture (2026-07-01)
+
+Threshold is parked behind Crucible. The optimizer remains strategically
+important, but optimization should not resume until Crucible can run and grade
+benchmarks for real, Sprite candidate artifacts are scored against arena answer
+keys, and the duplicate optimizer stacks collapse into one typed loop.
+
+The 2026-07-01 optimizer-loop run at
+`runs/20260701T182031Z-optimizer-loop-pr-review-key-recall-v0/` is a plumbing
+proof only. It proves the Crucible target -> Threshold optimizer -> Bitter
+Blossom Sprite receipt path, not candidate quality. Its score formula was
+`source_split_key_recall * remote_verdict_score`, so the candidate-dependent
+signal was remote self-verdict rather than answer-key grading. See
+`backlog.d/066-real-sprite-grading-and-one-optimizer.md` for the reentry gate.
+
 The working idea is not a general-purpose "make me an agent" button. It is a
 controlled research program: start with a concrete task specification, have a
 frontier master agent design the evaluation surface and sandbox, then search

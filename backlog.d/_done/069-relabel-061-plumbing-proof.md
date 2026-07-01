@@ -1,6 +1,6 @@
 # Relabel 061 as plumbing proof only
 
-Priority: P0 · Status: ready · Estimate: S
+Priority: P0 · Status: done · Estimate: S
 
 ## Goal
 
@@ -10,16 +10,16 @@ result.
 
 ## Oracle
 
-- [ ] `runs/20260701T182031Z-optimizer-loop-pr-review-key-recall-v0/report.md`
+- [x] `runs/20260701T182031Z-optimizer-loop-pr-review-key-recall-v0/report.md`
       states before the tables that the run is plumbing-proof-only because its
       candidate-dependent score is remote self-verdict, not answer-key grading.
-- [ ] `runs/NOTEBOOK.md` records the same caveat for the 061 run without
+- [x] `runs/NOTEBOOK.md` records the same caveat for the 061 run without
       editing any `runs/*.jsonl` file.
-- [ ] `README.md` status/onboarding text says Threshold is parked behind
+- [x] `README.md` status/onboarding text says Threshold is parked behind
       Crucible and that the 061 run is not a certified measurement.
-- [ ] `backlog.d/061-build-crucible-backed-optimization-loop.md` and dependent
+- [x] `backlog.d/061-build-crucible-backed-optimization-loop.md` and dependent
       tickets point to [[066]] as the reentry gate.
-- [ ] `bin/gate` passes.
+- [x] `bin/gate` passes.
 
 ## Verification System
 
@@ -38,3 +38,13 @@ result.
 - This is the top executable item in the 2026-07-01 Threshold operator
   decisions.
 - Do not edit committed run JSONL history.
+
+## Completion Evidence
+
+- `runs/20260701T182031Z-optimizer-loop-pr-review-key-recall-v0/report.md`
+  labels the run as plumbing proof before the tables and renames the frontier
+  section as provisional.
+- `runs/NOTEBOOK.md` records the score formula and `not_certified` caveat.
+- `README.md` now has a current factory posture section that says Threshold is
+  parked behind Crucible and links [[066]] as the reentry gate.
+- Verification: `bin/gate`.
