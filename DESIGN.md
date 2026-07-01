@@ -32,8 +32,8 @@ Decided now:
   (`harbor run --agent-import-path …`) and gains Docker isolation, multi-trial
   distributions, and cloud scaling for free. Historical Phase 0 note: the
   verifier delegated to the shared historical pre-migration `runner/score.py`.
-  Current Harbor isolation copies the `threshold-score` binary into the task
-  image.
+  Current Harbor isolation copies the Rust `threshold-score` verifier binary
+  into the task image.
 - **Candidate harness: pi over OpenRouter, frozen for V1.** The harness is a
   *slot* in the candidate manifest; V1 freezes it to `pi` (minimal system
   prompt, context-engineerable, headless `-p --mode json`, per-message usage

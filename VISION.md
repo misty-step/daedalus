@@ -84,7 +84,7 @@ learns only that "something changed."
   self-approve spend, eval trust, deployment, write authority, or production-data
   re-ingestion.
 - **Planes own production.** Threshold mints measured compositions and launch
-  contracts. Bitterblossom, Olympus, Cerberus, or another plane owns triggers,
+  contracts. Bitter Blossom, Olympus, Cerberus, or another plane owns triggers,
   runtime permissions, posting, rollback, production observability, and policy.
 
 ## Why This Exists

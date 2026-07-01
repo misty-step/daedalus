@@ -541,11 +541,10 @@ the initial Python prototype one parity-verified module at a time — every port
 was cross-checked against the Python reference by a parity oracle before the
 Python was retired; see `docs/rust-migration.md`.
 
-Harbor task containers still run a Python scorer script because the Harbor
-isolation image is `python:3.12-slim`, but the repo workflow is Rust-owned:
-`bin/harbor-run` builds `threshold-score` and calls the Rust `port-harbor`
-subcommand before invoking Harbor. Shell stays a thin launcher (`bin/gate`,
-`bin/harbor-run`), never the workflow engine.
+Harbor task containers run the copied Rust `threshold-score` verifier binary
+inside the Harbor isolation image. `bin/harbor-run` builds `threshold-score` and
+calls the Rust `port-harbor` subcommand before invoking Harbor. Shell stays a
+thin launcher (`bin/gate`, `bin/harbor-run`), never the workflow engine.
 
 The core stays small: task specs in, experiments out, receipts persisted. The
 master agent can be clever. The harness should be boring.
