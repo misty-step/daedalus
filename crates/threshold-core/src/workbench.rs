@@ -33,7 +33,11 @@ const VERIFY_SH: &str = "#!/usr/bin/env sh
 set -eu
 HERE=$(cd \"$(dirname \"$0\")\" && pwd)
 WORKDIR=${1:-$PWD}
-threshold-score \"$WORKDIR/findings.json\" \"$HERE/expected.json\"
+if command -v threshold-score >/dev/null 2>&1; then
+  threshold-score \"$WORKDIR/findings.json\" \"$HERE/expected.json\"
+else
+  threshold score \"$WORKDIR/findings.json\" \"$HERE/expected.json\"
+fi
 ";
 
 const DEFAULT_TEMPLATE: &str = "{intent}
@@ -1603,6 +1607,7 @@ mod tests {
         assert_eq!(findings, serde_json::json!({"findings": []}));
         let test_sh = fs::read_to_string(task.join("tests").join("test.sh")).unwrap();
         assert!(test_sh.contains("threshold-score"));
+        assert!(test_sh.contains("threshold score"));
         let _ = fs::remove_dir_all(&tmp);
     }
 

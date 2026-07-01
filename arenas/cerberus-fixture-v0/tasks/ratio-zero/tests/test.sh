@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-threshold-score findings.json tests/expected.json
+if command -v threshold-score >/dev/null 2>&1; then
+  threshold-score findings.json tests/expected.json
+else
+  threshold score findings.json tests/expected.json
+fi

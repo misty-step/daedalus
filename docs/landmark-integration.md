@@ -61,6 +61,7 @@ jobs:
       - name: Checkout repository history
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
           fetch-depth: 0
           persist-credentials: false
 
@@ -80,7 +81,10 @@ creator in `synthesis-only` mode instead of adding a second full release job.
 
 ## Verification
 
-- The repo's canonical gate must stay the release precondition.
+- The repo's canonical gate must stay the release precondition. For
+  `workflow_run` triggers, checkout must pin to
+  `github.event.workflow_run.head_sha` so Landmark runs against the exact commit
+  that passed the gate, not a newer default-branch commit.
 - `GH_RELEASE_TOKEN` must have repository write access.
 - `OPENROUTER_API_KEY` enables synthesized public notes; missing or stale keys
   must not block release unless the repo deliberately sets
