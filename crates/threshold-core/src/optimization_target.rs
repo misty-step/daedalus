@@ -717,8 +717,9 @@ fn dispatch_bitterblossom(
     );
     let mut cmd = Command::new(&options.bb_bin);
     if let Some(config) = &options.bb_config {
-        cmd.arg("--config").arg(config);
-        if let Some(root) = bb_repo_root(config) {
+        let plane_root = bb_plane_root(config);
+        cmd.arg("--config").arg(&plane_root);
+        if let Some(root) = bb_repo_root(&plane_root) {
             cmd.current_dir(root);
         }
     }
@@ -1084,9 +1085,19 @@ fn now_iso() -> String {
         .unwrap_or_else(|_| "1970-01-01T00:00:00+00:00".to_string())
 }
 
-fn bb_repo_root(config: &Path) -> Option<PathBuf> {
-    let plane_dir = config.parent()?;
-    plane_dir.parent().map(Path::to_path_buf)
+fn bb_plane_root(config: &Path) -> PathBuf {
+    if config.file_name().and_then(|s| s.to_str()) == Some("plane.toml") {
+        config
+            .parent()
+            .map(Path::to_path_buf)
+            .unwrap_or_else(|| config.to_path_buf())
+    } else {
+        config.to_path_buf()
+    }
+}
+
+fn bb_repo_root(plane_root: &Path) -> Option<PathBuf> {
+    plane_root.parent().map(Path::to_path_buf)
 }
 
 fn extract_bb_run_id(stdout_json: &Value) -> Value {
