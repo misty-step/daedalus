@@ -702,6 +702,8 @@ fn dispatch_bitterblossom(
     request: &Value,
 ) -> Value {
     let started = now_iso();
+    let payload_path =
+        std::fs::canonicalize(request_path).unwrap_or_else(|_| request_path.to_path_buf());
     let idempotency = format!(
         "threshold-{}-{}",
         request
@@ -728,7 +730,7 @@ fn dispatch_bitterblossom(
         .arg("--idempotency-key")
         .arg(&idempotency)
         .arg("--payload-file")
-        .arg(request_path)
+        .arg(&payload_path)
         .arg("--json");
 
     let result = cmd.output();
@@ -775,6 +777,7 @@ fn dispatch_bitterblossom(
                 "command": {
                     "bb_bin": path_string(&options.bb_bin),
                     "config": options.bb_config.as_ref().map(|p| path_string(p)),
+                    "payload_file": path_string(&payload_path),
                     "task": options.bb_task,
                     "idempotency_key": idempotency
                 },
