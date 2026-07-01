@@ -81,3 +81,17 @@ One entry per run: what was tried, what was learned. lineage.md in each run dir 
 - spec `cerberus-reviewer` (mode threshold-then-cheap) on arena `pr-review-v0` v0.3.0
 - stop: plateau · spend $2.0969 · generations 2
 - full story: 20260625T161856Z-search-cerberus-reviewer/lineage.md
+
+## 20260701T182031Z-optimizer-loop-pr-review-key-recall-v0
+
+- purpose: plumbing proof for the Crucible target -> Threshold optimizer ->
+  Bitter Blossom Sprite receipt path.
+- score caveat: not a candidate-quality measurement. The score formula was
+  `source_split_key_recall * remote_verdict_score`; source recall came from the
+  incumbent and the candidate-dependent signal was the Sprite's own verdict
+  string, not answer-key grading.
+- certification: `not_certified`; Kimi stayed stale in execution with unknown
+  cost, and no heldout score was fed back into GEPA.
+- reentry gate: [[066]] must grade Sprite artifacts against answer keys and
+  collapse the duplicate optimizer path before optimization resumes.
+- full story: 20260701T182031Z-optimizer-loop-pr-review-key-recall-v0/report.md
