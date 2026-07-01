@@ -5,7 +5,7 @@ Status: done
 Estimate: XL
 
 ## Goal
-Move Daedalus from trusted synthetic fixtures toward sensitive or adversarial
+Move Threshold from trusted synthetic fixtures toward sensitive or adversarial
 arenas by making isolation and contract validation executable instead of
 doctrine-only.
 
@@ -45,7 +45,7 @@ doctrine-only.
   packets. `runner/export.py` and `deliveries/pr-review/contract.toml` now use
   machine-checkable `write_actions = "none"`.
 - `docs/security-posture.md`, `DESIGN.md`, `ROADMAP.md`, `README.md`, and the
-  Daedalus skill document the local/Harbor boundary, Python validator, Rust
+  Threshold skill document the local/Harbor boundary, Python validator, Rust
   deferral trigger, exact commands, and residual risks.
 - Focused tests: `python3 -m pytest -q tests/test_run.py tests/test_launch.py
   tests/test_export.py` -> 40 passed.

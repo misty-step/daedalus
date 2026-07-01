@@ -36,7 +36,7 @@ tasks without relying on session memory or hand-written provenance.
 
 ## Evidence
 
-- Added `runner/workbench.py` plus `bin/daedalus arena-scaffold`,
+- Added `runner/workbench.py` plus `bin/threshold arena-scaffold`,
   `arena-validate`, `arena-adjudicate`, and `arena-disagreements`.
 - `arena-scaffold` creates Harbor-format task placeholders, including
   `template.md`, `intent.md`, `environment/`, `tests/expected.json`,
@@ -50,9 +50,9 @@ tasks without relying on session memory or hand-written provenance.
   scorer constants.
 - Docs: `docs/arena-workbench.md`, linked from `README.md` and `DESIGN.md`,
   including the auto-generated-defect revisit triggers.
-- Real validation smoke: `bin/daedalus arena-validate arenas/pr-review-v2
+- Real validation smoke: `bin/threshold arena-validate arenas/pr-review-v2
   --probe-run runs/20260611T173632Z-search-pr-review-v0 --report
-  /tmp/daedalus-031-pr-review-v2-freeze2.md` -> PASS.
+  /tmp/threshold-031-pr-review-v2-freeze2.md` -> PASS.
 - Focused tests: `python3 -m pytest -q tests/test_workbench.py tests/test_run.py
   tests/test_launch.py tests/test_export.py` -> 47 passed.
 - Full gate: `bin/gate` -> 129 passed.

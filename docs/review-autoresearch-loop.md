@@ -1,6 +1,6 @@
 # Code Review Autoresearch Loop
 
-Daedalus should improve code reviewers through patient, recorded research
+Threshold should improve code reviewers through patient, recorded research
 loops, not by treating one good prompt as the product. The product is still
 the evidence-backed agent contract: frozen arena, composition hash, run
 records, export boundary, and residual risk.
@@ -14,7 +14,7 @@ autonomous/reflex code review. Treat this loop as preserved research evidence
 for lane scoring, artifact contracts, and plateau discipline. New review
 product work flows through `backlog.d/048-build-cerberus-substrate-rd-lab.md`
 unless that lab explicitly revives a swarm topology. Pi remains the native
-Daedalus V1 search harness for this archived research loop; it is not the
+Threshold V1 search harness for this archived research loop; it is not the
 default substrate for Cerberus-backed reflex review labs.
 
 The machine-readable contract is intentionally small. Tests parse this block;

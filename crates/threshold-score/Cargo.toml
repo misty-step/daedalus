@@ -1,0 +1,13 @@
+[package]
+name = "threshold-score"
+version.workspace = true
+edition.workspace = true
+description = "Tiny static scorer binary — drop-in replacement for runner/score.py in the Harbor container."
+
+[[bin]]
+name = "threshold-score"
+path = "src/main.rs"
+
+[dependencies]
+threshold-core = { path = "../threshold-core", default-features = false }
+serde_json = { workspace = true }

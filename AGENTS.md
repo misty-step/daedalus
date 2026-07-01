@@ -1,10 +1,10 @@
-# Daedalus repo contracts
+# Threshold repo contracts
 
 - **Gate:** `bin/gate` (offline `cargo fmt --check` + `cargo test --workspace`
   + `cargo clippy -D warnings`). Run it before claiming done. Never weaken a
   test to get green.
 - **The grader is gospel.** Changes to the scorer
-  (`crates/daedalus-core/src/score.rs`), answer keys, or scorer constants
+  (`crates/threshold-core/src/score.rs`), answer keys, or scorer constants
   require an arena version bump (`arenas/<id>/arena.toml`)
   and re-running oracle/null baselines. Never average rewards across arena
   versions.
@@ -12,7 +12,7 @@
   only each provider's *latest* model per tier; a superseded version is
   removed, not kept alongside (e.g. glm-5 → glm-5.2, gpt-5-mini → gpt-5.4-mini).
   Every `specs/*/taskspec.toml [search].models` entry must exist in the pool.
-  `daedalus doctor` enforces both halves: `model-primitives` (pool re-verified
+  `threshold doctor` enforces both halves: `model-primitives` (pool re-verified
   within `--stale-days`) and `roster-in-pool` (no taskspec model outside the
   pool). Re-verify against OpenRouter `/api/v1/models` before adding a model.
   Optimizer default: `deepseek/deepseek-v4-pro` (escalate to `openai/gpt-5.5`
@@ -26,7 +26,7 @@
 - Architecture and schemas: `DESIGN.md`. Phases: `ROADMAP.md`. Work items:
   `backlog.d/` (Goal + Oracle required; close via `Closes-backlog: <id>`
   commit trailers).
-- North star: `VISION.md` — what Daedalus is (the constellation's certified-agent
+- North star: `VISION.md` — what Threshold is (the constellation's certified-agent
   foundry), the load-bearing commitments, and what it refuses. Operating
   principles and the review-swarm shape: `docs/philosophy.md`. Keep delivery
   choices consistent with both, or update them deliberately when direction

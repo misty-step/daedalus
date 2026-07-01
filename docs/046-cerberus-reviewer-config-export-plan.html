@@ -44,13 +44,13 @@
     <section>
       <h2>Backlog 046 / Cerberus Handoff</h2>
       <h1>Export the packet Cerberus actually imports.</h1>
-      <p>Target outcome: a measured Daedalus review delivery writes a sandbox-only <code>ReviewerConfigPacket.v1</code> JSON artifact that Cerberus validates, dry-run imports, and rejects for production promotion while G3/G4/G5 remain pending.</p>
+      <p>Target outcome: a measured Threshold review delivery writes a sandbox-only <code>ReviewerConfigPacket.v1</code> JSON artifact that Cerberus validates, dry-run imports, and rejects for production promotion while G3/G4/G5 remain pending.</p>
       <p>Chosen design: add one thin exporter target beside the existing delivery export. Reuse committed delivery, run, contract, approval, and prompt evidence. Do not build a generic promotion engine.</p>
     </section>
     <aside class="panel">
       <h2>Quality System</h2>
       <p><span class="accent">Standards:</span> Rust-only, evidence-preserving, deterministic config hash, no self-approval, no default mutation.</p>
-      <p><span class="accent">Proof:</span> Daedalus unit tests, Daedalus CLI smoke, Cerberus validator/importer QA, full Daedalus gate, fresh critic.</p>
+      <p><span class="accent">Proof:</span> Threshold unit tests, Threshold CLI smoke, Cerberus validator/importer QA, full Threshold gate, fresh critic.</p>
       <p><span class="warn">Stop:</span> if a field requires invented evidence, a pending gate is promoted, or Cerberus validation cannot be the oracle.</p>
     </aside>
   </header>
@@ -73,12 +73,12 @@
       <table>
         <thead><tr><th>Field</th><th>Answer</th></tr></thead>
         <tbody>
-          <tr><td>Claim</td><td>Daedalus exports a measured sandbox-only Cerberus reviewer config packet from committed delivery evidence.</td></tr>
+          <tr><td>Claim</td><td>Threshold exports a measured sandbox-only Cerberus reviewer config packet from committed delivery evidence.</td></tr>
           <tr><td>Falsifier</td><td>Lost run/gate/cost/prompt evidence, mismatched config hash, invalid Cerberus packet, or any production approval implication.</td></tr>
-          <tr><td>Driver</td><td><code>daedalus export-cerberus</code> plus Cerberus validator/importer commands.</td></tr>
+          <tr><td>Driver</td><td><code>threshold export-cerberus</code> plus Cerberus validator/importer commands.</td></tr>
           <tr><td>Grader</td><td>Schema validation, config digest equality, import rejection reasons, focused Rust assertions, and critic review.</td></tr>
           <tr><td>Evidence</td><td><code>tmp/cerberus-export-2026-06-19/</code>.</td></tr>
-          <tr><td>Cadence</td><td>Before closing Daedalus backlog 046 and whenever the measured delivery changes.</td></tr>
+          <tr><td>Cadence</td><td>Before closing Threshold backlog 046 and whenever the measured delivery changes.</td></tr>
         </tbody>
       </table>
     </article>

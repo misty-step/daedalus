@@ -6,7 +6,7 @@ Child of [[054]]. Retro gap #2.
 
 ## Implementation Receipt (2026-06-26)
 - Added `[incumbent]` support to `specs/cerberus-reviewer/taskspec.toml` and
-  `daedalus run`: the incumbent materializes as `kind = "incumbent"`, runs
+  `threshold run`: the incumbent materializes as `kind = "incumbent"`, runs
   `--certify-trials` deep on every task, and is excluded from Pareto,
   recommendation, mutation, and false-positive-trap alarms.
 - Certification now selects the incumbent as the reward-delta baseline when one

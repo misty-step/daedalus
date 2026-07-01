@@ -1,18 +1,18 @@
-# Daedalus Philosophy
+# Threshold Philosophy
 
-Daedalus is a lab for measured agent craft. It exists to turn a task into a
+Threshold is a lab for measured agent craft. It exists to turn a task into a
 focused agent with evidence, not to generate prompts that feel convincing.
 
-> North star: [`VISION.md`](../VISION.md) — what Daedalus is and what it
+> North star: [`VISION.md`](../VISION.md) — what Threshold is and what it
 > refuses. This file is the operating philosophy beneath it: the principles and
 > the review-swarm shape that the vision implies.
 
 ## Vision
 
-The highest-quality version of Daedalus is a disciplined agent foundry:
+The highest-quality version of Threshold is a disciplined agent foundry:
 
 - an operator states a task and its risk boundary;
-- Daedalus turns that task into a frozen arena, candidate search space, and
+- Threshold turns that task into a frozen arena, candidate search space, and
   launch contract;
 - the system compares agent compositions by records, not vibes;
 - a human reviews eval quality before trusting scores;
@@ -40,7 +40,7 @@ unproven.
 - **Cost and latency are part of quality.** A powerful agent that is too slow,
   too expensive, or too opaque is not a good deployment candidate under a
   threshold-then-cheap task.
-- **The plane owns production trust.** Daedalus recommends measured contracts.
+- **The plane owns production trust.** Threshold recommends measured contracts.
   Olympus, Bitter Blossom, or another control plane owns triggers, posting,
   permissions, dedupe, rollback, and operator-visible state.
 - **No hidden grader leakage.** Candidates never read `tests/` or `solution/`,
@@ -56,6 +56,6 @@ unproven.
 For PR review, the best system is unlikely to be one heroic reviewer. It is a
 measured review organization: specialists create coverage, a master reviewer
 creates restraint and synthesis, and the control plane posts one validated
-review. Daedalus should optimize that organization only where the suite
+review. Threshold should optimize that organization only where the suite
 contract, taxonomy, cost envelope, latency envelope, and human gates are
 explicit.

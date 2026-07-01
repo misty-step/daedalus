@@ -1,6 +1,6 @@
-# Daedalus
+# Threshold
 
-Daedalus is a laboratory for an agent that builds agents.
+Threshold is a laboratory for an agent that builds agents.
 
 The working idea is not a general-purpose "make me an agent" button. It is a
 controlled research program: start with a concrete task specification, have a
@@ -8,7 +8,7 @@ frontier master agent design the evaluation surface and sandbox, then search
 over focused agent compositions until a candidate is measurably good enough to
 hand to a human or a downstream runtime.
 
-If this works, Daedalus can become a way to define, generate, maintain, and
+If this works, Threshold can become a way to define, generate, maintain, and
 extend bespoke agents across several contexts: ad hoc local runs, repo-specific
 harnesses, Olympus-style operator workflows, Bitter Blossom-style product
 surfaces, or a future agent control plane. This repository starts as a seed
@@ -56,7 +56,7 @@ sleep." The important lesson is the shape of the loop:
 5. Keep, discard, or learn.
 6. Repeat with a trace.
 
-Daedalus asks what the equivalent loop looks like for agents. In this project,
+Threshold asks what the equivalent loop looks like for agents. In this project,
 the mutable surface is not a training script. It might be an agent manifest, prompt
 packet, skill list, tool policy, model/provider choice, or harness projection.
 The fixed arena is not a small language-model training run. It might be a pull
@@ -68,7 +68,7 @@ The rest of the research landscape reinforces a few constraints:
 - [OpenAI's eval guidance](https://developers.openai.com/api/docs/guides/evaluation-best-practices)
   treats evals as structured tests for nondeterministic systems and emphasizes
   task-specific tests, logging, automation, and human calibration. The same
-  docs now warn that OpenAI's Evals platform is being deprecated, so Daedalus
+  docs now warn that OpenAI's Evals platform is being deprecated, so Threshold
   should not assume that platform as its durable substrate.
 - [Anthropic's agent eval guidance](https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents)
   frames agent evals as multi-turn tasks with tools, environments, and grading
@@ -78,7 +78,7 @@ The rest of the research landscape reinforces a few constraints:
   monolith.
 - [LangSmith trajectory evals](https://docs.langchain.com/langsmith/trajectory-evals)
   separate final-answer grading, trajectory grading, and step-level grading.
-  Daedalus should make that distinction explicit instead of collapsing every
+  Threshold should make that distinction explicit instead of collapsing every
   signal into a vague score.
 - [DSPy GEPA optimization](https://dspy.ai/getting-started/gepa-optimization/)
   and the [GEPA paper](https://arxiv.org/abs/2507.19457) suggest that
@@ -91,7 +91,7 @@ The rest of the research landscape reinforces a few constraints:
   [agent eval work](https://github.com/vercel-labs/agent-eval) and
   [`AGENTS.md` eval writeup](https://vercel.com/blog/agents-md-outperforms-skills-in-our-agent-evals)
   are a useful warning: sophisticated retrieval or skill systems do not
-  automatically beat small, always-visible, version-matched context. Daedalus
+  automatically beat small, always-visible, version-matched context. Threshold
   should test boring baselines.
 
 ## Core Thesis
@@ -140,7 +140,7 @@ A useful task spec probably needs:
 - **Data boundaries:** which fixtures, repos, inboxes, browsers, APIs, and
   credentials the experiment may use.
 
-The first hard product question is whether Daedalus should require this task
+The first hard product question is whether Threshold should require this task
 spec as a structured document from the user, or whether the master agent should
 derive it through a clarifying interview.
 
@@ -219,7 +219,7 @@ Possible slots:
 
 The point of slots is experimental discipline. If two candidates differ in
 model, prompt, tool surface, and critic count at once, it is hard to know what
-caused a score change. Daedalus should support broad creative proposals, but
+caused a score change. Threshold should support broad creative proposals, but
 the experiment runner should preserve enough structure for ablation.
 
 ## Arena and Sandbox
@@ -257,7 +257,7 @@ the behavior.
 
 ## Evals and Benchmarks
 
-Daedalus should treat eval design as the first-class product.
+Threshold should treat eval design as the first-class product.
 
 Useful eval types:
 
@@ -302,7 +302,7 @@ high-scoring candidate that is obviously bad to a human.
 
 ## The Autoresearch Loop
 
-The simplest Daedalus loop should look like this:
+The simplest Threshold loop should look like this:
 
 1. Load the task spec.
 2. Create or select a fixed arena.
@@ -372,7 +372,7 @@ Possible trigger classes:
 - local file or folder change;
 - human approval after a recommended run.
 
-The output of Daedalus should be a recommended trigger contract:
+The output of Threshold should be a recommended trigger contract:
 
 - what event starts the agent;
 - what input packet is built;
@@ -477,11 +477,11 @@ corpus.
 
 ## Naming
 
-Working name: **Daedalus**.
+Working name: **Threshold**.
 
 Why it fits:
 
-- Daedalus is a builder, not a ruler.
+- Threshold is a builder, not a ruler.
 - The mythic tone fits near Olympus and Atlas without making the project a
   control plane by default.
 - The labyrinth association is useful: this project builds arenas and must also
@@ -501,7 +501,7 @@ Other candidates:
 - **Caliper:** measurement-first, restrained, precise. Better for an eval
   subsystem than the whole project.
 - **Hephaestus:** forge-builder energy, but heavier and less clean than
-  Daedalus.
+  Threshold.
 - **Labyrinth:** honest about the arena concept, but too much risk of sounding
   like complexity is the product.
 - **Whetstone:** excellent sharpening metaphor, but already present locally and
@@ -510,7 +510,7 @@ Other candidates:
 - **Glyph:** nice for compact agent recipes, but already present locally.
 - **Laboratory:** radically honest, but already present locally and too broad.
 
-The name can change later. For now, `daedalus` is a good working directory name
+The name can change later. For now, `threshold` is a good working directory name
 because it is evocative, available locally, and carries the right warning label:
 build carefully, or the system becomes a maze.
 
@@ -535,15 +535,15 @@ build carefully, or the system becomes a maze.
 
 ## Implementation
 
-Daedalus is implemented in **Rust**: `crates/daedalus-core` (the deterministic
-kernel) and `crates/daedalus-cli` (the `daedalus` binary). It was migrated from
+Threshold is implemented in **Rust**: `crates/threshold-core` (the deterministic
+kernel) and `crates/threshold-cli` (the `threshold` binary). It was migrated from
 the initial Python prototype one parity-verified module at a time — every port
 was cross-checked against the Python reference by a parity oracle before the
 Python was retired; see `docs/rust-migration.md`.
 
 Harbor task containers still run a Python scorer script because the Harbor
 isolation image is `python:3.12-slim`, but the repo workflow is Rust-owned:
-`bin/harbor-run` builds `daedalus-score` and calls the Rust `port-harbor`
+`bin/harbor-run` builds `threshold-score` and calls the Rust `port-harbor`
 subcommand before invoking Harbor. Shell stays a thin launcher (`bin/gate`,
 `bin/harbor-run`), never the workflow engine.
 
@@ -566,12 +566,12 @@ day, unlocking the Phase 0 prototype:
   launch-contract validation, and residual risks.
 - `specs/pr-review/` — first task specification (gate G1 approved).
 - `arenas/pr-review-v0/` — six PR fixtures in Harbor task format.
-- `crates/` — the Rust implementation: `daedalus-core` (kernel) +
-  `daedalus-cli` (the `daedalus` binary).
+- `crates/` — the Rust implementation: `threshold-core` (kernel) +
+  `threshold-cli` (the `threshold` binary).
 - `candidates/` — reference candidates (null floor, oracle ceiling, one-shot
   saturation probe) plus agent compositions (pi over OpenRouter).
 - `runs/` — JSONL run records with reward, tokens, cost, and latency.
-- `.agents/skills/daedalus/SKILL.md` — the master-agent operating protocol.
+- `.agents/skills/threshold/SKILL.md` — the master-agent operating protocol.
 
 ### Quickstart
 
@@ -581,8 +581,8 @@ and closeout commands.
 
 ```sh
 bin/gate                                           # offline gate (cargo fmt --check + cargo test + cargo clippy)
-cargo build -p daedalus-cli                        # build the `daedalus` binary
-cargo run --quiet --bin daedalus -- doctor         # readiness summary, no model spend
-cargo run --quiet --bin daedalus -- arena-freeze --help  # generate freeze packets before search
-cargo run --quiet --bin daedalus -- --help         # all subcommands
+cargo build -p threshold-cli                        # build the `threshold` binary
+cargo run --quiet --bin threshold -- doctor         # readiness summary, no model spend
+cargo run --quiet --bin threshold -- arena-freeze --help  # generate freeze packets before search
+cargo run --quiet --bin threshold -- --help         # all subcommands
 ```

@@ -1,12 +1,12 @@
 # Review Swarm Taxonomy
 
-This charter defines the lens boundaries for the first Daedalus PR-review
+This charter defines the lens boundaries for the first Threshold PR-review
 swarm. It is intentionally narrower than all possible code review: the first
 suite needs categories that can be scored, attributed, and adjudicated without
 turning the benchmark into taste.
 
 The machine-readable contract lives in the fenced TOML block below. Keep prose
-and TOML in sync; `cargo run --quiet --bin daedalus -- taxonomy-validate` treats the TOML block as the
+and TOML in sync; `cargo run --quiet --bin threshold -- taxonomy-validate` treats the TOML block as the
 source of truth.
 
 ```toml

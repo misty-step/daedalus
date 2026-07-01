@@ -23,7 +23,7 @@ in run evidence.
 ## Why Now
 
 Phases 0–2 and the Phase 3 launch-contract machinery are far enough along to
-build the lab side now: the lab is scientifically rigorous, `daedalus export`
+build the lab side now: the lab is scientifically rigorous, `threshold export`
 emits pinned launch contracts (026), and `launch-pack` emits approval-gated
 import packets for Olympus / Bitter Blossom (029). Phase 3 itself is not done:
 G3 deployment remains unsigned, so no live deployed incumbent exists yet. The
@@ -78,7 +78,7 @@ approves re-ingestion.
       against a null/oracle reference.
 - [ ] Certification (n ≥ 5/task, 020) gates any "re-optimized winner" claim;
       an uncertified re-optimization aborts rather than ships.
-- [ ] A contract revision is emitted (`daedalus export`) carrying provenance:
+- [ ] A contract revision is emitted (`threshold export`) carrying provenance:
       which production traces seeded the fixtures, which incumbent it beat, and
       the measured delta.
 - [ ] One full cycle is recorded end-to-end in `runs/` with lineage
@@ -113,9 +113,9 @@ incumbent — depends on a real G3 deployment of the pr-review (or another)
 agent to a control plane, which G2 has not yet authorized beyond sandbox use.
 Build the loop now; do not close the ticket until the live cycle lands.
 
-**Seam discipline:** this ticket owns the daedalus side (ingest → fixture →
+**Seam discipline:** this ticket owns the threshold side (ingest → fixture →
 re-optimize → revise). The control-plane side (emit run telemetry in a
-daedalus-consumable shape) is Bitter Blossom ticket 056. Keep the export
+threshold-consumable shape) is Bitter Blossom ticket 056. Keep the export
 contract versioned and shared; do not fork it.
 
 **Roadmap anchor:** ROADMAP.md "Phase 4 — The flywheel", specifically the

@@ -6,7 +6,7 @@ Priority: P0 · Status: delivered · Estimate: L
 
 - Context packet: `docs/048-cerberus-rd-lab-context.md`
 - HTML plan: `docs/048-cerberus-rd-lab-shape.html`
-- Strategic direction: Cerberus now supersedes the Daedalus review-swarm
+- Strategic direction: Cerberus now supersedes the Threshold review-swarm
   product lane for autonomous/reflex code review. The old 034 swarm work is
   reusable evaluation evidence, not the parent path.
 - Deliverable type: harness primitive plus research report. The first
@@ -15,7 +15,7 @@ Priority: P0 · Status: delivered · Estimate: L
 
 ## Goal
 
-Make Daedalus useful for Cerberus by measuring autonomous code-review
+Make Threshold useful for Cerberus by measuring autonomous code-review
 substrates as first-class candidate configurations, starting with OpenCode and
 OMP through Cerberus' `ReviewArtifact.v1` contract, before generalizing the lab
 pattern to arbitrary tasks, projects, and contexts.
@@ -28,35 +28,35 @@ better default substrate than OMP for unsupervised review services because it is
 server/session-first. Live Cerberus code has moved from architecture memory into
 an actual Rust runner with `opencode`, `omp`, and fixture harnesses plus strict
 artifact validation. Cerberus `master` now also includes PR/git-range request
-builders (`99c4b21 Add Cerberus PR request builder (#463)`), so Daedalus can
-start from real `ReviewRequest.v1` and `ReviewArtifact.v1` fixtures. Daedalus,
+builders (`99c4b21 Add Cerberus PR request builder (#463)`), so Threshold can
+start from real `ReviewRequest.v1` and `ReviewArtifact.v1` fixtures. Threshold,
 however, still treats `pi` as the only V1 candidate harness and cannot yet
 compare Cerberus substrate runs.
 
-This is the narrowest useful bridge between Daedalus and real applications:
+This is the narrowest useful bridge between Threshold and real applications:
 prove one upstream R&D lab for Cerberus, then extract the lab template for
 Allie-style evidence systems and other task domains.
 
 ## Scope
 
-- Add or shape a Daedalus candidate/import path for Cerberus
+- Add or shape a Threshold candidate/import path for Cerberus
   `ReviewArtifact.v1` outputs.
 - Shape the operator-facing lab surface: task contract, candidate rack,
   experiment console, evidence notebook, and promotion gate.
 - Compare at least one OpenCode-backed Cerberus run, one OMP-backed Cerberus
   run, and the current Pi-style review baseline where comparable.
 - Record substrate, model, context capability, artifact validity, lifecycle
-  state, cost, latency, and failure mode in evidence Daedalus can rank.
+  state, cost, latency, and failure mode in evidence Threshold can rank.
 - Keep Bitterblossom and Olympus as control-plane consumers/comparators; do not
   move production posting, trigger, budget, or approval authority into
-  Daedalus, and do not resurrect 034's Pi-first specialist swarm as the parent
+  Threshold, and do not resurrect 034's Pi-first specialist swarm as the parent
   product path.
 - Resolve or explicitly sequence with `047` so real-repo arena validation is
   not based on an inconclusive one-shot saturation probe.
 
 ## Non-Goals
 
-- No production PR posting from Daedalus or Cerberus in this ticket.
+- No production PR posting from Threshold or Cerberus in this ticket.
 - No arbitrary lab framework before the Cerberus lab works.
 - No hardcoded specialist roster as the product claim; reviewer topology is a
   measured variable or substrate-internal behavior.
@@ -70,9 +70,9 @@ Allie-style evidence systems and other task domains.
       boundaries, executable oracle, stop conditions, and premise sources
       without relying on chat context.
 - [x] A Cerberus fixture `ReviewArtifact.v1` can be validated and converted or
-      scored through a Daedalus run/eval path without live model spend.
+      scored through a Threshold run/eval path without live model spend.
 - [x] A live OpenCode-backed Cerberus review and an OMP-backed Cerberus review
-      for the same request leave comparable Daedalus evidence: artifact,
+      for the same request leave comparable Threshold evidence: artifact,
       transcript/receipt, substrate, model, lifecycle state, cost or `null`,
       latency, and scoring output.
 - [x] The current Pi review baseline remains measurable or is explicitly
@@ -91,18 +91,18 @@ Allie-style evidence systems and other task domains.
 
 ## Verification System
 
-- Claim: Daedalus can compare Cerberus autonomous review substrates credibly
+- Claim: Threshold can compare Cerberus autonomous review substrates credibly
   enough to recommend what Cerberus should run next.
-- Falsifier: Daedalus cannot score a valid Cerberus artifact, substrate errors
+- Falsifier: Threshold cannot score a valid Cerberus artifact, substrate errors
   are confused with model quality, OpenCode/OMP runs do not leave comparable
   evidence, or a saturated/inconclusive arena is used for a recommendation.
-- Driver: Cerberus fixture run, live Cerberus OpenCode/OMP runs, Daedalus
+- Driver: Cerberus fixture run, live Cerberus OpenCode/OMP runs, Threshold
   scoring/report generation, and the repo `bin/gate`.
-- Grader: `ReviewArtifact.v1` validation, Daedalus score against hidden answer
+- Grader: `ReviewArtifact.v1` validation, Threshold score against hidden answer
   key or fixture oracle, report fields present, lifecycle/failure states
   preserved, and non-inconclusive freeze evidence before any real-repo
   recommendation.
-- Evidence packet: Cerberus request/artifact/transcript, Daedalus run directory,
+- Evidence packet: Cerberus request/artifact/transcript, Threshold run directory,
   summary/report, substrate comparison table, and critic receipt.
 - Cadence: fixture before live spend; live run before recommendation; fresh
   critic before any G2/G3-facing handoff.
@@ -112,7 +112,7 @@ Allie-style evidence systems and other task domains.
 1. Land and reconcile the substrate premise on `master`; update stale Pi-first
    and `034`-parent wording in `036` and `037` so they depend on this lab
    instead of forking it.
-2. Add a fixture-only Cerberus artifact ingestion/scoring path in Daedalus.
+2. Add a fixture-only Cerberus artifact ingestion/scoring path in Threshold.
 3. Add live Cerberus OpenCode and OMP candidate execution or import receipts
    with honest cost/latency/failure fields.
 4. Connect the comparison to the review arena without weakening `047`; if the
@@ -127,9 +127,9 @@ Allie-style evidence systems and other task domains.
 - Context packet: `docs/048-cerberus-rd-lab-context.md`
 - HTML plan: `docs/048-cerberus-rd-lab-shape.html`
 - Fixture import command:
-  `daedalus cerberus-lab import --arena arenas/cerberus-fixture-v0 --request /Users/phaedrus/Development/cerberus/fixtures/requests/diff-only.json --artifact /Users/phaedrus/Development/cerberus/target/cerberus/artifact.json --candidate-id fixture-self-review --substrate fixture --task-id ratio-zero --out-dir runs/cerberus-rd-lab-fixture`
+  `threshold cerberus-lab import --arena arenas/cerberus-fixture-v0 --request /Users/phaedrus/Development/cerberus/fixtures/requests/diff-only.json --artifact /Users/phaedrus/Development/cerberus/target/cerberus/artifact.json --candidate-id fixture-self-review --substrate fixture --task-id ratio-zero --out-dir runs/cerberus-rd-lab-fixture`
 - Fixture comparison command:
-  `daedalus cerberus-lab compare --run-dir runs/cerberus-rd-lab-fixture --run-dir runs/cerberus-rd-lab-opencode --run-dir runs/cerberus-rd-lab-omp --out-dir runs/cerberus-rd-lab-comparison`
+  `threshold cerberus-lab compare --run-dir runs/cerberus-rd-lab-fixture --run-dir runs/cerberus-rd-lab-opencode --run-dir runs/cerberus-rd-lab-omp --out-dir runs/cerberus-rd-lab-comparison`
 - Fixture evidence:
   `runs/cerberus-rd-lab-fixture/`, `runs/cerberus-rd-lab-opencode/`,
   `runs/cerberus-rd-lab-omp/`, and
@@ -137,18 +137,18 @@ Allie-style evidence systems and other task domains.
 - Live OMP command:
   `cargo run --quiet --manifest-path /Users/phaedrus/Development/cerberus/Cargo.toml -- review --request /tmp/cerberus-live-request.json --harness omp --model openrouter/deepseek/deepseek-v4-flash --out /tmp/cerberus-live-omp/artifact.json --markdown /tmp/cerberus-live-omp/review.md --execution-plan /tmp/cerberus-live-omp/execution_plan.json --transcript /tmp/cerberus-live-omp/transcript.txt --timeout-seconds 180`
 - Live OpenCode command:
-  `cargo run --quiet --manifest-path /tmp/cerberus-daedalus-048/Cargo.toml -- review --request /tmp/cerberus-live-request.json --harness opencode --model openrouter/deepseek/deepseek-v4-pro --out /tmp/cerberus-live-opencode-patched/artifact.json --markdown /tmp/cerberus-live-opencode-patched/review.md --execution-plan /tmp/cerberus-live-opencode-patched/execution_plan.json --transcript /tmp/cerberus-live-opencode-patched/transcript.txt --timeout-seconds 180`
-- Live Daedalus import commands:
-  `cargo run --quiet --bin daedalus -- cerberus-lab import --arena arenas/cerberus-fixture-v0 --request /tmp/cerberus-live-request.json --artifact /tmp/cerberus-live-omp/artifact.json --candidate-id omp-live-review --substrate omp --model deepseek/deepseek-v4-flash --task-id ratio-zero --transcript /tmp/cerberus-live-omp/transcript.txt --receipt /tmp/cerberus-live-omp/execution_plan.json --out-dir runs/cerberus-rd-lab-live-omp`
-  `cargo run --quiet --bin daedalus -- cerberus-lab import --arena arenas/cerberus-fixture-v0 --request /tmp/cerberus-live-request.json --artifact /tmp/cerberus-live-opencode-patched/artifact.json --candidate-id opencode-live-review --substrate opencode --model deepseek/deepseek-v4-pro --task-id ratio-zero --transcript /tmp/cerberus-live-opencode-patched/transcript.txt --receipt /tmp/cerberus-live-opencode-patched/execution_plan.json --out-dir runs/cerberus-rd-lab-live-opencode`
+  `cargo run --quiet --manifest-path /tmp/cerberus-threshold-048/Cargo.toml -- review --request /tmp/cerberus-live-request.json --harness opencode --model openrouter/deepseek/deepseek-v4-pro --out /tmp/cerberus-live-opencode-patched/artifact.json --markdown /tmp/cerberus-live-opencode-patched/review.md --execution-plan /tmp/cerberus-live-opencode-patched/execution_plan.json --transcript /tmp/cerberus-live-opencode-patched/transcript.txt --timeout-seconds 180`
+- Live Threshold import commands:
+  `cargo run --quiet --bin threshold -- cerberus-lab import --arena arenas/cerberus-fixture-v0 --request /tmp/cerberus-live-request.json --artifact /tmp/cerberus-live-omp/artifact.json --candidate-id omp-live-review --substrate omp --model deepseek/deepseek-v4-flash --task-id ratio-zero --transcript /tmp/cerberus-live-omp/transcript.txt --receipt /tmp/cerberus-live-omp/execution_plan.json --out-dir runs/cerberus-rd-lab-live-omp`
+  `cargo run --quiet --bin threshold -- cerberus-lab import --arena arenas/cerberus-fixture-v0 --request /tmp/cerberus-live-request.json --artifact /tmp/cerberus-live-opencode-patched/artifact.json --candidate-id opencode-live-review --substrate opencode --model deepseek/deepseek-v4-pro --task-id ratio-zero --transcript /tmp/cerberus-live-opencode-patched/transcript.txt --receipt /tmp/cerberus-live-opencode-patched/execution_plan.json --out-dir runs/cerberus-rd-lab-live-opencode`
 - Live comparison command:
-  `cargo run --quiet --bin daedalus -- cerberus-lab compare --run-dir runs/cerberus-rd-lab-live-opencode --run-dir runs/cerberus-rd-lab-live-omp --run-dir runs/cerberus-rd-lab-fixture --out-dir runs/cerberus-rd-lab-live-comparison`
+  `cargo run --quiet --bin threshold -- cerberus-lab compare --run-dir runs/cerberus-rd-lab-live-opencode --run-dir runs/cerberus-rd-lab-live-omp --run-dir runs/cerberus-rd-lab-fixture --out-dir runs/cerberus-rd-lab-live-comparison`
 - Live evidence:
   `runs/cerberus-rd-lab-live-opencode/`,
   `runs/cerberus-rd-lab-live-omp/`, and
   `runs/cerberus-rd-lab-live-comparison/report.md`
 - Arena validation waiver evidence:
-  `cargo run --quiet --bin daedalus -- arena-validate arenas/cerberus-fixture-v0 --report runs/cerberus-rd-lab-live-comparison/arena-validate-report.md`
+  `cargo run --quiet --bin threshold -- arena-validate arenas/cerberus-fixture-v0 --report runs/cerberus-rd-lab-live-comparison/arena-validate-report.md`
   failed as expected because no `--probe-run` was supplied; report:
   `runs/cerberus-rd-lab-live-comparison/arena-validate-report.md`
 - Premise source:
@@ -166,9 +166,9 @@ Allie-style evidence systems and other task domains.
 
 ## Notes
 
-2026-06-20 delivery slice: Daedalus now has `cerberus-lab import` and
+2026-06-20 delivery slice: Threshold now has `cerberus-lab import` and
 `cerberus-lab compare`, plus `arenas/cerberus-fixture-v0`, to validate
-Cerberus `ReviewArtifact.v1`, map findings into Daedalus scoring, preserve
+Cerberus `ReviewArtifact.v1`, map findings into Threshold scoring, preserve
 receipt/transcript provenance, and compare fixture-backed substrate artifacts
 without live spend. The checked evidence is adapter proof only: the OpenCode
 and OMP artifacts imported here come from Cerberus' fake-harness verification
@@ -178,7 +178,7 @@ recommendation.
 
 2026-06-20 live slice: the same diff-only request was reviewed through live
 Cerberus OMP (`deepseek/deepseek-v4-flash`) and live Cerberus OpenCode
-(`deepseek/deepseek-v4-pro`) and imported into Daedalus. OpenCode produced a
+(`deepseek/deepseek-v4-pro`) and imported into Threshold. OpenCode produced a
 valid `WARN` artifact, matched the seeded `ratio-zero` defect, and scored
 reward `0.8` with one false positive. OMP produced a valid `PASS` artifact but
 missed the seeded defect and scored reward `0.0`. Both runs record unknown
@@ -191,7 +191,7 @@ land upstream before the live OpenCode lane is reproducible from Cerberus
 `master`.
 
 Pi is explicitly incomparable for this Cerberus adapter proof: current Pi
-Daedalus candidates emit Daedalus-native `findings.json` under the V1 search
+Threshold candidates emit Threshold-native `findings.json` under the V1 search
 harness, not Cerberus `ReviewArtifact.v1` receipts with lifecycle, substrate,
 request digest, context capability, and artifact validation fields. Pi can be
 added to this lab only after a Cerberus-compatible wrapper emits the same

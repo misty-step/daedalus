@@ -4,17 +4,17 @@
 > (`MUTABLE_SLOTS`) + a survey of the settled 2026 industry/research vocabulary.
 > Two choices remain open for the operator: the whole-bundle noun (this doc
 > recommends **composition**) and whether to promote this glossary into
-> `VISION.md`. Anchors to [VISION.md](../VISION.md): this defines *what Daedalus
+> `VISION.md`. Anchors to [VISION.md](../VISION.md): this defines *what Threshold
 > searches over*.
 
-Daedalus exists to certify the best **composition** for a plane. To do that
+Threshold exists to certify the best **composition** for a plane. To do that
 precisely, every distinct part of an agent needs one unambiguous name. The good
 news: the kernel already encodes most of this, and already resolves the two
 terms the field most often confuses.
 
 ## The pieces
 
-| Piece | Canonical term | Daedalus slot (`mutate.rs`) | Searched? |
+| Piece | Canonical term | Threshold slot (`mutate.rs`) | Searched? |
 |---|---|---|---|
 | Base model (weights + provider) | **model** | `model` | ✅ mutable |
 | Inference controls (reasoning effort) | **thinking** (industry: "reasoning effort") | `thinking` | ✅ mutable |
@@ -36,7 +36,7 @@ terms the field most often confuses.
 
 - **Composition** — the whole configured bundle (model + thinking + system
   prompt + capability surface). Already in the kernel (`composition_hash`); the
-  unit Daedalus certifies and a plane deploys. (Externally the whole-bundle noun
+  unit Threshold certifies and a plane deploys. (Externally the whole-bundle noun
   is essentially uncoined — "agent" is ambiguous — so "composition" is ours with
   near-zero collision.)
 - **Capability surface** — the searchable subset that *equips* an agent: tools +
@@ -50,13 +50,13 @@ terms the field most often confuses.
 
 ## Retire the bare word "harness"
 
-It is the most overloaded term in the field, and Daedalus already escaped the
+It is the most overloaded term in the field, and Threshold already escaped the
 ambiguity — so don't re-import it:
 
-- Eval orgs (SWE-bench) use **harness** = the *test runner / grader*. Daedalus
+- Eval orgs (SWE-bench) use **harness** = the *test runner / grader*. Threshold
   calls that the **arena**.
 - Tooling practitioners (OpenAI Codex, Willison) use **harness** = the *runtime
-  loop*. Daedalus calls that the **substrate**.
+  loop*. Threshold calls that the **substrate**.
 
 Use **arena** and **substrate**; reserve "harness" for loose external reference
 only.

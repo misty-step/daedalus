@@ -54,7 +54,7 @@
     <ul>
       <li>Claim: real-repo arena freeze probe is falsifiable and bounded.</li>
       <li>Falsifier: probe trials error on context overflow/empty content while validation passes or no useful artifact records why.</li>
-      <li>Driver: `cargo run --quiet --bin daedalus -- arena-freeze arenas/pr-review-correctness-v0 --out-dir runs/&lt;047-freeze&gt;`.</li>
+      <li>Driver: `cargo run --quiet --bin threshold -- arena-freeze arenas/pr-review-correctness-v0 --out-dir runs/&lt;047-freeze&gt;`.</li>
       <li>Grader: `arena-validate --probe-run` status plus `summary.json` probe errors/trials/verdict.</li>
       <li>Evidence packet: freeze dir with `trials.jsonl`, `summary.json`, and `freeze-report.md`.</li>
       <li>Cadence: tests before live spend, live freeze before PR.</li>

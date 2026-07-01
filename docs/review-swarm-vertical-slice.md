@@ -3,7 +3,7 @@
 Prepared for backlog 034 on 2026-06-12.
 
 This document records the first non-deploying review-swarm slice:
-`general + correctness + security + master`. It is a Daedalus lab artifact,
+`general + correctness + security + master`. It is a Threshold lab artifact,
 not a production launch packet and not an enterprise-readiness claim.
 
 ## Member Specs
@@ -38,8 +38,8 @@ security-specialist arena. It contains `py-markup-escape`,
 Freeze/search evidence:
 
 ```sh
-cargo run --quiet --bin daedalus -- arena-validate arenas/pr-review-security-v0 --probe-run runs/20260613T151035Z-freeze-pr-review-security-v0 --report runs/20260613T151035Z-freeze-pr-review-security-v0/freeze-report.md
-cargo run --quiet --bin daedalus -- run specs/pr-review-security/taskspec.toml --rng-seed 9 --budget-usd 0.40 --max-candidates 0 --trials 1 --certify-top 1 --certify-trials 2 --children-per-gen 1 --optimizer-model moonshotai/kimi-k2.6 --max-errors-per-candidate 2
+cargo run --quiet --bin threshold -- arena-validate arenas/pr-review-security-v0 --probe-run runs/20260613T151035Z-freeze-pr-review-security-v0 --report runs/20260613T151035Z-freeze-pr-review-security-v0/freeze-report.md
+cargo run --quiet --bin threshold -- run specs/pr-review-security/taskspec.toml --rng-seed 9 --budget-usd 0.40 --max-candidates 0 --trials 1 --certify-top 1 --certify-trials 2 --children-per-gen 1 --optimizer-model moonshotai/kimi-k2.6 --max-errors-per-candidate 2
 ```
 
 Observed:
@@ -70,8 +70,8 @@ correctness-specialist arena. It contains seven adapted Rich fixtures:
 Freeze/search evidence:
 
 ```sh
-cargo run --quiet --bin daedalus -- arena-validate arenas/pr-review-correctness-v0 --probe-run runs/20260613T151035Z-freeze-pr-review-correctness-v0 --report runs/20260613T151035Z-freeze-pr-review-correctness-v0/freeze-report.md
-cargo run --quiet --bin daedalus -- run specs/pr-review-correctness/taskspec.toml --rng-seed 11 --budget-usd 0.75 --max-candidates 0 --trials 1 --certify-top 1 --certify-trials 2 --children-per-gen 1 --optimizer-model moonshotai/kimi-k2.6 --max-errors-per-candidate 2
+cargo run --quiet --bin threshold -- arena-validate arenas/pr-review-correctness-v0 --probe-run runs/20260613T151035Z-freeze-pr-review-correctness-v0 --report runs/20260613T151035Z-freeze-pr-review-correctness-v0/freeze-report.md
+cargo run --quiet --bin threshold -- run specs/pr-review-correctness/taskspec.toml --rng-seed 11 --budget-usd 0.75 --max-candidates 0 --trials 1 --certify-top 1 --certify-trials 2 --children-per-gen 1 --optimizer-model moonshotai/kimi-k2.6 --max-errors-per-candidate 2
 ```
 
 Observed:
@@ -150,7 +150,7 @@ v0.1.0 reference/probe run:
 python3 runner/run.py --candidate candidates/oracle.toml --arena arenas/pr-review-master-v0 --exp-dir runs/20260612T205852Z-freeze-pr-review-master-v0 --split all --trials 1 --final # historical pre-migration command
 python3 runner/run.py --candidate candidates/null.toml --arena arenas/pr-review-master-v0 --exp-dir runs/20260612T205852Z-freeze-pr-review-master-v0 --split all --trials 1 --final # historical pre-migration command
 python3 runner/run.py --candidate candidates/probe-oneshot.toml --arena arenas/pr-review-master-v0 --exp-dir runs/20260612T205852Z-freeze-pr-review-master-v0 --split all --trials 1 --final --max-errors 1 # historical pre-migration command
-cargo run --quiet --bin daedalus -- arena-validate arenas/pr-review-master-v0 --probe-run runs/20260612T205852Z-freeze-pr-review-master-v0 --report runs/20260612T205852Z-freeze-pr-review-master-v0/freeze-report.md
+cargo run --quiet --bin threshold -- arena-validate arenas/pr-review-master-v0 --probe-run runs/20260612T205852Z-freeze-pr-review-master-v0 --report runs/20260612T205852Z-freeze-pr-review-master-v0/freeze-report.md
 ```
 
 Observed:
@@ -166,9 +166,9 @@ v0.2.0 freeze/search evidence:
 python3 runner/run.py --candidate candidates/oracle.toml --arena arenas/pr-review-master-v0 --exp-dir runs/20260612T215810Z-freeze-pr-review-master-v020 --split all --trials 1 --final # historical pre-migration command
 python3 runner/run.py --candidate candidates/null.toml --arena arenas/pr-review-master-v0 --exp-dir runs/20260612T215810Z-freeze-pr-review-master-v020 --split all --trials 1 --final # historical pre-migration command
 python3 runner/run.py --candidate candidates/probe-oneshot.toml --arena arenas/pr-review-master-v0 --exp-dir runs/20260612T215810Z-freeze-pr-review-master-v020 --split all --trials 1 --final # historical pre-migration command
-cargo run --quiet --bin daedalus -- arena-validate arenas/pr-review-master-v0 --probe-run runs/20260612T220412Z-search-pr-review-master --report runs/20260612T220412Z-search-pr-review-master/freeze-report.md
-cargo run --quiet --bin daedalus -- run specs/pr-review-master/taskspec.toml --rng-seed 3406 --budget-usd 0.55 --max-candidates 0 --trials 1 --certify-top 1 --certify-trials 2 --children-per-gen 1 --optimizer-model moonshotai/kimi-k2.6 --max-errors-per-candidate 2
-cargo run --quiet --bin daedalus -- trace --run-dir runs/20260612T220412Z-search-pr-review-master
+cargo run --quiet --bin threshold -- arena-validate arenas/pr-review-master-v0 --probe-run runs/20260612T220412Z-search-pr-review-master --report runs/20260612T220412Z-search-pr-review-master/freeze-report.md
+cargo run --quiet --bin threshold -- run specs/pr-review-master/taskspec.toml --rng-seed 3406 --budget-usd 0.55 --max-candidates 0 --trials 1 --certify-top 1 --certify-trials 2 --children-per-gen 1 --optimizer-model moonshotai/kimi-k2.6 --max-errors-per-candidate 2
+cargo run --quiet --bin threshold -- trace --run-dir runs/20260612T220412Z-search-pr-review-master
 ```
 
 Observed:

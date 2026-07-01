@@ -12,27 +12,27 @@ Priority: P1 · Status: delivered · Estimate: M
 > defaulted `SearchWorld::record_history` hook (pure loop preserved); the CLI
 > world appends each entry to `loop.history.jsonl` — streamed log equals the
 > returned history exactly (unit-tested), loop.json unchanged. Slice 2:
-> `daedalus view` renders the cockpit (spend/cap, headroom rig, leader callout
+> `threshold view` renders the cockpit (spend/cap, headroom rig, leader callout
 > with per-trial cost, candidate roll-up, hypotheses panel), reusing
 > `report::aggregate` so it never drifts from the static report; rig/hypotheses/
 > cap fold into `Snapshot` via `with_*` builders, each degrading gracefully when
 > its source is absent; the budget cap is persisted to seed.json at run start.
 > Fresh-context thermonuclear review applied (hypotheses now render before the
 > first trial; alt-screen dropped for Ctrl-C safety). Evidence:
-> `crates/daedalus-core/src/view.rs` (19 view tests), `search_loop.rs`
-> (streaming-equivalence test), `crates/daedalus-cli/src/main.rs`; verified live
-> via `daedalus view <fixture> --once` (mid-flight / early-window / empty-dir);
+> `crates/threshold-core/src/view.rs` (19 view tests), `search_loop.rs`
+> (streaming-equivalence test), `crates/threshold-cli/src/main.rs`; verified live
+> via `threshold view <fixture> --once` (mid-flight / early-window / empty-dir);
 > `bin/gate` green.
 
 ## Goal
-A human can watch a `daedalus run` as it happens in a single full-screen
+A human can watch a `threshold run` as it happens in a single full-screen
 terminal cockpit: the current leader, spend-vs-budget-cap, running candidates
 with running scores, the rig/headroom panel, the last-trial heartbeat, **and a
 live ledger of the hypotheses the optimizer is testing** (each mutation, its
 predicted effect, and kept/discarded verdict) — without grepping JSON.
 
 ## Why
-`daedalus view` (049) already gives a live terminal *roll-up*, and `report-html`
+`threshold view` (049) already gives a live terminal *roll-up*, and `report-html`
 (044) gives the rich *post-run* visual. The gap: (a) it's a flat poll-and-reprint,
 not a laid-out cockpit; and (b) the **hypotheses** — the most interesting "what
 is the search trying right now" signal — only exist in `loop.json.history` at
@@ -58,13 +58,13 @@ legible as a *search*, not just a leaderboard.
   an additional append-only artifact beside `trials.jsonl`.
 
 ## Repo Anchors
-- `crates/daedalus-core/src/view.rs` — the `Snapshot` model + `render`; the live
+- `crates/threshold-core/src/view.rs` — the `Snapshot` model + `render`; the live
   data layer to extend.
-- `crates/daedalus-cli/src/main.rs` `cmd_view` (~509-544) — the poll/redraw loop.
-- `crates/daedalus-core/src/search_loop.rs` — where children are proposed +
+- `crates/threshold-cli/src/main.rs` `cmd_view` (~509-544) — the poll/redraw loop.
+- `crates/threshold-core/src/search_loop.rs` — where children are proposed +
   evaluated (the `history` entries: child_id/parent_id/slot_changed/hypothesis/
   predicted_effect/improved) — the source of the incremental hypothesis log.
-- `docs/daedalus-ui-lab/round-2/{terminal.html,console.html}` — the cockpit
+- `docs/threshold-ui-lab/round-2/{terminal.html,console.html}` — the cockpit
   design (single-viewport status strip + leader + headroom + candidates).
 - `runs/<id>/{trials.jsonl, rig.json, loop.json}` — the data the cockpit reads.
 
@@ -96,9 +96,9 @@ scripts; degrade if a panel's source is absent.
   hypotheses streaming in.
 
 ## Oracle
-- [ ] `daedalus run` writes a growing `runs/<id>/loop.history.jsonl` (one row per
+- [ ] `threshold run` writes a growing `runs/<id>/loop.history.jsonl` (one row per
       proposed child) whose union equals `loop.json.history` at completion (unit-tested).
-- [ ] `daedalus view <run-dir>` renders a full-screen cockpit (status+spend/cap,
+- [ ] `threshold view <run-dir>` renders a full-screen cockpit (status+spend/cap,
       leader, rig strip, candidate table, **hypotheses panel**, heartbeat),
       dependency-free, offline; `--once` snapshots it.
 - [ ] Watching a live `run`, hypotheses appear in the panel as the optimizer
@@ -112,7 +112,7 @@ scripts; degrade if a panel's source is absent.
   live, in the terminal.
 - Falsifier: hypotheses don't appear until the run ends; or the cockpit's
   numbers diverge from `report-html` over the same dir.
-- Driver: `daedalus view <run-dir>` during a live `daedalus run`; the golden
+- Driver: `threshold view <run-dir>` during a live `threshold run`; the golden
   render test; the history-equivalence unit test.
 - Evidence: a screenshot/asciinema of the live cockpit + the committed fixture
   golden.

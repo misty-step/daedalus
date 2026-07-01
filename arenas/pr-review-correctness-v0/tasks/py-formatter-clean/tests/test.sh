@@ -4,4 +4,4 @@
 set -eu
 HERE=$(cd "$(dirname "$0")" && pwd)
 WORKDIR=${1:-$PWD}
-daedalus score "$WORKDIR/findings.json" "$HERE/expected.json"
+threshold-score "$WORKDIR/findings.json" "$HERE/expected.json"

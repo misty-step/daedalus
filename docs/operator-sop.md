@@ -1,6 +1,6 @@
-# Daedalus Operator SOP
+# Threshold Operator SOP
 
-This is the maintained cold-start path for a Daedalus task family. Lab
+This is the maintained cold-start path for a Threshold task family. Lab
 evidence proves a composition in an arena; launch approval is a separate human
 gate.
 
@@ -9,7 +9,7 @@ gate.
 ```sh
 git status --short --branch --untracked-files=all
 bin/gate
-cargo run --quiet --bin daedalus -- doctor
+cargo run --quiet --bin threshold -- doctor
 ```
 
 Resolve any `doctor` failures before spending model budget. Warnings can be
@@ -34,13 +34,13 @@ No paid search runs before G1 is signed.
 Use the workbench for task scaffolds and freeze checks:
 
 ```sh
-cargo run --quiet --bin daedalus -- arena-scaffold arenas/<arena-id> <task-id> \
+cargo run --quiet --bin threshold -- arena-scaffold arenas/<arena-id> <task-id> \
   --taskspec specs/<id>/taskspec.toml
 
-cargo run --quiet --bin daedalus -- arena-freeze arenas/<arena-id> \
+cargo run --quiet --bin threshold -- arena-freeze arenas/<arena-id> \
   --out-dir runs/<freeze-run>
 
-cargo run --quiet --bin daedalus -- arena-validate arenas/<arena-id> \
+cargo run --quiet --bin threshold -- arena-validate arenas/<arena-id> \
   --probe-run runs/<freeze-run> \
   --report runs/<freeze-run>/freeze-report.md
 ```
@@ -52,7 +52,7 @@ one-shot probe behavior, split membership, and holdout exposure counts. Human
 adjudications go through:
 
 ```sh
-cargo run --quiet --bin daedalus -- arena-adjudicate arenas/<arena-id> \
+cargo run --quiet --bin threshold -- arena-adjudicate arenas/<arena-id> \
   --task <task-id> \
   --finding "<summary>" \
   --ruling ACCEPT \
@@ -72,7 +72,7 @@ Do not trust comparative scores before G2 signs the arena and scorer quality.
 Use the task's declared mode and budget. A typical certified run shape is:
 
 ```sh
-cargo run --quiet --bin daedalus -- run specs/<id>/taskspec.toml \
+cargo run --quiet --bin threshold -- run specs/<id>/taskspec.toml \
   --rng-seed <seed> \
   --budget-usd <budget> \
   --max-candidates <n> \
@@ -119,17 +119,17 @@ gitignored.
 Export only evidence-backed candidates:
 
 ```sh
-cargo run --quiet --bin daedalus -- export deliveries/<id> --spec specs/<id>/taskspec.toml
-cargo run --quiet --bin daedalus -- export-cerberus deliveries/<id> --spec specs/<id>/taskspec.toml --out deliveries/<id>/cerberus-reviewer-config.json
-cargo run --quiet --bin daedalus -- trace --run-dir runs/<exp-id>
-cargo run --quiet --bin daedalus -- regression deliveries/<id> --spec specs/<id>/taskspec.toml --dry-run
+cargo run --quiet --bin threshold -- export deliveries/<id> --spec specs/<id>/taskspec.toml
+cargo run --quiet --bin threshold -- export-cerberus deliveries/<id> --spec specs/<id>/taskspec.toml --out deliveries/<id>/cerberus-reviewer-config.json
+cargo run --quiet --bin threshold -- trace --run-dir runs/<exp-id>
+cargo run --quiet --bin threshold -- regression deliveries/<id> --spec specs/<id>/taskspec.toml --dry-run
 ```
 
 Launch contracts are validated before import packets render:
 
 ```sh
-cargo run --quiet --bin daedalus -- launch-pack deliveries/<id> --plane bitter-blossom --dry-run
-cargo run --quiet --bin daedalus -- launch-pack deliveries/<id> --plane olympus --dry-run
+cargo run --quiet --bin threshold -- launch-pack deliveries/<id> --plane bitter-blossom --dry-run
+cargo run --quiet --bin threshold -- launch-pack deliveries/<id> --plane olympus --dry-run
 ```
 
 Dry-run packets are sandbox-only and non-deployable. Cerberus handoffs are
@@ -138,11 +138,11 @@ validated by Cerberus itself from the Cerberus checkout:
 ```sh
 cd /path/to/cerberus
 cargo run --locked -q -p cerberus-cli -- validate-reviewer-config \
-  /path/to/daedalus/deliveries/<id>/cerberus-reviewer-config.json
+  /path/to/threshold/deliveries/<id>/cerberus-reviewer-config.json
 cargo run --locked -q -p cerberus-cli -- import-reviewer-config \
-  /path/to/daedalus/deliveries/<id>/cerberus-reviewer-config.json \
+  /path/to/threshold/deliveries/<id>/cerberus-reviewer-config.json \
   --dry-run \
-  --out tmp/daedalus-cerberus-export/import-report.json
+  --out tmp/threshold-cerberus-export/import-report.json
 ```
 
 The import report must keep production import rejected while any required

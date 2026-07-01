@@ -29,7 +29,7 @@ tracked explicitly rather than hidden inside the production-trace flywheel.
 
 - [x] The canonical schema validators for task specs, arena metadata, run
       records/receipts, and launch contracts live in Rust and are exercised by
-      `bin/gate`. — `crates/daedalus-core/src/validate.rs` is the kernel: one
+      `bin/gate`. — `crates/threshold-core/src/validate.rs` is the kernel: one
       `ValidationError`, the canonical TOML + JSON `require_*` families, and the
       `SchemaVersion` registry. `launch.rs` and `cerberus_lab.rs` route their
       require-families through it (private duplicates deleted); `cerberus.rs`
@@ -37,21 +37,21 @@ tracked explicitly rather than hidden inside the production-trace flywheel.
       through `cargo test --workspace` (which `bin/gate` runs) — specifically the
       `launch_contracts_pass_on_accepted_records` unit test, which loads the real
       committed `deliveries/*/contract.toml` records through the kernel. The gate
-      is NOT coupled to a `daedalus doctor` invocation (that would make the gate's
+      is NOT coupled to a `threshold doctor` invocation (that would make the gate's
       verdict a function of working-tree run litter via `check_run_artifacts`'
       `git status` path, not the code).
-- [x] `daedalus doctor` or an equivalent command reports stale, malformed, or
+- [x] `threshold doctor` or an equivalent command reports stale, malformed, or
       incompatible receipts/contracts with actionable errors. — new
       `doctor::check_launch_contracts` walks `deliveries/*/contract.toml` through
       `launch::load_contract` and fails with the kernel's actionable message
       (e.g. `contract must be version 1`). It is available for operator use via
-      `daedalus doctor`, but not wired into `bin/gate`.
+      `threshold doctor`, but not wired into `bin/gate`.
 - [x] Existing accepted `pr-review-v2` and `launch-contract-v0` records pass
       the Rust validators without lossy compatibility shims. — the
       `launch_contracts_pass_on_accepted_records` unit test asserts the glob
       discovers `deliveries/launch-contract/contract.toml` and
       `deliveries/pr-review/contract.toml` and loads each through
-      `launch::load_contract` with no shim; `daedalus doctor` reports
+      `launch::load_contract` with no shim; `threshold doctor` reports
       `launch-contracts | ok` on the same records for operators.
 - [x] New or changed docs for the kernel name the Rust-owned validation
       surfaces; repo-wide Python-era doc cleanup remains owned by
@@ -75,8 +75,8 @@ deliberately NOT appended to `bin/gate` — doing so would make the gate's verdi
 depend on `git status` of uncommitted run output (`check_run_artifacts`), not on
 the code under review.
 
-Deferred: a dedicated `daedalus validate` CLI subcommand, deliberately leaving
-`crates/daedalus-cli/src/main.rs` untouched to avoid colliding with concurrent
+Deferred: a dedicated `threshold validate` CLI subcommand, deliberately leaving
+`crates/threshold-cli/src/main.rs` untouched to avoid colliding with concurrent
 branches that touch it; the standalone subcommand can land later without
 re-doing the kernel. Doc-prose migration (Python-era references) remains owned
 by 042, not this ticket.

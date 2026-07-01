@@ -29,7 +29,7 @@ Freeze packet: `runs/20260613T151035Z-freeze-pr-review-correctness-v0`
 Bounded seed-only search:
 `runs/20260613T161359Z-search-pr-review-correctness`
 
-- command: `cargo run --quiet --bin daedalus -- run specs/pr-review-correctness/taskspec.toml --rng-seed 11 --budget-usd 0.75 --max-candidates 0 --trials 1 --certify-top 1 --certify-trials 2 --children-per-gen 1 --optimizer-model moonshotai/kimi-k2.6 --max-errors-per-candidate 2`
+- command: `cargo run --quiet --bin threshold -- run specs/pr-review-correctness/taskspec.toml --rng-seed 11 --budget-usd 0.75 --max-candidates 0 --trials 1 --certify-top 1 --certify-trials 2 --children-per-gen 1 --optimizer-model moonshotai/kimi-k2.6 --max-errors-per-candidate 2`
 - recommended bounded baseline: `seed1-gpt-5-mini-spec-first`
 - model: `openai/gpt-5-mini`
 - composition hash: `f090f8060cf36637`
@@ -67,7 +67,7 @@ Freeze packet: `runs/20260613T213700Z-freeze-pr-review-correctness-v020`
 Bounded search with one reflective child:
 `runs/20260613T214006Z-search-pr-review-correctness`
 
-- command: `cargo run --quiet --bin daedalus -- run specs/pr-review-correctness/taskspec.toml --rng-seed 12 --budget-usd 1.25 --max-candidates 1 --trials 1 --certify-top 1 --certify-trials 2 --children-per-gen 1 --optimizer-model moonshotai/kimi-k2.6 --max-errors-per-candidate 2`
+- command: `cargo run --quiet --bin threshold -- run specs/pr-review-correctness/taskspec.toml --rng-seed 12 --budget-usd 1.25 --max-candidates 1 --trials 1 --certify-top 1 --certify-trials 2 --children-per-gen 1 --optimizer-model moonshotai/kimi-k2.6 --max-errors-per-candidate 2`
 - runner-recommended certified baseline:
   `g1a-seed3-qwen3-7-plus-skeptic`
 - model: `z-ai/glm-4.7-flash`
@@ -130,24 +130,24 @@ one-shot probe evidence before a certified search can be trusted.
 
 Diagnostic freeze attempts on 2026-06-19:
 
-- `cargo run --quiet --bin daedalus -- arena-validate
+- `cargo run --quiet --bin threshold -- arena-validate
   arenas/pr-review-correctness-v0 --probe-run
   runs/20260613T213700Z-freeze-pr-review-correctness-v020 --report
-  /tmp/daedalus-034-v03-validate-old-probe.md`:
+  /tmp/threshold-034-v03-validate-old-probe.md`:
   oracle `1.0`, null `0.25`, holdout exposures
   `{"py-formatter-missing-crash": 0, "py-live-lock": 0}`, but the old
   one-shot probe is inconclusive (`1/1` probe trial errored).
-- `cargo run --quiet --bin daedalus -- arena-freeze
+- `cargo run --quiet --bin threshold -- arena-freeze
   arenas/pr-review-correctness-v0 --out-dir
-  /tmp/daedalus-034-freeze-v03 --probe-model
+  /tmp/threshold-034-freeze-v03 --probe-model
   deepseek/deepseek-v4-pro --probe-context-window 1000000`: oracle `1.0`,
   null `0.25`, holdout exposures
   `{"py-formatter-missing-crash": 0, "py-live-lock": 0}`, probe mean
   `0.375`, but still inconclusive because `3/8` one-shot trials exceeded
   the one-million-token context preflight. Known probe spend: `$2.207417`.
-- `cargo run --quiet --bin daedalus -- arena-freeze
+- `cargo run --quiet --bin threshold -- arena-freeze
   arenas/pr-review-correctness-v0 --out-dir
-  /tmp/daedalus-034-freeze-v03-scout --probe-model
+  /tmp/threshold-034-freeze-v03-scout --probe-model
   meta-llama/llama-4-scout --probe-context-window 10000000`: oracle `1.0`,
   null `0.25`, holdout exposures
   `{"py-formatter-missing-crash": 0, "py-live-lock": 0}`, but the probe is

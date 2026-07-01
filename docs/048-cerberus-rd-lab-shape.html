@@ -147,9 +147,9 @@
     <article class="ae-view">
       <section class="hero" aria-label="Plan contract">
         <div>
-          <p class="ae-chrome kicker">DAEDALUS -> CERBERUS / SUBSTRATE LAB</p>
+          <p class="ae-chrome kicker">THRESHOLD -> CERBERUS / SUBSTRATE LAB</p>
           <h1 class="ae-strong">Prove what Cerberus should run next before changing what Cerberus runs.</h1>
-          <p class="ae-lede">Chosen design: a Cerberus-first R&amp;D lab inside Daedalus. It compares OpenCode, OMP, and a current Pi-style baseline through Cerberus <code>ReviewRequest.v1</code> and <code>ReviewArtifact.v1</code>, then emits sandbox-only evidence. It is not a generic lab framework, posting bot, or production control plane.</p>
+          <p class="ae-lede">Chosen design: a Cerberus-first R&amp;D lab inside Threshold. It compares OpenCode, OMP, and a current Pi-style baseline through Cerberus <code>ReviewRequest.v1</code> and <code>ReviewArtifact.v1</code>, then emits sandbox-only evidence. It is not a generic lab framework, posting bot, or production control plane.</p>
         </div>
         <aside class="ae-panel">
           <h2 class="ae-h">CHOSEN DESIGN</h2>
@@ -157,7 +157,7 @@
           <p class="ae-dim">First implementation imports fixture artifacts, then compares live OpenCode and OMP receipts only after freeze evidence is credible.</p>
           <div class="rule"></div>
           <h2 class="ae-h">PROOF SURFACE</h2>
-          <p><code>bin/gate</code>, <code>daedalus doctor</code>, <code>arena-freeze</code>, <code>arena-validate</code>, Cerberus <code>./scripts/verify.sh</code>, and one Daedalus report over imported Cerberus artifacts.</p>
+          <p><code>bin/gate</code>, <code>threshold doctor</code>, <code>arena-freeze</code>, <code>arena-validate</code>, Cerberus <code>./scripts/verify.sh</code>, and one Threshold report over imported Cerberus artifacts.</p>
           <div class="rule"></div>
           <p class="ae-dim">Premise: <code>sha256:2c10aea3... docs/premises/2026-06-19-coding-agent-substrates.md</code></p>
           <p class="ae-dim">Stop if: artifact validation fails, freeze remains inconclusive, or the report hides substrate failure behind model quality.</p>
@@ -190,11 +190,11 @@
       <section class="grid-3" aria-label="Current state" style="margin-top: 1px">
         <article class="cell">
           <h2 class="ae-h">CURRENT STATE</h2>
-          <p>Daedalus V1 still centers Pi candidates. Cerberus now has OpenCode, OMP, fixture harnesses, artifact validation, and PR/git-range request builders on <code>master</code> at <code>99c4b21</code>.</p>
+          <p>Threshold V1 still centers Pi candidates. Cerberus now has OpenCode, OMP, fixture harnesses, artifact validation, and PR/git-range request builders on <code>master</code> at <code>99c4b21</code>.</p>
         </article>
         <article class="cell">
           <h2 class="ae-h">CHANGE SHAPE</h2>
-          <p>Add <code>daedalus cerberus-lab import</code>: a narrow Cerberus artifact import path that reports comparable substrate evidence before any generalization.</p>
+          <p>Add <code>threshold cerberus-lab import</code>: a narrow Cerberus artifact import path that reports comparable substrate evidence before any generalization.</p>
         </article>
         <article class="cell wash">
           <h2 class="ae-h">QUALITY BAR</h2>
@@ -210,12 +210,12 @@
               <tr><th>group</th><th>dials</th><th>owner</th><th>failure this catches</th></tr>
             </thead>
             <tbody>
-              <tr><td class="ae-item">task</td><td>arena version, split, clean traps, context tier</td><td>Daedalus</td><td>scores that move because the arena moved</td></tr>
-              <tr><td class="ae-item">candidate</td><td>substrate, model, prompt packet, dynamic-lane permission</td><td>Daedalus measures; Cerberus runs</td><td>unattributed "better prompt" claims</td></tr>
+              <tr><td class="ae-item">task</td><td>arena version, split, clean traps, context tier</td><td>Threshold</td><td>scores that move because the arena moved</td></tr>
+              <tr><td class="ae-item">candidate</td><td>substrate, model, prompt packet, dynamic-lane permission</td><td>Threshold measures; Cerberus runs</td><td>unattributed "better prompt" claims</td></tr>
               <tr><td class="ae-item">context</td><td>diff only, repo head, base/head, runtime, external research</td><td>Cerberus records</td><td>reviews claiming evidence they did not have</td></tr>
-              <tr><td class="ae-item">safety</td><td>env allowlist, secrets/network policy, timeout, degraded mode</td><td>Cerberus + Daedalus risk metadata</td><td>unsafe local runs or hidden credentials</td></tr>
-              <tr><td class="ae-item">analysis</td><td>reward, validity, false positives, cost, latency, CI, holdout burn</td><td>Daedalus</td><td>mean-score theater</td></tr>
-              <tr><td class="ae-item">promotion</td><td>threshold, sandbox flag, waiver, rollback, gate state</td><td>Daedalus emits; human approves</td><td>lab result becoming production by accident</td></tr>
+              <tr><td class="ae-item">safety</td><td>env allowlist, secrets/network policy, timeout, degraded mode</td><td>Cerberus + Threshold risk metadata</td><td>unsafe local runs or hidden credentials</td></tr>
+              <tr><td class="ae-item">analysis</td><td>reward, validity, false positives, cost, latency, CI, holdout burn</td><td>Threshold</td><td>mean-score theater</td></tr>
+              <tr><td class="ae-item">promotion</td><td>threshold, sandbox flag, waiver, rollback, gate state</td><td>Threshold emits; human approves</td><td>lab result becoming production by accident</td></tr>
             </tbody>
           </table>
         </div>
@@ -243,7 +243,7 @@
         <div class="phase">
           <strong class="ae-accent">1 fixture</strong>
           <p>Import or score a Cerberus fixture <code>ReviewArtifact.v1</code> without live model spend.</p>
-          <p class="ae-dim">Evidence: valid request/artifact pair, Daedalus score or explicit unmappable fields, report stub.</p>
+          <p class="ae-dim">Evidence: valid request/artifact pair, Threshold score or explicit unmappable fields, report stub.</p>
         </div>
         <div class="phase">
           <strong class="ae-accent">2 freeze</strong>
@@ -287,9 +287,9 @@
         </article>
         <article class="cell wash">
           <h2 class="ae-h">VERIFICATION SYSTEM</h2>
-          <p><strong>Claim:</strong> Daedalus can compare Cerberus autonomous review substrates credibly enough to recommend what Cerberus should run next.</p>
+          <p><strong>Claim:</strong> Threshold can compare Cerberus autonomous review substrates credibly enough to recommend what Cerberus should run next.</p>
           <p><strong>Falsifier:</strong> invalid artifacts pass, substrate failure is scored as model quality, unknown cost is guessed, or an inconclusive freeze still produces a recommendation.</p>
-          <p><strong>Driver:</strong> Cerberus fixture/live runs, Daedalus import/scoring/report, <code>arena-freeze</code>, <code>arena-validate</code>, <code>bin/gate</code>.</p>
+          <p><strong>Driver:</strong> Cerberus fixture/live runs, Threshold import/scoring/report, <code>arena-freeze</code>, <code>arena-validate</code>, <code>bin/gate</code>.</p>
           <p><strong>Evidence:</strong> request, artifact, transcript, run directory, report, freeze reports, critic receipt.</p>
         </article>
       </section>

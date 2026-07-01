@@ -3,7 +3,7 @@
 Priority: P2 · Status: pending · Estimate: M
 
 ## Goal
-Evaluate and adopt the clean-atomic comic-ops flavor for Daedalus arena,
+Evaluate and adopt the clean-atomic comic-ops flavor for Threshold arena,
 candidate, confidence, and launch-contract surfaces.
 
 ## Oracle
@@ -20,4 +20,4 @@ candidate, confidence, and launch-contract surfaces.
 
 ## Notes
 Reference board:
-`http://serenity.tail5f5eb4.ts.net:8788/daedalus-clean-atomic-concept.png`.
+`http://serenity.tail5f5eb4.ts.net:8788/threshold-clean-atomic-concept.png`.

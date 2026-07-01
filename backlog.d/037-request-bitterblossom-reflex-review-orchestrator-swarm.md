@@ -32,7 +32,7 @@ The target product loop is an Amjad/Replit-style reflex plane:
 - the plane records the exact event, run, cost, artifact, and decision.
 
 Bitterblossom already has review lanes, submissions, storms, gates, and manual
-builder dispatch. It needs a measured, Daedalus-backed reflex review packet
+builder dispatch. It needs a measured, Threshold-backed reflex review packet
 that can replace ad-hoc review prompts with a reproducible Cerberus-backed
 review artifact path.
 
@@ -44,7 +44,7 @@ review artifact path.
   dedupe, budget checks, and ledger state.
 - Do not add workload-specific Rust branches to Bitterblossom dispatch,
   ledger, recovery, substrate, or budget code.
-- Do not assume parallel Pi execution inside Daedalus until the documented Pi
+- Do not assume parallel Pi execution inside Threshold until the documented Pi
   concurrency deadlock is retested. The target Bitterblossom plane may run
   members in parallel only after its substrate proves it safely.
 
@@ -133,7 +133,7 @@ Malformed or missing required member output is non-pass by default. A master
 may recommend `pass` only if the launch packet defines an explicit waiver path
 and the artifact records which member was waived and why.
 
-## Requested Daedalus Work
+## Requested Threshold Work
 
 1. Align this ticket with `048` so Bitterblossom consumes the Cerberus request,
    artifact, topology, and substrate recommendation instead of forking a
@@ -155,7 +155,7 @@ and the artifact records which member was waived and why.
 
 - [ ] The packet names the exact Bitterblossom task ids, agent ids, payload
       fields, idempotency keys, artifact paths, and run/gate read commands.
-- [ ] At least one measured Daedalus/Cerberus vertical slice covers
+- [ ] At least one measured Threshold/Cerberus vertical slice covers
       `ReviewRequest.v1`, `ReviewArtifact.v1`, and any selected topology
       rather than assuming a Pi specialist swarm.
 - [ ] Total recommended sandbox envelope is <= $2.00/PR and <= 20 minutes
@@ -174,8 +174,8 @@ and the artifact records which member was waived and why.
 
 ## Evidence
 
-- Active Daedalus parent: `backlog.d/048-build-cerberus-substrate-rd-lab.md`
-- Historical review-swarm evidence: `backlog.d/034-build-daedalus-review-swarm.md`
+- Active Threshold parent: `backlog.d/048-build-cerberus-substrate-rd-lab.md`
+- Historical review-swarm evidence: `backlog.d/034-build-threshold-review-swarm.md`
 - Bitterblossom reflex ticket:
   `/Users/phaedrus/Development/bitterblossom/backlog.d/061-sdlc-lifecycle-reflex-pack.md`
 - Current handoff precedent: `deliveries/pr-review/plane-handoff.md`

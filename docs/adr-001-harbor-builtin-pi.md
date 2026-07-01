@@ -4,7 +4,7 @@ Status: accepted (2026-06-09)
 
 ## Context
 
-Backlog 004 planned a custom `PiAgent(BaseInstalledAgent)` adapter so Daedalus
+Backlog 004 planned a custom `PiAgent(BaseInstalledAgent)` adapter so Threshold
 could run pi candidates under Harbor's Docker isolation. On inspecting the
 installed Harbor 0.13.1, the framework already ships a first-class `pi` agent
 (`harbor.agents.installed.pi.Pi`) that:
@@ -15,7 +15,7 @@ installed Harbor 0.13.1, the framework already ships a first-class `pi` agent
 - forwards `OPENROUTER_API_KEY` (and other provider keys) when the model id is
   `openrouter/...`;
 - parses pi's `message_end` usage events into `AgentContext` cost/tokens —
-  the same extraction Daedalus' own runner does.
+  the same extraction Threshold' own runner does.
 
 It also ships `oracle` (replays `solution/solve.sh`) and `nop` reference
 agents, matching our null/oracle reference candidates.
@@ -30,11 +30,11 @@ harbor run -p harbor-build/<arena>/<task> \
   --ae OPENROUTER_API_KEY=$OPENROUTER_API_KEY -y
 ```
 
-Daedalus owns the *arena→Harbor port* (`cargo run --quiet --bin daedalus --
+Threshold owns the *arena→Harbor port* (`cargo run --quiet --bin threshold --
 port-harbor ...`) and the task format; Harbor owns container lifecycle, the
 agent, and reward plumbing. This is the deepest-module / smallest-surface
-option: the only Daedalus code is the deterministic port, and the verifier is
-the `daedalus-score` binary copied into `tests/`.
+option: the only Threshold code is the deterministic port, and the verifier is
+the `threshold-score` binary copied into `tests/`.
 
 ## Consequences
 

@@ -18,7 +18,7 @@ A contamination-resistant pr-review arena of synthetic, non-public-library code 
 ## Verification System
 - Claim: a config certified on this arena is genuinely good, not leakage-inflated.
 - Falsifier: a model known to have seen public rich/pygments scores no higher here than a model that hasn't (no leakage signal); a gaming candidate (`arena-redteam`) earns no undue reward.
-- Driver: `daedalus arena-validate` + `daedalus arena-redteam` on the new arena; a live search (spend-gated) to confirm certifiability.
+- Driver: `threshold arena-validate` + `threshold arena-redteam` on the new arena; a live search (spend-gated) to confirm certifiability.
 - Grader: the freeze-gate report + redteam audit + a certified-candidate CI that excludes 0.
 - Evidence packet: the arena dir + its validity records + a run report.
 - Cadence: at arena freeze (G2).

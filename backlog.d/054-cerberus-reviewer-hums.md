@@ -3,7 +3,7 @@
 Priority: P0 · Status: in-progress · Estimate: XL (epic)
 
 > **This epic is the Now from [VISION.md](../VISION.md) "Focus — one customer
-> until it hums."** Daedalus has exactly one customer until this epic closes: the
+> until it hums."** Threshold has exactly one customer until this epic closes: the
 > Cerberus code reviewer. No second agent, domain, or plane is searched until the
 > gaps below close. This epic is the gate; 035 / 036 / 037 / 038 sit behind it.
 

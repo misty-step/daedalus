@@ -1,8 +1,8 @@
 # Security Posture
 
-Daedalus has two execution boundaries:
+Threshold has two execution boundaries:
 
-- The fast local Rust runner (`cargo run --quiet --bin daedalus -- run ...`) is
+- The fast local Rust runner (`cargo run --quiet --bin threshold -- run ...`) is
   for low-risk offline synthetic arenas only.
 - Harbor/Docker, via `bin/harbor-run`, is the isolation boundary for arenas
   that need network access, production or user data, secret-bearing workflows,
@@ -38,7 +38,7 @@ path leaks in low-risk arenas.
 
 ## Launch Contract Validation
 
-`cargo run --quiet --bin daedalus -- launch-pack <delivery> --plane <plane>` validates
+`cargo run --quiet --bin threshold -- launch-pack <delivery> --plane <plane>` validates
 `contract.toml` before rendering any import packet. The validator checks:
 
 - contract version and required identity fields;
@@ -51,7 +51,7 @@ path leaks in low-risk arenas.
 Unsigned contracts may still render sandbox-only packets:
 
 ```sh
-cargo run --quiet --bin daedalus -- launch-pack deliveries/pr-review \
+cargo run --quiet --bin threshold -- launch-pack deliveries/pr-review \
   --plane bitter-blossom --dry-run
 ```
 
@@ -74,6 +74,6 @@ stable external runtime dependency.
 ## Verification Commands
 
 ```sh
-cargo run --quiet --bin daedalus -- doctor
+cargo run --quiet --bin threshold -- doctor
 bin/gate
 ```

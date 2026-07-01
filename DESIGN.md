@@ -1,6 +1,6 @@
-# Daedalus Design
+# Threshold Design
 
-Daedalus turns a task specification into a measured, focused agent: spec in,
+Threshold turns a task specification into a measured, focused agent: spec in,
 candidate agent package out, with evidence. This document records the
 architecture, the file contracts that are the system's real interfaces, and
 the decisions behind them. The README holds the research framing; ROADMAP.md
@@ -8,19 +8,19 @@ holds the phases.
 
 ## Pipeline
 
-Six stages, connected by file contracts. Daedalus owns stages 1–3 fully and
+Six stages, connected by file contracts. Threshold owns stages 1–3 fully and
 ships thin reference implementations of 4–5; any control plane (Olympus,
 Bitter Blossom) can replace 4–5 by consuming launch contracts and emitting
 traces in the agreed shape.
 
 | # | Stage     | Input → Output | Owner |
 |---|-----------|----------------|-------|
-| 1 | Specify   | conversation → `specs/<id>/taskspec.toml` | Daedalus (master agent interview) |
-| 2 | Lab       | taskspec → arena, eval suite, run records, Pareto archive | Daedalus (runner + master agent loop) |
-| 3 | Contract  | winning candidate → launch contract + agent package | Daedalus |
+| 1 | Specify   | conversation → `specs/<id>/taskspec.toml` | Threshold (master agent interview) |
+| 2 | Lab       | taskspec → arena, eval suite, run records, Pareto archive | Threshold (runner + master agent loop) |
+| 3 | Contract  | winning candidate → launch contract + agent package | Threshold |
 | 4 | Deploy    | launch contract → wired trigger + runtime | reference impl (Phase 3); replaceable |
 | 5 | Observe   | running agent → traces, regression evals, budget alarms | reference impl (Phase 3); replaceable |
-| 6 | Re-iterate| production traces → new fixtures → back to stage 2 | Daedalus (gate G5) |
+| 6 | Re-iterate| production traces → new fixtures → back to stage 2 | Threshold (gate G5) |
 
 ## Architecture decisions
 
@@ -32,7 +32,7 @@ Decided now:
   (`harbor run --agent-import-path …`) and gains Docker isolation, multi-trial
   distributions, and cloud scaling for free. Historical Phase 0 note: the
   verifier delegated to the shared historical pre-migration `runner/score.py`.
-  Current Harbor isolation copies the `daedalus-score` binary into the task
+  Current Harbor isolation copies the `threshold-score` binary into the task
   image.
 - **Candidate harness: pi over OpenRouter, frozen for V1.** The harness is a
   *slot* in the candidate manifest; V1 freezes it to `pi` (minimal system
@@ -41,7 +41,7 @@ Decided now:
   per-generation cost. Frozen ≠ hardcoded: Phase 2+ may unfreeze the slot and
   search over harnesses (Harbor already ships claude-code/codex adapters).
 - **Master agent: Claude, interactive.** High-judgment, low-volume role.
-  Operates via `.agents/skills/daedalus/SKILL.md`. Revisit when the loop goes
+  Operates via `.agents/skills/threshold/SKILL.md`. Revisit when the loop goes
   headless.
 - **Traces: plain versioned JSONL** (`runs/*.jsonl`). OTel GenAI semantic
   conventions are still in Development status (May 2026); map at export time
@@ -104,13 +104,13 @@ Answer key `tests/expected.json`:
 Scoring families. A task may declare which apply in `tests/scoring.toml`;
 absence means deterministic-only (every task to date).
 
-- **deterministic** (`crates/daedalus-core/src/score.rs`, primary, always present): a finding
+- **deterministic** (`crates/threshold-core/src/score.rs`, primary, always present): a finding
   matches a defect on equal file + category with line inside the range; each
   defect matches once; `reward = max(0, recall − 0.2 × false_positives)`;
   malformed or missing output scores 0; on a clean task any finding scores 0.
   The clean-PR task makes silence a non-strategy and invented findings fatal.
   Trials that error, crash, or trip grader tamper-detection are voided.
-- **judge** (`crates/daedalus-core/src/judge.rs`, secondary, opt-in): a calibrated 0–5 rubric
+- **judge** (`crates/threshold-core/src/judge.rs`, secondary, opt-in): a calibrated 0–5 rubric
   judge for qualities the key can't capture (evidence quality, actionability,
   severity calibration, precision). Rubric files under `rubrics/` are
   versioned and hashed into run records; judge cost is metered into the
@@ -158,13 +158,13 @@ asking.
   (rewards list, mean/min/max, wall, cost totals)
 - `report.md` / `report.html` — the comparison report in two registers: the
   markdown source of truth, and a self-contained static HTML companion
-  (`daedalus report-html <run-dir>`, auto-emitted by `run`) that draws the
+  (`threshold report-html <run-dir>`, auto-emitted by `run`) that draws the
   leaderboard, the reward-delta CI forest, the candidate×task coverage heatmap,
   and a transcript drill behind every score, in the Misty Step / lab.css
   language. Offline (`file://`), PR-attachable; a *derived view*, never the
   source of truth. Backlog 044.
 
-The *live* counterpart is `daedalus view <run-dir>` (backlog 049): a terminal
+The *live* counterpart is `threshold view <run-dir>` (backlog 049): a terminal
 roll-up — per-candidate running mean, trials so far, cumulative known spend —
 that polls `trials.jsonl` while a `run` is in flight and stops when `loop.json`
 appears. It reuses the same aggregate, so the live numbers never drift from the
@@ -189,7 +189,7 @@ never guessed. Records are committed; artifacts are local evidence.
 
 ### Launch contract — `deliveries/<id>/contract.toml` (contract.v1)
 
-Generated by `cargo run --quiet --bin daedalus -- export <delivery> --spec
+Generated by `cargo run --quiet --bin threshold -- export <delivery> --spec
 <taskspec>`, never hand-edited where pinned to evidence. Fields: `contract = 1`, `agent`,
 `composition_hash` (binds manifest + resolved packet/skills/agents texts),
 `taskspec`, `mode`; `[composition]` (harness + pinned harness_version,
@@ -205,7 +205,7 @@ Alongside it, `persona.md` renders the same composition in the Bitter
 Blossom sprite shape (frontmatter name/description/model/skills + the
 prompt packet verbatim as the body) so control planes (Olympus, Bitter
 Blossom) import the byte-identical system prompt the lab measured; the
-embedded `daedalus.composition_hash` ties the persona back to the contract.
+embedded `threshold.composition_hash` ties the persona back to the contract.
 
 `plane-handoff.md` is generated next to the contract and persona. It is the
 human-reviewable bridge from lab evidence to control-plane import: composition
@@ -216,14 +216,14 @@ delivery directory contains `plane-incumbents.toml`, export includes the
 current control-plane baselines as comparison context, but it still does not
 mutate those repos or bypass G3/G4/G5.
 
-`cargo run --quiet --bin daedalus -- launch-pack <delivery> --plane
+`cargo run --quiet --bin threshold -- launch-pack <delivery> --plane
 <bitter-blossom|olympus>` is the
 approval-aware import boundary. With an unsigned contract it refuses by
 default; `--dry-run` emits only a sandbox packet marked non-deployable,
-non-primary-reviewer, and blocked on G3. `cargo run --quiet --bin daedalus --
+non-primary-reviewer, and blocked on G3. `cargo run --quiet --bin threshold --
 regression <delivery> --spec <taskspec>` replays the delivery against the arena
 holdout and writes a trace view; `--dry-run` writes the exact Rust replay command
-without spending model budget. `cargo run --quiet --bin daedalus -- trace
+without spending model budget. `cargo run --quiet --bin threshold -- trace
 --run-dir <run-dir>` renders existing committed run records as
 `trace.otel.json`.
 
@@ -231,7 +231,7 @@ Cerberus is a different downstream shape from the generic control-plane
 `launch-pack` planes. Cerberus imports measured reviewer configurations through
 `ReviewerConfigPacket.v1` JSON, then validates and dry-run compares the embedded
 `ReviewConfig.v1` before any production default can change. A Cerberus handoff
-must therefore emit that packet shape, preserve Daedalus run evidence and
+must therefore emit that packet shape, preserve Threshold run evidence and
 G2/G3/G4/G5 gate state, and prove itself with Cerberus'
 `validate-reviewer-config` and `import-reviewer-config --dry-run` commands. A
 generic `launch-pack --plane cerberus` TOML packet is not sufficient for

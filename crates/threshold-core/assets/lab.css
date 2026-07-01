@@ -1,0 +1,721 @@
+/* ═══════════════════════════════════════════════════════════════════
+   lab.css — Threshold instrument extensions to misty-step / aesthetic
+
+   The base system speaks in one dimension: the spark (a trend), the
+   meter (a level), the figure (a number + its delta). A measurement
+   foundry needs two: the cost×quality plane where candidates compete,
+   and the candidate×task grid where coverage lives. This file proposes
+   that second dimension in the house idiom — ink on ruled lines, hard
+   axes, mono ticks, exactly one accent for the chosen candidate, status
+   only on the glyph. Round marks are the pen (cf. the spark's round
+   caps, the engraving's stipple); radius-0 still governs every
+   rectangular surface. Everything here is a candidate for upstream.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Threshold spends its one accent on a deep ledger ultramarine. */
+:root {
+  --ae-accent: #2a4bd0;
+  --ae-accent-dark: #93a6ff;
+  --lab-grid: color-mix(in srgb, var(--ae-line) 60%, var(--ae-surface));
+}
+
+/* ── the desk, at instrument density ──────────────────────────────────
+   The density dial, turned up: a lab desk earns its ink, so the working
+   area runs edge-to-edge and a touch tighter than the editorial 2.8em. */
+.lab-desk {
+  padding: 1.8em 2.2em 2.6em;
+}
+
+.lab-deskhead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1em 2em;
+  flex-wrap: wrap;
+  margin-bottom: 1.6em;
+}
+
+.lab-deskhead .ae-lede {
+  max-width: 46em;
+  color: var(--ae-ink-muted);
+  margin-top: 0.2em;
+}
+
+/* the one loud thing: a hero figure stands alone, 800 by weight. Pair a
+   verdict line (item) above and the supporting figures beside it. */
+.lab-hero {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5em;
+  line-height: 1;
+}
+
+/* the law holds: the hero figure is loud by WEIGHT (800) and ISOLATION,
+   never by scale. One size per surface — the figure reads as the focal
+   point because it is black, alone on its line, and ringed by muted
+   context, exactly as the gauntlet's figures do. */
+.lab-hero .lab-hero-num {
+  font-family: var(--ae-font-mono);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--ae-w-black);
+  letter-spacing: 0.01em;
+}
+
+.lab-hero .lab-hero-unit {
+  color: var(--ae-ink-muted);
+}
+
+/* a rule of figures: KPIs on a single ruled shelf, divided by hairlines,
+   never by boxes */
+.lab-figrow {
+  display: flex;
+  flex-wrap: wrap;
+  border-top: 1px solid var(--ae-line);
+  border-bottom: 1px solid var(--ae-line);
+}
+
+.lab-fig {
+  flex: 1 1 0;
+  min-width: 9em;
+  padding: 1em 1.4em 1.1em;
+  border-left: 1px solid var(--ae-line);
+}
+
+.lab-fig:first-child {
+  border-left: 0;
+  padding-left: 0;
+}
+
+.lab-fig-k {
+  font-size: 13px;
+  color: var(--ae-ink-muted);
+  margin-bottom: 0.3em;
+}
+
+.lab-fig-v {
+  font-family: var(--ae-font-mono);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--ae-w-medium);
+}
+
+.lab-fig-v.is-loud {
+  font-weight: var(--ae-w-black);
+}
+
+/* ── the scatter: the cost×quality plane, with the frontier ──────────
+   Candidates are stipple. The efficient frontier is a hairline stair.
+   The chosen candidate is the accent; the incumbent is an open ring;
+   the dominated recede to faint. Axes are two hairlines, ticks are
+   mono. No gridlines unless asked (.is-ruled). */
+.ae-scatter {
+  position: relative;
+  font-size: 13px;
+  color: var(--ae-ink-muted);
+}
+
+.ae-scatter-plot {
+  position: relative;
+  height: clamp(15em, 38vh, 22em);
+  margin: 0.4em 0 2.4em 3.2em;
+  border-left: 1px solid var(--ae-line);
+  border-bottom: 1px solid var(--ae-line);
+}
+
+/* opt-in faint gridlines for reading exact positions */
+.ae-scatter-plot.is-ruled {
+  background-image:
+    repeating-linear-gradient(to right, transparent 0 calc(25% - 1px), var(--lab-grid) calc(25% - 1px) 25%),
+    repeating-linear-gradient(to top, transparent 0 calc(25% - 1px), var(--lab-grid) calc(25% - 1px) 25%);
+}
+
+/* the frontier: a hairline guide laid over the plane */
+.ae-scatter-line {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.ae-scatter-line polyline {
+  fill: none;
+  stroke: var(--ae-ink-muted);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+  vector-effect: non-scaling-stroke;
+}
+
+/* a plotted candidate: pen stipple. Positioned by left/bottom %. */
+.ae-dot {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--ae-ink);
+  transform: translate(-50%, 50%);
+  cursor: pointer;
+  transition:
+    transform var(--ae-quick) var(--ae-ease),
+    background-color var(--ae-quick) var(--ae-ease);
+}
+
+.ae-dot::after {
+  /* the label rides above-right, mono, revealed on hover/selection */
+  content: attr(data-label);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 4px);
+  transform: translateX(-50%);
+  font-family: var(--ae-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  color: var(--ae-ink-muted);
+  opacity: 0;
+  transition: opacity var(--ae-quick) var(--ae-ease);
+  pointer-events: none;
+}
+
+.ae-dot:hover::after,
+.ae-dot.is-named::after,
+.ae-dot.is-chosen::after {
+  opacity: 1;
+}
+
+.ae-dot:hover {
+  transform: translate(-50%, 50%) scale(1.25);
+}
+
+/* dominated: present but receding */
+.ae-dot.is-dominated {
+  width: 7px;
+  height: 7px;
+  background: var(--ae-ink-faint);
+}
+
+/* incumbent: a reference, not a candidate — an open ink ring */
+.ae-dot.is-incumbent {
+  background: var(--ae-surface);
+  border: 1.5px solid var(--ae-ink); /* a crisp open ring, not a shadow */
+  box-sizing: border-box;
+}
+
+/* the chosen candidate: the one accent, ringed so it reads as selected.
+   The ring is a hard outline (no blur, no shadow) offset from the mark. */
+.ae-dot.is-chosen {
+  background: var(--ae-accent);
+  outline: 1.5px solid var(--ae-accent);
+  outline-offset: 2px;
+}
+
+.ae-dot.is-chosen::after {
+  color: var(--ae-accent);
+  font-weight: var(--ae-w-medium);
+}
+
+/* axis furniture: titles and ticks in the chrome register */
+.ae-scatter-yt,
+.ae-scatter-xt {
+  font-family: var(--ae-font-mono);
+  font-size: 11px;
+  color: var(--ae-ink-faint);
+  position: absolute;
+}
+
+.ae-axis-title {
+  font-size: 13px;
+  color: var(--ae-ink-muted);
+}
+
+.ae-axis-title.is-y {
+  position: absolute;
+  left: -3.2em;
+  top: 45%;
+  transform: rotate(-90deg);
+  transform-origin: left center;
+  white-space: nowrap;
+}
+
+.ae-axis-title.is-x {
+  display: block;
+  text-align: center;
+  margin-top: -1.4em;
+}
+
+/* ── the legend: ink marks beside mono words, never a key of pills ──── */
+.ae-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4em 1.6em;
+  font-size: 13px;
+  color: var(--ae-ink-muted);
+}
+
+.ae-legend > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+}
+
+.ae-legend i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--ae-ink);
+  flex: none;
+}
+
+.ae-legend i.is-chosen {
+  background: var(--ae-accent);
+}
+.ae-legend i.is-incumbent {
+  background: var(--ae-surface);
+  border: 1.5px solid var(--ae-ink);
+  box-sizing: border-box;
+}
+.ae-legend i.is-dominated {
+  background: var(--ae-ink-faint);
+  width: 7px;
+  height: 7px;
+}
+
+/* ── the matrix: candidate × task, the lawful eval grid ───────────────
+   Adopted from the design system's own exploration, state A
+   (aesthetic/prototypes/flex-3-instrument-matrix.html). A coverage grid
+   needs two facts per cell — an outcome and a magnitude. A colored tile
+   makes color BE the data and stops being misty-step; this is the lawful
+   answer instead: a status GLYPH carries the hue (and only it), a
+   tabular FIGURE carries the score in ink, and a ruled INTENSITY bar
+   (.ibar, the meter idiom) carries the magnitude as a length of ink. The
+   "heatmap" is the field of bar lengths. These should graduate upstream
+   into aesthetic.css as .ae-matrix / .ae-ibar. */
+.mx-scroll {
+  overflow: auto;
+  border: 1px solid var(--ae-line);
+  max-height: min(58vh, 32em);
+  scrollbar-width: thin;
+}
+
+.matrix {
+  border-collapse: separate;
+  border-spacing: 0;
+  font-family: var(--ae-font-mono);
+  font-size: 13px;
+  line-height: 1.55;
+  width: max-content;
+  min-width: 100%;
+}
+
+.matrix th,
+.matrix td {
+  padding: 0.5em 0.8em;
+  border-bottom: 1px solid var(--ae-line);
+  border-right: 1px solid var(--ae-line);
+  background: var(--ae-surface);
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.matrix thead th:not(.mx-corner),
+.matrix tbody td {
+  min-width: 5.4rem;
+  text-align: right; /* numerals form a clean column; headers match (flex-3b) */
+}
+
+.matrix tr td:last-child,
+.matrix tr th:last-child {
+  border-right: 0;
+}
+
+.matrix tfoot td,
+.matrix tfoot th {
+  border-bottom: 0;
+}
+
+/* candidate column headers: lowercase mono on a wash band, sticky top */
+.matrix thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--ae-wash);
+  color: var(--ae-ink-muted);
+  font-weight: var(--ae-w-regular);
+  letter-spacing: 0.08em;
+  text-align: right;
+}
+
+.matrix thead th .cand-meta {
+  display: block;
+  color: var(--ae-ink-faint);
+  letter-spacing: 0.04em;
+}
+
+/* the task column: frozen to the left so a row never loses its name */
+.mx-task {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  width: 13rem;
+  min-width: 13rem;
+  max-width: 13rem;
+  text-align: left;
+  white-space: normal;
+  box-shadow: 1px 0 0 0 var(--ae-line);
+}
+
+.matrix tbody th.mx-task {
+  font-weight: var(--ae-w-medium);
+  color: var(--ae-ink);
+}
+
+.mx-task .mx-task-id {
+  display: block;
+  font-weight: var(--ae-w-regular);
+  color: var(--ae-ink-faint);
+  letter-spacing: 0.06em;
+}
+
+.mx-corner {
+  position: sticky;
+  left: 0;
+  top: 0;
+  z-index: 3;
+  background: var(--ae-wash);
+  text-align: left;
+  color: var(--ae-ink-faint);
+  letter-spacing: 0.08em;
+  box-shadow: 1px 0 0 0 var(--ae-line);
+}
+
+/* the cell · flex-3b NUMERALS + WINNER (the locked encoding, 013):
+   a leading status glyph carries the hue, an exact mono figure carries the
+   score, the per-task winner is heavy (800) by weight alone, low scores
+   lighten to faint. No databar — rejected as too noisy. The figures
+   right-align into a clean numeric column. */
+.cell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.4em;
+  min-width: 3em;
+}
+
+.cell-head {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  line-height: 1;
+}
+
+.cell .ae-icon {
+  width: 0.92em;
+  height: 0.92em;
+  vertical-align: 0;
+  flex: none;
+}
+
+.cell-fig {
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--ae-w-regular);
+  color: var(--ae-ink);
+  letter-spacing: 0.02em;
+}
+
+/* the winner: best candidate on this task, loud by weight alone.
+   .is-mark exposes the optional accent-marks-the-winner treatment. */
+.cell.is-best .cell-fig {
+  font-weight: var(--ae-w-black);
+}
+
+.cell.is-best.is-mark .cell-fig {
+  color: var(--ae-accent);
+}
+
+/* a missed trial: the figure recedes to faint — the ✗ carries the verdict */
+.cell.is-fail .cell-fig {
+  color: var(--ae-ink-faint);
+}
+
+/* an empty trial: a candidate that never ran this task — an honest dash */
+.cell.is-none {
+  color: var(--ae-ink-faint);
+}
+
+/* threshold additions on top of the adopted bones:
+   the chosen candidate's column is marked by the accent on its header —
+   one structural spend, not an ambient label. Reference columns
+   (oracle / null) recede; the summary footer is loud. */
+.matrix th.mx-pick,
+.matrix th.mx-pick .cand-meta {
+  color: var(--ae-accent);
+}
+
+.matrix .mx-ref {
+  color: var(--ae-ink-faint);
+}
+
+.matrix tfoot th.mx-task,
+.matrix tfoot td {
+  border-top: 1px solid var(--ae-line);
+  color: var(--ae-ink);
+  font-weight: var(--ae-w-medium);
+}
+
+/* the matrix legend: reads the cell vocabulary back, mono chrome */
+.mx-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5em 1.6em;
+  font-family: var(--ae-font-mono);
+  font-size: 13px;
+  color: var(--ae-ink-muted);
+  margin-top: 1.1em;
+}
+
+.mx-legend .lg {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
+}
+
+.mx-legend .ae-icon {
+  width: 0.92em;
+  height: 0.92em;
+  vertical-align: 0;
+}
+
+.mx-legend .ae-strong {
+  font-weight: var(--ae-w-black);
+}
+
+/* ── the interval: mean ± spread across n trials ─────────────────────
+   A meter that carries a band, not just a fill — answers "is this score
+   solid or noisy" in one ruled line. Tall enough that the band reads. */
+.ae-ci {
+  position: relative;
+  height: 7px;
+  background: var(--ae-wash);
+  border: 1px solid var(--ae-line);
+}
+
+.ae-ci-band {
+  position: absolute;
+  top: -1px;
+  bottom: -1px;
+  background: color-mix(in srgb, var(--ae-ink) 26%, var(--ae-surface));
+}
+
+.ae-ci-mean {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 2px;
+  background: var(--ae-ink);
+}
+
+/* ── the gate spine: G1…G5 as a ruled progression ────────────────────
+   Launch is a contract, not a button. The gates read left-to-right as a
+   hairline spine; each carries its status on the glyph and its state in
+   muted words. The reached edge is ink, the locked tail is faint. */
+.lab-gates {
+  display: flex;
+  align-items: stretch;
+  border: 1px solid var(--ae-line);
+}
+
+.lab-gate {
+  flex: 1 1 0;
+  padding: 0.9em 1em 1em;
+  border-left: 1px solid var(--ae-line);
+}
+
+.lab-gate:first-child {
+  border-left: 0;
+}
+
+.lab-gate-id {
+  display: flex;
+  align-items: center;
+  gap: 0.45em;
+  font-family: var(--ae-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--ae-ink-muted);
+  margin-bottom: 0.35em;
+}
+
+.lab-gate.is-locked {
+  background: var(--ae-wash);
+}
+
+.lab-gate.is-locked .lab-gate-id,
+.lab-gate.is-locked .lab-gate-name {
+  color: var(--ae-ink-faint);
+}
+
+.lab-gate-name {
+  font-weight: var(--ae-w-medium);
+}
+
+.lab-gate-sub {
+  font-size: 13px;
+  color: var(--ae-ink-muted);
+}
+
+/* ── the lineage spine: aggregate → trial → finding → scorer ─────────
+   The drill path is a first-class object. A ruled vertical spine with a
+   mono timestamp gutter; each stop is one claim. (Generalizes the
+   dashboard timeline into a named primitive.) */
+.lab-spine {
+  display: grid;
+  grid-template-columns: 7.5em minmax(0, 1fr);
+}
+
+.lab-spine > * {
+  padding: 0.9em 0 0.9em 1.4em;
+  border-top: 1px solid var(--ae-line);
+}
+
+.lab-spine > .lab-when {
+  padding-left: 0;
+  border-top: 1px solid var(--ae-line);
+  font-family: var(--ae-font-mono);
+  font-size: 13px;
+  color: var(--ae-ink-muted);
+}
+
+.lab-spine > .lab-step {
+  position: relative;
+  border-left: 1px solid var(--ae-line);
+}
+
+/* the node on the spine: a small ink tessera (square — it is structure,
+   not a datum) sitting on the rule */
+.lab-spine > .lab-step::before {
+  content: '';
+  position: absolute;
+  left: -3px;
+  top: 1.25em;
+  width: 5px;
+  height: 5px;
+  background: var(--ae-ink);
+}
+
+.lab-spine > .lab-step.is-flag::before {
+  background: var(--ae-err);
+}
+
+.lab-step-h {
+  font-weight: var(--ae-w-medium);
+  margin-bottom: 0.1em;
+}
+
+.lab-step-h .ae-icon {
+  vertical-align: -0.18em;
+}
+
+/* ── side-by-side plates: candidate output vs answer key ─────────────── */
+.lab-versus {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.4em;
+}
+
+@media (max-width: 720px) {
+  .lab-versus {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* a code block that stays in its lane */
+.lab-code {
+  font-family: var(--ae-font-mono);
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--ae-ink);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.lab-code .k {
+  color: var(--ae-ink-muted);
+}
+.lab-code .a {
+  color: var(--ae-accent);
+}
+
+/* ── small shared utilities ──────────────────────────────────────────── */
+.lab-cols {
+  display: grid;
+  gap: 1.8em 2.4em;
+}
+
+.lab-cols.is-2 {
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+}
+
+.lab-cols.is-2-even {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 880px) {
+  .lab-cols.is-2,
+  .lab-cols.is-2-even {
+    grid-template-columns: 1fr;
+  }
+}
+
+.lab-spread {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1em;
+}
+
+/* status words: the lab names a few non-glyph states in muted mono.
+   Never a filled pill — a word in the caption voice, the glyph carries
+   any hue. */
+.lab-state {
+  font-family: var(--ae-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: var(--ae-ink-muted);
+  text-transform: lowercase;
+}
+
+/* a definition plate: hairline-ruled label · value rows — contracts, specs,
+   handoffs. Structure from rules, never boxes. */
+.lab-defs > div {
+  display: grid;
+  grid-template-columns: minmax(7em, 28%) minmax(0, 1fr);
+  gap: 0.4em 1.4em;
+  padding: 0.7em 0;
+  border-top: 1px solid var(--ae-line);
+}
+
+.lab-defs > div:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.lab-defs .k {
+  color: var(--ae-ink-muted);
+}
+
+.lab-defs .v .ae-num {
+  overflow-wrap: anywhere;
+}
+
+/* a thin top toolbar inside the desk: tabs left, actions right */
+.lab-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1em 1.6em;
+  flex-wrap: wrap;
+  padding-bottom: 1.2em;
+  margin-bottom: 1.6em;
+  border-bottom: 1px solid var(--ae-line);
+}

@@ -2,7 +2,7 @@ id = "cerberus-fixture-v0"
 version = "0.1.0"
 taskspec = "specs/cerberus-lab/taskspec.toml"
 description = """
-Fixture-only arena for proving the Daedalus Cerberus lab import path. The
+Fixture-only arena for proving the Threshold Cerberus lab import path. The
 single task mirrors Cerberus' deterministic ratio-review fixture and gives the
 importer a real answer key without live model spend.
 """

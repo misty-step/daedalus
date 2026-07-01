@@ -21,13 +21,13 @@ search space.
 
 | kind | what it is | search status |
 |---|---|---|
-| `pi` | pi coding agent (headless `-p --mode json --no-session`), default tools read/bash/edit/write, OpenRouter provider | **the V1 Daedalus native search harness** — every native candidate is a pi composition |
+| `pi` | pi coding agent (headless `-p --mode json --no-session`), default tools read/bash/edit/write, OpenRouter provider | **the V1 Threshold native search harness** — every native candidate is a pi composition |
 | `oneshot` | single chat completion, full or bounded review-context workspace | reference probe only (saturation detection); never a candidate |
 | `null` / `oracle` | floor / ceiling | references only |
 | claude-code, codex, … | other harnesses via Harbor adapters | frozen out of V1; reopen at Phase 2 prompt-plateau (DESIGN.md) |
 
 Cerberus review-lab imports are a separate downstream artifact path, not a
-replacement for the native Pi search harness above. `daedalus cerberus-lab`
+replacement for the native Pi search harness above. `threshold cerberus-lab`
 compares Cerberus `ReviewArtifact.v1` receipts from substrates such as
 OpenCode and OMP; Pi is comparable there only after it emits the same Cerberus
 request/artifact/lifecycle contract.
@@ -39,7 +39,7 @@ behavior changes ride on that field.
 concurrent `pi -p` agent processes deadlock at startup (zero stdout until
 timeout) — isolated HOMEs and `--offline` do not help; `pi --version` and
 plain network calls are fine concurrently. Run pi trials **sequentially**
-per machine. The Rust `daedalus run` path is naturally sequential; do not
+per machine. The Rust `threshold run` path is naturally sequential; do not
 parallelize runner invocations until pi fixes this. Re-test on pi upgrades.
 
 ## Slots a pi composition actually has

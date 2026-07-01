@@ -1,4 +1,4 @@
-# Build `daedalus run`: the autonomous search loop
+# Build `threshold run`: the autonomous search loop
 
 Priority: P0
 Status: ready
@@ -13,7 +13,7 @@ One command takes a taskspec and runs the whole loop — validate rig → baseli
 - Deploy/runtime anything
 
 ## Oracle
-- [ ] `daedalus run specs/pr-review/taskspec.toml --budget-usd 2 --max-candidates 6` completes unattended: validates oracle/null, runs both baselines, then ≥3 generated compositions, each n≥3 trials
+- [ ] `threshold run specs/pr-review/taskspec.toml --budget-usd 2 --max-candidates 6` completes unattended: validates oracle/null, runs both baselines, then ≥3 generated compositions, each n≥3 trials
 - [ ] Candidate proposals come from the reflection step (007) reading worst-trial transcripts; every mutation differs from its parent in exactly one slot
 - [ ] Search scores against the train/validation split only (008); holdout is scored once, at the end, for the final report
 - [ ] Emits `runs/<exp-id>/report.md` (006) + `pareto.json` (quality/cost/latency archive) + stop reason

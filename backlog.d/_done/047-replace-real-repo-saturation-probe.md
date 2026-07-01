@@ -10,11 +10,11 @@ provider empty-output behavior.
 
 ## Oracle
 
-- [x] `cargo run --quiet --bin daedalus -- arena-freeze
+- [x] `cargo run --quiet --bin threshold -- arena-freeze
       arenas/pr-review-correctness-v0 --out-dir <tmp-or-run-dir>` produces a
       non-inconclusive probe verdict for correctness v0.3.0 without running
       candidate search.
-- [x] `cargo run --quiet --bin daedalus -- arena-validate
+- [x] `cargo run --quiet --bin threshold -- arena-validate
       arenas/pr-review-correctness-v0 --probe-run <freeze-dir>` exits 0 or
       fails only for a true saturated arena, not context overflow or empty
       provider output.

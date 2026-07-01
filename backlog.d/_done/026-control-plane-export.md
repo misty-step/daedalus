@@ -5,7 +5,7 @@ Status: ready
 Estimate: M
 
 ## Goal
-`daedalus export <delivery>` turns a delivered agent into artifacts a
+`threshold export <delivery>` turns a delivered agent into artifacts a
 control plane can import directly: a machine-readable launch contract
 (trigger class, input packet construction, permissions, budgets, escalation,
 trace destination, regression-eval schedule, pinned composition hash + pi
@@ -30,7 +30,7 @@ frontmatter: name/description/model/skills; body = the prompt packet).
 
 ## Notes
 Operator direction 2026-06-10: Olympus (work) and Bitter Blossom (personal)
-will host event/trigger-driven focused agents; Daedalus generates the
+will host event/trigger-driven focused agents; Threshold generates the
 bespoke harnesses. BB persona format verified locally
 (~/Development/bitterblossom/sprites/*.md: frontmatter name/description/
 model/memory/permissionMode/skills + system-prompt body). Olympus not local

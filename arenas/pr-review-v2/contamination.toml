@@ -2,7 +2,7 @@
 # Each upstream source the fixtures are drawn from, whether it is publicly
 # indexable (and so plausibly in model training data), and whether the planted
 # defects are novel (authored for this arena, not upstream historical bugs).
-# Validated by `daedalus arena-validate`.
+# Validated by `threshold arena-validate`.
 
 # All planted defects were authored for this arena, with answer keys and oracle
 # solutions written together with the edits, before any candidate ran — so a

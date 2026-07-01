@@ -1,0 +1,15 @@
+[package]
+name = "threshold-cli"
+version.workspace = true
+edition.workspace = true
+description = "The `threshold` command-line tool."
+
+[[bin]]
+name = "threshold"
+path = "src/main.rs"
+
+[dependencies]
+threshold-core = { workspace = true }
+serde_json = { workspace = true }
+toml = { workspace = true }
+clap = { workspace = true }

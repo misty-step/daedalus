@@ -49,7 +49,7 @@ Compare at least these options:
 ## Gut-Instinct Seed Configs
 
 This ticket is primarily design/prototype work. Use Pi/OpenRouter lanes for
-research and implementation probes when Daedalus turns it into an arena.
+research and implementation probes when Threshold turns it into an arena.
 
 | role | harness | model/config | why seed it |
 |---|---|---|---|
@@ -62,7 +62,7 @@ research and implementation probes when Daedalus turns it into an arena.
 `z-ai/glm-5.2` is page-visible on OpenRouter but remains API-pending until the
 OpenRouter catalog lists it and Pi can smoke it.
 
-## Requested Daedalus Work
+## Requested Threshold Work
 
 1. Produce a decision matrix for the trigger surfaces above, covering dedupe,
    debounce, revision identity, auth, offline operation, forked repos, branch
@@ -107,4 +107,4 @@ OpenRouter catalog lists it and Pi can smoke it.
   `/Users/phaedrus/Development/bitterblossom/docs/spine.md`
 - Bitterblossom reflex design:
   `/Users/phaedrus/Development/bitterblossom/docs/plans/2026-06-15-sdlc-reflex-agent-plane.md`
-- Daedalus review-swarm parent: `backlog.d/034-build-daedalus-review-swarm.md`
+- Threshold review-swarm parent: `backlog.d/034-build-threshold-review-swarm.md`

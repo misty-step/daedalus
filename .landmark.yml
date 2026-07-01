@@ -1,0 +1,15 @@
+product:
+  name: Threshold
+  description: Agent-configuration optimizer that searches for the cheapest reliable composition above a quality threshold.
+audience: developer
+voice: Evidence-first, concrete, and release-operator friendly.
+changelog:
+  source: auto
+release:
+  profile: full
+model:
+  policy: balanced
+budget:
+  max_input_tokens: 12000
+  max_output_tokens: 1200
+  max_usd: 0.25

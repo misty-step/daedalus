@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Threshold — pr-review-correctness · gates &amp; launch</title>
+    <script>
+      try {
+        var m = localStorage.getItem('ae-mode');
+        if (m === 'dark' || m === 'light') {
+          document.documentElement.classList.add(m);
+          document.documentElement.style.colorScheme = m;
+        }
+      } catch (e) {}
+    </script>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&display=swap"
+    />
+    <link rel="stylesheet" href="../../../../aesthetic/aesthetic.css" />
+    <link rel="stylesheet" href="lab.css" />
+  </head>
+  <body>
+    <svg style="display: none" xmlns="http://www.w3.org/2000/svg">
+      <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" /><path d="M12 2v2" /><path d="M12 20v2" /><path d="m4.93 4.93 1.41 1.41" /><path d="m17.66 17.66 1.41 1.41" /><path d="M2 12h2" /><path d="M20 12h2" /><path d="m6.34 17.66-1.41 1.41" /><path d="m19.07 4.93-1.41 1.41" /></symbol>
+      <symbol id="i-moon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" /></symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5" /></symbol>
+      <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></symbol>
+      <symbol id="i-alert" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" /><path d="M12 9v4" /><path d="M12 17h.01" /></symbol>
+      <symbol id="i-lock" viewBox="0 0 24 24"><rect width="18" height="11" x="3" y="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></symbol>
+      <symbol id="i-shield" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" /></symbol>
+      <symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="m17 8-5-5-5 5" /><path d="M12 3v12" /></symbol>
+    </svg>
+
+    <div class="ae-shell">
+      <aside class="ae-rail">
+        <p class="ae-name" style="letter-spacing: 0.22em; color: var(--ae-ink)">THRESHOLD</p>
+        <p class="ae-chrome" style="margin-top: 0.2em">agent foundry</p>
+
+        <p class="ae-h">FOUNDRY</p>
+        <a href="console.html">Console</a>
+        <a href="comparison.html">Comparison</a>
+        <a href="trial.html">Trial</a>
+        <a href="#">Arenas</a>
+        <a href="gates.html" aria-current="page">Gates &amp; launch</a>
+
+        <p class="ae-h">TASK</p>
+        <a href="#" class="is-active">pr-review-correctness</a>
+        <a href="#">Spec &amp; taxonomy</a>
+        <a href="#">Swarm members</a>
+        <a href="#">Delivery</a>
+
+        <div class="ae-rail-foot">
+          <p class="ae-chrome">arena v0.2.0 · low-risk</p>
+          <p class="ae-chrome">runner 20260613</p>
+          <p style="margin-top: 1em">
+            <button class="ae-mode" aria-label="toggle color mode">
+              <svg class="ae-icon ae-sun"><use href="#i-sun" /></svg>
+              <svg class="ae-icon ae-moon"><use href="#i-moon" /></svg>
+            </button>
+          </p>
+        </div>
+      </aside>
+
+      <main class="ae-desk lab-desk">
+        <nav class="ae-crumbs" aria-label="breadcrumb" style="margin-bottom: 1.4em">
+          <ol>
+            <li><a href="#">foundry</a></li>
+            <li><a href="console.html">correctness</a></li>
+            <li><span aria-current="page">gates &amp; launch</span></li>
+          </ol>
+        </nav>
+
+        <div class="lab-deskhead">
+          <div>
+            <h1>Gates &amp; launch</h1>
+            <p class="ae-lede">
+              Launch is a contract, not a button — evidence, permissions, and
+              plane handoff bound to one candidate. Automation prepares a gate;
+              only a human signs it.
+            </p>
+          </div>
+          <div style="display: flex; gap: 0.6em">
+            <button class="ae-button ae-button-compact ae-button-quiet">
+              <svg class="ae-icon"><use href="#i-upload" /></svg> Dry-run packet
+            </button>
+            <button class="ae-button ae-button-compact">Request G2 review</button>
+          </div>
+        </div>
+
+        <!-- the candidate under contract -->
+        <p style="margin-bottom: 1.6em">
+          <span class="ae-h" style="display: inline; margin-right: 0.8em">UNDER CONTRACT</span>
+          <span class="ae-item" style="color: var(--ae-accent)">seed4-…-checklist</span>
+          <span class="ae-dim"> · <span class="ae-num">comp 4a73f1fd</span> · <span class="ae-num">0.68</span> mean ·
+          <span class="ae-tag">gpt-5-mini</span> · mode <span class="ae-num">threshold-then-cheap</span> ·
+          <svg class="ae-icon ae-err" style="width: 1em; height: 1em"><use href="#i-x" /></svg> unsigned — sandbox dry-run only</span>
+        </p>
+
+        <!-- the G1–G5 spine -->
+        <p class="ae-h">THE LADDER · a human signs each rung</p>
+        <div class="lab-gates" style="margin: 0.6em 0 2.2em">
+          <div class="lab-gate">
+            <p class="lab-gate-id"><svg class="ae-icon ae-ok"><use href="#i-check" /></svg> G1</p>
+            <p class="lab-gate-name">Spend &amp; spec</p>
+            <p class="lab-gate-sub">approved · offline experimentation only</p>
+          </div>
+          <div class="lab-gate">
+            <p class="lab-gate-id"><svg class="ae-icon ae-warn"><use href="#i-alert" /></svg> G2</p>
+            <p class="lab-gate-name">Eval trust</p>
+            <p class="lab-gate-sub">pending review · internal handoff only</p>
+          </div>
+          <div class="lab-gate is-locked">
+            <p class="lab-gate-id"><svg class="ae-icon"><use href="#i-lock" /></svg> G3</p>
+            <p class="lab-gate-name">Launch</p>
+            <p class="lab-gate-sub">unsigned · not a primary reviewer</p>
+          </div>
+          <div class="lab-gate is-locked">
+            <p class="lab-gate-id"><svg class="ae-icon"><use href="#i-lock" /></svg> G4</p>
+            <p class="lab-gate-name">Write authority</p>
+            <p class="lab-gate-sub">locked · no production writes</p>
+          </div>
+          <div class="lab-gate is-locked">
+            <p class="lab-gate-id"><svg class="ae-icon"><use href="#i-lock" /></svg> G5</p>
+            <p class="lab-gate-name">Re-ingest</p>
+            <p class="lab-gate-sub">locked · no prod data → fixtures</p>
+          </div>
+        </div>
+
+        <div class="lab-cols is-2-even" style="align-items: start; margin-bottom: 2em">
+          <!-- the contract -->
+          <div class="ae-plate">
+            <p class="ae-plate-cap">THE CONTRACT · contract.v1 · deliveries/pr-review</p>
+            <div class="lab-defs">
+              <div><span class="k">trigger</span><span class="v">GitHub PR webhook (Phase 3) — manual runs until then</span></div>
+              <div><span class="k">output</span><span class="v"><span class="ae-num">findings.json</span> · {findings:[{file, line, category, description}]}</span></div>
+              <div><span class="k">permissions</span><span class="v">read-only checkout; writes only the output artifact in a throwaway workdir; <span class="ae-item">write_actions: none</span></span></div>
+              <div><span class="k">budgets</span><span class="v"><span class="ae-num">$0.50</span>/run · <span class="ae-num">600s</span> wall</span></div>
+              <div><span class="k">observability</span><span class="v">JSONL records · <span class="ae-warn">trace sink waived</span> (no live sink signed)</span></div>
+              <div><span class="k">composition</span><span class="v"><span class="ae-num">pi 0.78.1</span> · openrouter · gpt-5-mini · thinking low</span></div>
+              <div><span class="k">persona</span><span class="v">byte-identical prompt · <span class="ae-num">persona.md</span></span></div>
+            </div>
+          </div>
+
+          <!-- the plane handoff -->
+          <div class="ae-plate">
+            <p class="ae-plate-cap">PLANE HANDOFF · the lab recommends, the plane owns trust</p>
+            <div class="lab-defs">
+              <div><span class="k">Threshold</span><span class="v">the measured composition + persona, the <span class="ae-num">findings.json</span> contract, regression replay, evidence</span></div>
+              <div><span class="k">Bitter Blossom</span><span class="v">trigger &amp; filters, HMAC dedupe, budgets, posting — incumbent <span class="ae-tag">review-coordinator v2</span></span></div>
+              <div><span class="k">Olympus</span><span class="v">diff-anchor validation, output caps, duplicate suppression, GitHub posting — incumbent <span class="ae-tag">charon v2</span></span></div>
+              <div><span class="k">rollback</span><span class="v">emergency-disable &amp; audit log — a <span class="ae-num">G4</span> control-plane duty, unsigned</span></div>
+              <div><span class="k">boundary</span><span class="v"><svg class="ae-icon ae-ok" style="width: 0.95em; height: 0.95em"><use href="#i-shield" /></svg> no direct approve / merge / code-edit authority — the agent only emits strict JSON</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="lab-cols is-2" style="align-items: start">
+          <div>
+            <p class="ae-h">RESIDUAL RISK</p>
+            <p>
+              The delivery is <span class="ae-item">certified but weak</span>: it
+              still scores <span class="ae-num">0</span> on
+              <span class="ae-num">py-live-lock</span> and thins out on the
+              hardest defect classes. The contract is sealed at
+              <span class="ae-item">sandbox dry-run only</span> until a human
+              signs G3 — unsigned contracts may not deploy as a primary reviewer.
+            </p>
+          </div>
+          <div>
+            <p class="ae-h">NEXT MOVE</p>
+            <p>
+              G1 holds and the arena ranks, so the gate is eval trust, not spend.
+              Recover py-live-lock recall, re-certify on the holdout split, then
+              request G2 — the only rung the lab can prepare before a human takes
+              the launch decision.
+            </p>
+            <p style="margin-top: 1em">
+              <button class="ae-button ae-button-compact">Request G2 review</button>
+            </p>
+          </div>
+        </div>
+      </main>
+    </div>
+    <script src="../../../../aesthetic/site/recipes.js"></script>
+  </body>
+</html>

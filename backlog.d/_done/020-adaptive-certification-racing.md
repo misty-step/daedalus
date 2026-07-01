@@ -15,7 +15,7 @@ candidates — so a lucky 8/8 can never ship again.
 - Changing the scorer
 
 ## Oracle
-- [ ] `bin/daedalus` stage 3.5 certifies top-k (default 3) by mode objective:
+- [ ] `bin/threshold` stage 3.5 certifies top-k (default 3) by mode objective:
       each reaches `--certify-trials` (default 5) per train+validation task,
       budget-metered (shrinks k, never silently shrinks n)
 - [ ] Holdout final runs at certification depth for the front

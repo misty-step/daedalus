@@ -21,7 +21,7 @@ Estimate: L
 **Reframe.** Don't build a new dispatch-agent arena+scorer. Code review already
 has the whole measurement loop: validated arenas
 (`arenas/pr-review-correctness-v0`), the deterministic findings scorer
-(`crates/daedalus-core/src/score.rs`), and the Cerberus substrate lab (048) —
+(`crates/threshold-core/src/score.rs`), and the Cerberus substrate lab (048) —
 and Bitterblossom already ships the review consumers
 (`plane/agents/storm-correctness.toml`, `review-coordinator.toml`, the storm
 lanes), today wired to **hand-picked** models (`storm-correctness` →
@@ -56,11 +56,11 @@ model/config bb imports instead of the current gut-picked `deepseek-v4-pro`.
 - `specs/pr-review-security/taskspec.toml` — the `[search]` block shape to copy.
 - `arenas/pr-review-correctness-v0/` — the validated arena (rig: oracle 1.0 / null
   floor / one-shot probe).
-- `crates/daedalus-core/src/score.rs` — the deterministic findings scorer (unchanged).
+- `crates/threshold-core/src/score.rs` — the deterministic findings scorer (unchanged).
 - `docs/primitives.md` — the model pool to refresh + the Pi concurrency constraint.
 - `~/Development/bitterblossom/plane/agents/storm-correctness.toml` — import target
   (`harness="pi"`, `model=…`).
-- `daedalus doctor` · `arena-freeze` · `arena-validate` — the reused rig harness.
+- `threshold doctor` · `arena-freeze` · `arena-validate` — the reused rig harness.
 
 ### Alternatives
 | option | how it fails | verdict |
@@ -79,7 +79,7 @@ model/config bb imports instead of the current gut-picked `deepseek-v4-pro`.
    pr-review-correctness shape; `[search].models` = bb's candidate set;
    `fixtures = arenas/pr-review-correctness-v0`; lens = correctness;
    `mode = "threshold-then-cheap"` (cheap reflex lane).
-3. **Validate the rig at ~$0** — `daedalus doctor` (model-primitives +
+3. **Validate the rig at ~$0** — `threshold doctor` (model-primitives +
    roster-in-pool); `arena-freeze` + `arena-validate` confirm non-saturable for
    this model set (oracle 1.0 / null floor / one-shot probe). Oracle/null are
    costless; the probe is one cheap call. **No paid candidate search.**
@@ -91,12 +91,12 @@ model/config bb imports instead of the current gut-picked `deepseek-v4-pro`.
    separate `/deliver` under an explicit G1 budget.
 
 ### Oracle (executable — this $0 slice)
-- [ ] `cargo run -q --bin daedalus -- doctor` passes `model-primitives` and
+- [ ] `cargo run -q --bin threshold -- doctor` passes `model-primitives` and
       `roster-in-pool` (every `specs/bb-review-correctness` model is in the pool).
 - [ ] `docs/primitives.md` lists all four bb candidates with current
       price/context/tools; `z-ai/glm-5.2` is catalog-listed or explicitly waived
       with a live-checked reason.
-- [ ] `cargo run -q --bin daedalus -- arena-freeze arenas/pr-review-correctness-v0
+- [ ] `cargo run -q --bin threshold -- arena-freeze arenas/pr-review-correctness-v0
       --out-dir <tmp>` then `arena-validate … --probe-run <tmp>` exits 0
       (non-saturable) or records a true probe verdict for the bb model set — with
       **no paid candidate search**.
@@ -110,7 +110,7 @@ model/config bb imports instead of the current gut-picked `deepseek-v4-pro`.
   candidate models and is non-saturable for them, so a paid search would certify.
 - **Falsifier:** a one-shot ties the oracle (saturated) → no paid search until the
   arena is hardened; or a bb candidate is absent from the verified pool.
-- **Driver:** `daedalus doctor` + `arena-freeze`/`arena-validate` over the new
+- **Driver:** `threshold doctor` + `arena-freeze`/`arena-validate` over the new
   taskspec ($0).
 - **Grader:** `arena-validate` exit 0 / probe verdict; `doctor` green; the report.
 - **Evidence:** committed taskspec + arena-validate report + paid-search plan.
@@ -155,12 +155,12 @@ agent to improvise every dispatch lane.
 
 Bitterblossom has a merged manual builder-dispatch role, but it is still a
 single useful lane rather than a measured dispatch portfolio. The user wants
-Daedalus to find bespoke agent and harness configs for these recurring
+Threshold to find bespoke agent and harness configs for these recurring
 operator flows, while Bitterblossom stays the event/dispatch plane.
 
 The desired split:
 
-- Daedalus owns task specs, arenas, candidate compositions, cost/latency
+- Threshold owns task specs, arenas, candidate compositions, cost/latency
   measurement, and launch-contract recommendations.
 - Bitterblossom owns durable task/agent/card config, queueing, leases, budgets,
   run ledger, and operator-visible receipts.
@@ -184,14 +184,14 @@ Non-goals:
 
 - A semantic workflow engine inside Bitterblossom dispatch.
 - Production write authority for reflex agents.
-- Treating Codex/Claude subscription lanes as Daedalus-certified before they
+- Treating Codex/Claude subscription lanes as Threshold-certified before they
   have an arena and comparable trace.
-- Replacing the current Daedalus `pi` V1 harness unless this ticket produces a
+- Replacing the current Threshold `pi` V1 harness unless this ticket produces a
   separate approved harness-adapter child.
 
 ## Gut-Instinct Seed Configs
 
-These are seeds for Daedalus search, not launch recommendations.
+These are seeds for Threshold search, not launch recommendations.
 
 OpenRouter facts were checked on 2026-06-15 from both the model page and
 `https://openrouter.ai/api/v1/models`. `z-ai/glm-5.2` is page-visible at
@@ -215,7 +215,7 @@ recommendation.
 | architecture council | OpenRouter | `openrouter/fusion` | use only for research/council questions worth multi-model routing; not a routine coding lane |
 | pending GLM | Pi | `z-ai/glm-5.2` | requested by operator; page-visible/API-pending; do not use until catalog-listed and smoke-tested |
 
-## Requested Daedalus Work
+## Requested Threshold Work
 
 1. Write task specs and arenas for the five families above, starting with a
    vertical slice of `builder`, `fixer`, and `diagnoser`.
@@ -233,12 +233,12 @@ recommendation.
    - cost and wall-clock budget defaults,
    - residual risks and approval gates.
 6. Emit separate "manual subscription" overlays for Codex and Claude Code that
-   are clearly marked unmeasured unless Daedalus adds a comparable harness
+   are clearly marked unmeasured unless Threshold adds a comparable harness
    adapter and trace.
 
 ## Oracle
 
-- [ ] A human-reviewable Daedalus G1 task-spec packet is produced for each
+- [ ] A human-reviewable Threshold G1 task-spec packet is produced for each
       selected dispatch family, with goal, inputs, outputs, risk class, budget
       posture, and negative examples. This does not imply self-approval of G1.
 - [ ] At least three Pi/OpenRouter candidates are run for the first vertical
@@ -261,7 +261,7 @@ recommendation.
 
 - Bitterblossom anchor:
   `/Users/phaedrus/Development/bitterblossom/backlog.d/061-sdlc-lifecycle-reflex-pack.md`
-- Current Daedalus primitive facts:
+- Current Threshold primitive facts:
   `docs/primitives.md`
 - Current Harness Kit model facts:
   `/Users/phaedrus/Development/harness-kit/skills/roster/references/model-provider-harness-index.md`

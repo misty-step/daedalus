@@ -8,7 +8,7 @@ Priority: P2 · Status: pending · Estimate: M
 > gate on the real 2026-06-23 cerberus data and will block the same for [[055]].
 
 ## Goal
-A `daedalus recertify <run-dir>` (or `report --rebuild`) subcommand that
+A `threshold recertify <run-dir>` (or `report --rebuild`) subcommand that
 re-derives `pareto.json` / `report.md` / `loop.json` from a run's existing
 `trials.jsonl` + `summary.json` under new gate knobs (`--reliability-floor`,
 `--min-effect`, `--certify-trials`, and later `--baseline incumbent:<hash>`),
@@ -23,7 +23,7 @@ with hand-entered numbers — neither is a live exercise of the real binary on
 real data. This is the verification harness the certification layer is missing.
 
 ## Oracle
-- [ ] `daedalus recertify runs/20260623T183514Z-search-cerberus-reviewer
+- [ ] `threshold recertify runs/20260623T183514Z-search-cerberus-reviewer
       --reliability-floor 0.10` reproduces the run's report with seed2-kimi
       demoted, spending $0 (no trials, no network).
 - [ ] Re-derived `certified` / `recommendable` / CIs match a fresh run on the

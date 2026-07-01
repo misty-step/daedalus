@@ -17,15 +17,15 @@ and a control plane owns any eventual posting after G3.
 
 ## Decision
 
-Introduce `swarm-contract.v1` and `cargo run --quiet --bin daedalus -- export-suite`.
+Introduce `swarm-contract.v1` and `cargo run --quiet --bin threshold -- export-suite`.
 
-- `cargo run --quiet --bin daedalus -- export-suite <delivery> --suite <taskspec>` reads
+- `cargo run --quiet --bin threshold -- export-suite <delivery> --suite <taskspec>` reads
   `<delivery>/summary.json`, validates the summary against the suite taskspec,
   and writes `<delivery>/swarm-contract.toml` plus a human-readable
   `plane-handoff.md`.
 - `summary.json` is the evidence boundary. Export refuses to fabricate suite
   cost, wall time, handoff mode, or master real-member replay status.
-- `cargo run --quiet --bin daedalus -- launch-pack <delivery> --plane ... --dry-run` recognizes
+- `cargo run --quiet --bin threshold -- launch-pack <delivery> --plane ... --dry-run` recognizes
   `swarm-contract.toml` and emits sandbox-only import packets while G3 is
   unsigned.
 - Non-dry-run suite packets require G3 just like single-agent launch
@@ -46,7 +46,7 @@ Introduce `swarm-contract.v1` and `cargo run --quiet --bin daedalus -- export-su
 
 - **Fold members into `contract.v1`.** Rejected because single-agent fields
   such as `agent`, `composition_hash`, and `prompt_packet` become ambiguous.
-- **Let planes assemble the suite themselves.** Rejected because Daedalus would
+- **Let planes assemble the suite themselves.** Rejected because Threshold would
   lose the measured composition and threshold accounting at the exact import
   boundary.
 - **Export a deployable swarm while G3 is unsigned.** Rejected by the existing
