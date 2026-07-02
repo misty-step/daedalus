@@ -67,7 +67,7 @@ jobs:
           persist-credentials: false
 
       - name: Run Landmark
-        uses: misty-step/landmark@1379e56f007de6a2b34993e12e5f1d8931f7c157 # v1
+        uses: misty-step/landmark@v1
         with:
           github-token: ${{ secrets.GH_RELEASE_TOKEN }}
           llm-api-key: ${{ secrets.OPENROUTER_API_KEY }}
@@ -87,8 +87,9 @@ creator in `synthesis-only` mode instead of adding a second full release job.
   dispatch. Checkout must pin to `github.event.workflow_run.head_sha` so
   Landmark runs against the exact commit that passed the gate, not a newer
   default-branch commit.
-- The Landmark action is pinned to the current `v1` commit. Refresh the SHA only
-  when deliberately adopting a newer Landmark release.
+- The Landmark action is pinned to the floating `v1` major tag, which Landmark's
+  own release workflow only moves once a release's binaries and checksums are
+  live, so `v1` never resolves to a tag whose binary can't be downloaded.
 - `GH_RELEASE_TOKEN` must have repository write access.
 - `OPENROUTER_API_KEY` enables synthesized public notes; missing or stale keys
   must not block release unless the repo deliberately sets
