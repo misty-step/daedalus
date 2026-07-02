@@ -34,7 +34,7 @@ jobs:
           persist-credentials: false
 
       - name: Run Landmark
-        uses: misty-step/landmark@1379e56f007de6a2b34993e12e5f1d8931f7c157 # v1
+        uses: misty-step/landmark@v1
         with:
           github-token: ${{ secrets.GH_RELEASE_TOKEN }}
           llm-api-key: ${{ secrets.OPENROUTER_API_KEY }}
